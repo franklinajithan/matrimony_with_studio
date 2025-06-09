@@ -44,7 +44,7 @@ const HoroscopeCompatibilityOutputSchema = z.object({
     z.object({
       aspectName: z.string().describe("Name of the astrological aspect being compared (e.g., 'Moon Sign Compatibility', 'Mars-Venus Synastry', 'Nakshatra Porutham')."),
       description: z.string().describe("Detailed description of this specific compatibility aspect."),
-      score: z.number().optional().min(0).max(10).describe("Score for this specific aspect (if applicable)."),
+      score: z.number().min(0).max(10).optional().describe("Score for this specific aspect (if applicable)."),
     })
   ).optional().describe("Optional detailed breakdown of specific compatibility points."),
 });
@@ -122,3 +122,4 @@ const horoscopeCompatibilityFlow = ai.defineFlow(
     return output;
   }
 );
+
