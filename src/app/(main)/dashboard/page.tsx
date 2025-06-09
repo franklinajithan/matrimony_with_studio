@@ -22,8 +22,6 @@ const mockQuickSuggestions = [
   { id: 's1', name: 'Vikram Singh', age: 31, profession: 'Architect', location: 'Mumbai', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: 'man outdoor' },
   { id: 's2', name: 'Neha Reddy', age: 28, profession: 'Marketing', location: 'Bangalore', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: 'woman creative' },
   { id: 's3', name: 'Arjun Mehta', age: 33, profession: 'Doctor', location: 'Delhi', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: 'man indian' },
-  { id: 's4', name: 'Priya Desai', age: 29, profession: 'Writer', location: 'Pune', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: 'woman reading' },
-  { id: 's5', name: 'Sameer Khan', age: 30, profession: 'Consultant', location: 'Hyderabad', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: 'man suit' },
 ];
 
 const mockTodaysHoroscope = {
@@ -128,6 +126,31 @@ export default function DashboardPage() {
 
         {/* Sidebar Area - Right Column */}
         <div className="lg:col-span-1 space-y-6">
+          {/* Quick Navigation Links */}
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader>
+                 <CardTitle className="flex items-center gap-2 font-headline text-xl text-primary">
+                    <CalendarCheck className="h-5 w-5" /> Quick Links
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 gap-3">
+                 <Button variant="outline" className="w-full justify-start" asChild>
+                    <Link href="/discover"><Search className="mr-2 h-4 w-4" />Discover</Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start relative" asChild>
+                  <Link href="/messages">
+                    <MessageCircle className="mr-2 h-4 w-4" />Messages
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link href="/dashboard/horoscope"><Sparkles className="mr-2 h-4 w-4" />Horoscope</Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link href="/pricing"><CreditCard className="mr-2 h-4 w-4" />Subscription</Link>
+                </Button>
+            </CardContent>
+          </Card>
+          
           {/* Today's Horoscope Section */}
           <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
@@ -175,31 +198,6 @@ export default function DashboardPage() {
                   </div>
                 </div>
               )) : <p className="text-sm text-muted-foreground text-center py-4">No new match requests.</p>}
-            </CardContent>
-          </Card>
-
-          {/* Other Navigation Links */}
-          <Card className="shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader>
-                 <CardTitle className="flex items-center gap-2 font-headline text-xl text-primary">
-                    <CalendarCheck className="h-5 w-5" /> Quick Links
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-3">
-                 <Button variant="outline" className="w-full justify-start" asChild>
-                    <Link href="/discover"><Search className="mr-2 h-4 w-4" />Discover</Link>
-                </Button>
-                <Button variant="outline" className="w-full justify-start relative" asChild>
-                  <Link href="/messages">
-                    <MessageCircle className="mr-2 h-4 w-4" />Messages
-                  </Link>
-                </Button>
-                <Button variant="outline" className="w-full justify-start" asChild>
-                  <Link href="/dashboard/horoscope"><Sparkles className="mr-2 h-4 w-4" />Horoscope</Link>
-                </Button>
-                <Button variant="outline" className="w-full justify-start" asChild>
-                  <Link href="/pricing"><CreditCard className="mr-2 h-4 w-4" />Subscription</Link>
-                </Button>
             </CardContent>
           </Card>
         </div>
