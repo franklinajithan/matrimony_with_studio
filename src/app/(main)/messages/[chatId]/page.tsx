@@ -14,10 +14,10 @@ import { cn } from '@/lib/utils';
 
 // Mock data - In a real app, this would come from an API/Firebase
 const mockUsers = {
-  chat1: { id: 'chat1', name: 'Rohan Sharma', avatarUrl: 'https://placehold.co/100x100', dataAiHint: 'man portrait' },
-  chat2: { id: 'chat2', name: 'Priya Patel', avatarUrl: 'https://placehold.co/100x100', dataAiHint: 'woman smiling' },
-  chat3: { id: 'chat3', name: 'Amit Singh', avatarUrl: 'https://placehold.co/100x100', dataAiHint: 'man professional' },
-  chat4: { id: 'chat4', name: 'Sneha Reddy', avatarUrl: 'https://placehold.co/100x100', dataAiHint: 'woman creative' },
+  chat1: { id: 'chat1', name: 'Rohan Sharma', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: 'man indian' },
+  chat2: { id: 'chat2', name: 'Priya Patel', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: 'woman professional' },
+  chat3: { id: 'chat3', name: 'Amit Singh', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: 'man smiling' },
+  chat4: { id: 'chat4', name: 'Sneha Reddy', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: 'woman creative' },
 };
 
 const mockMessagesData: { [key: string]: Array<{ id: string, senderId: string, text: string, timestamp: string }> } = {

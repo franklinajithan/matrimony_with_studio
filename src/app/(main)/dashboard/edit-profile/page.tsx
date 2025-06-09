@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 const currentUser = {
   fullName: "Aisha Khan",
   bio: "Passionate about technology, travel, and finding meaningful connections. I enjoy reading, hiking, and exploring new cuisines. Looking for someone kind, ambitious, and with a good sense of humor.",
-  profilePhotoUrl: "https://placehold.co/150x150",
+  profilePhotoUrl: "https://placehold.co/150x150.png",
   dataAiHint: "woman portrait",
   location: "Mumbai, India",
   profession: "Software Engineer",
@@ -141,9 +141,13 @@ export default function EditProfilePage() {
                 <Label className="flex items-center"><ImageIcon className="mr-2 h-4 w-4 text-muted-foreground" />Profile Photos</Label>
                 <div className="grid grid-cols-3 gap-2">
                     {/* Map existing photos here with delete option */}
-                    {[1,2,3].map(i => (
-                        <div key={i} className="aspect-square bg-muted rounded-md flex items-center justify-center">
-                            <img src={`https://placehold.co/100x100?text=Photo+${i}`} alt={`Photo ${i}`} className="object-cover rounded-md h-full w-full" data-ai-hint="person profile"/>
+                    {[
+                        {id:1, hint: 'woman indoor'}, 
+                        {id:2, hint: 'woman outdoor'},
+                        {id:3, hint: 'woman casual'}
+                    ].map(photo => (
+                        <div key={photo.id} className="aspect-square bg-muted rounded-md flex items-center justify-center">
+                            <img src={`https://placehold.co/100x100.png`} alt={`Photo ${photo.id}`} className="object-cover rounded-md h-full w-full" data-ai-hint={photo.hint}/>
                         </div>
                     ))}
                     <Button type="button" variant="outline" className="aspect-square flex items-center justify-center">

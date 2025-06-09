@@ -7,12 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Heart, X, MapPin, Briefcase, CheckCircle, Search } from 'lucide-react';
 
 const mockProfiles = [
-  { id: '1', name: 'Rohan Sharma', age: 30, profession: 'Doctor', location: 'Delhi, India', imageUrl: 'https://placehold.co/300x400', dataAiHint: 'man portrait', isVerified: true, interests: ['Music', 'Books'] },
-  { id: '2', name: 'Priya Patel', age: 27, profession: 'Architect', location: 'Bangalore, India', imageUrl: 'https://placehold.co/300x400', dataAiHint: 'woman smiling', isVerified: false, interests: ['Art', 'Yoga'] },
-  { id: '3', name: 'Amit Singh', age: 32, profession: 'Marketing Manager', location: 'Pune, India', imageUrl: 'https://placehold.co/300x400', dataAiHint: 'man professional', isVerified: true, interests: ['Sports', 'Movies'] },
-  { id: '4', name: 'Sneha Reddy', age: 29, profession: 'Graphic Designer', location: 'Hyderabad, India', imageUrl: 'https://placehold.co/300x400', dataAiHint: 'woman creative', isVerified: true, interests: ['Photography', 'Dance'] },
-  { id: '5', name: 'Vikram Kumar', age: 28, profession: 'Civil Engineer', location: 'Chennai, India', imageUrl: 'https://placehold.co/300x400', dataAiHint: 'man engineer', isVerified: false, interests: ['Gaming', 'Trekking'] },
-  { id: '6', name: 'Anjali Desai', age: 26, profession: 'Teacher', location: 'Ahmedabad, India', imageUrl: 'https://placehold.co/300x400', dataAiHint: 'woman teacher', isVerified: true, interests: ['Crafts', 'Reading'] },
+  { id: '1', name: 'Rohan Sharma', age: 30, profession: 'Doctor', location: 'Delhi, India', imageUrl: 'https://placehold.co/300x400.png', dataAiHint: 'man indian', isVerified: true, interests: ['Music', 'Books'] },
+  { id: '2', name: 'Priya Patel', age: 27, profession: 'Architect', location: 'Bangalore, India', imageUrl: 'https://placehold.co/300x400.png', dataAiHint: 'woman professional', isVerified: false, interests: ['Art', 'Yoga'] },
+  { id: '3', name: 'Amit Singh', age: 32, profession: 'Marketing Manager', location: 'Pune, India', imageUrl: 'https://placehold.co/300x400.png', dataAiHint: 'man smiling', isVerified: true, interests: ['Sports', 'Movies'] },
+  { id: '4', name: 'Sneha Reddy', age: 29, profession: 'Graphic Designer', location: 'Hyderabad, India', imageUrl: 'https://placehold.co/300x400.png', dataAiHint: 'woman creative', isVerified: true, interests: ['Photography', 'Dance'] },
+  { id: '5', name: 'Vikram Kumar', age: 28, profession: 'Civil Engineer', location: 'Chennai, India', imageUrl: 'https://placehold.co/300x400.png', dataAiHint: 'man outdoor', isVerified: false, interests: ['Gaming', 'Trekking'] },
+  { id: '6', name: 'Anjali Desai', age: 26, profession: 'Teacher', location: 'Ahmedabad, India', imageUrl: 'https://placehold.co/300x400.png', dataAiHint: 'woman glasses', isVerified: true, interests: ['Crafts', 'Reading'] },
 ];
 
 export default function DiscoverPage() {

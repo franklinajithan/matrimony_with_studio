@@ -8,10 +8,10 @@ import { MessageSquarePlus, Search as SearchIcon } from 'lucide-react'; // Renam
 import { Input } from '@/components/ui/input';
 
 const mockConversations = [
-  { id: 'chat1', name: 'Rohan Sharma', lastMessage: "Hey, how are you doing? Liked your profile!", unreadCount: 2, timestamp: "10:30 AM", avatarUrl: "https://placehold.co/100x100", dataAiHint:"man portrait" },
-  { id: 'chat2', name: 'Priya Patel', lastMessage: "Thanks for the connection! Yes, I'd love to chat.", unreadCount: 0, timestamp: "Yesterday", avatarUrl: "https://placehold.co/100x100", dataAiHint:"woman smiling" },
-  { id: 'chat3', name: 'Amit Singh', lastMessage: "Let's catch up sometime this week?", unreadCount: 5, timestamp: "Mon", avatarUrl: "https://placehold.co/100x100", dataAiHint:"man professional" },
-  { id: 'chat4', name: 'Sneha Reddy', lastMessage: "Your interests are quite similar to mine!", unreadCount: 0, timestamp: "Sun", avatarUrl: "https://placehold.co/100x100", dataAiHint:"woman creative" },
+  { id: 'chat1', name: 'Rohan Sharma', lastMessage: "Hey, how are you doing? Liked your profile!", unreadCount: 2, timestamp: "10:30 AM", avatarUrl: "https://placehold.co/100x100.png", dataAiHint:"man indian" },
+  { id: 'chat2', name: 'Priya Patel', lastMessage: "Thanks for the connection! Yes, I'd love to chat.", unreadCount: 0, timestamp: "Yesterday", avatarUrl: "https://placehold.co/100x100.png", dataAiHint:"woman professional" },
+  { id: 'chat3', name: 'Amit Singh', lastMessage: "Let's catch up sometime this week?", unreadCount: 5, timestamp: "Mon", avatarUrl: "https://placehold.co/100x100.png", dataAiHint:"man smiling" },
+  { id: 'chat4', name: 'Sneha Reddy', lastMessage: "Your interests are quite similar to mine!", unreadCount: 0, timestamp: "Sun", avatarUrl: "https://placehold.co/100x100.png", dataAiHint:"woman creative" },
 ];
 
 export default function MessagesPage() {

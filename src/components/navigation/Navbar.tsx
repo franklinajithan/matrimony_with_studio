@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -13,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"; // Added AvatarFallback
 import { cn } from '@/lib/utils';
 
 const navLinks = [
@@ -25,7 +26,7 @@ const navLinks = [
 
 // Mock authentication state
 const isAuthenticated = true; 
-const user = { name: "Aisha Khan", email: "aisha@example.com", imageUrl: "https://placehold.co/100x100" };
+const user = { name: "Aisha Khan", email: "aisha@example.com", imageUrl: "https://placehold.co/100x100.png", dataAiHint: "woman portrait" };
 
 export function Navbar() {
   const pathname = usePathname();
@@ -57,7 +58,7 @@ export function Navbar() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar className="h-9 w-9">
-                    <AvatarImage src={user.imageUrl} alt={user.name} data-ai-hint="user avatar" />
+                    <AvatarImage src={user.imageUrl} alt={user.name} data-ai-hint={user.dataAiHint} />
                     <AvatarFallback>{user.name.substring(0,1).toUpperCase()}</AvatarFallback>
                   </Avatar>
                 </Button>

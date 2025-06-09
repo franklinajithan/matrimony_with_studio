@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,8 +15,9 @@ const userProfile = {
   bio: "Passionate about technology, travel, and finding meaningful connections. I enjoy reading, hiking, and exploring new cuisines. Looking for someone kind, ambitious, and with a good sense of humor.",
   interests: ['Reading', 'Hiking', 'Travel', 'Cooking', 'Technology'],
   photos: [
-    { id: 'p1', url: 'https://placehold.co/600x800', alt: 'Aisha Khan Profile Photo 1', dataAiHint: 'woman portrait' },
-    { id: 'p2', url: 'https://placehold.co/600x800', alt: 'Aisha Khan Profile Photo 2', dataAiHint: 'woman outdoor' },
+    { id: 'p1', url: 'https://placehold.co/600x800.png', alt: 'Aisha Khan Profile Photo 1', dataAiHint: 'woman portrait' },
+    { id: 'p2', url: 'https://placehold.co/600x800.png', alt: 'Aisha Khan Profile Photo 2', dataAiHint: 'woman outdoor' },
+    { id: 'p3', url: 'https://placehold.co/600x800.png', alt: 'Aisha Khan Profile Photo 3', dataAiHint: 'woman smiling' },
   ],
   religion: 'Islam',
   caste: 'Sunni',
