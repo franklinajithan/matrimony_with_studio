@@ -59,29 +59,53 @@ export default function ProfileSetupPage() {
     }
 
     try {
-      let photoURL: string | null = user.photoURL; // Keep existing photo if no new one is uploaded
+      let finalPhotoURL = user.photoURL; // Start with existing photo from Auth (e.g. Google)
+      let finalDataAiHint = user.photoURL ? "social profile" : "person placeholder"; // Default hint
 
       if (values.profilePhoto) {
         const filePath = `users/${user.uid}/profile_photo/${values.profilePhoto.name}`;
-        photoURL = await uploadFile(values.profilePhoto, filePath);
+        finalPhotoURL = await uploadFile(values.profilePhoto, filePath);
+        finalDataAiHint = "profile photo"; // Hint for newly uploaded photo
+      } else if (!user.photoURL) { // No new photo uploaded AND no existing photo from Auth
+        finalPhotoURL = "https://placehold.co/128x128.png"; // Default placeholder
+        finalDataAiHint = "person placeholder";
       }
 
-      // Update Firebase Auth profile
+      // Update Firebase Auth profile with the determined photoURL and new displayName
       await updateProfile(user, {
         displayName: values.fullName,
-        photoURL: photoURL, 
+        photoURL: finalPhotoURL, 
       });
 
-      // Save profile data to Firestore
+      // Prepare comprehensive initial data for Firestore
       const userDocRef = doc(db, "users", user.uid);
-      await setDoc(userDocRef, {
+      const initialProfileData = {
         uid: user.uid,
         email: user.email,
         displayName: values.fullName,
-        photoURL: photoURL,
         bio: values.bio,
-        createdAt: new Date().toISOString(), 
-      }, { merge: true });
+        photoURL: finalPhotoURL,
+        dataAiHint: finalDataAiHint,
+        
+        // Initialize other profile fields to defaults
+        location: "",
+        profession: "",
+        height: "", 
+        dob: "",    
+        religion: "",
+        caste: "",
+        language: "",
+        horoscopeInfo: "",
+        horoscopeFileName: "",
+        horoscopeFileUrl: "",
+        additionalPhotoUrls: [], // Initialize as empty array
+        
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(), // Add updatedAt timestamp
+      };
+
+      // Save profile data to Firestore
+      await setDoc(userDocRef, initialProfileData, { merge: true });
 
       toast({
         title: "Profile Setup Complete!",
@@ -143,7 +167,7 @@ export default function ProfileSetupPage() {
               <FormField
                 control={form.control}
                 name="profilePhoto"
-                render={({ field }) => ( // field.onChange provided by RHF handles file object
+                render={({ field }) => ( 
                   <FormItem>
                     <FormLabel className="flex items-center"><ImageIcon className="mr-2 h-4 w-4 text-muted-foreground" />Profile Photo</FormLabel>
                     <FormControl>
