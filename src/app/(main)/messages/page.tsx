@@ -1,16 +1,17 @@
+
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquarePlus, Search } from 'lucide-react';
+import { MessageSquarePlus, Search as SearchIcon } from 'lucide-react'; // Renamed Search to SearchIcon to avoid conflict
 import { Input } from '@/components/ui/input';
 
 const mockConversations = [
-  { id: '1', name: 'Rohan Sharma', lastMessage: "Hey, how are you doing? Liked your profile!", unreadCount: 2, timestamp: "10:30 AM", avatarUrl: "https://placehold.co/100x100", dataAiHint:"man portrait" },
-  { id: '2', name: 'Priya Patel', lastMessage: "Thanks for the connection! Yes, I'd love to chat.", unreadCount: 0, timestamp: "Yesterday", avatarUrl: "https://placehold.co/100x100", dataAiHint:"woman smiling" },
-  { id: '3', name: 'Amit Singh', lastMessage: "Let's catch up sometime this week?", unreadCount: 5, timestamp: "Mon", avatarUrl: "https://placehold.co/100x100", dataAiHint:"man professional" },
-  { id: '4', name: 'Sneha Reddy', lastMessage: "Your interests are quite similar to mine!", unreadCount: 0, timestamp: "Sun", avatarUrl: "https://placehold.co/100x100", dataAiHint:"woman creative" },
+  { id: 'chat1', name: 'Rohan Sharma', lastMessage: "Hey, how are you doing? Liked your profile!", unreadCount: 2, timestamp: "10:30 AM", avatarUrl: "https://placehold.co/100x100", dataAiHint:"man portrait" },
+  { id: 'chat2', name: 'Priya Patel', lastMessage: "Thanks for the connection! Yes, I'd love to chat.", unreadCount: 0, timestamp: "Yesterday", avatarUrl: "https://placehold.co/100x100", dataAiHint:"woman smiling" },
+  { id: 'chat3', name: 'Amit Singh', lastMessage: "Let's catch up sometime this week?", unreadCount: 5, timestamp: "Mon", avatarUrl: "https://placehold.co/100x100", dataAiHint:"man professional" },
+  { id: 'chat4', name: 'Sneha Reddy', lastMessage: "Your interests are quite similar to mine!", unreadCount: 0, timestamp: "Sun", avatarUrl: "https://placehold.co/100x100", dataAiHint:"woman creative" },
 ];
 
 export default function MessagesPage() {
@@ -29,7 +30,7 @@ export default function MessagesPage() {
       <Card className="shadow-lg">
         <CardHeader className="border-b">
           <div className="flex items-center space-x-2">
-            <Search className="h-5 w-5 text-muted-foreground" />
+            <SearchIcon className="h-5 w-5 text-muted-foreground" />
             <Input placeholder="Search conversations..." className="border-none focus-visible:ring-0 shadow-none text-base"/>
           </div>
         </CardHeader>
