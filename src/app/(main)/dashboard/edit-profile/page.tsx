@@ -111,6 +111,7 @@ export default function EditProfilePage() {
         const docSnap = await getDoc(userDocRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
+          console.log("Firestore data found:", data);
           form.reset({
             fullName: data.displayName || currentUser.displayName || defaultFirestoreProfile.fullName,
             bio: data.bio || defaultFirestoreProfile.bio,
@@ -134,7 +135,7 @@ export default function EditProfilePage() {
           setManagedExistingPhotos(data.additionalPhotoUrls || []);
 
         } else {
-          // No Firestore document, initialize with Auth data and defaults
+          console.log("No Firestore document for user:", currentUser.uid, "Initializing with Auth data and defaults.");
           form.reset({
             fullName: currentUser.displayName || defaultFirestoreProfile.fullName,
             bio: defaultFirestoreProfile.bio,
@@ -156,10 +157,13 @@ export default function EditProfilePage() {
           setSelectedHoroscopeFileName(null);
           setManagedExistingPhotos([]);
         }
-      } catch (error) {
-        console.error("Error fetching profile data:", error);
-        toast({ title: "Error", description: "Could not load profile data.", variant: "destructive" });
-        // Reset to defaults on error
+      } catch (error: any) {
+        console.error("Error fetching profile data from Firestore:", error);
+        toast({ 
+            title: "Profile Load Error", 
+            description: `Could not load profile from database. Error: ${error.message || String(error)}`, 
+            variant: "destructive" 
+        });
         form.reset({ ...defaultFirestoreProfile, profilePhoto: undefined, additionalPhotos: [], horoscopeFile: undefined });
         setCurrentProfilePhotoUrl(defaultFirestoreProfile.profilePhotoUrl);
         setCurrentDataAiHint(defaultFirestoreProfile.dataAiHint);
@@ -172,17 +176,16 @@ export default function EditProfilePage() {
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
+        console.log("Auth state changed: User logged in", user.uid);
         loadProfile(user);
       } else {
-        console.log("No user logged in, cannot fetch profile data.");
-        // toast({ title: "Not Logged In", description: "Please log in to edit your profile.", variant: "destructive" });
-        // router.push('/login'); // Consider redirecting
+        console.log("Auth state changed: No user logged in. Profile edit page cannot load data.");
         form.reset({ ...defaultFirestoreProfile, profilePhoto: undefined, additionalPhotos: [], horoscopeFile: undefined });
         setCurrentProfilePhotoUrl(defaultFirestoreProfile.profilePhotoUrl);
         setCurrentDataAiHint(defaultFirestoreProfile.dataAiHint);
         setManagedExistingPhotos(defaultFirestoreProfile.additionalPhotoUrls);
         setSelectedHoroscopeFileName(defaultFirestoreProfile.horoscopeFileName);
-        setProfileDataLoaded(true); // Stop skeleton even if no user
+        setProfileDataLoaded(true); 
       }
     });
 
@@ -239,9 +242,8 @@ export default function EditProfilePage() {
         dataToSave.horoscopeFileName = values.horoscopeFile.name;
         setSelectedHoroscopeFileName(values.horoscopeFile.name); 
       } else if (selectedHoroscopeFileName === null && form.getValues('horoscopeFile') === undefined) {
-        // If user cleared selection AND there was a file before, mark for deletion/clearing in DB
-        dataToSave.horoscopeFileUrl = ""; // Or null, depending on your DB preference
-        dataToSave.horoscopeFileName = ""; // Or null
+        dataToSave.horoscopeFileUrl = ""; 
+        dataToSave.horoscopeFileName = ""; 
       }
 
 
@@ -358,7 +360,6 @@ export default function EditProfilePage() {
         setSelectedHoroscopeFileName(file.name);
     } else {
         form.setValue('horoscopeFile', undefined, { shouldValidate: true });
-        // Revert to existing name (from Firestore) if selection is cleared, only if not already null
         const existingFirestoreFileName = form.getValues('horoscopeInfo') ? (doc(db, "users", auth.currentUser!.uid), getDoc(doc(db, "users", auth.currentUser!.uid)).then(d => d.data()?.horoscopeFileName)) : null;
         setSelectedHoroscopeFileName(existingFirestoreFileName || null);
     }
@@ -367,7 +368,7 @@ export default function EditProfilePage() {
   const clearHoroscopeFileSelection = () => {
     setSelectedHoroscopeFileName(null);
     form.setValue('horoscopeFile', undefined, { shouldValidate: true });
-    const horoscopeFileInput = document.getElementById('horoscopeFile-input') as HTMLInputElement | null; // Assuming you add an ID
+    const horoscopeFileInput = document.getElementById('horoscopeFile-input') as HTMLInputElement | null; 
     if (horoscopeFileInput) {
         horoscopeFileInput.value = "";
     }
