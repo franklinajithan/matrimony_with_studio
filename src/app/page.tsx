@@ -21,6 +21,9 @@ export default function LandingPage() {
       if (user) {
         // User is signed in, redirect to dashboard.
         router.replace('/dashboard');
+        // Set loading to false here as well, in case the redirect is slow
+        // or the component doesn't unmount immediately.
+        setLoading(false); 
       } else {
         // User is signed out, show the landing page.
         setLoading(false);
