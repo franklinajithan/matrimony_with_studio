@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { User as UserIconLucide, Image as ImageIcon, Info, MapPin, Briefcase, Ruler, Languages, CalendarDays, PlusCircle, FileImage, Trash2, XCircle, AlertTriangle, FileText, Loader2, Film, Music, School, Droplet, Cigarette, Sparkles as SparklesIcon } from 'lucide-react'; 
+import { User as UserIconLucide, Image as ImageIcon, Info, MapPin, Briefcase, Ruler, Languages, CalendarDays, PlusCircle, FileImage, Trash2, XCircle, AlertTriangle, FileText, Loader2, Film, Music, School, Droplet, Cigarette, Sparkles as SparklesIcon, Wand2 } from 'lucide-react'; 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect, useRef } from "react";
@@ -31,6 +31,7 @@ import { updateProfile, onAuthStateChanged, type User } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { uploadFile } from "@/lib/firebase/storageService";
 import { Skeleton } from "@/components/ui/skeleton";
+import { enhanceBio } from "@/ai/flows/enhance-bio-flow"; // Import the new AI flow
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -67,7 +68,7 @@ const editProfileSchema = z.object({
   sunSign: z.string().optional(),
   moonSign: z.string().optional(),
   nakshatra: z.string().optional(),
-  horoscopeInfo: z.string().optional(), // General text notes
+  horoscopeInfo: z.string().optional(), 
   horoscopeFile: z 
     .instanceof(File, { message: "Please select a file." })
     .optional()
@@ -94,6 +95,7 @@ export default function EditProfilePage() {
   const { toast } = useToast();
   const [profileDataLoaded, setProfileDataLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isEnhancingBio, setIsEnhancingBio] = useState(false);
   
   const [currentProfilePhotoUrl, setCurrentProfilePhotoUrl] = useState<string | null>(defaultFirestoreProfile.profilePhotoUrl);
   const [currentDataAiHint, setCurrentDataAiHint] = useState<string>(defaultFirestoreProfile.dataAiHint);
@@ -124,7 +126,6 @@ export default function EditProfilePage() {
         const docSnap = await getDoc(userDocRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
-          console.log("Firestore data found:", data);
           form.reset({
             fullName: data.displayName || currentUser.displayName || defaultFirestoreProfile.fullName,
             bio: data.bio || defaultFirestoreProfile.bio,
@@ -135,9 +136,9 @@ export default function EditProfilePage() {
             religion: data.religion || defaultFirestoreProfile.religion,
             caste: data.caste || defaultFirestoreProfile.caste,
             language: data.language || defaultFirestoreProfile.language,
-            hobbies: data.hobbies || defaultFirestoreProfile.hobbies, // Expects string
-            favoriteMovies: data.favoriteMovies || defaultFirestoreProfile.favoriteMovies, // Expects string
-            favoriteMusic: data.favoriteMusic || defaultFirestoreProfile.favoriteMusic, // Expects string
+            hobbies: data.hobbies || defaultFirestoreProfile.hobbies,
+            favoriteMovies: data.favoriteMovies || defaultFirestoreProfile.favoriteMovies, 
+            favoriteMusic: data.favoriteMusic || defaultFirestoreProfile.favoriteMusic, 
             educationLevel: data.educationLevel || defaultFirestoreProfile.educationLevel,
             smokingHabits: data.smokingHabits || defaultFirestoreProfile.smokingHabits,
             drinkingHabits: data.drinkingHabits || defaultFirestoreProfile.drinkingHabits,
@@ -157,7 +158,6 @@ export default function EditProfilePage() {
           setManagedExistingPhotos(data.additionalPhotoUrls || []);
 
         } else {
-          console.log("No Firestore document for user:", currentUser.uid, "Initializing with Auth data and defaults.");
           form.reset({
             fullName: currentUser.displayName || defaultFirestoreProfile.fullName,
             bio: defaultFirestoreProfile.bio,
@@ -189,10 +189,9 @@ export default function EditProfilePage() {
           setManagedExistingPhotos([]);
         }
       } catch (error: any) {
-        console.error("Error fetching profile data from Firestore:", error);
         toast({ 
             title: "Profile Load Error", 
-            description: `Could not load profile from database. Error: ${error.message || String(error)}`, 
+            description: `Could not load profile. Error: ${error.message || String(error)}`, 
             variant: "destructive" 
         });
         form.reset({ ...defaultFirestoreProfile, profilePhoto: undefined, additionalPhotos: [], horoscopeFile: undefined });
@@ -207,10 +206,8 @@ export default function EditProfilePage() {
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        console.log("Auth state changed: User logged in", user.uid);
         loadProfile(user);
       } else {
-        console.log("Auth state changed: No user logged in. Profile edit page cannot load data.");
         form.reset({ ...defaultFirestoreProfile, profilePhoto: undefined, additionalPhotos: [], horoscopeFile: undefined });
         setCurrentProfilePhotoUrl(defaultFirestoreProfile.profilePhotoUrl);
         setCurrentDataAiHint(defaultFirestoreProfile.dataAiHint);
@@ -223,6 +220,35 @@ export default function EditProfilePage() {
     return () => unsubscribe();
   }, [form, toast]);
 
+  const handleEnhanceBio = async () => {
+    const currentBio = form.getValues("bio");
+    if (!currentBio || currentBio.trim().length < 10) {
+      toast({
+        title: "Bio Too Short",
+        description: "Please write a bit more in your bio before enhancing.",
+        variant: "default",
+      });
+      return;
+    }
+    setIsEnhancingBio(true);
+    try {
+      const result = await enhanceBio({ bioText: currentBio });
+      form.setValue("bio", result.enhancedBioText, { shouldValidate: true, shouldDirty: true });
+      toast({
+        title: "Bio Enhanced!",
+        description: "AI has helped refine your bio.",
+        variant: "default",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Bio Enhancement Failed",
+        description: error.message || "Could not enhance bio at this time.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEnhancingBio(false);
+    }
+  };
 
   async function onSubmit(values: z.infer<typeof editProfileSchema>) {
     setIsSaving(true);
@@ -244,9 +270,9 @@ export default function EditProfilePage() {
         religion: values.religion,
         caste: values.caste,
         language: values.language,
-        hobbies: values.hobbies, // Saved as string
-        favoriteMovies: values.favoriteMovies, // Saved as string
-        favoriteMusic: values.favoriteMusic, // Saved as string
+        hobbies: values.hobbies, 
+        favoriteMovies: values.favoriteMovies, 
+        favoriteMusic: values.favoriteMusic, 
         educationLevel: values.educationLevel,
         smokingHabits: values.smokingHabits,
         drinkingHabits: values.drinkingHabits,
@@ -311,7 +337,6 @@ export default function EditProfilePage() {
         description: "Your profile information has been saved.",
       });
     } catch (error: any) {
-      console.error("Error updating profile:", error);
       toast({
         title: "Update Failed",
         description: error.message || "An unexpected error occurred.",
@@ -500,8 +525,26 @@ export default function EditProfilePage() {
             <FormField control={form.control} name="fullName" render={({ field }) => (
               <FormItem><FormLabel className="flex items-center"><UserIconLucide className="mr-2 h-4 w-4 text-muted-foreground" />Full Name</FormLabel><FormControl><Input {...field} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
             )} />
+            
             <FormField control={form.control} name="bio" render={({ field }) => (
-              <FormItem><FormLabel className="flex items-center"><Info className="mr-2 h-4 w-4 text-muted-foreground" />About Me (Bio)</FormLabel><FormControl><Textarea {...field} rows={4} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
+              <FormItem>
+                <div className="flex items-center justify-between">
+                  <FormLabel className="flex items-center"><Info className="mr-2 h-4 w-4 text-muted-foreground" />About Me (Bio)</FormLabel>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleEnhanceBio} 
+                    disabled={isEnhancingBio || isSaving}
+                    className="text-xs text-primary hover:bg-primary/10 h-auto p-1"
+                  >
+                    {isEnhancingBio ? <Loader2 className="h-3 w-3 mr-1 animate-spin"/> : <Wand2 className="h-3 w-3 mr-1"/>}
+                    Enhance with AI
+                  </Button>
+                </div>
+                <FormControl><Textarea {...field} rows={4} disabled={isSaving || isEnhancingBio} /></FormControl>
+                <FormMessage />
+              </FormItem>
             )} />
             
             <div className="grid md:grid-cols-2 gap-6">
@@ -691,7 +734,7 @@ export default function EditProfilePage() {
               )}
             />
 
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isSaving || !profileDataLoaded}>
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isSaving || !profileDataLoaded || isEnhancingBio}>
               {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes
             </Button>

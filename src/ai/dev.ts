@@ -4,4 +4,6 @@ config();
 
 import '@/ai/flows/intelligent-match-suggestions.ts';
 import '@/ai/flows/extract-horoscope-details-flow.ts';
-import '@/ai/flows/horoscope-compatibility-flow.ts'; // Added new flow
+import '@/ai/flows/horoscope-compatibility-flow.ts'; 
+import '@/ai/flows/enhance-bio-flow.ts'; // Added new flow for bio enhancement
+
