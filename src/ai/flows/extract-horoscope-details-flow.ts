@@ -11,7 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const ExtractHoroscopeDetailsInputSchema = z.object({
+const ExtractHoroscopeDetailsInputSchema = z.object({
   dateOfBirth: z.string().describe("Date of birth in YYYY-MM-DD format."),
   timeOfBirth: z.string().describe("Time of birth in HH:MM AM/PM format (e.g., 02:30 PM). Ensure timezone context if known, or specify it is local time."),
   placeOfBirth: z.string().describe("Place of birth (City, Country)."),
@@ -19,7 +19,7 @@ export const ExtractHoroscopeDetailsInputSchema = z.object({
 });
 export type ExtractHoroscopeDetailsInput = z.infer<typeof ExtractHoroscopeDetailsInputSchema>;
 
-export const ExtractHoroscopeDetailsOutputSchema = z.object({
+const ExtractHoroscopeDetailsOutputSchema = z.object({
   sunSign: z.string().describe("The user's Western Sun Sign (e.g., Aries, Taurus)."),
   moonSign: z.string().describe("The user's Vedic Moon Sign or Rasi (e.g., Mesha, Vrishabha)."),
   ascendant: z.string().describe("The user's Ascendant or Lagna (e.g., Aries Ascendant, Simha Lagna)."),
