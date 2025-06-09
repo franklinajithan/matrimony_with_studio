@@ -21,13 +21,20 @@ import React, { useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { useToast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-const navLinks = [
+const mainNavLinks = [
   { href: '/discover', label: 'Discover', icon: <Heart className="h-4 w-4" /> },
   { href: '/suggestions', label: 'Suggestions', icon: <Star className="h-4 w-4" /> },
   { href: '/search', label: 'Search', icon: <Search className="h-4 w-4" /> },
-  { href: '/messages', label: 'Messages', icon: <MessageCircle className="h-4 w-4" />, notificationCount: 3 }, // Mock notification count
 ];
+
+const messagesLinkData = {
+  href: '/messages',
+  label: 'Messages',
+  icon: <MessageCircle className="h-5 w-5" />, // Slightly larger icon
+  notificationCount: 3, // Mock notification count
+};
 
 export function Navbar() {
   const pathname = usePathname();
@@ -63,39 +70,58 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
-        <Logo />
-        {currentUser && (
-          <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "transition-colors hover:text-primary relative",
-                  pathname === link.href ? "text-primary font-semibold" : "text-foreground/70"
-                )}
-              >
-                <span className="flex items-center gap-1.5">
-                  {link.icon}
-                  {link.label}
-                  {link.notificationCount && link.notificationCount > 0 && (
-                     <Badge variant="destructive" className="absolute -top-1.5 -right-2.5 h-4 w-4 p-0 flex items-center justify-center text-xs">
-                        {link.notificationCount}
-                    </Badge>
+    <TooltipProvider delayDuration={0}>
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
+          <Logo />
+          {currentUser && (
+            <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
+              {mainNavLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "transition-colors hover:text-primary relative",
+                    pathname === link.href ? "text-primary font-semibold" : "text-foreground/70"
                   )}
-                </span>
-              </Link>
-            ))}
-          </nav>
-        )}
-        <div className="flex items-center space-x-2">
-          {isLoadingAuth ? (
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          ) : currentUser ? (
-            <>
-              {/* Removed Bell Icon */}
+                >
+                  <span className="flex items-center gap-1.5">
+                    {link.icon}
+                    {link.label}
+                  </span>
+                </Link>
+              ))}
+            </nav>
+          )}
+          <div className="flex items-center space-x-3"> {/* Adjusted space-x for better icon spacing */}
+            {currentUser && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={messagesLinkData.href}
+                    className={cn(
+                      "transition-colors relative p-2 rounded-full hover:bg-accent",
+                      pathname === messagesLinkData.href ? "text-primary bg-accent" : "text-foreground/70 hover:text-primary"
+                    )}
+                    aria-label={messagesLinkData.label}
+                  >
+                    {messagesLinkData.icon}
+                    {messagesLinkData.notificationCount && messagesLinkData.notificationCount > 0 && (
+                      <Badge variant="destructive" className="absolute top-0 right-0 h-4 w-4 min-w-[1rem] p-0 flex items-center justify-center text-xs transform translate-x-1/4 -translate-y-1/4">
+                        {messagesLinkData.notificationCount}
+                      </Badge>
+                    )}
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>{messagesLinkData.label}</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+
+            {isLoadingAuth ? (
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            ) : currentUser ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -140,19 +166,19 @@ export function Navbar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </>
-          ) : (
-            <>
-              <Button variant="ghost" asChild>
-                <Link href="/login">Log In</Link>
-              </Button>
-              <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                <Link href="/signup">Sign Up</Link>
-              </Button>
-            </>
-          )}
+            ) : (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link href="/login">Log In</Link>
+                </Button>
+                <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                  <Link href="/signup">Sign Up</Link>
+                </Button>
+              </>
+            )}
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+    </TooltipProvider>
   );
 }
