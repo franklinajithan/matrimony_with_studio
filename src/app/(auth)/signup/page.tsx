@@ -12,8 +12,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, User, ChromeIcon, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, ChromeIcon, Eye, EyeOff, Loader2 } from 'lucide-react';
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { auth } from '@/lib/firebase/config';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
 const signupSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -28,8 +31,10 @@ const signupSchema = z.object({
 
 export default function SignupPage() {
   const { toast } = useToast();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
@@ -43,14 +48,42 @@ export default function SignupPage() {
   });
 
   async function onSubmit(values: z.infer<typeof signupSchema>) {
-    console.log("Signup submitted with:", values);
-    toast({
-      title: "Account Creation Attempted",
-      description: "Signup functionality to be implemented with Firebase. You would be redirected to profile setup.",
-    });
-    // Here you would typically call Firebase auth: createUserWithEmailAndPassword(auth, values.email, values.password)
-    // Then update profile with name: updateProfile(auth.currentUser, { displayName: values.name })
-    // Then redirect to profile setup, e.g. router.push('/profile-setup')
+    setIsLoading(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
+
+      if (user) {
+        await updateProfile(user, {
+          displayName: values.name,
+        });
+      }
+
+      toast({
+        title: "Account Created!",
+        description: "Welcome to MatchCraft! Redirecting you to setup your profile.",
+        variant: "default",
+      });
+      router.push('/profile-setup');
+
+    } catch (error: any) {
+      console.error("Firebase signup error:", error);
+      let errorMessage = "Failed to create account. Please try again.";
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'This email address is already in use.';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'The password is too weak. It must be at least 6 characters.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'The email address is not valid.';
+      }
+      toast({
+        title: "Signup Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   const handleGoogleSignIn = () => {
@@ -58,6 +91,7 @@ export default function SignupPage() {
       title: "Google Sign-In",
       description: "Google Sign-In to be implemented with Firebase.",
     });
+    // Placeholder for signInWithPopup(auth, googleProvider)
   };
 
   return (
@@ -76,7 +110,7 @@ export default function SignupPage() {
                 <FormItem>
                   <FormLabel className="flex items-center"><User className="mr-2 h-4 w-4 text-muted-foreground" />Full Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Your Name" {...field} />
+                    <Input placeholder="Your Name" {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -89,7 +123,7 @@ export default function SignupPage() {
                 <FormItem>
                   <FormLabel className="flex items-center"><Mail className="mr-2 h-4 w-4 text-muted-foreground" />Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="you@example.com" {...field} />
+                    <Input type="email" placeholder="you@example.com" {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -108,6 +142,7 @@ export default function SignupPage() {
                         placeholder="••••••••" 
                         {...field} 
                         className="pr-10"
+                        disabled={isLoading}
                       />
                       <Button 
                         type="button" 
@@ -115,6 +150,7 @@ export default function SignupPage() {
                         size="icon" 
                         className="absolute inset-y-0 right-0 h-full px-3 text-muted-foreground hover:text-primary"
                         onClick={() => setShowPassword(!showPassword)}
+                        disabled={isLoading}
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
@@ -138,6 +174,7 @@ export default function SignupPage() {
                         placeholder="••••••••" 
                         {...field} 
                         className="pr-10"
+                        disabled={isLoading}
                       />
                       <Button 
                         type="button" 
@@ -145,6 +182,7 @@ export default function SignupPage() {
                         size="icon" 
                         className="absolute inset-y-0 right-0 h-full px-3 text-muted-foreground hover:text-primary"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        disabled={isLoading}
                       >
                         {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         <span className="sr-only">{showConfirmPassword ? "Hide password" : "Show password"}</span>
@@ -164,6 +202,7 @@ export default function SignupPage() {
                     <Checkbox
                       checked={field.value}
                       onCheckedChange={field.onChange}
+                      disabled={isLoading}
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
@@ -175,7 +214,8 @@ export default function SignupPage() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Account
             </Button>
           </form>
@@ -190,7 +230,7 @@ export default function SignupPage() {
             </span>
           </div>
         </div>
-        <Button variant="outline" className="w-full mt-6" onClick={handleGoogleSignIn}>
+        <Button variant="outline" className="w-full mt-6" onClick={handleGoogleSignIn} disabled={isLoading}>
            <ChromeIcon className="mr-2 h-5 w-5" /> Google
         </Button>
       </CardContent>
@@ -205,4 +245,3 @@ export default function SignupPage() {
     </Card>
   );
 }
-
