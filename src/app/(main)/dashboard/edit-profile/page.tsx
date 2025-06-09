@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { User, Image as ImageIcon, Info, MapPin, Briefcase, Ruler, Languages, CalendarDays, Upload, PlusCircle } from 'lucide-react';
+import { User, Image as ImageIcon, Info, MapPin, Briefcase, Ruler, Languages, CalendarDays, Upload, PlusCircle, FileImage } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import React, { useState } from "react";
 
 // Mock existing user data
 const currentUser = {
@@ -28,13 +29,37 @@ const currentUser = {
   caste: "Sunni",
   language: "Urdu, English, Hindi",
   horoscopeInfo: "Leo, some details...",
-  // photos: ["url1", "url2"] // For multiple photo uploads
+  additionalPhotoUrls: [
+    {id:1, url: "https://placehold.co/100x100.png", hint: 'woman indoor'},
+    {id:2, url: "https://placehold.co/100x100.png", hint: 'woman outdoor'},
+    {id:3, url: "https://placehold.co/100x100.png", hint: 'woman casual'}
+  ]
 };
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const editProfileSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters."),
   bio: z.string().min(10, "Bio must be at least 10 characters.").max(500, "Bio cannot exceed 500 characters."),
-  profilePhoto: z.any().optional(), // For new photo upload
+  profilePhoto: z
+    .any()
+    .refine((file) => !file || file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+    .refine(
+      (file) => !file || ACCEPTED_IMAGE_TYPES.includes(file.type),
+      ".jpg, .jpeg, .png and .webp files are accepted."
+    ).optional(),
+  additionalPhotos: z
+    .array(z.any())
+    .optional()
+    .refine(
+        (files) => !files || files.every(file => file.size <= MAX_FILE_SIZE),
+        `Max file size for each additional photo is 5MB.`
+    )
+    .refine(
+        (files) => !files || files.every(file => ACCEPTED_IMAGE_TYPES.includes(file.type)),
+        "Only .jpg, .jpeg, .png and .webp formats are supported for additional photos."
+    ),
   location: z.string().min(2, "Location is required."),
   profession: z.string().min(2, "Profession is required."),
   height: z.string().regex(/^\d{2,3}$/, "Enter height in cm (e.g., 165)."),
@@ -48,6 +73,10 @@ const editProfileSchema = z.object({
 
 export default function EditProfilePage() {
   const { toast } = useToast();
+  const [selectedProfilePhotoName, setSelectedProfilePhotoName] = useState<string | null>(null);
+  const [selectedAdditionalPhotos, setSelectedAdditionalPhotos] = useState<File[]>([]);
+
+
   const form = useForm<z.infer<typeof editProfileSchema>>({
     resolver: zodResolver(editProfileSchema),
     defaultValues: {
@@ -61,19 +90,25 @@ export default function EditProfilePage() {
       caste: currentUser.caste,
       language: currentUser.language,
       horoscopeInfo: currentUser.horoscopeInfo,
+      profilePhoto: undefined,
+      additionalPhotos: [],
     },
   });
 
   async function onSubmit(values: z.infer<typeof editProfileSchema>) {
     console.log("Profile update submitted:", values);
+    // values.profilePhoto will be a File object or undefined
+    // values.additionalPhotos will be an array of File objects or undefined
+
     toast({
       title: "Profile Updated (Mock)",
       description: "Your profile information would be saved.",
     });
     // Here you would:
-    // 1. If new profilePhoto, upload to Firebase Storage and get URL
-    // 2. If new horoscopePdf, upload to Firebase Storage and get URL
-    // 3. Update profile data in Firestore
+    // 1. If values.profilePhoto, upload to Firebase Storage and get URL
+    // 2. If values.additionalPhotos, upload each to Firebase Storage and get URLs
+    // 3. If values.horoscopePdf, upload to Firebase Storage and get URL
+    // 4. Update profile data in Firestore
   }
 
   return (
@@ -83,21 +118,44 @@ export default function EditProfilePage() {
         <CardDescription>Keep your information up-to-date to find the best matches.</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center space-x-4 mb-6">
-          <img src={currentUser.profilePhotoUrl} alt={currentUser.fullName} data-ai-hint={currentUser.dataAiHint} className="h-24 w-24 rounded-full object-cover" />
-          <div>
-            <h3 className="text-xl font-semibold">{currentUser.fullName}</h3>
-            <Button variant="link" className="p-0 h-auto text-sm text-primary">Change Photo</Button> {/* Link to modal or section */}
-          </div>
-        </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="flex items-center space-x-4 mb-4">
+              <img src={currentUser.profilePhotoUrl} alt={currentUser.fullName} data-ai-hint={currentUser.dataAiHint} className="h-24 w-24 rounded-full object-cover" />
+              <div className="flex-grow">
+                <FormField
+                  control={form.control}
+                  name="profilePhoto"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-semibold">Change Profile Photo</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="file" 
+                          accept={ACCEPTED_IMAGE_TYPES.join(',')} 
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            field.onChange(file);
+                            setSelectedProfilePhotoName(file ? file.name : null);
+                          }} 
+                          className="text-sm"
+                        />
+                      </FormControl>
+                      {selectedProfilePhotoName && <FormDescription className="text-xs">Selected: {selectedProfilePhotoName}</FormDescription>}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
             <FormField control={form.control} name="fullName" render={({ field }) => (
               <FormItem><FormLabel className="flex items-center"><User className="mr-2 h-4 w-4 text-muted-foreground" />Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="bio" render={({ field }) => (
               <FormItem><FormLabel className="flex items-center"><Info className="mr-2 h-4 w-4 text-muted-foreground" />About Me (Bio)</FormLabel><FormControl><Textarea {...field} rows={4} /></FormControl><FormMessage /></FormItem>
             )} />
+            
             <div className="grid md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="location" render={({ field }) => (
                 <FormItem><FormLabel className="flex items-center"><MapPin className="mr-2 h-4 w-4 text-muted-foreground" />Location</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
@@ -136,27 +194,46 @@ export default function EditProfilePage() {
                 <FormItem><FormLabel className="flex items-center"><Upload className="mr-2 h-4 w-4 text-muted-foreground" />Upload Horoscope PDF</FormLabel><FormControl><Input type="file" accept=".pdf" onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)} /></FormControl><FormMessage /></FormItem>
             )} />
 
-            {/* Placeholder for Multiple Photo Uploads */}
             <div className="space-y-2">
-                <Label className="flex items-center"><ImageIcon className="mr-2 h-4 w-4 text-muted-foreground" />Profile Photos</Label>
-                <div className="grid grid-cols-3 gap-2">
-                    {/* Map existing photos here with delete option */}
-                    {[
-                        {id:1, hint: 'woman indoor'}, 
-                        {id:2, hint: 'woman outdoor'},
-                        {id:3, hint: 'woman casual'}
-                    ].map(photo => (
-                        <div key={photo.id} className="aspect-square bg-muted rounded-md flex items-center justify-center">
-                            <img src={`https://placehold.co/100x100.png`} alt={`Photo ${photo.id}`} className="object-cover rounded-md h-full w-full" data-ai-hint={photo.hint}/>
+                <Label className="flex items-center font-semibold"><FileImage className="mr-2 h-4 w-4 text-muted-foreground" />Your Photo Gallery</Label>
+                <FormDescription>These are your currently displayed additional photos. You can add more below.</FormDescription>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                    {currentUser.additionalPhotoUrls.map(photo => (
+                        <div key={photo.id} className="aspect-square bg-muted rounded-md flex items-center justify-center relative group">
+                            <img src={photo.url} alt={`Photo ${photo.id}`} className="object-cover rounded-md h-full w-full" data-ai-hint={photo.hint}/>
+                            {/* Add delete button functionality here if needed for existing photos */}
                         </div>
                     ))}
-                    <Button type="button" variant="outline" className="aspect-square flex items-center justify-center">
-                        <PlusCircle className="h-6 w-6 text-muted-foreground"/>
-                    </Button>
                 </div>
-                <p className="text-sm text-muted-foreground">Upload multiple photos. First photo will be your main display picture.</p>
             </div>
-
+            
+            <FormField
+              control={form.control}
+              name="additionalPhotos"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center"><PlusCircle className="mr-2 h-4 w-4 text-muted-foreground" />Upload Additional Photos</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="file"
+                      multiple
+                      accept={ACCEPTED_IMAGE_TYPES.join(',')}
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        field.onChange(files);
+                        setSelectedAdditionalPhotos(files);
+                      }}
+                    />
+                  </FormControl>
+                  {selectedAdditionalPhotos.length > 0 && (
+                    <FormDescription className="text-xs">
+                      Selected {selectedAdditionalPhotos.length} file(s): {selectedAdditionalPhotos.map(f => f.name).join(', ')}
+                    </FormDescription>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
               Save Changes
@@ -167,3 +244,6 @@ export default function EditProfilePage() {
     </Card>
   );
 }
+
+
+    
