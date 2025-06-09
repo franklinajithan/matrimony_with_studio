@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview Provides AI-driven horoscope detail extraction.
+ * @fileOverview Provides AI-driven horoscope detail extraction from birth data and an optional PDF or image file.
  *
  * - extractHoroscopeDetails - A function that extracts detailed horoscope information.
  * - ExtractHoroscopeDetailsInput - The input type for the extractHoroscopeDetails function.
@@ -15,7 +15,7 @@ const ExtractHoroscopeDetailsInputSchema = z.object({
   dateOfBirth: z.string().describe("Date of birth in YYYY-MM-DD format."),
   timeOfBirth: z.string().describe("Time of birth in HH:MM AM/PM format (e.g., 02:30 PM). Ensure timezone context if known, or specify it is local time."),
   placeOfBirth: z.string().describe("Place of birth (City, Country)."),
-  horoscopePdfDataUri: z.string().optional().describe("Optional. A horoscope chart PDF document, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:application/pdf;base64,<encoded_data>'."),
+  horoscopeFileDataUri: z.string().optional().describe("Optional. A horoscope chart document (PDF or image like JPG, PNG, WebP), as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
 });
 export type ExtractHoroscopeDetailsInput = z.infer<typeof ExtractHoroscopeDetailsInputSchema>;
 
@@ -50,15 +50,16 @@ Date of Birth: {{{dateOfBirth}}}
 Time of Birth: {{{timeOfBirth}}}
 Place of Birth: {{{placeOfBirth}}}
 
-{{#if horoscopePdfDataUri}}
-You have also been provided with a PDF document which might contain a pre-generated horoscope chart or details. 
-Prioritize calculations based on the birth data (DOB, TOB, POB). Use the PDF document to corroborate or supplement your findings if it contains relevant textual information that you can parse.
-Do not attempt to interpret images directly from the PDF if it's purely graphical; focus on any extractable text.
-Horoscope Document: {{media url=horoscopePdfDataUri}}
+{{#if horoscopeFileDataUri}}
+You have also been provided with a document (PDF or image) which might contain a pre-generated horoscope chart or details.
+If it is a PDF, focus on any extractable text.
+If it is an image, analyze any visible astrological charts, symbols, or text relevant to Vedic astrology. Describe key elements like planetary placements in signs/houses if clearly depicted.
+Prioritize calculations based on the birth data (DOB, TOB, POB). Use the provided document to corroborate or supplement your findings.
+Horoscope Document: {{media url=horoscopeFileDataUri}}
 {{/if}}
 
 Provide the analysis in the specified JSON format. Ensure all fields in the output schema are addressed to the best of your ability.
-If some specific details (like planetary house positions) cannot be accurately determined without complex calculations or a visual chart you cannot interpret, state that clearly in the relevant output field or omit the optional field.
+If some specific details (like planetary house positions) cannot be accurately determined without complex calculations or a visual chart you cannot interpret clearly, state that in the relevant output field or omit the optional field.
 Focus on providing accurate Vedic astrological insights. For 'sunSign', provide the Western astrology sun sign. For 'moonSign', 'ascendant', 'nakshatra', and 'planetaryPositions', provide Vedic astrology details.
 `,
 });

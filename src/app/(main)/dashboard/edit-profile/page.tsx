@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { User, Image as ImageIcon, Info, MapPin, Briefcase, Ruler, Languages, CalendarDays, Upload, PlusCircle, FileImage, Trash2, XCircle, AlertTriangle } from 'lucide-react';
+import { User, Image as ImageIcon, Info, MapPin, Briefcase, Ruler, Languages, CalendarDays, Upload, PlusCircle, FileImage, Trash2, XCircle, AlertTriangle, FileText } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect } from "react";
@@ -41,6 +41,7 @@ const currentUser = {
   caste: "Sunni",
   language: "Urdu, English, Hindi",
   horoscopeInfo: "Leo, some details...",
+  horoscopeFileName: "my_horoscope.pdf", // Example: name of the currently uploaded file
   additionalPhotoUrls: [
     {id:1, url: "https://placehold.co/100x100.png", hint: 'woman indoor'},
     {id:2, url: "https://placehold.co/100x100.png", hint: 'woman outdoor'},
@@ -50,6 +51,7 @@ const currentUser = {
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+const ACCEPTED_HOROSCOPE_FILE_TYPES = [...ACCEPTED_IMAGE_TYPES, "application/pdf"];
 
 const editProfileSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters."),
@@ -80,8 +82,9 @@ const editProfileSchema = z.object({
   caste: z.string().min(1, "Caste is required."),
   language: z.string().min(1, "Primary language is required."),
   horoscopeInfo: z.string().optional(),
-  horoscopePdf: z.any().optional().refine((file) => !file || (file instanceof File && file.type === "application/pdf"), "Only PDF files are accepted for horoscope.")
-    .refine((file) => !file || (file instanceof File && file.size <= MAX_FILE_SIZE), `Max PDF file size is 5MB.`),
+  horoscopeFile: z.any().optional()
+    .refine((file) => !file || (file instanceof File && ACCEPTED_HOROSCOPE_FILE_TYPES.includes(file.type)), "Only PDF, JPG, JPEG, PNG, and WebP files are accepted for horoscope.")
+    .refine((file) => !file || (file instanceof File && file.size <= MAX_FILE_SIZE), `Max file size is 5MB.`),
 });
 
 export default function EditProfilePage() {
@@ -89,6 +92,7 @@ export default function EditProfilePage() {
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
   const [additionalPhotosPreview, setAdditionalPhotosPreview] = useState<string[]>([]);
   const [selectedProfilePhotoName, setSelectedProfilePhotoName] = useState<string | null>(null);
+  const [selectedHoroscopeFileName, setSelectedHoroscopeFileName] = useState<string | null>(currentUser.horoscopeFileName || null);
   const [managedExistingPhotos, setManagedExistingPhotos] = useState(currentUser.additionalPhotoUrls);
 
   const profilePhotoInputRef = React.useRef<HTMLInputElement>(null);
@@ -109,7 +113,7 @@ export default function EditProfilePage() {
       horoscopeInfo: currentUser.horoscopeInfo,
       profilePhoto: undefined,
       additionalPhotos: [],
-      horoscopePdf: undefined,
+      horoscopeFile: undefined,
     },
   });
 
@@ -151,9 +155,6 @@ export default function EditProfilePage() {
 
   const handleAdditionalPhotosChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    // Assuming you want to append to existing selection in the form field, or replace.
-    // For simplicity, let's replace current selection in the form field
-    // but append to previews. This might need adjustment based on exact UX desired.
     form.setValue("additionalPhotos", files, { shouldValidate: true }); 
 
     if (files.length > 0) {
@@ -165,15 +166,12 @@ export default function EditProfilePage() {
           newPreviews.push(reader.result as string);
           loadedCount++;
           if (loadedCount === files.length) {
-            // Append new previews to existing new previews
             setAdditionalPhotosPreview(prev => [...prev, ...newPreviews.filter(p => !prev.includes(p))]);
           }
         };
         reader.readAsDataURL(file);
       });
     }
-    // Clearing previews if no files are selected is tricky if appending.
-    // If replacing, you could do: else { setAdditionalPhotosPreview([]); }
   };
 
   const removeAdditionalPhotoPreview = (index: number) => {
@@ -194,12 +192,22 @@ export default function EditProfilePage() {
   };
   
   const handleDeactivateAccount = () => {
-    // In a real app, this would trigger a backend API call
     toast({
         title: "Account Deactivated (Mock)",
         description: "Your account has been scheduled for deactivation.",
         variant: "destructive"
     });
+  };
+
+  const handleHoroscopeFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+        form.setValue('horoscopeFile', file, { shouldValidate: true });
+        setSelectedHoroscopeFileName(file.name);
+    } else {
+        form.setValue('horoscopeFile', null, { shouldValidate: true });
+        setSelectedHoroscopeFileName(null);
+    }
   };
 
 
@@ -241,7 +249,7 @@ export default function EditProfilePage() {
                 <FormField
                   control={form.control}
                   name="profilePhoto"
-                  render={({ field }) => ( // field.onChange is handled by handleProfilePhotoChange
+                  render={({ field }) => ( 
                     <FormItem>
                       <FormLabel className="text-base font-semibold sr-only">Change Profile Photo</FormLabel>
                       <FormControl>
@@ -249,7 +257,10 @@ export default function EditProfilePage() {
                           type="file"
                           ref={profilePhotoInputRef}
                           accept={ACCEPTED_IMAGE_TYPES.join(',')} 
-                          onChange={handleProfilePhotoChange} // Uses custom handler
+                          onChange={(e) => {
+                            field.onChange(e.target.files?.[0] || null); // RHF update
+                            handleProfilePhotoChange(e); // Custom preview logic
+                          }}
                           className="text-sm"
                         />
                       </FormControl>
@@ -304,18 +315,21 @@ export default function EditProfilePage() {
             )} />
              <FormField
                 control={form.control}
-                name="horoscopePdf"
+                name="horoscopeFile"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel className="flex items-center"><Upload className="mr-2 h-4 w-4 text-muted-foreground" />Upload Horoscope PDF</FormLabel>
+                    <FormLabel className="flex items-center"><FileText className="mr-2 h-4 w-4 text-muted-foreground" />Upload Horoscope File (PDF/Image)</FormLabel>
                     <FormControl>
                         <Input 
                         type="file" 
-                        accept=".pdf" 
-                        onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)} 
+                        accept={ACCEPTED_HOROSCOPE_FILE_TYPES.join(',')} 
+                        onChange={(e) => {
+                             field.onChange(e.target.files ? e.target.files[0] : null); // RHF update
+                             handleHoroscopeFileChange(e); // Custom handler for name display
+                        }}
                         />
                     </FormControl>
-                    {field.value && typeof field.value === 'object' && 'name' in field.value && <FormDescription className="text-xs">Selected: {field.value.name}</FormDescription>}
+                    {selectedHoroscopeFileName && <FormDescription className="text-xs">Selected: {selectedHoroscopeFileName}</FormDescription>}
                     <FormMessage />
                     </FormItem>
                 )}
@@ -347,7 +361,7 @@ export default function EditProfilePage() {
             <FormField
               control={form.control}
               name="additionalPhotos"
-              render={({ field }) => ( // field.onChange is handled by handleAdditionalPhotosChange
+              render={({ field }) => ( 
                 <FormItem>
                   <FormLabel className="flex items-center"><PlusCircle className="mr-2 h-4 w-4 text-muted-foreground" />Upload Additional Photos</FormLabel>
                   <FormControl>
@@ -355,7 +369,10 @@ export default function EditProfilePage() {
                       type="file"
                       multiple
                       accept={ACCEPTED_IMAGE_TYPES.join(',')}
-                      onChange={handleAdditionalPhotosChange} // Uses custom handler
+                      onChange={(e) => {
+                         field.onChange(e.target.files ? Array.from(e.target.files) : null); // RHF Update
+                         handleAdditionalPhotosChange(e); // Custom preview logic
+                      }}
                     />
                   </FormControl>
                   {form.getValues("additionalPhotos") && form.getValues("additionalPhotos")!.length > 0 && (
@@ -414,6 +431,3 @@ export default function EditProfilePage() {
     </div>
   );
 }
-
-
-    

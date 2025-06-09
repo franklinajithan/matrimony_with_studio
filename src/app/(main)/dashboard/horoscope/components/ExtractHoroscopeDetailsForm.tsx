@@ -14,12 +14,22 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Sparkles, Telescope, FileText } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-// Schema must match the input schema used by the AI flow
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/jpg", "image/png", "image/webp"];
+
 const ExtractHoroscopeDetailsFormSchema = z.object({
   dateOfBirth: z.string().min(1, { message: "Date of birth is required."}).regex(/^\d{4}-\d{2}-\d{2}$/, "Date of birth must be in YYYY-MM-DD format."),
-  timeOfBirth: z.string().min(1, { message: "Time of birth is required."}), // Basic validation, specific format (HH:MM AM/PM) is harder with native input type="time"
+  timeOfBirth: z.string().min(1, { message: "Time of birth is required."}),
   placeOfBirth: z.string().min(1, { message: "Place of birth is required."}),
-  horoscopePdfDataUri: z.string().optional(),
+  horoscopeFileDataUri: z.string().optional(), // This will hold the data URI
+  // We'll add a temporary field for the File object for client-side validation, not part of the AI flow input.
+  horoscopeFile: z
+    .any()
+    .refine((file) => !file || (file instanceof File && file.size <= MAX_FILE_SIZE), `Max file size is 5MB.`)
+    .refine(
+      (file) => !file || (file instanceof File && ACCEPTED_FILE_TYPES.includes(file.type)),
+      "Only PDF, JPG, JPEG, PNG, and WebP files are accepted."
+    ).optional(),
 });
 
 type FormData = z.infer<typeof ExtractHoroscopeDetailsFormSchema>;
@@ -29,43 +39,49 @@ export function ExtractHoroscopeDetailsForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<ExtractHoroscopeDetailsOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+
 
   const form = useForm<FormData>({
     resolver: zodResolver(ExtractHoroscopeDetailsFormSchema),
     defaultValues: {
       dateOfBirth: "1990-01-01",
-      timeOfBirth: "12:00", // HTML time input expects HH:MM (24-hour) or HH:MM:SS
+      timeOfBirth: "12:00 PM", 
       placeOfBirth: "Delhi, India",
-      horoscopePdfDataUri: undefined,
+      horoscopeFileDataUri: undefined,
+      horoscopeFile: undefined,
     },
   });
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>, fieldChange: (value: string | undefined) => void) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.type !== "application/pdf") {
-        form.setError("horoscopePdfDataUri", { type: "manual", message: "Please upload a PDF file." });
-        fieldChange(undefined);
+      // Validate using Zod schema for horoscopeFile
+      const validationResult = ExtractHoroscopeDetailsFormSchema.shape.horoscopeFile.safeParse(file);
+      if (!validationResult.success) {
+        form.setError("horoscopeFile", { type: "manual", message: validationResult.error.errors[0].message });
+        form.setValue("horoscopeFileDataUri", undefined);
+        setSelectedFileName(null);
         return;
       }
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        form.setError("horoscopePdfDataUri", { type: "manual", message: "PDF file size should not exceed 5MB." });
-        fieldChange(undefined);
-        return;
-      }
+
+      form.clearErrors("horoscopeFile");
+      setSelectedFileName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
-        fieldChange(reader.result as string);
-        form.clearErrors("horoscopePdfDataUri");
+        form.setValue("horoscopeFileDataUri", reader.result as string, { shouldValidate: true });
       };
       reader.onerror = () => {
         toast({ title: "File Read Error", description: "Could not read the selected file.", variant: "destructive" });
-        fieldChange(undefined);
+        form.setValue("horoscopeFileDataUri", undefined);
+        setSelectedFileName(null);
       };
       reader.readAsDataURL(file);
     } else {
-      fieldChange(undefined);
-      form.clearErrors("horoscopePdfDataUri");
+      form.setValue("horoscopeFileDataUri", undefined);
+      form.setValue("horoscopeFile", undefined);
+      setSelectedFileName(null);
+      form.clearErrors("horoscopeFile");
     }
   };
 
@@ -73,19 +89,12 @@ export function ExtractHoroscopeDetailsForm() {
     setIsLoading(true);
     setAnalysisResult(null);
     setError(null);
-
-    // The AI flow expects time in HH:MM AM/PM format for its description,
-    // but HTML time input gives HH:MM. We need to ensure it's compatible.
-    // For simplicity, we'll pass it as is, the Genkit flow prompt mentions "e.g., 02:30 PM"
-    // but also says "Time of birth in HH:MM AM/PM format".
-    // A more robust solution might involve a custom time input or parsing and reformatting.
-    // For now, let's assume the model can handle HH:MM as well or the user types it with AM/PM if using text input.
-    // The default value "12:00 PM" in the flow matches the form's "12:00" if user doesn't change.
     
-    // The flow expects ExtractHoroscopeDetailsInput, ensure values match this type.
     const flowInput: ExtractHoroscopeDetailsInput = {
-        ...values,
-        timeOfBirth: values.timeOfBirth, // Pass as is, user/model needs to handle format.
+        dateOfBirth: values.dateOfBirth,
+        timeOfBirth: values.timeOfBirth,
+        placeOfBirth: values.placeOfBirth,
+        horoscopeFileDataUri: values.horoscopeFileDataUri, // This is the data URI
     };
     
     try {
@@ -129,7 +138,6 @@ export function ExtractHoroscopeDetailsForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Time of Birth (Local)</FormLabel>
-                {/* Using type="text" for AM/PM flexibility, or type="time" and model handles 24hr */}
                 <FormControl><Input type="text" placeholder="e.g., 12:00 PM or 14:30" {...field} /></FormControl>
                  <FormDescription>Enter local time of birth (e.g., 02:30 PM or 14:30).</FormDescription>
                 <FormMessage />
@@ -149,24 +157,26 @@ export function ExtractHoroscopeDetailsForm() {
           />
           <FormField
             control={form.control}
-            name="horoscopePdfDataUri"
-            render={({ field }) => ( // field.value will be the data URI string or undefined
+            name="horoscopeFile" // Control the File object for validation display
+            render={({ field: { onChange, ...restFieldProps }}) => ( 
               <FormItem>
                 <FormLabel className="flex items-center">
                   <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
-                  Upload Horoscope PDF (Optional)
+                  Upload Horoscope File (PDF/Image - Optional)
                 </FormLabel>
                 <FormControl>
                   <Input 
                     type="file" 
-                    accept=".pdf" 
-                    // We don't pass field.onChange directly to input type="file"
-                    // because field.onChange expects the final value (data URI string), not the File object.
-                    onChange={(e) => handleFileChange(e, field.onChange)}
+                    accept=".pdf,image/jpeg,image/jpg,image/png,image/webp" 
+                    onChange={(e) => {
+                       onChange(e.target.files?.[0] || null); // Update RHF for the File object
+                       handleFileChange(e); // Custom handler for data URI and further processing
+                    }}
                     className="text-sm"
+                    {...restFieldProps} // Pass other props like ref, onBlur
                   />
                 </FormControl>
-                {field.value && <FormDescription className="text-xs">PDF selected. Will be used to supplement analysis.</FormDescription>}
+                {selectedFileName && <FormDescription className="text-xs">Selected: {selectedFileName}. Will be used to supplement analysis.</FormDescription>}
                 <FormMessage />
               </FormItem>
             )}
