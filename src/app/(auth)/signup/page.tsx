@@ -61,10 +61,10 @@ export default function SignupPage() {
 
       toast({
         title: "Account Created!",
-        description: "Welcome to MatchCraft! Redirecting you to setup your profile.",
+        description: "Welcome to MatchCraft! Please log in to continue.",
         variant: "default",
       });
-      router.push('/profile-setup');
+      router.push('/login');
 
     } catch (error: any) {
       console.error("Firebase signup error:", error);
