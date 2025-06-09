@@ -92,12 +92,15 @@ export default function ProfileSetupPage() {
         religion: "",
         caste: "",
         language: "",
-        hobbies: "", // Stored as comma-separated string initially
-        favoriteMovies: "", // Stored as comma-separated string initially
-        favoriteMusic: "", // Stored as comma-separated string initially
+        hobbies: "", // Stored as comma-separated string initially, but AI expects array
+        favoriteMovies: "", // Stored as comma-separated string
+        favoriteMusic: "", // Stored as comma-separated string
         educationLevel: "",
         smokingHabits: "",
         drinkingHabits: "",
+        sunSign: "",
+        moonSign: "",
+        nakshatra: "",
         horoscopeInfo: "",
         horoscopeFileName: "",
         horoscopeFileUrl: "",

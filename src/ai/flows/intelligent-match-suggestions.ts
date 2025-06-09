@@ -21,7 +21,9 @@ const UserProfileSchema = z.object({
   hobbies: z.array(z.string()).describe('The user\'s hobbies and interests.'),
   location: z.string().describe('The user\'s location.'),
   profession: z.string().describe('The user\'s profession.'),
-  horoscope: z.string().optional().describe('Horoscope information of the user.'),
+  sunSign: z.string().optional().describe("User's Western Sun Sign (e.g., Aries)"),
+  moonSign: z.string().optional().describe("User's Vedic Moon Sign / Rasi (e.g., Mesha)"),
+  nakshatra: z.string().optional().describe("User's Vedic Nakshatra / Birth Star (e.g., Ashwini)"),
   favoriteMovies: z.array(z.string()).optional().describe('The user\'s favorite movies.'),
   favoriteMusic: z.array(z.string()).optional().describe('The user\'s favorite music genres or artists.'),
   educationLevel: z.string().optional().describe('The user\'s education level.'),
@@ -46,8 +48,8 @@ export type IntelligentMatchSuggestionsInput = z.infer<typeof IntelligentMatchSu
 
 const IntelligentMatchSuggestionsOutputSchema = z.array(z.object({
   userId: z.string().describe('The user ID of the suggested match.'),
-  compatibilityScore: z.number().describe('A score indicating the compatibility between the user and the suggested match.'),
-  reasoning: z.string().describe('The reasoning behind the match suggestion and compatibility score.'),
+  compatibilityScore: z.number().describe('A score indicating the compatibility between the user and the suggested match (0-100).'),
+  reasoning: z.string().describe('The reasoning behind the match suggestion and compatibility score. Include a brief astrological compatibility summary if astrological details are provided.'),
 }));
 
 export type IntelligentMatchSuggestionsOutput = z.infer<typeof IntelligentMatchSuggestionsOutputSchema>;
@@ -73,7 +75,9 @@ Height: {{{userProfile.height}}} cm
 Hobbies: {{#each userProfile.hobbies}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
 Location: {{{userProfile.location}}}
 Profession: {{{userProfile.profession}}}
-{{#if userProfile.horoscope}}Horoscope: {{{userProfile.horoscope}}}{{/if}}
+{{#if userProfile.sunSign}}Sun Sign: {{{userProfile.sunSign}}}{{/if}}
+{{#if userProfile.moonSign}}Moon Sign: {{{userProfile.moonSign}}}{{/if}}
+{{#if userProfile.nakshatra}}Nakshatra: {{{userProfile.nakshatra}}}{{/if}}
 {{#if userProfile.educationLevel}}Education: {{{userProfile.educationLevel}}}{{/if}}
 {{#if userProfile.favoriteMovies}}Favorite Movies: {{#each userProfile.favoriteMovies}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
 {{#if userProfile.favoriteMusic}}Favorite Music: {{#each userProfile.favoriteMusic}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
@@ -81,8 +85,8 @@ Profession: {{{userProfile.profession}}}
 {{#if userProfile.drinkingHabits}}Drinking Habits: {{{userProfile.drinkingHabits}}}{{/if}}
 
 User Activity:
-Profiles Viewed: {{#each userActivity.profilesViewed}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
-Matches Made: {{#each userActivity.matchesMade}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+Profiles Viewed: {{#if userActivity.profilesViewed}}{{#each userActivity.profilesViewed}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}None{{/if}}
+Matches Made: {{#if userActivity.matchesMade}}{{#each userActivity.matchesMade}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}None{{/if}}
 
 Potential Matches:
 {{#each allPotentialMatches}}
@@ -95,7 +99,9 @@ Height: {{{height}}} cm
 Hobbies: {{#each hobbies}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
 Location: {{{location}}}
 Profession: {{{profession}}}
-{{#if horoscope}}Horoscope: {{{horoscope}}}{{/if}}
+{{#if sunSign}}Sun Sign: {{{sunSign}}}{{/if}}
+{{#if moonSign}}Moon Sign: {{{moonSign}}}{{/if}}
+{{#if nakshatra}}Nakshatra: {{{nakshatra}}}{{/if}}
 {{#if educationLevel}}Education: {{{educationLevel}}}{{/if}}
 {{#if favoriteMovies}}Favorite Movies: {{#each favoriteMovies}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
 {{#if favoriteMusic}}Favorite Music: {{#each favoriteMusic}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
@@ -104,7 +110,11 @@ Profession: {{{profession}}}
 
 {{/each}}
 
-For each potential match, provide a compatibility score (0-100) and reasoning based on the user's profile, activity, and the potential match's profile. Consider shared hobbies, lifestyle preferences (deduced from smoking/drinking habits), education, cultural background (religion, caste, language), and implicit compatibility based on user activity. The output should be a JSON array.
+For each potential match, provide a compatibility score (0-100) and reasoning. 
+The reasoning should cover shared hobbies, lifestyle preferences (deduced from smoking/drinking habits), education, cultural background (religion, caste, language), and implicit compatibility based on user activity.
+If astrological details (Sun Sign, Moon Sign, Nakshatra) are provided for both the user and the potential match, include a brief astrological compatibility summary as part of your reasoning. Focus on general harmony or potential challenges based on these details.
+
+The output should be a JSON array.
 
 Output:`, 
 });

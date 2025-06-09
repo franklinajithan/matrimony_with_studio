@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, Trash2, PlusCircle, School, Cigarette, Droplet, Film, Music } from 'lucide-react';
+import { Loader2, Sparkles, Trash2, PlusCircle, School, Cigarette, Droplet, Film, Music, Star as StarIcon } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -28,7 +28,9 @@ const profileSchema = z.object({
   hobbies: z.string().transform(stringToArrayTransformer),
   location: z.string().min(1, "Location is required"),
   profession: z.string().min(1, "Profession is required"),
-  horoscope: z.string().optional(),
+  sunSign: z.string().optional(),
+  moonSign: z.string().optional(),
+  nakshatra: z.string().optional(),
   favoriteMovies: z.string().optional().transform(stringToArrayTransformer),
   favoriteMusic: z.string().optional().transform(stringToArrayTransformer),
   educationLevel: z.string().optional(),
@@ -60,7 +62,9 @@ const defaultUserProfile: z.input<typeof profileSchema> = {
   hobbies: "Reading, Trekking, Movies",
   location: "Mumbai, India",
   profession: "Software Engineer",
-  horoscope: "Leo",
+  sunSign: "Leo",
+  moonSign: "Simha",
+  nakshatra: "Magha",
   favoriteMovies: "Inception, The Dark Knight",
   favoriteMusic: "Rock, Classical",
   educationLevel: "Master's Degree",
@@ -84,7 +88,9 @@ const defaultPotentialMatches: z.input<typeof potentialMatchSchema>[] = [
     hobbies: "Yoga, Cooking, Travel", 
     location: "Pune, India", 
     profession: "Doctor", 
-    horoscope: "Cancer",
+    sunSign: "Cancer",
+    moonSign: "Karka",
+    nakshatra: "Pushya",
     favoriteMovies: "The Matrix, Interstellar",
     favoriteMusic: "Pop, Indie",
     educationLevel: "Bachelor's Degree",
@@ -120,7 +126,6 @@ export function SuggestionForm() {
     setIsLoading(true);
     setSuggestions(null);
     try {
-      // Zod transform handles string to array for hobbies, movies, music, profilesViewed, matchesMade
       const formattedValues: IntelligentMatchSuggestionsInput = {
         userProfile: {
             ...values.userProfile,
@@ -143,7 +148,7 @@ export function SuggestionForm() {
       console.error("Error generating suggestions:", error);
       toast({
         title: "Error",
-        description: "Failed to generate suggestions. Please try again.",
+        description: (error as Error).message || "Failed to generate suggestions. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -179,9 +184,20 @@ export function SuggestionForm() {
       <FormField control={form.control} name={`${fieldNamePrefix}.profession` as any} render={({ field }) => (
         <FormItem><FormLabel>Profession</FormLabel><FormControl><Input placeholder="e.g., Software Engineer" {...field} /></FormControl><FormMessage /></FormItem>
       )} />
-      <FormField control={form.control} name={`${fieldNamePrefix}.horoscope` as any} render={({ field }) => (
-        <FormItem><FormLabel>Horoscope (Optional)</FormLabel><FormControl><Input placeholder="e.g., Leo" {...field} /></FormControl><FormMessage /></FormItem>
-      )} />
+      
+      <div className="pt-2 space-y-2 border-t border-border">
+        <FormLabel className="text-sm font-medium flex items-center"><StarIcon className="mr-2 h-4 w-4 text-muted-foreground" />Astrological Details (Optional)</FormLabel>
+        <FormField control={form.control} name={`${fieldNamePrefix}.sunSign` as any} render={({ field }) => (
+          <FormItem><FormLabel className="text-xs">Sun Sign</FormLabel><FormControl><Input placeholder="e.g., Leo" {...field} /></FormControl><FormMessage /></FormItem>
+        )} />
+        <FormField control={form.control} name={`${fieldNamePrefix}.moonSign` as any} render={({ field }) => (
+          <FormItem><FormLabel className="text-xs">Moon Sign (Rasi)</FormLabel><FormControl><Input placeholder="e.g., Simha" {...field} /></FormControl><FormMessage /></FormItem>
+        )} />
+        <FormField control={form.control} name={`${fieldNamePrefix}.nakshatra` as any} render={({ field }) => (
+          <FormItem><FormLabel className="text-xs">Nakshatra</FormLabel><FormControl><Input placeholder="e.g., Magha" {...field} /></FormControl><FormMessage /></FormItem>
+        )} />
+      </div>
+
        <FormField control={form.control} name={`${fieldNamePrefix}.favoriteMovies` as any} render={({ field }) => (
         <FormItem><FormLabel className="flex items-center"><Film className="mr-2 h-4 w-4 text-muted-foreground" />Favorite Movies (comma-separated)</FormLabel><FormControl><Textarea placeholder="e.g., Inception, The Dark Knight" {...field} /></FormControl><FormMessage /></FormItem>
       )} />
@@ -280,11 +296,14 @@ export function SuggestionForm() {
                     ))}
                      <Button type="button" variant="outline" onClick={() => {
                         const newMatchDefault = { ...defaultPotentialMatches[0]};
-                        // Ensure hobbies, movies, music are strings for the form's defaultValues
                         newMatchDefault.userId = `match00${fields.length + 1}`;
                         newMatchDefault.hobbies = defaultPotentialMatches[0].hobbies || "";
                         newMatchDefault.favoriteMovies = defaultPotentialMatches[0].favoriteMovies || "";
                         newMatchDefault.favoriteMusic = defaultPotentialMatches[0].favoriteMusic || "";
+                        // Ensure new astrological fields are also strings for the form
+                        newMatchDefault.sunSign = defaultPotentialMatches[0].sunSign || "";
+                        newMatchDefault.moonSign = defaultPotentialMatches[0].moonSign || "";
+                        newMatchDefault.nakshatra = defaultPotentialMatches[0].nakshatra || "";
                         append(newMatchDefault);
                      }} className="w-full">
                         <PlusCircle className="mr-2 h-4 w-4" /> Add Potential Match
@@ -316,7 +335,7 @@ export function SuggestionForm() {
                 <CardDescription>Compatibility Score: <strong className="text-primary">{suggestion.compatibilityScore}/100</strong></CardDescription>
               </CardHeader>
               <CardContent>
-                <h4 className="font-semibold mb-1">Reasoning:</h4>
+                <h4 className="font-semibold mb-1">Reasoning (including Astrological Summary):</h4>
                 <p className="text-sm text-foreground/80 whitespace-pre-line">{suggestion.reasoning}</p>
               </CardContent>
             </Card>

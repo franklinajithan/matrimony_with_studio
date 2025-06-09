@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { User as UserIconLucide, Image as ImageIcon, Info, MapPin, Briefcase, Ruler, Languages, CalendarDays, PlusCircle, FileImage, Trash2, XCircle, AlertTriangle, FileText, Loader2, Film, Music, School, Droplet, Cigarette } from 'lucide-react'; 
+import { User as UserIconLucide, Image as ImageIcon, Info, MapPin, Briefcase, Ruler, Languages, CalendarDays, PlusCircle, FileImage, Trash2, XCircle, AlertTriangle, FileText, Loader2, Film, Music, School, Droplet, Cigarette, Sparkles as SparklesIcon } from 'lucide-react'; 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect, useRef } from "react";
@@ -63,12 +63,17 @@ const editProfileSchema = z.object({
   religion: z.string().min(1, "Religion is required."),
   caste: z.string().min(1, "Caste is required."),
   language: z.string().min(1, "Primary language is required."),
-  horoscopeInfo: z.string().optional(),
+  
+  sunSign: z.string().optional(),
+  moonSign: z.string().optional(),
+  nakshatra: z.string().optional(),
+  horoscopeInfo: z.string().optional(), // General text notes
   horoscopeFile: z 
     .instanceof(File, { message: "Please select a file." })
     .optional()
     .refine(file => !file || ACCEPTED_HOROSCOPE_FILE_TYPES.includes(file.type), "Only PDF, JPG, JPEG, PNG, and WebP files are accepted.")
     .refine(file => !file || file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`),
+  
   hobbies: z.string().optional(),
   favoriteMovies: z.string().optional(),
   favoriteMusic: z.string().optional(),
@@ -81,7 +86,8 @@ const defaultFirestoreProfile = {
   fullName: "", bio: "", profilePhotoUrl: "https://placehold.co/128x128.png", dataAiHint: "person placeholder",
   location: "", profession: "", height: "", dob: "", religion: "", caste: "", language: "",
   hobbies: "", favoriteMovies: "", favoriteMusic: "", educationLevel: "", smokingHabits: "", drinkingHabits: "",
-  horoscopeInfo: "", horoscopeFileName: "", horoscopeFileUrl: "", additionalPhotoUrls: [],
+  sunSign: "", moonSign: "", nakshatra: "", horoscopeInfo: "", 
+  horoscopeFileName: "", horoscopeFileUrl: "", additionalPhotoUrls: [],
 };
 
 export default function EditProfilePage() {
@@ -129,12 +135,15 @@ export default function EditProfilePage() {
             religion: data.religion || defaultFirestoreProfile.religion,
             caste: data.caste || defaultFirestoreProfile.caste,
             language: data.language || defaultFirestoreProfile.language,
-            hobbies: data.hobbies || defaultFirestoreProfile.hobbies,
-            favoriteMovies: data.favoriteMovies || defaultFirestoreProfile.favoriteMovies,
-            favoriteMusic: data.favoriteMusic || defaultFirestoreProfile.favoriteMusic,
+            hobbies: data.hobbies || defaultFirestoreProfile.hobbies, // Expects string
+            favoriteMovies: data.favoriteMovies || defaultFirestoreProfile.favoriteMovies, // Expects string
+            favoriteMusic: data.favoriteMusic || defaultFirestoreProfile.favoriteMusic, // Expects string
             educationLevel: data.educationLevel || defaultFirestoreProfile.educationLevel,
             smokingHabits: data.smokingHabits || defaultFirestoreProfile.smokingHabits,
             drinkingHabits: data.drinkingHabits || defaultFirestoreProfile.drinkingHabits,
+            sunSign: data.sunSign || defaultFirestoreProfile.sunSign,
+            moonSign: data.moonSign || defaultFirestoreProfile.moonSign,
+            nakshatra: data.nakshatra || defaultFirestoreProfile.nakshatra,
             horoscopeInfo: data.horoscopeInfo || defaultFirestoreProfile.horoscopeInfo,
             profilePhoto: undefined,
             additionalPhotos: [],
@@ -165,6 +174,9 @@ export default function EditProfilePage() {
             educationLevel: defaultFirestoreProfile.educationLevel,
             smokingHabits: defaultFirestoreProfile.smokingHabits,
             drinkingHabits: defaultFirestoreProfile.drinkingHabits,
+            sunSign: defaultFirestoreProfile.sunSign,
+            moonSign: defaultFirestoreProfile.moonSign,
+            nakshatra: defaultFirestoreProfile.nakshatra,
             horoscopeInfo: defaultFirestoreProfile.horoscopeInfo,
             profilePhoto: undefined,
             additionalPhotos: [],
@@ -232,12 +244,15 @@ export default function EditProfilePage() {
         religion: values.religion,
         caste: values.caste,
         language: values.language,
-        hobbies: values.hobbies,
-        favoriteMovies: values.favoriteMovies,
-        favoriteMusic: values.favoriteMusic,
+        hobbies: values.hobbies, // Saved as string
+        favoriteMovies: values.favoriteMovies, // Saved as string
+        favoriteMusic: values.favoriteMusic, // Saved as string
         educationLevel: values.educationLevel,
         smokingHabits: values.smokingHabits,
         drinkingHabits: values.drinkingHabits,
+        sunSign: values.sunSign,
+        moonSign: values.moonSign,
+        nakshatra: values.nakshatra,
         horoscopeInfo: values.horoscopeInfo,
         updatedAt: new Date().toISOString(),
       };
@@ -573,8 +588,26 @@ export default function EditProfilePage() {
                 )} />
             </div>
 
+            <Card className="border-primary/30 shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center"><SparklesIcon className="mr-2 h-5 w-5 text-primary" />Astrological Details (for AI)</CardTitle>
+                <CardDescription className="text-xs">Provide these for more accurate AI-driven horoscope analysis and matching.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-2">
+                <FormField control={form.control} name="sunSign" render={({ field }) => (
+                  <FormItem><FormLabel>Sun Sign (Western)</FormLabel><FormControl><Input placeholder="e.g., Aries" {...field} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={form.control} name="moonSign" render={({ field }) => (
+                  <FormItem><FormLabel>Moon Sign (Vedic Rasi)</FormLabel><FormControl><Input placeholder="e.g., Mesha" {...field} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={form.control} name="nakshatra" render={({ field }) => (
+                  <FormItem><FormLabel>Nakshatra (Birth Star)</FormLabel><FormControl><Input placeholder="e.g., Ashwini" {...field} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
+                )} />
+              </CardContent>
+            </Card>
+            
             <FormField control={form.control} name="horoscopeInfo" render={({ field }) => (
-              <FormItem><FormLabel>Horoscope Information (Rasi, Nakshatra, etc.)</FormLabel><FormControl><Textarea placeholder="Enter details like Rasi, Nakshatra, Gothram..." {...field} rows={3} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>General Horoscope Notes (Rasi, Nakshatra, Gotra, etc.)</FormLabel><FormControl><Textarea placeholder="Enter any additional horoscope details or notes here..." {...field} rows={3} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField
                 control={form.control}
