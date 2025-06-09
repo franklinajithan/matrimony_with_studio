@@ -13,18 +13,19 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Sparkles, Telescope, FileText } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { HoroscopeChartDisplay } from './HoroscopeChartDisplay'; // Import the new component
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/jpg", "image/png", "image/webp"];
 
-// Schema for client-side form validation
+// Schema for client-side form validation, needs to be self-contained
 const ExtractHoroscopeDetailsFormClientSchema = z.object({
   dateOfBirth: z.string().min(1, { message: "Date of birth is required."}).regex(/^\d{4}-\d{2}-\d{2}$/, "Date of birth must be in YYYY-MM-DD format."),
   timeOfBirth: z.string().min(1, { message: "Time of birth is required."}),
   placeOfBirth: z.string().min(1, { message: "Place of birth is required."}),
   horoscopeFileDataUri: z.string().optional(),
   horoscopeFile: z
-    .any() // Using .any() for File object, validation done via .refine
+    .any() 
     .refine((file) => !file || (file instanceof File && file.size <= MAX_FILE_SIZE), `Max file size is 5MB.`)
     .refine(
       (file) => !file || (file instanceof File && ACCEPTED_FILE_TYPES.includes(file.type)),
@@ -78,7 +79,7 @@ export function ExtractHoroscopeDetailsForm() {
       reader.readAsDataURL(file);
     } else {
       form.setValue("horoscopeFileDataUri", undefined);
-      form.setValue("horoscopeFile", undefined); // RHF stores File object here
+      form.setValue("horoscopeFile", undefined); 
       setSelectedFileName(null);
       form.clearErrors("horoscopeFile");
     }
@@ -204,60 +205,68 @@ export function ExtractHoroscopeDetailsForm() {
       )}
 
       {analysisResult && !isLoading && (
-        <Card className="mt-8 shadow-md">
-          <CardHeader>
-            <CardTitle className="font-headline text-2xl text-primary flex items-center">
-              <Telescope className="mr-2 h-6 w-6" /> AI Astrological Insights
-            </CardTitle>
-            <CardDescription>Detailed analysis based on your provided information.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 text-sm">
-            <div><strong>Sun Sign:</strong> {analysisResult.sunSign}</div>
-            <div><strong>Moon Sign (Rasi):</strong> {analysisResult.moonSign}</div>
-            <div><strong>Ascendant (Lagna):</strong> {analysisResult.ascendant}</div>
-            <div><strong>Nakshatra:</strong> {analysisResult.nakshatra}</div>
-            
-            {analysisResult.planetaryPositions && analysisResult.planetaryPositions.length > 0 && (
-              <div>
-                <h4 className="font-semibold mb-1 mt-3">Planetary Positions:</h4>
-                <ul className="list-disc list-inside pl-2 space-y-1">
-                  {analysisResult.planetaryPositions.map((p, i) => (
-                    <li key={i}>{p.planet} in {p.sign}{p.house ? ` (House ${p.house})` : ''}</li>
-                  ))}
-                </ul>
+        <>
+          <Card className="mt-8 shadow-md">
+            <CardHeader>
+              <CardTitle className="font-headline text-2xl text-primary flex items-center">
+                <Telescope className="mr-2 h-6 w-6" /> AI Astrological Insights
+              </CardTitle>
+              <CardDescription>Detailed analysis based on your provided information.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              <div><strong>Sun Sign:</strong> {analysisResult.sunSign}</div>
+              <div><strong>Moon Sign (Rasi):</strong> {analysisResult.moonSign}</div>
+              <div><strong>Ascendant (Lagna):</strong> {analysisResult.ascendant}</div>
+              <div><strong>Nakshatra:</strong> {analysisResult.nakshatra}</div>
+              
+              {analysisResult.planetaryPositions && analysisResult.planetaryPositions.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-1 mt-3">Planetary Positions:</h4>
+                  <ul className="list-disc list-inside pl-2 space-y-1">
+                    {analysisResult.planetaryPositions.map((p, i) => (
+                      <li key={i}>{p.planet} in {p.sign}{p.house ? ` (House ${p.house})` : ''}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              <div className="pt-2">
+                <h4 className="font-semibold mb-1">Key Insights:</h4>
+                <p className="whitespace-pre-line text-foreground/90">{analysisResult.keyInsights}</p>
               </div>
-            )}
-            
-            <div className="pt-2">
-              <h4 className="font-semibold mb-1">Key Insights:</h4>
-              <p className="whitespace-pre-line text-foreground/90">{analysisResult.keyInsights}</p>
-            </div>
 
-            {analysisResult.careerOutlook && (
-               <div className="pt-2">
-                <h4 className="font-semibold mb-1">Career Outlook:</h4>
-                <p className="whitespace-pre-line text-foreground/90">{analysisResult.careerOutlook}</p>
-              </div>
-            )}
-            {analysisResult.relationshipOutlook && (
-               <div className="pt-2">
-                <h4 className="font-semibold mb-1">Relationship Outlook:</h4>
-                <p className="whitespace-pre-line text-foreground/90">{analysisResult.relationshipOutlook}</p>
-              </div>
-            )}
-             {analysisResult.healthOutlook && (
-               <div className="pt-2">
-                <h4 className="font-semibold mb-1">Health Outlook:</h4>
-                <p className="whitespace-pre-line text-foreground/90">{analysisResult.healthOutlook}</p>
-              </div>
-            )}
-          </CardContent>
-          <CardFooter>
-            <p className="text-xs text-muted-foreground">Note: This AI analysis is for informational purposes and should not replace professional astrological consultation.</p>
-          </CardFooter>
-        </Card>
+              {analysisResult.careerOutlook && (
+                 <div className="pt-2">
+                  <h4 className="font-semibold mb-1">Career Outlook:</h4>
+                  <p className="whitespace-pre-line text-foreground/90">{analysisResult.careerOutlook}</p>
+                </div>
+              )}
+              {analysisResult.relationshipOutlook && (
+                 <div className="pt-2">
+                  <h4 className="font-semibold mb-1">Relationship Outlook:</h4>
+                  <p className="whitespace-pre-line text-foreground/90">{analysisResult.relationshipOutlook}</p>
+                </div>
+              )}
+               {analysisResult.healthOutlook && (
+                 <div className="pt-2">
+                  <h4 className="font-semibold mb-1">Health Outlook:</h4>
+                  <p className="whitespace-pre-line text-foreground/90">{analysisResult.healthOutlook}</p>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter>
+              <p className="text-xs text-muted-foreground">Note: This AI analysis is for informational purposes and should not replace professional astrological consultation.</p>
+            </CardFooter>
+          </Card>
+          
+          {analysisResult.ascendant && analysisResult.planetaryPositions && (
+            <HoroscopeChartDisplay 
+              ascendant={analysisResult.ascendant}
+              planetaryPositions={analysisResult.planetaryPositions}
+            />
+          )}
+        </>
       )}
     </>
   );
 }
-
