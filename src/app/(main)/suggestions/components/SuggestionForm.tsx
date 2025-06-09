@@ -13,8 +13,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, Trash2, PlusCircle } from 'lucide-react';
+import { Loader2, Sparkles, Trash2, PlusCircle, School, Cigarette, Droplet, Film, Music } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const stringToArrayTransformer = (val: string | undefined) => val ? val.split(',').map(s => s.trim()).filter(Boolean) : [];
 
 const profileSchema = z.object({
   age: z.coerce.number().min(18).max(100),
@@ -22,10 +25,15 @@ const profileSchema = z.object({
   caste: z.string().min(1, "Caste is required"),
   language: z.string().min(1, "Language is required"),
   height: z.coerce.number().min(100).max(250),
-  interests: z.string().transform(val => val.split(',').map(s => s.trim()).filter(Boolean)), // Comma-separated string to array
+  hobbies: z.string().transform(stringToArrayTransformer),
   location: z.string().min(1, "Location is required"),
   profession: z.string().min(1, "Profession is required"),
   horoscope: z.string().optional(),
+  favoriteMovies: z.string().optional().transform(stringToArrayTransformer),
+  favoriteMusic: z.string().optional().transform(stringToArrayTransformer),
+  educationLevel: z.string().optional(),
+  smokingHabits: z.string().optional(),
+  drinkingHabits: z.string().optional(),
 });
 
 const potentialMatchSchema = profileSchema.extend({
@@ -35,8 +43,8 @@ const potentialMatchSchema = profileSchema.extend({
 const formSchema = z.object({
   userProfile: profileSchema,
   userActivity: z.object({
-    profilesViewed: z.string().transform(val => val.split(',').map(s => s.trim()).filter(Boolean)),
-    matchesMade: z.string().transform(val => val.split(',').map(s => s.trim()).filter(Boolean)),
+    profilesViewed: z.string().transform(stringToArrayTransformer),
+    matchesMade: z.string().transform(stringToArrayTransformer),
   }),
   allPotentialMatches: z.array(potentialMatchSchema).min(1, "At least one potential match is required."),
 });
@@ -49,10 +57,15 @@ const defaultUserProfile: z.input<typeof profileSchema> = {
   caste: "Brahmin",
   language: "English, Hindi",
   height: 170,
-  interests: "Reading, Trekking, Movies",
+  hobbies: "Reading, Trekking, Movies",
   location: "Mumbai, India",
   profession: "Software Engineer",
   horoscope: "Leo",
+  favoriteMovies: "Inception, The Dark Knight",
+  favoriteMusic: "Rock, Classical",
+  educationLevel: "Master's Degree",
+  smokingHabits: "Never",
+  drinkingHabits: "Socially",
 };
 
 const defaultUserActivity: z.input<typeof formSchema>['userActivity'] = {
@@ -61,7 +74,23 @@ const defaultUserActivity: z.input<typeof formSchema>['userActivity'] = {
 };
 
 const defaultPotentialMatches: z.input<typeof potentialMatchSchema>[] = [
-  { userId: "match001", age: 28, religion: "Hindu", caste: "Brahmin", language: "English, Marathi", height: 165, interests: "Yoga, Cooking, Travel", location: "Pune, India", profession: "Doctor", horoscope: "Cancer" },
+  { 
+    userId: "match001", 
+    age: 28, 
+    religion: "Hindu", 
+    caste: "Brahmin", 
+    language: "English, Marathi", 
+    height: 165, 
+    hobbies: "Yoga, Cooking, Travel", 
+    location: "Pune, India", 
+    profession: "Doctor", 
+    horoscope: "Cancer",
+    favoriteMovies: "The Matrix, Interstellar",
+    favoriteMusic: "Pop, Indie",
+    educationLevel: "Bachelor's Degree",
+    smokingHabits: "Never",
+    drinkingHabits: "Never",
+  },
 ];
 
 
@@ -73,12 +102,12 @@ export function SuggestionForm() {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      userProfile: defaultUserProfile, // interests is already a string here
+      userProfile: defaultUserProfile,
       userActivity: {
-        profilesViewed: defaultUserActivity.profilesViewed, // This is a string
-        matchesMade: defaultUserActivity.matchesMade,       // This is a string
+        profilesViewed: defaultUserActivity.profilesViewed,
+        matchesMade: defaultUserActivity.matchesMade,
       },
-      allPotentialMatches: defaultPotentialMatches, // interests within each item is already a string
+      allPotentialMatches: defaultPotentialMatches,
     },
   });
 
@@ -91,22 +120,16 @@ export function SuggestionForm() {
     setIsLoading(true);
     setSuggestions(null);
     try {
-      // After Zod parsing (values: FormData), 'interests', 'profilesViewed', etc., are already string[]
-      // So, 'values' can be passed directly if its structure matches IntelligentMatchSuggestionsInput.
-      // The current formattedValues construction is okay but the casts might be redundant if TS infers types correctly.
+      // Zod transform handles string to array for hobbies, movies, music, profilesViewed, matchesMade
       const formattedValues: IntelligentMatchSuggestionsInput = {
-        ...values,
         userProfile: {
             ...values.userProfile,
-            interests: values.userProfile.interests // This is string[] after Zod transform
         },
         userActivity: {
-            profilesViewed: values.userActivity.profilesViewed, // This is string[]
-            matchesMade: values.userActivity.matchesMade,       // This is string[]
+            ...values.userActivity,
         },
         allPotentialMatches: values.allPotentialMatches.map(pm => ({
             ...pm,
-            interests: pm.interests // This is string[]
         }))
       };
       const result = await intelligentMatchSuggestions(formattedValues);
@@ -147,8 +170,8 @@ export function SuggestionForm() {
       <FormField control={form.control} name={`${fieldNamePrefix}.language` as any} render={({ field }) => (
         <FormItem><FormLabel>Language(s)</FormLabel><FormControl><Input placeholder="e.g., English, Hindi" {...field} /></FormControl><FormMessage /></FormItem>
       )} />
-      <FormField control={form.control} name={`${fieldNamePrefix}.interests` as any} render={({ field }) => (
-        <FormItem><FormLabel>Interests (comma-separated)</FormLabel><FormControl><Textarea placeholder="e.g., Reading, Trekking, Movies" {...field} /></FormControl><FormMessage /></FormItem>
+      <FormField control={form.control} name={`${fieldNamePrefix}.hobbies` as any} render={({ field }) => (
+        <FormItem><FormLabel>Hobbies (comma-separated)</FormLabel><FormControl><Textarea placeholder="e.g., Reading, Trekking, Movies" {...field} /></FormControl><FormMessage /></FormItem>
       )} />
       <FormField control={form.control} name={`${fieldNamePrefix}.location` as any} render={({ field }) => (
         <FormItem><FormLabel>Location</FormLabel><FormControl><Input placeholder="e.g., Mumbai, India" {...field} /></FormControl><FormMessage /></FormItem>
@@ -159,6 +182,55 @@ export function SuggestionForm() {
       <FormField control={form.control} name={`${fieldNamePrefix}.horoscope` as any} render={({ field }) => (
         <FormItem><FormLabel>Horoscope (Optional)</FormLabel><FormControl><Input placeholder="e.g., Leo" {...field} /></FormControl><FormMessage /></FormItem>
       )} />
+       <FormField control={form.control} name={`${fieldNamePrefix}.favoriteMovies` as any} render={({ field }) => (
+        <FormItem><FormLabel className="flex items-center"><Film className="mr-2 h-4 w-4 text-muted-foreground" />Favorite Movies (comma-separated)</FormLabel><FormControl><Textarea placeholder="e.g., Inception, The Dark Knight" {...field} /></FormControl><FormMessage /></FormItem>
+      )} />
+      <FormField control={form.control} name={`${fieldNamePrefix}.favoriteMusic` as any} render={({ field }) => (
+        <FormItem><FormLabel className="flex items-center"><Music className="mr-2 h-4 w-4 text-muted-foreground" />Favorite Music (comma-separated)</FormLabel><FormControl><Textarea placeholder="e.g., Rock, Classical" {...field} /></FormControl><FormMessage /></FormItem>
+      )} />
+       <FormField control={form.control} name={`${fieldNamePrefix}.educationLevel` as any} render={({ field }) => (
+        <FormItem><FormLabel className="flex items-center"><School className="mr-2 h-4 w-4 text-muted-foreground" />Education Level</FormLabel>
+          <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <FormControl><SelectTrigger><SelectValue placeholder="Select Education" /></SelectTrigger></FormControl>
+            <SelectContent>
+              <SelectItem value="High School">High School</SelectItem>
+              <SelectItem value="Associate Degree">Associate Degree</SelectItem>
+              <SelectItem value="Bachelor's Degree">Bachelor&apos;s Degree</SelectItem>
+              <SelectItem value="Master's Degree">Master&apos;s Degree</SelectItem>
+              <SelectItem value="Doctorate">Doctorate</SelectItem>
+              <SelectItem value="Other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+        <FormMessage /></FormItem>
+      )} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField control={form.control} name={`${fieldNamePrefix}.smokingHabits` as any} render={({ field }) => (
+          <FormItem><FormLabel className="flex items-center"><Cigarette className="mr-2 h-4 w-4 text-muted-foreground" />Smoking Habits</FormLabel>
+           <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <FormControl><SelectTrigger><SelectValue placeholder="Select Smoking Habits" /></SelectTrigger></FormControl>
+            <SelectContent>
+                <SelectItem value="Never">Never</SelectItem>
+                <SelectItem value="Occasionally/Socially">Occasionally/Socially</SelectItem>
+                <SelectItem value="Regularly">Regularly</SelectItem>
+                <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
+            </SelectContent>
+          </Select>
+          <FormMessage /></FormItem>
+        )} />
+        <FormField control={form.control} name={`${fieldNamePrefix}.drinkingHabits` as any} render={({ field }) => (
+          <FormItem><FormLabel className="flex items-center"><Droplet className="mr-2 h-4 w-4 text-muted-foreground" />Drinking Habits</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl><SelectTrigger><SelectValue placeholder="Select Drinking Habits" /></SelectTrigger></FormControl>
+                <SelectContent>
+                    <SelectItem value="Never">Never</SelectItem>
+                    <SelectItem value="Occasionally/Socially">Occasionally/Socially</SelectItem>
+                    <SelectItem value="Regularly">Regularly</SelectItem>
+                    <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
+                </SelectContent>
+            </Select>
+          <FormMessage /></FormItem>
+        )} />
+      </div>
     </>
   );
 
@@ -206,11 +278,22 @@ export function SuggestionForm() {
                             </CardContent>
                         </Card>
                     ))}
-                     <Button type="button" variant="outline" onClick={() => append({ ...defaultPotentialMatches[0], userId: `match00${fields.length + 1}`, interests: defaultPotentialMatches[0].interests })} className="w-full">
+                     <Button type="button" variant="outline" onClick={() => {
+                        const newMatchDefault = { ...defaultPotentialMatches[0]};
+                        // Ensure hobbies, movies, music are strings for the form's defaultValues
+                        newMatchDefault.userId = `match00${fields.length + 1}`;
+                        newMatchDefault.hobbies = defaultPotentialMatches[0].hobbies || "";
+                        newMatchDefault.favoriteMovies = defaultPotentialMatches[0].favoriteMovies || "";
+                        newMatchDefault.favoriteMusic = defaultPotentialMatches[0].favoriteMusic || "";
+                        append(newMatchDefault);
+                     }} className="w-full">
                         <PlusCircle className="mr-2 h-4 w-4" /> Add Potential Match
                     </Button>
                      {form.formState.errors.allPotentialMatches && !form.formState.errors.allPotentialMatches.root && (
                         <p className="text-sm font-medium text-destructive">{form.formState.errors.allPotentialMatches.message}</p>
+                    )}
+                     {form.formState.errors.allPotentialMatches?.root && (
+                        <p className="text-sm font-medium text-destructive">{form.formState.errors.allPotentialMatches.root.message}</p>
                     )}
                 </AccordionContent>
             </AccordionItem>
@@ -248,3 +331,4 @@ export function SuggestionForm() {
     </>
   );
 }
+

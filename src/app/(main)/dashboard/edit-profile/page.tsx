@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { User as UserIconLucide, Image as ImageIcon, Info, MapPin, Briefcase, Ruler, Languages, CalendarDays, PlusCircle, FileImage, Trash2, XCircle, AlertTriangle, FileText, Loader2 } from 'lucide-react'; // Renamed User to UserIconLucide
+import { User as UserIconLucide, Image as ImageIcon, Info, MapPin, Briefcase, Ruler, Languages, CalendarDays, PlusCircle, FileImage, Trash2, XCircle, AlertTriangle, FileText, Loader2, Film, Music, School, Droplet, Cigarette } from 'lucide-react'; 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect, useRef } from "react";
@@ -69,11 +69,18 @@ const editProfileSchema = z.object({
     .optional()
     .refine(file => !file || ACCEPTED_HOROSCOPE_FILE_TYPES.includes(file.type), "Only PDF, JPG, JPEG, PNG, and WebP files are accepted.")
     .refine(file => !file || file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`),
+  hobbies: z.string().optional(),
+  favoriteMovies: z.string().optional(),
+  favoriteMusic: z.string().optional(),
+  educationLevel: z.string().optional(),
+  smokingHabits: z.string().optional(),
+  drinkingHabits: z.string().optional(),
 });
 
 const defaultFirestoreProfile = {
   fullName: "", bio: "", profilePhotoUrl: "https://placehold.co/128x128.png", dataAiHint: "person placeholder",
   location: "", profession: "", height: "", dob: "", religion: "", caste: "", language: "",
+  hobbies: "", favoriteMovies: "", favoriteMusic: "", educationLevel: "", smokingHabits: "", drinkingHabits: "",
   horoscopeInfo: "", horoscopeFileName: "", horoscopeFileUrl: "", additionalPhotoUrls: [],
 };
 
@@ -122,6 +129,12 @@ export default function EditProfilePage() {
             religion: data.religion || defaultFirestoreProfile.religion,
             caste: data.caste || defaultFirestoreProfile.caste,
             language: data.language || defaultFirestoreProfile.language,
+            hobbies: data.hobbies || defaultFirestoreProfile.hobbies,
+            favoriteMovies: data.favoriteMovies || defaultFirestoreProfile.favoriteMovies,
+            favoriteMusic: data.favoriteMusic || defaultFirestoreProfile.favoriteMusic,
+            educationLevel: data.educationLevel || defaultFirestoreProfile.educationLevel,
+            smokingHabits: data.smokingHabits || defaultFirestoreProfile.smokingHabits,
+            drinkingHabits: data.drinkingHabits || defaultFirestoreProfile.drinkingHabits,
             horoscopeInfo: data.horoscopeInfo || defaultFirestoreProfile.horoscopeInfo,
             profilePhoto: undefined,
             additionalPhotos: [],
@@ -146,6 +159,12 @@ export default function EditProfilePage() {
             religion: defaultFirestoreProfile.religion,
             caste: defaultFirestoreProfile.caste,
             language: defaultFirestoreProfile.language,
+            hobbies: defaultFirestoreProfile.hobbies,
+            favoriteMovies: defaultFirestoreProfile.favoriteMovies,
+            favoriteMusic: defaultFirestoreProfile.favoriteMusic,
+            educationLevel: defaultFirestoreProfile.educationLevel,
+            smokingHabits: defaultFirestoreProfile.smokingHabits,
+            drinkingHabits: defaultFirestoreProfile.drinkingHabits,
             horoscopeInfo: defaultFirestoreProfile.horoscopeInfo,
             profilePhoto: undefined,
             additionalPhotos: [],
@@ -213,6 +232,12 @@ export default function EditProfilePage() {
         religion: values.religion,
         caste: values.caste,
         language: values.language,
+        hobbies: values.hobbies,
+        favoriteMovies: values.favoriteMovies,
+        favoriteMusic: values.favoriteMusic,
+        educationLevel: values.educationLevel,
+        smokingHabits: values.smokingHabits,
+        drinkingHabits: values.drinkingHabits,
         horoscopeInfo: values.horoscopeInfo,
         updatedAt: new Date().toISOString(),
       };
@@ -495,6 +520,59 @@ export default function EditProfilePage() {
             <FormField control={form.control} name="language" render={({ field }) => (
               <FormItem><FormLabel className="flex items-center"><Languages className="mr-2 h-4 w-4 text-muted-foreground" />Primary Language(s)</FormLabel><FormControl><Input placeholder="e.g., English, Hindi" {...field} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
             )} />
+
+            <FormField control={form.control} name="hobbies" render={({ field }) => (
+                <FormItem><FormLabel className="flex items-center"><Info className="mr-2 h-4 w-4 text-muted-foreground" />Hobbies & Interests</FormLabel><FormControl><Textarea placeholder="e.g., Reading, Cooking, Hiking (comma-separated)" {...field} rows={3} disabled={isSaving}/></FormControl><FormMessage /></FormItem>
+            )} />
+             <FormField control={form.control} name="favoriteMovies" render={({ field }) => (
+                <FormItem><FormLabel className="flex items-center"><Film className="mr-2 h-4 w-4 text-muted-foreground" />Favorite Movies</FormLabel><FormControl><Textarea placeholder="e.g., The Shawshank Redemption, Inception (comma-separated)" {...field} rows={2} disabled={isSaving}/></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="favoriteMusic" render={({ field }) => (
+                <FormItem><FormLabel className="flex items-center"><Music className="mr-2 h-4 w-4 text-muted-foreground" />Favorite Music</FormLabel><FormControl><Textarea placeholder="e.g., Classical, Pop, A.R. Rahman (comma-separated)" {...field} rows={2} disabled={isSaving}/></FormControl><FormMessage /></FormItem>
+            )} />
+
+            <FormField control={form.control} name="educationLevel" render={({ field }) => (
+                <FormItem><FormLabel className="flex items-center"><School className="mr-2 h-4 w-4 text-muted-foreground" />Education Level</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving} value={field.value}>
+                    <FormControl><SelectTrigger><SelectValue placeholder="Select Education Level" /></SelectTrigger></FormControl>
+                    <SelectContent>
+                        <SelectItem value="High School">High School</SelectItem>
+                        <SelectItem value="Associate Degree">Associate Degree</SelectItem>
+                        <SelectItem value="Bachelor's Degree">Bachelor&apos;s Degree</SelectItem>
+                        <SelectItem value="Master's Degree">Master&apos;s Degree</SelectItem>
+                        <SelectItem value="Doctorate">Doctorate</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                </Select><FormMessage /></FormItem>
+            )} />
+
+            <div className="grid md:grid-cols-2 gap-6">
+                <FormField control={form.control} name="smokingHabits" render={({ field }) => (
+                    <FormItem><FormLabel className="flex items-center"><Cigarette className="mr-2 h-4 w-4 text-muted-foreground" />Smoking Habits</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving} value={field.value}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Select Smoking Habits" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                            <SelectItem value="Never">Never</SelectItem>
+                            <SelectItem value="Occasionally/Socially">Occasionally/Socially</SelectItem>
+                            <SelectItem value="Regularly">Regularly</SelectItem>
+                            <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
+                        </SelectContent>
+                    </Select><FormMessage /></FormItem>
+                )} />
+                <FormField control={form.control} name="drinkingHabits" render={({ field }) => (
+                    <FormItem><FormLabel className="flex items-center"><Droplet className="mr-2 h-4 w-4 text-muted-foreground" />Drinking Habits</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving} value={field.value}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Select Drinking Habits" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                            <SelectItem value="Never">Never</SelectItem>
+                            <SelectItem value="Occasionally/Socially">Occasionally/Socially</SelectItem>
+                            <SelectItem value="Regularly">Regularly</SelectItem>
+                            <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
+                        </SelectContent>
+                    </Select><FormMessage /></FormItem>
+                )} />
+            </div>
+
             <FormField control={form.control} name="horoscopeInfo" render={({ field }) => (
               <FormItem><FormLabel>Horoscope Information (Rasi, Nakshatra, etc.)</FormLabel><FormControl><Textarea placeholder="Enter details like Rasi, Nakshatra, Gothram..." {...field} rows={3} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
             )} />

@@ -59,25 +59,23 @@ export default function ProfileSetupPage() {
     }
 
     try {
-      let finalPhotoURL = user.photoURL; // Start with existing photo from Auth (e.g. Google)
-      let finalDataAiHint = user.photoURL ? "social profile" : "person placeholder"; // Default hint
+      let finalPhotoURL = user.photoURL; 
+      let finalDataAiHint = user.photoURL ? "social profile" : "person placeholder"; 
 
       if (values.profilePhoto) {
         const filePath = `users/${user.uid}/profile_photo/${values.profilePhoto.name}`;
         finalPhotoURL = await uploadFile(values.profilePhoto, filePath);
-        finalDataAiHint = "profile photo"; // Hint for newly uploaded photo
-      } else if (!user.photoURL) { // No new photo uploaded AND no existing photo from Auth
-        finalPhotoURL = "https://placehold.co/128x128.png"; // Default placeholder
+        finalDataAiHint = "profile photo"; 
+      } else if (!user.photoURL) { 
+        finalPhotoURL = "https://placehold.co/128x128.png"; 
         finalDataAiHint = "person placeholder";
       }
 
-      // Update Firebase Auth profile with the determined photoURL and new displayName
       await updateProfile(user, {
         displayName: values.fullName,
         photoURL: finalPhotoURL, 
       });
 
-      // Prepare comprehensive initial data for Firestore
       const userDocRef = doc(db, "users", user.uid);
       const initialProfileData = {
         uid: user.uid,
@@ -87,7 +85,6 @@ export default function ProfileSetupPage() {
         photoURL: finalPhotoURL,
         dataAiHint: finalDataAiHint,
         
-        // Initialize other profile fields to defaults
         location: "",
         profession: "",
         height: "", 
@@ -95,16 +92,21 @@ export default function ProfileSetupPage() {
         religion: "",
         caste: "",
         language: "",
+        hobbies: "", // Stored as comma-separated string initially
+        favoriteMovies: "", // Stored as comma-separated string initially
+        favoriteMusic: "", // Stored as comma-separated string initially
+        educationLevel: "",
+        smokingHabits: "",
+        drinkingHabits: "",
         horoscopeInfo: "",
         horoscopeFileName: "",
         horoscopeFileUrl: "",
-        additionalPhotoUrls: [], // Initialize as empty array
+        additionalPhotoUrls: [], 
         
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(), // Add updatedAt timestamp
+        updatedAt: new Date().toISOString(),
       };
 
-      // Save profile data to Firestore
       await setDoc(userDocRef, initialProfileData, { merge: true });
 
       toast({
@@ -202,3 +204,4 @@ export default function ProfileSetupPage() {
     </div>
   );
 }
+
