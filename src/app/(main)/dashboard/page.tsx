@@ -50,10 +50,6 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
-              <Bell className="h-5 w-5" />
-              <span className="sr-only">Notifications</span>
-            </Button>
             {/* Quick Stats - Mock */}
             <div className="text-right">
                 <p className="text-xs text-muted-foreground">Profile Views Today</p>
@@ -196,7 +192,6 @@ export default function DashboardPage() {
                 <Button variant="outline" className="w-full justify-start relative" asChild>
                   <Link href="/messages">
                     <MessageCircle className="mr-2 h-4 w-4" />Messages
-                    <Badge variant="destructive" className="absolute -top-1 -right-1 px-1.5 text-xs">3</Badge> 
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>

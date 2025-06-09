@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Heart, MessageCircle, Search, UserCircle, LogOut, LayoutDashboard, Settings, Star, Loader2 } from 'lucide-react';
+import { Heart, MessageCircle, Search, UserCircle, LogOut, LayoutDashboard, Settings, Star, Loader2, Bell } from 'lucide-react';
 import { Logo } from '@/components/shared/Logo';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { cn } from '@/lib/utils';
 import React, { useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
@@ -25,7 +26,7 @@ const navLinks = [
   { href: '/discover', label: 'Discover', icon: <Heart className="h-4 w-4" /> },
   { href: '/suggestions', label: 'Suggestions', icon: <Star className="h-4 w-4" /> },
   { href: '/search', label: 'Search', icon: <Search className="h-4 w-4" /> },
-  { href: '/messages', label: 'Messages', icon: <MessageCircle className="h-4 w-4" /> },
+  { href: '/messages', label: 'Messages', icon: <MessageCircle className="h-4 w-4" />, notificationCount: 3 }, // Mock notification count
 ];
 
 export function Navbar() {
@@ -72,66 +73,82 @@ export function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "transition-colors hover:text-primary",
+                  "transition-colors hover:text-primary relative",
                   pathname === link.href ? "text-primary font-semibold" : "text-foreground/70"
                 )}
               >
                 <span className="flex items-center gap-1.5">
                   {link.icon}
                   {link.label}
+                  {link.notificationCount && link.notificationCount > 0 && (
+                     <Badge variant="destructive" className="absolute -top-1.5 -right-2.5 h-4 w-4 p-0 flex items-center justify-center text-xs">
+                        {link.notificationCount}
+                    </Badge>
+                  )}
                 </span>
               </Link>
             ))}
           </nav>
         )}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
           {isLoadingAuth ? (
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           ) : currentUser ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage src={currentUser.photoURL || undefined} alt={currentUser.displayName || "User"} data-ai-hint="user avatar" />
-                    <AvatarFallback>{currentUser.displayName ? currentUser.displayName.substring(0,1).toUpperCase() : "U"}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{currentUser.displayName || "User"}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {currentUser.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard" className="flex items-center">
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/edit-profile" className="flex items-center">
-                    <UserCircle className="mr-2 h-4 w-4" />
-                    Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                   <Link href="/dashboard/preferences" className="flex items-center">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Preferences
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="flex items-center cursor-pointer">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <>
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary relative">
+                <Bell className="h-5 w-5" />
+                {/* Mock notification dot for general notifications */}
+                <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
+                </span>
+                <span className="sr-only">Notifications</span>
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={currentUser.photoURL || undefined} alt={currentUser.displayName || "User"} data-ai-hint="user avatar" />
+                      <AvatarFallback>{currentUser.displayName ? currentUser.displayName.substring(0,1).toUpperCase() : "U"}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{currentUser.displayName || "User"}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {currentUser.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard" className="flex items-center">
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/edit-profile" className="flex items-center">
+                      <UserCircle className="mr-2 h-4 w-4" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/preferences" className="flex items-center">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Preferences
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="flex items-center cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
           ) : (
             <>
               <Button variant="ghost" asChild>
