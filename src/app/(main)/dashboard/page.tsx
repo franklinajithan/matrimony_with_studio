@@ -1,7 +1,8 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { UserCircle, Settings, Star, Search, MessageCircle } from "lucide-react";
+import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard } from "lucide-react";
 
 export default function DashboardPage() {
   return (
@@ -90,7 +91,7 @@ export default function DashboardPage() {
          <Card className="shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-primary"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 16v-4M12 8H8.5a2.5 2.5 0 1 0 0 5H12m5.5-2.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/></svg>
+               <CreditCard className="h-6 w-6 text-primary"/>
               Subscription
             </CardTitle>
             <CardDescription>Manage your subscription plan.</CardDescription>
