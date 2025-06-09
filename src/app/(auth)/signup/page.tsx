@@ -68,14 +68,32 @@ export default function SignupPage() {
 
     } catch (error: any) {
       console.error("Firebase signup error:", error);
-      let errorMessage = "Failed to create account. Please try again.";
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'This email address is already in use.';
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = 'The password is too weak. It must be at least 6 characters.';
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'The email address is not valid.';
+      let errorMessage = "An unexpected error occurred. Please try again or check the console for details.";
+
+      if (error && typeof error === 'object' && 'code' in error) {
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            errorMessage = 'This email address is already in use. Please try logging in or use a different email.';
+            break;
+          case 'auth/weak-password':
+            errorMessage = 'The password is too weak. It must be at least 6 characters long.';
+            break;
+          case 'auth/invalid-email':
+            errorMessage = 'The email address is not valid. Please check and try again.';
+            break;
+          case 'auth/operation-not-allowed':
+            errorMessage = 'Email/Password sign-up is currently disabled. Please contact support or check Firebase project configuration (Authentication -> Sign-in method).';
+            break;
+          case 'auth/network-request-failed':
+            errorMessage = 'A network error occurred. Please check your internet connection and try again.';
+            break;
+          default:
+            errorMessage = (error as any).message || `An error occurred (Code: ${error.code}). Please try again.`;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
       }
+
       toast({
         title: "Signup Failed",
         description: errorMessage,
@@ -151,6 +169,7 @@ export default function SignupPage() {
                         className="absolute inset-y-0 right-0 h-full px-3 text-muted-foreground hover:text-primary"
                         onClick={() => setShowPassword(!showPassword)}
                         disabled={isLoading}
+                        tabIndex={-1}
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
@@ -183,6 +202,7 @@ export default function SignupPage() {
                         className="absolute inset-y-0 right-0 h-full px-3 text-muted-foreground hover:text-primary"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         disabled={isLoading}
+                        tabIndex={-1}
                       >
                         {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         <span className="sr-only">{showConfirmPassword ? "Hide password" : "Show password"}</span>
@@ -245,3 +265,4 @@ export default function SignupPage() {
     </Card>
   );
 }
+
