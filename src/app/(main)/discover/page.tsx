@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, X, MapPin, Briefcase, CheckCircle, Search } from 'lucide-react';
+import { Heart, X, MapPin, Briefcase, CheckCircle, Search as SearchIcon } from 'lucide-react'; // Renamed Search to SearchIcon
 
 const mockProfiles = [
   { id: '1', name: 'Rohan Sharma', age: 30, profession: 'Doctor', location: 'Delhi, India', imageUrl: 'https://placehold.co/300x400.png', dataAiHint: 'man indian', isVerified: true, interests: ['Music', 'Books'] },
@@ -23,19 +23,20 @@ export default function DiscoverPage() {
         <p className="mt-2 text-lg text-muted-foreground">Swipe, like, and connect with potential partners.</p>
       </div>
 
-      {/* Placeholder for swipe cards, showing a grid for now */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {mockProfiles.map((profile) => (
           <Card key={profile.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
             <div className="relative">
-              <Image
-                src={profile.imageUrl}
-                alt={profile.name}
-                width={300}
-                height={400}
-                className="w-full h-80 object-cover"
-                data-ai-hint={profile.dataAiHint}
-              />
+              <Link href={`/profile/${profile.id}`} passHref>
+                <Image
+                  src={profile.imageUrl}
+                  alt={profile.name}
+                  width={300}
+                  height={400}
+                  className="w-full h-80 object-cover cursor-pointer"
+                  data-ai-hint={profile.dataAiHint}
+                />
+              </Link>
               {profile.isVerified && (
                 <Badge variant="default" className="absolute top-2 right-2 bg-green-500 text-white flex items-center gap-1 text-xs">
                   <CheckCircle className="h-3 w-3" /> Verified
@@ -43,7 +44,9 @@ export default function DiscoverPage() {
               )}
             </div>
             <CardHeader className="p-4">
-              <CardTitle className="font-headline text-xl text-primary">{profile.name}, {profile.age}</CardTitle>
+              <Link href={`/profile/${profile.id}`} passHref>
+                <CardTitle className="font-headline text-xl text-primary hover:underline cursor-pointer">{profile.name}, {profile.age}</CardTitle>
+              </Link>
               <CardDescription className="text-sm">
                 <span className="flex items-center text-muted-foreground"><Briefcase className="mr-1 h-3.5 w-3.5" />{profile.profession}</span>
                 <span className="flex items-center text-muted-foreground"><MapPin className="mr-1 h-3.5 w-3.5" />{profile.location}</span>
@@ -63,7 +66,7 @@ export default function DiscoverPage() {
               </Button>
               <Button variant="outline" size="icon" className="col-span-1 border-primary/50 text-primary hover:bg-primary/10" asChild>
                 <Link href={`/profile/${profile.id}`}>
-                  <Search className="h-5 w-5" />
+                  <SearchIcon className="h-5 w-5" />
                   <span className="sr-only">View Profile</span>
                 </Link>
               </Button>
