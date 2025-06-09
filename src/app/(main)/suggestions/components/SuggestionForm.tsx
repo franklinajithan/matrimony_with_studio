@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -72,15 +73,12 @@ export function SuggestionForm() {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      userProfile: {
-        ...defaultUserProfile,
-        interests: defaultUserProfile.interests.join(', ') // Convert array to string for input
-      },
+      userProfile: defaultUserProfile, // interests is already a string here
       userActivity: {
-        profilesViewed: defaultUserActivity.profilesViewed.join(', '),
-        matchesMade: defaultUserActivity.matchesMade.join(', '),
+        profilesViewed: defaultUserActivity.profilesViewed, // This is a string
+        matchesMade: defaultUserActivity.matchesMade,       // This is a string
       },
-      allPotentialMatches: defaultPotentialMatches.map(pm => ({ ...pm, interests: pm.interests.join(', ') })),
+      allPotentialMatches: defaultPotentialMatches, // interests within each item is already a string
     },
   });
 
@@ -93,19 +91,22 @@ export function SuggestionForm() {
     setIsLoading(true);
     setSuggestions(null);
     try {
+      // After Zod parsing (values: FormData), 'interests', 'profilesViewed', etc., are already string[]
+      // So, 'values' can be passed directly if its structure matches IntelligentMatchSuggestionsInput.
+      // The current formattedValues construction is okay but the casts might be redundant if TS infers types correctly.
       const formattedValues: IntelligentMatchSuggestionsInput = {
         ...values,
         userProfile: {
             ...values.userProfile,
-            interests: values.userProfile.interests as unknown as string[] // Already transformed by Zod
+            interests: values.userProfile.interests // This is string[] after Zod transform
         },
         userActivity: {
-            profilesViewed: values.userActivity.profilesViewed as unknown as string[],
-            matchesMade: values.userActivity.matchesMade as unknown as string[],
+            profilesViewed: values.userActivity.profilesViewed, // This is string[]
+            matchesMade: values.userActivity.matchesMade,       // This is string[]
         },
         allPotentialMatches: values.allPotentialMatches.map(pm => ({
             ...pm,
-            interests: pm.interests as unknown as string[]
+            interests: pm.interests // This is string[]
         }))
       };
       const result = await intelligentMatchSuggestions(formattedValues);
@@ -205,7 +206,7 @@ export function SuggestionForm() {
                             </CardContent>
                         </Card>
                     ))}
-                     <Button type="button" variant="outline" onClick={() => append({ ...defaultPotentialMatches[0], userId: `match00${fields.length + 1}`, interests: defaultPotentialMatches[0].interests.join(', ') })} className="w-full">
+                     <Button type="button" variant="outline" onClick={() => append({ ...defaultPotentialMatches[0], userId: `match00${fields.length + 1}`, interests: defaultPotentialMatches[0].interests })} className="w-full">
                         <PlusCircle className="mr-2 h-4 w-4" /> Add Potential Match
                     </Button>
                      {form.formState.errors.allPotentialMatches && !form.formState.errors.allPotentialMatches.root && (
