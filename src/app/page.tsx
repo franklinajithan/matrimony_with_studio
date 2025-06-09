@@ -1,11 +1,45 @@
+
+"use client";
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { HeartHandshake, Search, MessageSquareText, ShieldCheck } from 'lucide-react';
+import { HeartHandshake, Search, MessageSquareText, ShieldCheck, Loader2 } from 'lucide-react';
 import { Logo } from '@/components/shared/Logo';
 import { Footer } from '@/components/navigation/Footer';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '@/lib/firebase/config';
 
 export default function LandingPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, redirect to dashboard.
+        router.replace('/dashboard');
+      } else {
+        // User is signed out, show the landing page.
+        setLoading(false);
+      }
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen items-center justify-center bg-gradient-to-br from-background to-rose-50">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-background to-rose-50">
       <header className="py-6 px-4 sm:px-6 lg:px-8">
