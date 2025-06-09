@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Heart, MessageCircle, Search, UserCircle, LogOut, LayoutDashboard, Settings, Star, Loader2, Bell } from 'lucide-react';
+import { Heart, MessageCircle, Search, UserCircle, LogOut, LayoutDashboard, Settings, Star, Loader2 } from 'lucide-react';
 import { Logo } from '@/components/shared/Logo';
 import { Button } from '@/components/ui/button';
 import {
@@ -95,15 +95,7 @@ export function Navbar() {
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           ) : currentUser ? (
             <>
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary relative">
-                <Bell className="h-5 w-5" />
-                {/* Mock notification dot for general notifications */}
-                <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
-                </span>
-                <span className="sr-only">Notifications</span>
-              </Button>
+              {/* Removed Bell Icon */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full">
