@@ -1,9 +1,10 @@
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, X, MapPin, Briefcase, CheckCircle } from 'lucide-react';
+import { Heart, X, MapPin, Briefcase, CheckCircle, Search } from 'lucide-react';
 
 const mockProfiles = [
   { id: '1', name: 'Rohan Sharma', age: 30, profession: 'Doctor', location: 'Delhi, India', imageUrl: 'https://placehold.co/300x400', dataAiHint: 'man portrait', isVerified: true, interests: ['Music', 'Books'] },
