@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { User, Image as ImageIcon, Info, MapPin, Briefcase, Ruler, Languages, CalendarDays, PlusCircle, FileImage, Trash2, XCircle, AlertTriangle, FileText, Loader2 } from 'lucide-react';
+import { User as UserIconLucide, Image as ImageIcon, Info, MapPin, Briefcase, Ruler, Languages, CalendarDays, PlusCircle, FileImage, Trash2, XCircle, AlertTriangle, FileText, Loader2 } from 'lucide-react'; // Renamed User to UserIconLucide
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect, useRef } from "react";
@@ -27,7 +27,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { auth, db } from "@/lib/firebase/config";
-import { updateProfile } from "firebase/auth";
+import { updateProfile, onAuthStateChanged, type User } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { uploadFile } from "@/lib/firebase/storageService";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -40,18 +40,18 @@ interface StoredPhoto {
   id: string;
   url: string;
   hint: string;
-  storagePath?: string; // Important for deletion from Firebase Storage
+  storagePath?: string; 
 }
 
 const editProfileSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters."),
   bio: z.string().min(10, "Bio must be at least 10 characters.").max(500, "Bio cannot exceed 500 characters."),
-  profilePhoto: z // This is for the new File object
+  profilePhoto: z 
     .instanceof(File, { message: "Please select a file." })
     .optional()
     .refine(file => !file || file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
     .refine(file => !file || ACCEPTED_IMAGE_TYPES.includes(file.type), ".jpg, .jpeg, .png and .webp files are accepted."),
-  additionalPhotos: z // Array of new File objects
+  additionalPhotos: z 
     .array(z.instanceof(File))
     .optional()
     .refine(files => !files || files.every(file => file.size <= MAX_FILE_SIZE), `Max file size for each additional photo is 5MB.`)
@@ -64,16 +64,15 @@ const editProfileSchema = z.object({
   caste: z.string().min(1, "Caste is required."),
   language: z.string().min(1, "Primary language is required."),
   horoscopeInfo: z.string().optional(),
-  horoscopeFile: z // This is for the new File object
+  horoscopeFile: z 
     .instanceof(File, { message: "Please select a file." })
     .optional()
     .refine(file => !file || ACCEPTED_HOROSCOPE_FILE_TYPES.includes(file.type), "Only PDF, JPG, JPEG, PNG, and WebP files are accepted.")
     .refine(file => !file || file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`),
 });
 
-// Default structure for Firestore data
 const defaultFirestoreProfile = {
-  fullName: "", bio: "", profilePhotoUrl: "", dataAiHint: "person",
+  fullName: "", bio: "", profilePhotoUrl: "https://placehold.co/128x128.png", dataAiHint: "person placeholder",
   location: "", profession: "", height: "", dob: "", religion: "", caste: "", language: "",
   horoscopeInfo: "", horoscopeFileName: "", horoscopeFileUrl: "", additionalPhotoUrls: [],
 };
@@ -83,22 +82,21 @@ export default function EditProfilePage() {
   const [profileDataLoaded, setProfileDataLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
-  const [currentProfilePhotoUrl, setCurrentProfilePhotoUrl] = useState<string | null>("https://placehold.co/128x128.png");
-  const [currentDataAiHint, setCurrentDataAiHint] = useState<string>("person");
+  const [currentProfilePhotoUrl, setCurrentProfilePhotoUrl] = useState<string | null>(defaultFirestoreProfile.profilePhotoUrl);
+  const [currentDataAiHint, setCurrentDataAiHint] = useState<string>(defaultFirestoreProfile.dataAiHint);
 
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
-  const [additionalPhotosPreview, setAdditionalPhotosPreview] = useState<string[]>([]); // Previews for NEWLY selected files
+  const [additionalPhotosPreview, setAdditionalPhotosPreview] = useState<string[]>([]); 
   const [selectedProfilePhotoName, setSelectedProfilePhotoName] = useState<string | null>(null);
   const [selectedHoroscopeFileName, setSelectedHoroscopeFileName] = useState<string | null>(null);
   
-  // Holds StoredPhoto objects fetched from Firestore or initial mock if not fetched
   const [managedExistingPhotos, setManagedExistingPhotos] = useState<StoredPhoto[]>([]); 
 
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<z.infer<typeof editProfileSchema>>({
     resolver: zodResolver(editProfileSchema),
-    defaultValues: { // These will be overridden by fetched data
+    defaultValues: { 
       ...defaultFirestoreProfile,
       profilePhoto: undefined,
       additionalPhotos: [],
@@ -107,46 +105,88 @@ export default function EditProfilePage() {
   });
 
   useEffect(() => {
-    const fetchProfileData = async () => {
-      if (auth.currentUser) {
-        const userDocRef = doc(db, "users", auth.currentUser.uid);
-        try {
-          const docSnap = await getDoc(userDocRef);
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            form.reset({
-              fullName: data.displayName || auth.currentUser.displayName || "",
-              bio: data.bio || "",
-              location: data.location || "",
-              profession: data.profession || "",
-              height: data.height || "",
-              dob: data.dob || "",
-              religion: data.religion || "",
-              caste: data.caste || "",
-              language: data.language || "",
-              horoscopeInfo: data.horoscopeInfo || "",
-              // File inputs are not reset with files, only their previews/names
-              profilePhoto: undefined,
-              additionalPhotos: [],
-              horoscopeFile: undefined,
-            });
-            setCurrentProfilePhotoUrl(data.photoURL || auth.currentUser.photoURL || "https://placehold.co/128x128.png");
-            setCurrentDataAiHint(data.dataAiHint || "person");
-            setSelectedHoroscopeFileName(data.horoscopeFileName || null);
-            setManagedExistingPhotos(data.additionalPhotoUrls || []);
-          } else {
-            // Use auth data if no Firestore doc, or defaults
-            form.reset({ fullName: auth.currentUser.displayName || "", bio: "" });
-            setCurrentProfilePhotoUrl(auth.currentUser.photoURL || "https://placehold.co/128x128.png");
-          }
-        } catch (error) {
-          console.error("Error fetching profile data:", error);
-          toast({ title: "Error", description: "Could not load profile data.", variant: "destructive" });
+    const loadProfile = async (currentUser: User) => {
+      const userDocRef = doc(db, "users", currentUser.uid);
+      try {
+        const docSnap = await getDoc(userDocRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          form.reset({
+            fullName: data.displayName || currentUser.displayName || defaultFirestoreProfile.fullName,
+            bio: data.bio || defaultFirestoreProfile.bio,
+            location: data.location || defaultFirestoreProfile.location,
+            profession: data.profession || defaultFirestoreProfile.profession,
+            height: data.height || defaultFirestoreProfile.height,
+            dob: data.dob || defaultFirestoreProfile.dob,
+            religion: data.religion || defaultFirestoreProfile.religion,
+            caste: data.caste || defaultFirestoreProfile.caste,
+            language: data.language || defaultFirestoreProfile.language,
+            horoscopeInfo: data.horoscopeInfo || defaultFirestoreProfile.horoscopeInfo,
+            profilePhoto: undefined,
+            additionalPhotos: [],
+            horoscopeFile: undefined,
+          });
+          
+          const photoToUse = data.photoURL || currentUser.photoURL || defaultFirestoreProfile.profilePhotoUrl;
+          setCurrentProfilePhotoUrl(photoToUse);
+          setCurrentDataAiHint(data.dataAiHint || (photoToUse !== defaultFirestoreProfile.profilePhotoUrl ? "person" : defaultFirestoreProfile.dataAiHint));
+          setSelectedHoroscopeFileName(data.horoscopeFileName || null);
+          setManagedExistingPhotos(data.additionalPhotoUrls || []);
+
+        } else {
+          // No Firestore document, initialize with Auth data and defaults
+          form.reset({
+            fullName: currentUser.displayName || defaultFirestoreProfile.fullName,
+            bio: defaultFirestoreProfile.bio,
+            location: defaultFirestoreProfile.location,
+            profession: defaultFirestoreProfile.profession,
+            height: defaultFirestoreProfile.height,
+            dob: defaultFirestoreProfile.dob,
+            religion: defaultFirestoreProfile.religion,
+            caste: defaultFirestoreProfile.caste,
+            language: defaultFirestoreProfile.language,
+            horoscopeInfo: defaultFirestoreProfile.horoscopeInfo,
+            profilePhoto: undefined,
+            additionalPhotos: [],
+            horoscopeFile: undefined,
+          });
+          const authPhoto = currentUser.photoURL || defaultFirestoreProfile.profilePhotoUrl;
+          setCurrentProfilePhotoUrl(authPhoto);
+          setCurrentDataAiHint(authPhoto !== defaultFirestoreProfile.profilePhotoUrl ? "person" : defaultFirestoreProfile.dataAiHint);
+          setSelectedHoroscopeFileName(null);
+          setManagedExistingPhotos([]);
         }
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+        toast({ title: "Error", description: "Could not load profile data.", variant: "destructive" });
+        // Reset to defaults on error
+        form.reset({ ...defaultFirestoreProfile, profilePhoto: undefined, additionalPhotos: [], horoscopeFile: undefined });
+        setCurrentProfilePhotoUrl(defaultFirestoreProfile.profilePhotoUrl);
+        setCurrentDataAiHint(defaultFirestoreProfile.dataAiHint);
+        setManagedExistingPhotos(defaultFirestoreProfile.additionalPhotoUrls);
+        setSelectedHoroscopeFileName(defaultFirestoreProfile.horoscopeFileName);
+      } finally {
+        setProfileDataLoaded(true);
       }
-      setProfileDataLoaded(true);
     };
-    fetchProfileData();
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loadProfile(user);
+      } else {
+        console.log("No user logged in, cannot fetch profile data.");
+        // toast({ title: "Not Logged In", description: "Please log in to edit your profile.", variant: "destructive" });
+        // router.push('/login'); // Consider redirecting
+        form.reset({ ...defaultFirestoreProfile, profilePhoto: undefined, additionalPhotos: [], horoscopeFile: undefined });
+        setCurrentProfilePhotoUrl(defaultFirestoreProfile.profilePhotoUrl);
+        setCurrentDataAiHint(defaultFirestoreProfile.dataAiHint);
+        setManagedExistingPhotos(defaultFirestoreProfile.additionalPhotoUrls);
+        setSelectedHoroscopeFileName(defaultFirestoreProfile.horoscopeFileName);
+        setProfileDataLoaded(true); // Stop skeleton even if no user
+      }
+    });
+
+    return () => unsubscribe();
   }, [form, toast]);
 
 
@@ -174,49 +214,51 @@ export default function EditProfilePage() {
         updatedAt: new Date().toISOString(),
       };
 
-      // Handle Profile Photo Upload
       if (values.profilePhoto) {
         const filePath = `users/${user.uid}/profile_photo/${values.profilePhoto.name}`;
         const newPhotoURL = await uploadFile(values.profilePhoto, filePath);
         await updateProfile(user, { photoURL: newPhotoURL });
         dataToSave.photoURL = newPhotoURL;
-        dataToSave.dataAiHint = "new upload"; // Or derive from filename/AI
-        setCurrentProfilePhotoUrl(newPhotoURL); // Update UI immediately
-        setProfilePhotoPreview(null); // Clear preview as it's now the main photo
+        dataToSave.dataAiHint = "new profile upload"; 
+        setCurrentProfilePhotoUrl(newPhotoURL); 
+        setCurrentDataAiHint("new profile upload");
+        setProfilePhotoPreview(null); 
         setSelectedProfilePhotoName(null);
       } else {
-        dataToSave.photoURL = currentProfilePhotoUrl; // Keep existing if no new one
+        dataToSave.photoURL = currentProfilePhotoUrl; 
         dataToSave.dataAiHint = currentDataAiHint;
       }
       
-      // Update Auth display name if changed
       if (user.displayName !== values.fullName) {
         await updateProfile(user, { displayName: values.fullName });
       }
 
-      // Handle Horoscope File Upload
       if (values.horoscopeFile) {
         const filePath = `users/${user.uid}/horoscope_file/${values.horoscopeFile.name}`;
         dataToSave.horoscopeFileUrl = await uploadFile(values.horoscopeFile, filePath);
         dataToSave.horoscopeFileName = values.horoscopeFile.name;
-        setSelectedHoroscopeFileName(values.horoscopeFile.name); // Update UI
+        setSelectedHoroscopeFileName(values.horoscopeFile.name); 
+      } else if (selectedHoroscopeFileName === null && form.getValues('horoscopeFile') === undefined) {
+        // If user cleared selection AND there was a file before, mark for deletion/clearing in DB
+        dataToSave.horoscopeFileUrl = ""; // Or null, depending on your DB preference
+        dataToSave.horoscopeFileName = ""; // Or null
       }
 
-      // Handle Additional Photos Upload
-      let finalAdditionalPhotos = [...managedExistingPhotos]; // Start with photos user wants to keep
+
+      let finalAdditionalPhotos = [...managedExistingPhotos]; 
       if (values.additionalPhotos && values.additionalPhotos.length > 0) {
         const newUploadedPhotos: StoredPhoto[] = [];
         for (const file of values.additionalPhotos) {
           const timestamp = Date.now();
           const filePath = `users/${user.uid}/additional_photos/${timestamp}-${file.name}`;
           const url = await uploadFile(file, filePath);
-          newUploadedPhotos.push({ id: timestamp.toString(), url, hint: "new upload", storagePath: filePath });
+          newUploadedPhotos.push({ id: timestamp.toString(), url, hint: "new additional upload", storagePath: filePath });
         }
         finalAdditionalPhotos = [...finalAdditionalPhotos, ...newUploadedPhotos];
-        setAdditionalPhotosPreview([]); // Clear previews as they are now "existing"
+        setAdditionalPhotosPreview([]); 
       }
       dataToSave.additionalPhotoUrls = finalAdditionalPhotos;
-      setManagedExistingPhotos(finalAdditionalPhotos); // Update UI immediately
+      setManagedExistingPhotos(finalAdditionalPhotos); 
 
 
       const userDocRef = doc(db, "users", user.uid);
@@ -267,7 +309,6 @@ export default function EditProfilePage() {
 
   const handleAdditionalPhotosChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    // RHF expects File[] or undefined for 'additionalPhotos' field
     form.setValue("additionalPhotos", files.length > 0 ? files : undefined, { shouldValidate: true }); 
 
     if (files.length > 0) {
@@ -276,7 +317,7 @@ export default function EditProfilePage() {
         const reader = new FileReader();
         reader.onloadend = () => {
           newPreviews.push(reader.result as string);
-          if (newPreviews.length === files.length) { // Ensure all files are read
+          if (newPreviews.length === files.length) { 
             setAdditionalPhotosPreview(prev => [...prev, ...newPreviews.filter(p => !prev.includes(p))]);
           }
         };
@@ -295,10 +336,6 @@ export default function EditProfilePage() {
   };
 
   const removeExistingPhoto = (photoId: string) => {
-    // This only removes from client-side state for now.
-    // Actual deletion from storage and Firestore will happen on save, if this photoId is not in the final list.
-    // For simplicity here, onSubmit will just save the `managedExistingPhotos` list.
-    // A more robust solution would track deleted IDs and explicitly delete from storage.
     setManagedExistingPhotos(prev => prev.filter(p => p.id !== photoId));
     toast({
       title: "Photo Marked for Removal",
@@ -307,7 +344,6 @@ export default function EditProfilePage() {
   };
   
   const handleDeactivateAccount = () => {
-    // Placeholder: Implement actual deactivation logic (e.g., set a flag in Firestore)
     toast({
         title: "Account Deactivated (Mock)",
         description: "Your account has been scheduled for deactivation.",
@@ -322,9 +358,22 @@ export default function EditProfilePage() {
         setSelectedHoroscopeFileName(file.name);
     } else {
         form.setValue('horoscopeFile', undefined, { shouldValidate: true });
-        setSelectedHoroscopeFileName(form.getValues('horoscopeInfo') ? form.getValues('horoscopeInfo')! : null); // Revert to existing name if cleared
+        // Revert to existing name (from Firestore) if selection is cleared, only if not already null
+        const existingFirestoreFileName = form.getValues('horoscopeInfo') ? (doc(db, "users", auth.currentUser!.uid), getDoc(doc(db, "users", auth.currentUser!.uid)).then(d => d.data()?.horoscopeFileName)) : null;
+        setSelectedHoroscopeFileName(existingFirestoreFileName || null);
     }
   };
+  
+  const clearHoroscopeFileSelection = () => {
+    setSelectedHoroscopeFileName(null);
+    form.setValue('horoscopeFile', undefined, { shouldValidate: true });
+    const horoscopeFileInput = document.getElementById('horoscopeFile-input') as HTMLInputElement | null; // Assuming you add an ID
+    if (horoscopeFileInput) {
+        horoscopeFileInput.value = "";
+    }
+    toast({ title: "Horoscope file selection cleared."});
+  };
+
 
   if (!profileDataLoaded) {
     return (
@@ -356,13 +405,13 @@ export default function EditProfilePage() {
             <div className="flex flex-col items-center space-y-4 mb-4">
                 <div className="relative group">
                     <Image 
-                        src={profilePhotoPreview || currentProfilePhotoUrl || "https://placehold.co/128x128.png"} 
+                        src={profilePhotoPreview || currentProfilePhotoUrl || defaultFirestoreProfile.profilePhotoUrl} 
                         alt={form.getValues("fullName") || "User"} 
                         width={128} 
                         height={128} 
                         className="h-32 w-32 rounded-full object-cover border-2 border-muted shadow-md" 
-                        data-ai-hint={profilePhotoPreview ? "new upload" : currentDataAiHint}
-                        key={profilePhotoPreview || currentProfilePhotoUrl} // Force re-render on change
+                        data-ai-hint={profilePhotoPreview ? "new upload preview" : currentDataAiHint}
+                        key={profilePhotoPreview || currentProfilePhotoUrl} 
                     />
                     {profilePhotoPreview && (
                          <Button 
@@ -408,7 +457,7 @@ export default function EditProfilePage() {
             </div>
 
             <FormField control={form.control} name="fullName" render={({ field }) => (
-              <FormItem><FormLabel className="flex items-center"><User className="mr-2 h-4 w-4 text-muted-foreground" />Full Name</FormLabel><FormControl><Input {...field} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel className="flex items-center"><UserIconLucide className="mr-2 h-4 w-4 text-muted-foreground" />Full Name</FormLabel><FormControl><Input {...field} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="bio" render={({ field }) => (
               <FormItem><FormLabel className="flex items-center"><Info className="mr-2 h-4 w-4 text-muted-foreground" />About Me (Bio)</FormLabel><FormControl><Textarea {...field} rows={4} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
@@ -448,25 +497,33 @@ export default function EditProfilePage() {
             <FormField control={form.control} name="horoscopeInfo" render={({ field }) => (
               <FormItem><FormLabel>Horoscope Information (Rasi, Nakshatra, etc.)</FormLabel><FormControl><Textarea placeholder="Enter details like Rasi, Nakshatra, Gothram..." {...field} rows={3} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
             )} />
-             <FormField
+            <FormField
                 control={form.control}
                 name="horoscopeFile"
-                render={({ field }) => ( // field.onChange handles the File object
+                render={({ field }) => (
                     <FormItem>
-                    <FormLabel className="flex items-center"><FileText className="mr-2 h-4 w-4 text-muted-foreground" />Upload Horoscope File (PDF/Image)</FormLabel>
-                    <FormControl>
-                        <Input 
-                        type="file" 
-                        accept={ACCEPTED_HOROSCOPE_FILE_TYPES.join(',')} 
-                        onChange={(e) => {
-                             field.onChange(e.target.files ? e.target.files[0] : null); 
-                             handleHoroscopeFileChange(e); 
-                        }}
-                        disabled={isSaving}
-                        />
-                    </FormControl>
-                    {selectedHoroscopeFileName && <FormDescription className="text-xs">Selected: {selectedHoroscopeFileName}</FormDescription>}
-                    <FormMessage />
+                        <div className="flex items-center justify-between">
+                            <FormLabel className="flex items-center"><FileText className="mr-2 h-4 w-4 text-muted-foreground" />Upload Horoscope File (PDF/Image)</FormLabel>
+                            {selectedHoroscopeFileName && (
+                                <Button type="button" variant="ghost" size="sm" onClick={clearHoroscopeFileSelection} className="text-xs h-auto p-1 text-destructive" disabled={isSaving}>
+                                    <XCircle className="h-3 w-3 mr-1"/> Clear
+                                </Button>
+                            )}
+                        </div>
+                        <FormControl>
+                            <Input 
+                                type="file" 
+                                id="horoscopeFile-input"
+                                accept={ACCEPTED_HOROSCOPE_FILE_TYPES.join(',')} 
+                                onChange={(e) => {
+                                    field.onChange(e.target.files ? e.target.files[0] : null); 
+                                    handleHoroscopeFileChange(e); 
+                                }}
+                                disabled={isSaving}
+                            />
+                        </FormControl>
+                        {selectedHoroscopeFileName && <FormDescription className="text-xs">Current file: {selectedHoroscopeFileName}</FormDescription>}
+                        <FormMessage />
                     </FormItem>
                 )}
             />
@@ -485,7 +542,7 @@ export default function EditProfilePage() {
                     ))}
                     {additionalPhotosPreview.map((previewUrl, index) => (
                          <div key={`new-${index}`} className="aspect-square bg-muted rounded-md flex items-center justify-center relative group">
-                            <Image src={previewUrl} alt={`New Photo ${index + 1}`} width={100} height={100} className="object-cover rounded-md h-full w-full" data-ai-hint="new upload"/>
+                            <Image src={previewUrl} alt={`New Photo ${index + 1}`} width={100} height={100} className="object-cover rounded-md h-full w-full" data-ai-hint="new upload preview"/>
                              <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeAdditionalPhotoPreview(index)} disabled={isSaving}>
                                 <Trash2 className="h-3 w-3" />
                             </Button>
@@ -496,7 +553,7 @@ export default function EditProfilePage() {
             
             <FormField
               control={form.control}
-              name="additionalPhotos" // Handles an array of File objects
+              name="additionalPhotos" 
               render={({ field }) => ( 
                 <FormItem>
                   <FormLabel className="flex items-center"><PlusCircle className="mr-2 h-4 w-4 text-muted-foreground" />Upload Additional Photos</FormLabel>
@@ -522,7 +579,7 @@ export default function EditProfilePage() {
               )}
             />
 
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isSaving}>
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isSaving || !profileDataLoaded}>
               {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes
             </Button>
@@ -569,3 +626,4 @@ export default function EditProfilePage() {
     </div>
   );
 }
+
