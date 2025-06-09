@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { User as UserIconLucide, Image as ImageIcon, Info, MapPin, Briefcase, Ruler, Languages, CalendarDays, PlusCircle, FileImage, Trash2, XCircle, AlertTriangle, FileText, Loader2, Film, Music, School, Droplet, Cigarette, Sparkles as SparklesIcon, Wand2 } from 'lucide-react'; 
+import { User as UserIconLucide, Image as ImageIcon, Info, MapPin, Briefcase, Ruler, Languages, CalendarDays, PlusCircle, FileImage, Trash2, XCircle, AlertTriangle, FileText, Loader2, Film, Music, School, Droplet, Cigarette, Sparkles as SparklesIcon, Wand2, Gamepad2, Palette, Video } from 'lucide-react'; 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect, useRef } from "react";
@@ -31,7 +31,10 @@ import { updateProfile, onAuthStateChanged, type User } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { uploadFile } from "@/lib/firebase/storageService";
 import { Skeleton } from "@/components/ui/skeleton";
-import { enhanceBio } from "@/ai/flows/enhance-bio-flow"; // Import the new AI flow
+import { enhanceBio } from "@/ai/flows/enhance-bio-flow";
+import { enhanceHobbies } from "@/ai/flows/enhance-hobbies-flow";
+import { enhanceMovies } from "@/ai/flows/enhance-movies-flow";
+import { enhanceMusic } from "@/ai/flows/enhance-music-flow";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -96,6 +99,9 @@ export default function EditProfilePage() {
   const [profileDataLoaded, setProfileDataLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isEnhancingBio, setIsEnhancingBio] = useState(false);
+  const [isEnhancingHobbies, setIsEnhancingHobbies] = useState(false);
+  const [isEnhancingMovies, setIsEnhancingMovies] = useState(false);
+  const [isEnhancingMusic, setIsEnhancingMusic] = useState(false);
   
   const [currentProfilePhotoUrl, setCurrentProfilePhotoUrl] = useState<string | null>(defaultFirestoreProfile.profilePhotoUrl);
   const [currentDataAiHint, setCurrentDataAiHint] = useState<string>(defaultFirestoreProfile.dataAiHint);
@@ -220,35 +226,43 @@ export default function EditProfilePage() {
     return () => unsubscribe();
   }, [form, toast]);
 
-  const handleEnhanceBio = async () => {
-    const currentBio = form.getValues("bio");
-    if (!currentBio || currentBio.trim().length < 10) {
+  const handleEnhanceWithAI = async (
+    fieldName: "bio" | "hobbies" | "favoriteMovies" | "favoriteMusic",
+    enhancerFunction: (input: any) => Promise<any>,
+    setLoadingState: React.Dispatch<React.SetStateAction<boolean>>,
+    inputKey: string,
+    outputKey: string,
+    title: string
+  ) => {
+    const currentValue = form.getValues(fieldName);
+    if (!currentValue || currentValue.trim().length < 3) { // Basic check
       toast({
-        title: "Bio Too Short",
-        description: "Please write a bit more in your bio before enhancing.",
+        title: `${title} Too Short`,
+        description: `Please write a bit more in your ${title.toLowerCase()} before enhancing.`,
         variant: "default",
       });
       return;
     }
-    setIsEnhancingBio(true);
+    setLoadingState(true);
     try {
-      const result = await enhanceBio({ bioText: currentBio });
-      form.setValue("bio", result.enhancedBioText, { shouldValidate: true, shouldDirty: true });
+      const result = await enhancerFunction({ [inputKey]: currentValue });
+      form.setValue(fieldName, result[outputKey], { shouldValidate: true, shouldDirty: true });
       toast({
-        title: "Bio Enhanced!",
-        description: "AI has helped refine your bio.",
+        title: `${title} Enhanced!`,
+        description: `AI has helped refine your ${title.toLowerCase()}.`,
         variant: "default",
       });
     } catch (error: any) {
       toast({
-        title: "Bio Enhancement Failed",
-        description: error.message || "Could not enhance bio at this time.",
+        title: `${title} Enhancement Failed`,
+        description: error.message || `Could not enhance ${title.toLowerCase()} at this time.`,
         variant: "destructive",
       });
     } finally {
-      setIsEnhancingBio(false);
+      setLoadingState(false);
     }
   };
+
 
   async function onSubmit(values: z.infer<typeof editProfileSchema>) {
     setIsSaving(true);
@@ -457,6 +471,8 @@ export default function EditProfilePage() {
         </div>
     )
   }
+  
+  const anyEnhancementLoading = isEnhancingBio || isEnhancingHobbies || isEnhancingMovies || isEnhancingMusic;
 
   return (
     <div className="space-y-8">
@@ -487,7 +503,7 @@ export default function EditProfilePage() {
                             className="absolute -top-1 -right-1 h-7 w-7 rounded-full bg-destructive/80 text-destructive-foreground hover:bg-destructive"
                             onClick={clearProfilePhotoSelection}
                             aria-label="Clear selected profile photo"
-                            disabled={isSaving}
+                            disabled={isSaving || anyEnhancementLoading}
                         >
                             <XCircle className="h-4 w-4" />
                         </Button>
@@ -511,7 +527,7 @@ export default function EditProfilePage() {
                             handleProfilePhotoChange(e);
                           }}
                           className="text-sm"
-                          disabled={isSaving}
+                          disabled={isSaving || anyEnhancementLoading}
                         />
                       </FormControl>
                       {selectedProfilePhotoName && <FormDescription className="text-xs text-center mt-1">Selected: {selectedProfilePhotoName}</FormDescription>}
@@ -523,7 +539,7 @@ export default function EditProfilePage() {
             </div>
 
             <FormField control={form.control} name="fullName" render={({ field }) => (
-              <FormItem><FormLabel className="flex items-center"><UserIconLucide className="mr-2 h-4 w-4 text-muted-foreground" />Full Name</FormLabel><FormControl><Input {...field} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel className="flex items-center"><UserIconLucide className="mr-2 h-4 w-4 text-muted-foreground" />Full Name</FormLabel><FormControl><Input {...field} disabled={isSaving || anyEnhancementLoading} /></FormControl><FormMessage /></FormItem>
             )} />
             
             <FormField control={form.control} name="bio" render={({ field }) => (
@@ -534,36 +550,36 @@ export default function EditProfilePage() {
                     type="button" 
                     variant="ghost" 
                     size="sm" 
-                    onClick={handleEnhanceBio} 
-                    disabled={isEnhancingBio || isSaving}
+                    onClick={() => handleEnhanceWithAI("bio", enhanceBio, setIsEnhancingBio, "bioText", "enhancedBioText", "Bio")} 
+                    disabled={isEnhancingBio || isSaving || anyEnhancementLoading}
                     className="text-xs text-primary hover:bg-primary/10 h-auto p-1"
                   >
                     {isEnhancingBio ? <Loader2 className="h-3 w-3 mr-1 animate-spin"/> : <Wand2 className="h-3 w-3 mr-1"/>}
                     Enhance with AI
                   </Button>
                 </div>
-                <FormControl><Textarea {...field} rows={4} disabled={isSaving || isEnhancingBio} /></FormControl>
+                <FormControl><Textarea {...field} rows={4} disabled={isSaving || anyEnhancementLoading} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
             
             <div className="grid md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="location" render={({ field }) => (
-                <FormItem><FormLabel className="flex items-center"><MapPin className="mr-2 h-4 w-4 text-muted-foreground" />Location</FormLabel><FormControl><Input {...field} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel className="flex items-center"><MapPin className="mr-2 h-4 w-4 text-muted-foreground" />Location</FormLabel><FormControl><Input {...field} disabled={isSaving || anyEnhancementLoading} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="profession" render={({ field }) => (
-                <FormItem><FormLabel className="flex items-center"><Briefcase className="mr-2 h-4 w-4 text-muted-foreground" />Profession</FormLabel><FormControl><Input {...field} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel className="flex items-center"><Briefcase className="mr-2 h-4 w-4 text-muted-foreground" />Profession</FormLabel><FormControl><Input {...field} disabled={isSaving || anyEnhancementLoading} /></FormControl><FormMessage /></FormItem>
                 )} />
                  <FormField control={form.control} name="height" render={({ field }) => (
-                <FormItem><FormLabel className="flex items-center"><Ruler className="mr-2 h-4 w-4 text-muted-foreground" />Height (cm)</FormLabel><FormControl><Input type="number" {...field} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel className="flex items-center"><Ruler className="mr-2 h-4 w-4 text-muted-foreground" />Height (cm)</FormLabel><FormControl><Input type="number" {...field} disabled={isSaving || anyEnhancementLoading} /></FormControl><FormMessage /></FormItem>
                 )} />
                  <FormField control={form.control} name="dob" render={({ field }) => (
-                <FormItem><FormLabel className="flex items-center"><CalendarDays className="mr-2 h-4 w-4 text-muted-foreground" />Date of Birth</FormLabel><FormControl><Input type="date" {...field} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel className="flex items-center"><CalendarDays className="mr-2 h-4 w-4 text-muted-foreground" />Date of Birth</FormLabel><FormControl><Input type="date" {...field} disabled={isSaving || anyEnhancementLoading} /></FormControl><FormMessage /></FormItem>
                 )} />
             </div>
              <FormField control={form.control} name="religion" render={({ field }) => (
                 <FormItem><FormLabel>Religion</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving} value={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving || anyEnhancementLoading} value={field.value}>
                     <FormControl><SelectTrigger><SelectValue placeholder="Select Religion" /></SelectTrigger></FormControl>
                     <SelectContent>
                         <SelectItem value="Hinduism">Hinduism</SelectItem><SelectItem value="Islam">Islam</SelectItem>
@@ -573,25 +589,52 @@ export default function EditProfilePage() {
                 </Select><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="caste" render={({ field }) => (
-              <FormItem><FormLabel>Caste/Community</FormLabel><FormControl><Input {...field} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>Caste/Community</FormLabel><FormControl><Input {...field} disabled={isSaving || anyEnhancementLoading} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="language" render={({ field }) => (
-              <FormItem><FormLabel className="flex items-center"><Languages className="mr-2 h-4 w-4 text-muted-foreground" />Primary Language(s)</FormLabel><FormControl><Input placeholder="e.g., English, Hindi" {...field} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel className="flex items-center"><Languages className="mr-2 h-4 w-4 text-muted-foreground" />Primary Language(s)</FormLabel><FormControl><Input placeholder="e.g., English, Hindi" {...field} disabled={isSaving || anyEnhancementLoading} /></FormControl><FormMessage /></FormItem>
             )} />
 
             <FormField control={form.control} name="hobbies" render={({ field }) => (
-                <FormItem><FormLabel className="flex items-center"><Info className="mr-2 h-4 w-4 text-muted-foreground" />Hobbies & Interests</FormLabel><FormControl><Textarea placeholder="e.g., Reading, Cooking, Hiking (comma-separated)" {...field} rows={3} disabled={isSaving}/></FormControl><FormMessage /></FormItem>
+                <FormItem>
+                    <div className="flex items-center justify-between">
+                        <FormLabel className="flex items-center"><Gamepad2 className="mr-2 h-4 w-4 text-muted-foreground" />Hobbies & Interests</FormLabel>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => handleEnhanceWithAI("hobbies", enhanceHobbies, setIsEnhancingHobbies, "hobbiesText", "enhancedHobbiesText", "Hobbies")} disabled={isEnhancingHobbies || isSaving || anyEnhancementLoading} className="text-xs text-primary hover:bg-primary/10 h-auto p-1">
+                            {isEnhancingHobbies ? <Loader2 className="h-3 w-3 mr-1 animate-spin"/> : <Wand2 className="h-3 w-3 mr-1"/>} Enhance
+                        </Button>
+                    </div>
+                    <FormControl><Textarea placeholder="e.g., Reading, Cooking, Hiking (comma-separated)" {...field} rows={3} disabled={isSaving || anyEnhancementLoading}/></FormControl>
+                    <FormMessage />
+                </FormItem>
             )} />
              <FormField control={form.control} name="favoriteMovies" render={({ field }) => (
-                <FormItem><FormLabel className="flex items-center"><Film className="mr-2 h-4 w-4 text-muted-foreground" />Favorite Movies</FormLabel><FormControl><Textarea placeholder="e.g., The Shawshank Redemption, Inception (comma-separated)" {...field} rows={2} disabled={isSaving}/></FormControl><FormMessage /></FormItem>
+                <FormItem>
+                    <div className="flex items-center justify-between">
+                        <FormLabel className="flex items-center"><Film className="mr-2 h-4 w-4 text-muted-foreground" />Favorite Movies</FormLabel>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => handleEnhanceWithAI("favoriteMovies", enhanceMovies, setIsEnhancingMovies, "moviesText", "enhancedMoviesText", "Favorite Movies")} disabled={isEnhancingMovies || isSaving || anyEnhancementLoading} className="text-xs text-primary hover:bg-primary/10 h-auto p-1">
+                             {isEnhancingMovies ? <Loader2 className="h-3 w-3 mr-1 animate-spin"/> : <Wand2 className="h-3 w-3 mr-1"/>} Enhance
+                        </Button>
+                    </div>
+                    <FormControl><Textarea placeholder="e.g., The Shawshank Redemption, Inception (comma-separated)" {...field} rows={2} disabled={isSaving || anyEnhancementLoading}/></FormControl>
+                    <FormMessage />
+                </FormItem>
             )} />
             <FormField control={form.control} name="favoriteMusic" render={({ field }) => (
-                <FormItem><FormLabel className="flex items-center"><Music className="mr-2 h-4 w-4 text-muted-foreground" />Favorite Music</FormLabel><FormControl><Textarea placeholder="e.g., Classical, Pop, A.R. Rahman (comma-separated)" {...field} rows={2} disabled={isSaving}/></FormControl><FormMessage /></FormItem>
+                <FormItem>
+                    <div className="flex items-center justify-between">
+                        <FormLabel className="flex items-center"><Music className="mr-2 h-4 w-4 text-muted-foreground" />Favorite Music</FormLabel>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => handleEnhanceWithAI("favoriteMusic", enhanceMusic, setIsEnhancingMusic, "musicText", "enhancedMusicText", "Favorite Music")} disabled={isEnhancingMusic || isSaving || anyEnhancementLoading} className="text-xs text-primary hover:bg-primary/10 h-auto p-1">
+                            {isEnhancingMusic ? <Loader2 className="h-3 w-3 mr-1 animate-spin"/> : <Wand2 className="h-3 w-3 mr-1"/>} Enhance
+                        </Button>
+                    </div>
+                    <FormControl><Textarea placeholder="e.g., Classical, Pop, A.R. Rahman (comma-separated)" {...field} rows={2} disabled={isSaving || anyEnhancementLoading}/></FormControl>
+                    <FormMessage />
+                </FormItem>
             )} />
 
             <FormField control={form.control} name="educationLevel" render={({ field }) => (
                 <FormItem><FormLabel className="flex items-center"><School className="mr-2 h-4 w-4 text-muted-foreground" />Education Level</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving} value={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving || anyEnhancementLoading} value={field.value}>
                     <FormControl><SelectTrigger><SelectValue placeholder="Select Education Level" /></SelectTrigger></FormControl>
                     <SelectContent>
                         <SelectItem value="High School">High School</SelectItem>
@@ -607,7 +650,7 @@ export default function EditProfilePage() {
             <div className="grid md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="smokingHabits" render={({ field }) => (
                     <FormItem><FormLabel className="flex items-center"><Cigarette className="mr-2 h-4 w-4 text-muted-foreground" />Smoking Habits</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving} value={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving || anyEnhancementLoading} value={field.value}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Select Smoking Habits" /></SelectTrigger></FormControl>
                         <SelectContent>
                             <SelectItem value="Never">Never</SelectItem>
@@ -619,7 +662,7 @@ export default function EditProfilePage() {
                 )} />
                 <FormField control={form.control} name="drinkingHabits" render={({ field }) => (
                     <FormItem><FormLabel className="flex items-center"><Droplet className="mr-2 h-4 w-4 text-muted-foreground" />Drinking Habits</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving} value={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving || anyEnhancementLoading} value={field.value}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Select Drinking Habits" /></SelectTrigger></FormControl>
                         <SelectContent>
                             <SelectItem value="Never">Never</SelectItem>
@@ -638,19 +681,19 @@ export default function EditProfilePage() {
               </CardHeader>
               <CardContent className="space-y-4 pt-2">
                 <FormField control={form.control} name="sunSign" render={({ field }) => (
-                  <FormItem><FormLabel>Sun Sign (Western)</FormLabel><FormControl><Input placeholder="e.g., Aries" {...field} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>Sun Sign (Western)</FormLabel><FormControl><Input placeholder="e.g., Aries" {...field} disabled={isSaving || anyEnhancementLoading} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="moonSign" render={({ field }) => (
-                  <FormItem><FormLabel>Moon Sign (Vedic Rasi)</FormLabel><FormControl><Input placeholder="e.g., Mesha" {...field} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>Moon Sign (Vedic Rasi)</FormLabel><FormControl><Input placeholder="e.g., Mesha" {...field} disabled={isSaving || anyEnhancementLoading} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="nakshatra" render={({ field }) => (
-                  <FormItem><FormLabel>Nakshatra (Birth Star)</FormLabel><FormControl><Input placeholder="e.g., Ashwini" {...field} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>Nakshatra (Birth Star)</FormLabel><FormControl><Input placeholder="e.g., Ashwini" {...field} disabled={isSaving || anyEnhancementLoading} /></FormControl><FormMessage /></FormItem>
                 )} />
               </CardContent>
             </Card>
             
             <FormField control={form.control} name="horoscopeInfo" render={({ field }) => (
-              <FormItem><FormLabel>General Horoscope Notes (Rasi, Nakshatra, Gotra, etc.)</FormLabel><FormControl><Textarea placeholder="Enter any additional horoscope details or notes here..." {...field} rows={3} disabled={isSaving} /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>General Horoscope Notes (Rasi, Nakshatra, Gotra, etc.)</FormLabel><FormControl><Textarea placeholder="Enter any additional horoscope details or notes here..." {...field} rows={3} disabled={isSaving || anyEnhancementLoading} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField
                 control={form.control}
@@ -660,7 +703,7 @@ export default function EditProfilePage() {
                         <div className="flex items-center justify-between">
                             <FormLabel className="flex items-center"><FileText className="mr-2 h-4 w-4 text-muted-foreground" />Upload Horoscope File (PDF/Image)</FormLabel>
                             {selectedHoroscopeFileName && (
-                                <Button type="button" variant="ghost" size="sm" onClick={clearHoroscopeFileSelection} className="text-xs h-auto p-1 text-destructive" disabled={isSaving}>
+                                <Button type="button" variant="ghost" size="sm" onClick={clearHoroscopeFileSelection} className="text-xs h-auto p-1 text-destructive" disabled={isSaving || anyEnhancementLoading}>
                                     <XCircle className="h-3 w-3 mr-1"/> Clear
                                 </Button>
                             )}
@@ -674,7 +717,7 @@ export default function EditProfilePage() {
                                     field.onChange(e.target.files ? e.target.files[0] : null); 
                                     handleHoroscopeFileChange(e); 
                                 }}
-                                disabled={isSaving}
+                                disabled={isSaving || anyEnhancementLoading}
                             />
                         </FormControl>
                         {selectedHoroscopeFileName && <FormDescription className="text-xs">Current file: {selectedHoroscopeFileName}</FormDescription>}
@@ -690,7 +733,7 @@ export default function EditProfilePage() {
                     {managedExistingPhotos.map(photo => (
                         <div key={`existing-${photo.id}`} className="aspect-square bg-muted rounded-md flex items-center justify-center relative group">
                             <Image src={photo.url} alt={`Photo ${photo.id}`} width={100} height={100} className="object-cover rounded-md h-full w-full" data-ai-hint={photo.hint}/>
-                            <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeExistingPhoto(photo.id)} disabled={isSaving}>
+                            <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeExistingPhoto(photo.id)} disabled={isSaving || anyEnhancementLoading}>
                                 <Trash2 className="h-3 w-3" />
                             </Button>
                         </div>
@@ -698,7 +741,7 @@ export default function EditProfilePage() {
                     {additionalPhotosPreview.map((previewUrl, index) => (
                          <div key={`new-${index}`} className="aspect-square bg-muted rounded-md flex items-center justify-center relative group">
                             <Image src={previewUrl} alt={`New Photo ${index + 1}`} width={100} height={100} className="object-cover rounded-md h-full w-full" data-ai-hint="new upload preview"/>
-                             <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeAdditionalPhotoPreview(index)} disabled={isSaving}>
+                             <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeAdditionalPhotoPreview(index)} disabled={isSaving || anyEnhancementLoading}>
                                 <Trash2 className="h-3 w-3" />
                             </Button>
                         </div>
@@ -721,7 +764,7 @@ export default function EditProfilePage() {
                          field.onChange(e.target.files ? Array.from(e.target.files) : undefined);
                          handleAdditionalPhotosChange(e);
                       }}
-                      disabled={isSaving}
+                      disabled={isSaving || anyEnhancementLoading}
                     />
                   </FormControl>
                   {form.getValues("additionalPhotos") && form.getValues("additionalPhotos")!.length > 0 && (
@@ -734,7 +777,7 @@ export default function EditProfilePage() {
               )}
             />
 
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isSaving || !profileDataLoaded || isEnhancingBio}>
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isSaving || !profileDataLoaded || anyEnhancementLoading}>
               {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes
             </Button>
@@ -753,7 +796,7 @@ export default function EditProfilePage() {
         <CardContent>
              <AlertDialog>
                 <AlertDialogTrigger asChild>
-                    <Button variant="destructive" className="w-full" disabled={isSaving}>
+                    <Button variant="destructive" className="w-full" disabled={isSaving || anyEnhancementLoading}>
                         Deactivate Account
                     </Button>
                 </AlertDialogTrigger>
