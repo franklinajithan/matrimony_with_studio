@@ -17,14 +17,14 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/jpg", "image/png", "image/webp"];
 
-const ExtractHoroscopeDetailsFormSchema = z.object({
+// Schema for client-side form validation
+const ExtractHoroscopeDetailsFormClientSchema = z.object({
   dateOfBirth: z.string().min(1, { message: "Date of birth is required."}).regex(/^\d{4}-\d{2}-\d{2}$/, "Date of birth must be in YYYY-MM-DD format."),
   timeOfBirth: z.string().min(1, { message: "Time of birth is required."}),
   placeOfBirth: z.string().min(1, { message: "Place of birth is required."}),
-  horoscopeFileDataUri: z.string().optional(), // This will hold the data URI
-  // We'll add a temporary field for the File object for client-side validation, not part of the AI flow input.
+  horoscopeFileDataUri: z.string().optional(),
   horoscopeFile: z
-    .any()
+    .any() // Using .any() for File object, validation done via .refine
     .refine((file) => !file || (file instanceof File && file.size <= MAX_FILE_SIZE), `Max file size is 5MB.`)
     .refine(
       (file) => !file || (file instanceof File && ACCEPTED_FILE_TYPES.includes(file.type)),
@@ -32,7 +32,7 @@ const ExtractHoroscopeDetailsFormSchema = z.object({
     ).optional(),
 });
 
-type FormData = z.infer<typeof ExtractHoroscopeDetailsFormSchema>;
+type FormData = z.infer<typeof ExtractHoroscopeDetailsFormClientSchema>;
 
 export function ExtractHoroscopeDetailsForm() {
   const { toast } = useToast();
@@ -43,7 +43,7 @@ export function ExtractHoroscopeDetailsForm() {
 
 
   const form = useForm<FormData>({
-    resolver: zodResolver(ExtractHoroscopeDetailsFormSchema),
+    resolver: zodResolver(ExtractHoroscopeDetailsFormClientSchema),
     defaultValues: {
       dateOfBirth: "1990-01-01",
       timeOfBirth: "12:00 PM", 
@@ -56,8 +56,7 @@ export function ExtractHoroscopeDetailsForm() {
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Validate using Zod schema for horoscopeFile
-      const validationResult = ExtractHoroscopeDetailsFormSchema.shape.horoscopeFile.safeParse(file);
+      const validationResult = ExtractHoroscopeDetailsFormClientSchema.shape.horoscopeFile.safeParse(file);
       if (!validationResult.success) {
         form.setError("horoscopeFile", { type: "manual", message: validationResult.error.errors[0].message });
         form.setValue("horoscopeFileDataUri", undefined);
@@ -79,7 +78,7 @@ export function ExtractHoroscopeDetailsForm() {
       reader.readAsDataURL(file);
     } else {
       form.setValue("horoscopeFileDataUri", undefined);
-      form.setValue("horoscopeFile", undefined);
+      form.setValue("horoscopeFile", undefined); // RHF stores File object here
       setSelectedFileName(null);
       form.clearErrors("horoscopeFile");
     }
@@ -94,7 +93,7 @@ export function ExtractHoroscopeDetailsForm() {
         dateOfBirth: values.dateOfBirth,
         timeOfBirth: values.timeOfBirth,
         placeOfBirth: values.placeOfBirth,
-        horoscopeFileDataUri: values.horoscopeFileDataUri, // This is the data URI
+        horoscopeFileDataUri: values.horoscopeFileDataUri,
     };
     
     try {
@@ -127,7 +126,7 @@ export function ExtractHoroscopeDetailsForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Date of Birth</FormLabel>
-                <FormControl><Input type="date" {...field} /></FormControl>
+                <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -138,7 +137,7 @@ export function ExtractHoroscopeDetailsForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Time of Birth (Local)</FormLabel>
-                <FormControl><Input type="text" placeholder="e.g., 12:00 PM or 14:30" {...field} /></FormControl>
+                <FormControl><Input type="text" placeholder="e.g., 12:00 PM or 14:30" {...field} value={field.value || ""} /></FormControl>
                  <FormDescription>Enter local time of birth (e.g., 02:30 PM or 14:30).</FormDescription>
                 <FormMessage />
               </FormItem>
@@ -150,15 +149,15 @@ export function ExtractHoroscopeDetailsForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Place of Birth</FormLabel>
-                <FormControl><Input placeholder="e.g., City, Country" {...field} /></FormControl>
+                <FormControl><Input placeholder="e.g., City, Country" {...field} value={field.value || ""} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
           <FormField
             control={form.control}
-            name="horoscopeFile" // Control the File object for validation display
-            render={({ field: { onChange, ...restFieldProps }}) => ( 
+            name="horoscopeFile" 
+            render={({ field: { onChange: rhfOnChange, onBlur, name, ref }}) => ( 
               <FormItem>
                 <FormLabel className="flex items-center">
                   <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -167,13 +166,15 @@ export function ExtractHoroscopeDetailsForm() {
                 <FormControl>
                   <Input 
                     type="file" 
-                    accept=".pdf,image/jpeg,image/jpg,image/png,image/webp" 
+                    accept={ACCEPTED_FILE_TYPES.join(',')} 
                     onChange={(e) => {
-                       onChange(e.target.files?.[0] || null); // Update RHF for the File object
-                       handleFileChange(e); // Custom handler for data URI and further processing
+                       rhfOnChange(e.target.files?.[0] || null); 
+                       handleFileChange(e); 
                     }}
+                    onBlur={onBlur}
+                    name={name}
+                    ref={ref}
                     className="text-sm"
-                    {...restFieldProps} // Pass other props like ref, onBlur
                   />
                 </FormControl>
                 {selectedFileName && <FormDescription className="text-xs">Selected: {selectedFileName}. Will be used to supplement analysis.</FormDescription>}
@@ -259,3 +260,4 @@ export function ExtractHoroscopeDetailsForm() {
     </>
   );
 }
+
