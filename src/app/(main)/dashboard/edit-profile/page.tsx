@@ -10,10 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { User, Image as ImageIcon, Info, MapPin, Briefcase, Ruler, Languages, CalendarDays, Upload, PlusCircle, FileImage } from 'lucide-react';
+import { User, Image as ImageIcon, Info, MapPin, Briefcase, Ruler, Languages, CalendarDays, Upload, PlusCircle, FileImage, Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Image from "next/image"; // Import NextImage for optimized images if needed, or stick to img for simplicity with data URLs
 
 // Mock existing user data
 const currentUser = {
@@ -44,13 +45,13 @@ const editProfileSchema = z.object({
   bio: z.string().min(10, "Bio must be at least 10 characters.").max(500, "Bio cannot exceed 500 characters."),
   profilePhoto: z
     .any()
-    .refine((file) => !file || file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+    .refine((file) => !file || (file instanceof File && file.size <= MAX_FILE_SIZE), `Max file size is 5MB.`)
     .refine(
-      (file) => !file || ACCEPTED_IMAGE_TYPES.includes(file.type),
+      (file) => !file || (file instanceof File && ACCEPTED_IMAGE_TYPES.includes(file.type)),
       ".jpg, .jpeg, .png and .webp files are accepted."
     ).optional(),
   additionalPhotos: z
-    .array(z.any())
+    .array(z.instanceof(File))
     .optional()
     .refine(
         (files) => !files || files.every(file => file.size <= MAX_FILE_SIZE),
@@ -68,13 +69,15 @@ const editProfileSchema = z.object({
   caste: z.string().min(1, "Caste is required."),
   language: z.string().min(1, "Primary language is required."),
   horoscopeInfo: z.string().optional(),
-  horoscopePdf: z.any().optional(),
+  horoscopePdf: z.any().optional().refine((file) => !file || (file instanceof File && file.type === "application/pdf"), "Only PDF files are accepted for horoscope.")
+    .refine((file) => !file || (file instanceof File && file.size <= MAX_FILE_SIZE), `Max PDF file size is 5MB.`),
 });
 
 export default function EditProfilePage() {
   const { toast } = useToast();
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
+  const [additionalPhotosPreview, setAdditionalPhotosPreview] = useState<string[]>([]);
   const [selectedProfilePhotoName, setSelectedProfilePhotoName] = useState<string | null>(null);
-  const [selectedAdditionalPhotos, setSelectedAdditionalPhotos] = useState<File[]>([]);
 
 
   const form = useForm<z.infer<typeof editProfileSchema>>({
@@ -92,6 +95,7 @@ export default function EditProfilePage() {
       horoscopeInfo: currentUser.horoscopeInfo,
       profilePhoto: undefined,
       additionalPhotos: [],
+      horoscopePdf: undefined,
     },
   });
 
@@ -99,6 +103,7 @@ export default function EditProfilePage() {
     console.log("Profile update submitted:", values);
     // values.profilePhoto will be a File object or undefined
     // values.additionalPhotos will be an array of File objects or undefined
+    // values.horoscopePdf will be a File object or undefined
 
     toast({
       title: "Profile Updated (Mock)",
@@ -110,6 +115,57 @@ export default function EditProfilePage() {
     // 3. If values.horoscopePdf, upload to Firebase Storage and get URL
     // 4. Update profile data in Firestore
   }
+  
+  const handleProfilePhotoChange = (event: React.ChangeEvent<HTMLInputElement>, fieldChange: (file: File | null) => void) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      fieldChange(file);
+      setSelectedProfilePhotoName(file.name);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      fieldChange(null);
+      setSelectedProfilePhotoName(null);
+      setProfilePhotoPreview(null);
+    }
+  };
+
+  const handleAdditionalPhotosChange = (event: React.ChangeEvent<HTMLInputElement>, fieldChange: (files: File[]) => void) => {
+    const files = Array.from(event.target.files || []);
+    fieldChange(files);
+    if (files.length > 0) {
+      const newPreviews: string[] = [];
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          newPreviews.push(reader.result as string);
+          if (newPreviews.length === files.length) {
+            setAdditionalPhotosPreview(prev => [...prev, ...newPreviews]); // Append new previews
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    } else {
+       // If no files are selected (e.g. user clears selection in file dialog),
+       // it's tricky to know which specific previews to remove if appending.
+       // For simplicity now, let's clear all *new* previews if the selection is empty.
+       // A more robust solution might involve managing previews with unique IDs.
+       setAdditionalPhotosPreview([]);
+    }
+  };
+
+  // Function to remove a newly added additional photo preview
+  const removeAdditionalPhotoPreview = (index: number) => {
+    setAdditionalPhotosPreview(prev => prev.filter((_, i) => i !== index));
+    // Also update the react-hook-form field
+    const currentFiles = form.getValues("additionalPhotos") || [];
+    const updatedFiles = currentFiles.filter((_, i) => i !== index);
+    form.setValue("additionalPhotos", updatedFiles, { shouldValidate: true });
+  };
+
 
   return (
     <Card className="w-full max-w-2xl mx-auto shadow-xl">
@@ -121,7 +177,14 @@ export default function EditProfilePage() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="flex items-center space-x-4 mb-4">
-              <img src={currentUser.profilePhotoUrl} alt={currentUser.fullName} data-ai-hint={currentUser.dataAiHint} className="h-24 w-24 rounded-full object-cover" />
+              <Image 
+                src={profilePhotoPreview || currentUser.profilePhotoUrl} 
+                alt={currentUser.fullName} 
+                width={96} 
+                height={96} 
+                className="h-24 w-24 rounded-full object-cover" 
+                data-ai-hint={profilePhotoPreview ? "new upload" : currentUser.dataAiHint}
+              />
               <div className="flex-grow">
                 <FormField
                   control={form.control}
@@ -133,11 +196,7 @@ export default function EditProfilePage() {
                         <Input 
                           type="file" 
                           accept={ACCEPTED_IMAGE_TYPES.join(',')} 
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            field.onChange(file);
-                            setSelectedProfilePhotoName(file ? file.name : null);
-                          }} 
+                          onChange={(e) => handleProfilePhotoChange(e, field.onChange)}
                           className="text-sm"
                         />
                       </FormControl>
@@ -190,18 +249,44 @@ export default function EditProfilePage() {
             <FormField control={form.control} name="horoscopeInfo" render={({ field }) => (
               <FormItem><FormLabel>Horoscope Information (Rasi, Nakshatra, etc.)</FormLabel><FormControl><Textarea placeholder="Enter details like Rasi, Nakshatra, Gothram..." {...field} rows={3} /></FormControl><FormMessage /></FormItem>
             )} />
-            <FormField control={form.control} name="horoscopePdf" render={({ field }) => (
-                <FormItem><FormLabel className="flex items-center"><Upload className="mr-2 h-4 w-4 text-muted-foreground" />Upload Horoscope PDF</FormLabel><FormControl><Input type="file" accept=".pdf" onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)} /></FormControl><FormMessage /></FormItem>
-            )} />
+             <FormField
+                control={form.control}
+                name="horoscopePdf"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel className="flex items-center"><Upload className="mr-2 h-4 w-4 text-muted-foreground" />Upload Horoscope PDF</FormLabel>
+                    <FormControl>
+                        <Input 
+                        type="file" 
+                        accept=".pdf" 
+                        onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)} 
+                        />
+                    </FormControl>
+                    {field.value && <FormDescription className="text-xs">Selected: {field.value.name}</FormDescription>}
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
 
             <div className="space-y-2">
                 <Label className="flex items-center font-semibold"><FileImage className="mr-2 h-4 w-4 text-muted-foreground" />Your Photo Gallery</Label>
-                <FormDescription>These are your currently displayed additional photos. You can add more below.</FormDescription>
+                <FormDescription>Manage your additional photos. Upload new ones or remove existing ones.</FormDescription>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                     {currentUser.additionalPhotoUrls.map(photo => (
-                        <div key={photo.id} className="aspect-square bg-muted rounded-md flex items-center justify-center relative group">
-                            <img src={photo.url} alt={`Photo ${photo.id}`} className="object-cover rounded-md h-full w-full" data-ai-hint={photo.hint}/>
-                            {/* Add delete button functionality here if needed for existing photos */}
+                        <div key={`existing-${photo.id}`} className="aspect-square bg-muted rounded-md flex items-center justify-center relative group">
+                            <Image src={photo.url} alt={`Photo ${photo.id}`} width={100} height={100} className="object-cover rounded-md h-full w-full" data-ai-hint={photo.hint}/>
+                            {/* In a real app, add a delete button for existing photos, which would call a function to remove from backend and update UI */}
+                            <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => alert('Delete existing photo: ' + photo.id)}>
+                                <Trash2 className="h-3 w-3" />
+                            </Button>
+                        </div>
+                    ))}
+                    {additionalPhotosPreview.map((previewUrl, index) => (
+                         <div key={`new-${index}`} className="aspect-square bg-muted rounded-md flex items-center justify-center relative group">
+                            <Image src={previewUrl} alt={`New Photo ${index + 1}`} width={100} height={100} className="object-cover rounded-md h-full w-full" data-ai-hint="new upload"/>
+                             <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeAdditionalPhotoPreview(index)}>
+                                <Trash2 className="h-3 w-3" />
+                            </Button>
                         </div>
                     ))}
                 </div>
@@ -218,16 +303,12 @@ export default function EditProfilePage() {
                       type="file"
                       multiple
                       accept={ACCEPTED_IMAGE_TYPES.join(',')}
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files || []);
-                        field.onChange(files);
-                        setSelectedAdditionalPhotos(files);
-                      }}
+                      onChange={(e) => handleAdditionalPhotosChange(e, field.onChange)}
                     />
                   </FormControl>
-                  {selectedAdditionalPhotos.length > 0 && (
+                  {form.getValues("additionalPhotos") && form.getValues("additionalPhotos")!.length > 0 && (
                     <FormDescription className="text-xs">
-                      Selected {selectedAdditionalPhotos.length} file(s): {selectedAdditionalPhotos.map(f => f.name).join(', ')}
+                      Selected {form.getValues("additionalPhotos")!.length} file(s): {form.getValues("additionalPhotos")!.map(f => f.name).join(', ')}
                     </FormDescription>
                   )}
                   <FormMessage />
@@ -244,6 +325,3 @@ export default function EditProfilePage() {
     </Card>
   );
 }
-
-
-    
