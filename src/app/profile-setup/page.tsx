@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,36 +10,95 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { User, Image as ImageIcon, Info } from 'lucide-react';
+import { User, Image as ImageIcon, Info, Loader2 } from 'lucide-react';
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import React, { useState } from "react";
 import { Logo } from "@/components/shared/Logo";
+import { auth, db } from "@/lib/firebase/config";
+import { updateProfile } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { uploadFile } from "@/lib/firebase/storageService";
 
 const profileSetupSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters."),
   bio: z.string().min(10, "Bio must be at least 10 characters.").max(500, "Bio cannot exceed 500 characters."),
-  profilePhoto: z.any().optional(), // For file upload, validation is more complex client/server side
+  profilePhoto: z
+    .instanceof(File, { message: "Please select a file." })
+    .optional()
+    .refine(file => !file || file.size <= 5 * 1024 * 1024, `Max file size is 5MB.`)
+    .refine(
+      file => !file || ["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type),
+      ".jpg, .jpeg, .png and .webp files are accepted."
+    ),
 });
 
 export default function ProfileSetupPage() {
   const { toast } = useToast();
+  const router = useRouter();
+  const [isSaving, setIsSaving] = useState(false);
+
   const form = useForm<z.infer<typeof profileSetupSchema>>({
     resolver: zodResolver(profileSetupSchema),
     defaultValues: {
-      fullName: "",
+      fullName: auth.currentUser?.displayName || "",
       bio: "",
+      profilePhoto: undefined,
     },
   });
 
   async function onSubmit(values: z.infer<typeof profileSetupSchema>) {
-    console.log("Profile setup submitted:", values);
-    toast({
-      title: "Profile Setup Complete (Mock)",
-      description: "Your profile information would be saved. Redirecting to dashboard...",
-    });
-    // Here you would:
-    // 1. Upload photo to Firebase Storage if provided
-    // 2. Save profile data (name, bio, photoURL) to Firestore
-    // 3. Redirect to dashboard: router.push('/dashboard')
+    setIsSaving(true);
+    const user = auth.currentUser;
+
+    if (!user) {
+      toast({ title: "Error", description: "No authenticated user found. Please sign in again.", variant: "destructive" });
+      setIsSaving(false);
+      router.push('/login');
+      return;
+    }
+
+    try {
+      let photoURL: string | null = user.photoURL; // Keep existing photo if no new one is uploaded
+
+      if (values.profilePhoto) {
+        const filePath = `users/${user.uid}/profile_photo/${values.profilePhoto.name}`;
+        photoURL = await uploadFile(values.profilePhoto, filePath);
+      }
+
+      // Update Firebase Auth profile
+      await updateProfile(user, {
+        displayName: values.fullName,
+        photoURL: photoURL, 
+      });
+
+      // Save profile data to Firestore
+      const userDocRef = doc(db, "users", user.uid);
+      await setDoc(userDocRef, {
+        uid: user.uid,
+        email: user.email,
+        displayName: values.fullName,
+        photoURL: photoURL,
+        bio: values.bio,
+        createdAt: new Date().toISOString(), 
+      }, { merge: true });
+
+      toast({
+        title: "Profile Setup Complete!",
+        description: "Your profile has been saved. Redirecting to dashboard...",
+      });
+      router.push('/dashboard');
+
+    } catch (error: any) {
+      console.error("Profile setup error:", error);
+      toast({
+        title: "Setup Failed",
+        description: error.message || "An unexpected error occurred while saving your profile.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -61,7 +121,7 @@ export default function ProfileSetupPage() {
                   <FormItem>
                     <FormLabel className="flex items-center"><User className="mr-2 h-4 w-4 text-muted-foreground" />Full Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="E.g., Aisha Khan" {...field} />
+                      <Input placeholder="E.g., Aisha Khan" {...field} disabled={isSaving} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -74,7 +134,7 @@ export default function ProfileSetupPage() {
                   <FormItem>
                     <FormLabel className="flex items-center"><Info className="mr-2 h-4 w-4 text-muted-foreground" />About Me (Bio)</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Share a few words about yourself, your interests, and what you're looking for." {...field} rows={4} />
+                      <Textarea placeholder="Share a few words about yourself, your interests, and what you're looking for." {...field} rows={4} disabled={isSaving} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -83,18 +143,24 @@ export default function ProfileSetupPage() {
               <FormField
                 control={form.control}
                 name="profilePhoto"
-                render={({ field }) => (
+                render={({ field }) => ( // field.onChange provided by RHF handles file object
                   <FormItem>
                     <FormLabel className="flex items-center"><ImageIcon className="mr-2 h-4 w-4 text-muted-foreground" />Profile Photo</FormLabel>
                     <FormControl>
-                      <Input type="file" accept="image/*" onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)} />
+                      <Input 
+                        type="file" 
+                        accept="image/jpeg,image/jpg,image/png,image/webp" 
+                        onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)} 
+                        disabled={isSaving}
+                      />
                     </FormControl>
-                    <FormDescription>A clear photo helps make a great first impression.</FormDescription>
+                    <FormDescription>A clear photo helps make a great first impression. Max 5MB.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isSaving}>
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save and Continue
               </Button>
             </form>
@@ -102,7 +168,7 @@ export default function ProfileSetupPage() {
         </CardContent>
         <CardFooter className="flex justify-center">
             <Link href="/dashboard">
-                <Button variant="link" className="text-sm text-muted-foreground hover:text-primary">Skip for now</Button>
+                <Button variant="link" className="text-sm text-muted-foreground hover:text-primary" disabled={isSaving}>Skip for now</Button>
             </Link>
         </CardFooter>
       </Card>
