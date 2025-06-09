@@ -10,11 +10,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { User, Image as ImageIcon, Info, MapPin, Briefcase, Ruler, Languages, CalendarDays, Upload, PlusCircle, FileImage, Trash2 } from 'lucide-react';
+import { User, Image as ImageIcon, Info, MapPin, Briefcase, Ruler, Languages, CalendarDays, Upload, PlusCircle, FileImage, Trash2, XCircle, AlertTriangle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect } from "react";
-import Image from "next/image"; // Import NextImage for optimized images if needed, or stick to img for simplicity with data URLs
+import Image from "next/image";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // Mock existing user data
 const currentUser = {
@@ -78,6 +89,9 @@ export default function EditProfilePage() {
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
   const [additionalPhotosPreview, setAdditionalPhotosPreview] = useState<string[]>([]);
   const [selectedProfilePhotoName, setSelectedProfilePhotoName] = useState<string | null>(null);
+  const [managedExistingPhotos, setManagedExistingPhotos] = useState(currentUser.additionalPhotoUrls);
+
+  const profilePhotoInputRef = React.useRef<HTMLInputElement>(null);
 
 
   const form = useForm<z.infer<typeof editProfileSchema>>({
@@ -101,25 +115,17 @@ export default function EditProfilePage() {
 
   async function onSubmit(values: z.infer<typeof editProfileSchema>) {
     console.log("Profile update submitted:", values);
-    // values.profilePhoto will be a File object or undefined
-    // values.additionalPhotos will be an array of File objects or undefined
-    // values.horoscopePdf will be a File object or undefined
-
+    // In a real app, you would also send information about which `managedExistingPhotos` were removed.
     toast({
       title: "Profile Updated (Mock)",
       description: "Your profile information would be saved.",
     });
-    // Here you would:
-    // 1. If values.profilePhoto, upload to Firebase Storage and get URL
-    // 2. If values.additionalPhotos, upload each to Firebase Storage and get URLs
-    // 3. If values.horoscopePdf, upload to Firebase Storage and get URL
-    // 4. Update profile data in Firestore
   }
   
-  const handleProfilePhotoChange = (event: React.ChangeEvent<HTMLInputElement>, fieldChange: (file: File | null) => void) => {
+  const handleProfilePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      fieldChange(file);
+      form.setValue('profilePhoto', file, { shouldValidate: true });
       setSelectedProfilePhotoName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -127,47 +133,78 @@ export default function EditProfilePage() {
       };
       reader.readAsDataURL(file);
     } else {
-      fieldChange(null);
+      form.setValue('profilePhoto', null, { shouldValidate: true });
       setSelectedProfilePhotoName(null);
       setProfilePhotoPreview(null);
     }
   };
 
-  const handleAdditionalPhotosChange = (event: React.ChangeEvent<HTMLInputElement>, fieldChange: (files: File[]) => void) => {
+  const clearProfilePhotoSelection = () => {
+    setProfilePhotoPreview(null);
+    setSelectedProfilePhotoName(null);
+    form.setValue('profilePhoto', null, { shouldValidate: true });
+    if (profilePhotoInputRef.current) {
+        profilePhotoInputRef.current.value = ""; // Clear the file input
+    }
+    toast({ title: "Profile photo selection cleared."});
+  }
+
+  const handleAdditionalPhotosChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    fieldChange(files);
+    // Assuming you want to append to existing selection in the form field, or replace.
+    // For simplicity, let's replace current selection in the form field
+    // but append to previews. This might need adjustment based on exact UX desired.
+    form.setValue("additionalPhotos", files, { shouldValidate: true }); 
+
     if (files.length > 0) {
       const newPreviews: string[] = [];
+      let loadedCount = 0;
       files.forEach(file => {
         const reader = new FileReader();
         reader.onloadend = () => {
           newPreviews.push(reader.result as string);
-          if (newPreviews.length === files.length) {
-            setAdditionalPhotosPreview(prev => [...prev, ...newPreviews]); // Append new previews
+          loadedCount++;
+          if (loadedCount === files.length) {
+            // Append new previews to existing new previews
+            setAdditionalPhotosPreview(prev => [...prev, ...newPreviews.filter(p => !prev.includes(p))]);
           }
         };
         reader.readAsDataURL(file);
       });
-    } else {
-       // If no files are selected (e.g. user clears selection in file dialog),
-       // it's tricky to know which specific previews to remove if appending.
-       // For simplicity now, let's clear all *new* previews if the selection is empty.
-       // A more robust solution might involve managing previews with unique IDs.
-       setAdditionalPhotosPreview([]);
     }
+    // Clearing previews if no files are selected is tricky if appending.
+    // If replacing, you could do: else { setAdditionalPhotosPreview([]); }
   };
 
-  // Function to remove a newly added additional photo preview
   const removeAdditionalPhotoPreview = (index: number) => {
     setAdditionalPhotosPreview(prev => prev.filter((_, i) => i !== index));
-    // Also update the react-hook-form field
     const currentFiles = form.getValues("additionalPhotos") || [];
     const updatedFiles = currentFiles.filter((_, i) => i !== index);
     form.setValue("additionalPhotos", updatedFiles, { shouldValidate: true });
+    toast({title: "Photo preview removed."});
+  };
+
+  const removeExistingPhoto = (photoId: number) => {
+    setManagedExistingPhotos(prev => prev.filter(p => p.id !== photoId));
+    toast({
+      title: "Photo Removed (Locally)",
+      description: "This photo will be permanently deleted when you save changes.",
+      variant: "destructive"
+    });
+  };
+  
+  const handleDeactivateAccount = () => {
+    // In a real app, this would trigger a backend API call
+    toast({
+        title: "Account Deactivated (Mock)",
+        description: "Your account has been scheduled for deactivation.",
+        variant: "destructive"
+    });
   };
 
 
   return (
+    <div className="space-y-8">
     <Card className="w-full max-w-2xl mx-auto shadow-xl">
       <CardHeader>
         <CardTitle className="font-headline text-3xl text-primary">Edit Your Profile</CardTitle>
@@ -176,31 +213,47 @@ export default function EditProfilePage() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="flex items-center space-x-4 mb-4">
-              <Image 
-                src={profilePhotoPreview || currentUser.profilePhotoUrl} 
-                alt={currentUser.fullName} 
-                width={96} 
-                height={96} 
-                className="h-24 w-24 rounded-full object-cover" 
-                data-ai-hint={profilePhotoPreview ? "new upload" : currentUser.dataAiHint}
-              />
-              <div className="flex-grow">
+            <div className="flex flex-col items-center space-y-4 mb-4">
+                <div className="relative group">
+                    <Image 
+                        src={profilePhotoPreview || currentUser.profilePhotoUrl} 
+                        alt={currentUser.fullName} 
+                        width={128} 
+                        height={128} 
+                        className="h-32 w-32 rounded-full object-cover border-2 border-muted shadow-md" 
+                        data-ai-hint={profilePhotoPreview ? "new upload" : currentUser.dataAiHint}
+                    />
+                    {profilePhotoPreview && (
+                         <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            className="absolute -top-1 -right-1 h-7 w-7 rounded-full bg-destructive/80 text-destructive-foreground hover:bg-destructive"
+                            onClick={clearProfilePhotoSelection}
+                            aria-label="Clear selected profile photo"
+                        >
+                            <XCircle className="h-4 w-4" />
+                        </Button>
+                    )}
+                </div>
+              
+              <div className="w-full max-w-sm">
                 <FormField
                   control={form.control}
                   name="profilePhoto"
-                  render={({ field }) => (
+                  render={({ field }) => ( // field.onChange is handled by handleProfilePhotoChange
                     <FormItem>
-                      <FormLabel className="text-base font-semibold">Change Profile Photo</FormLabel>
+                      <FormLabel className="text-base font-semibold sr-only">Change Profile Photo</FormLabel>
                       <FormControl>
                         <Input 
-                          type="file" 
+                          type="file"
+                          ref={profilePhotoInputRef}
                           accept={ACCEPTED_IMAGE_TYPES.join(',')} 
-                          onChange={(e) => handleProfilePhotoChange(e, field.onChange)}
+                          onChange={handleProfilePhotoChange} // Uses custom handler
                           className="text-sm"
                         />
                       </FormControl>
-                      {selectedProfilePhotoName && <FormDescription className="text-xs">Selected: {selectedProfilePhotoName}</FormDescription>}
+                      {selectedProfilePhotoName && <FormDescription className="text-xs text-center mt-1">Selected: {selectedProfilePhotoName}</FormDescription>}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -262,7 +315,7 @@ export default function EditProfilePage() {
                         onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)} 
                         />
                     </FormControl>
-                    {field.value && <FormDescription className="text-xs">Selected: {field.value.name}</FormDescription>}
+                    {field.value && typeof field.value === 'object' && 'name' in field.value && <FormDescription className="text-xs">Selected: {field.value.name}</FormDescription>}
                     <FormMessage />
                     </FormItem>
                 )}
@@ -272,11 +325,10 @@ export default function EditProfilePage() {
                 <Label className="flex items-center font-semibold"><FileImage className="mr-2 h-4 w-4 text-muted-foreground" />Your Photo Gallery</Label>
                 <FormDescription>Manage your additional photos. Upload new ones or remove existing ones.</FormDescription>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                    {currentUser.additionalPhotoUrls.map(photo => (
+                    {managedExistingPhotos.map(photo => (
                         <div key={`existing-${photo.id}`} className="aspect-square bg-muted rounded-md flex items-center justify-center relative group">
                             <Image src={photo.url} alt={`Photo ${photo.id}`} width={100} height={100} className="object-cover rounded-md h-full w-full" data-ai-hint={photo.hint}/>
-                            {/* In a real app, add a delete button for existing photos, which would call a function to remove from backend and update UI */}
-                            <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => alert('Delete existing photo: ' + photo.id)}>
+                            <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeExistingPhoto(photo.id)}>
                                 <Trash2 className="h-3 w-3" />
                             </Button>
                         </div>
@@ -295,7 +347,7 @@ export default function EditProfilePage() {
             <FormField
               control={form.control}
               name="additionalPhotos"
-              render={({ field }) => (
+              render={({ field }) => ( // field.onChange is handled by handleAdditionalPhotosChange
                 <FormItem>
                   <FormLabel className="flex items-center"><PlusCircle className="mr-2 h-4 w-4 text-muted-foreground" />Upload Additional Photos</FormLabel>
                   <FormControl>
@@ -303,7 +355,7 @@ export default function EditProfilePage() {
                       type="file"
                       multiple
                       accept={ACCEPTED_IMAGE_TYPES.join(',')}
-                      onChange={(e) => handleAdditionalPhotosChange(e, field.onChange)}
+                      onChange={handleAdditionalPhotosChange} // Uses custom handler
                     />
                   </FormControl>
                   {form.getValues("additionalPhotos") && form.getValues("additionalPhotos")!.length > 0 && (
@@ -323,5 +375,45 @@ export default function EditProfilePage() {
         </Form>
       </CardContent>
     </Card>
+
+    <Card className="w-full max-w-2xl mx-auto shadow-xl mt-8 border-destructive/50">
+        <CardHeader>
+            <CardTitle className="font-headline text-2xl text-destructive flex items-center">
+                <AlertTriangle className="mr-2 h-6 w-6"/>Danger Zone
+            </CardTitle>
+            <CardDescription>Actions in this zone are critical and may have irreversible consequences.</CardDescription>
+        </CardHeader>
+        <CardContent>
+             <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="w-full">
+                        Deactivate Account
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Deactivating your account will hide your profile from MatchCraft. You will not be able to log in or be discovered by others. 
+                        You can usually reactivate your account by contacting support. This action is not immediate deletion.
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeactivateAccount} className="bg-destructive hover:bg-destructive/90">
+                        Yes, Deactivate My Account
+                    </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            <p className="mt-2 text-xs text-muted-foreground text-center">
+                Please be certain before deactivating your account.
+            </p>
+        </CardContent>
+    </Card>
+    </div>
   );
 }
+
+
+    
