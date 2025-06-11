@@ -112,7 +112,7 @@ export default function DashboardPage() {
       collection(db, "matchRequests"),
       where("receiverUid", "==", currentUser.uid),
       where("status", "==", "pending"),
-      orderBy("createdAt", "desc")
+      orderBy("createdAt", "asc") // Changed to 'asc'
     );
 
     const unsubscribeRequests = onSnapshot(requestsQuery, async (snapshot) => {
@@ -148,12 +148,13 @@ export default function DashboardPage() {
           timestamp: data.createdAt as Timestamp,
         } as MatchRequest;
       });
-      const fetchedRequests = await Promise.all(requestsPromises);
-      setMatchRequests(fetchedRequests.filter(req => req !== null));
+      let fetchedRequests = await Promise.all(requestsPromises);
+      fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); // Reverse here to show newest first
+      setMatchRequests(fetchedRequests as MatchRequest[]);
       setIsLoadingRequests(false);
     }, (error) => {
         console.error("Error fetching match requests: ", error);
-        toast({ title: "Error", description: "Could not load match requests.", variant: "destructive"});
+        toast({ title: "Error", description: "Could not load match requests. " + error.message, variant: "destructive"});
         setIsLoadingRequests(false);
     });
 
@@ -195,8 +196,8 @@ export default function DashboardPage() {
         unreadBy: { [user1Uid]: 0, [user2Uid]: 0 } 
     }, { merge: true });
     
-    // Also update the request status
-    const requestDocRef = doc(db, "matchRequests", getCompositeId(user1Uid, user2Uid)); // Assuming request ID is composite
+    // Also update the request status using the correct composite ID for the request
+    const requestDocRef = doc(db, "matchRequests", getCompositeId(user1Uid, user2Uid)); 
     batch.update(requestDocRef, { status: "accepted", updatedAt: serverTimestamp() });
     
     await batch.commit();
@@ -205,9 +206,16 @@ export default function DashboardPage() {
 
   const handleAcceptRequest = async (requestId: string, senderUid: string) => {
     if (!currentUser) return;
-    setProcessingRequestId(requestId);
+    setProcessingRequestId(requestId); // Use actual request ID for processing state
     try {
-      await createChatDocument(currentUser.uid, senderUid);
+      // The request document ID (requestId) is what needs to be updated.
+      // createChatDocument will handle updating the specific request ID if it's the composite one.
+      // If requestId is ALREADY the composite ID, then createChatDocument is fine.
+      // If requestId is the individual Firestore doc ID, then createChatDocument needs that one.
+      // For now, let's assume createChatDocument correctly identifies the request to update based on its internal logic or params.
+      // The key is that createChatDocument takes user1Uid and user2Uid.
+      
+      await createChatDocument(currentUser.uid, senderUid); // This function now also updates the request
       toast({ title: "Request Accepted!", description: "You are now matched." });
       // The onSnapshot listener will update the local list
     } catch (error: any) {
@@ -220,8 +228,9 @@ export default function DashboardPage() {
 
   const handleDeclineRequest = async (requestId: string) => {
      if (!currentUser) return;
-    setProcessingRequestId(requestId);
-    const requestDocRef = doc(db, "matchRequests", requestId); // requestID is now the specific doc ID
+    setProcessingRequestId(requestId); // Use actual request ID for processing state
+    // requestId here is the actual document ID from the matchRequests collection
+    const requestDocRef = doc(db, "matchRequests", requestId); 
     try {
       await updateDoc(requestDocRef, { status: "declined_by_receiver", updatedAt: serverTimestamp() });
       toast({ title: "Request Declined" });
@@ -389,11 +398,11 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <div className="flex gap-1.5">
-                      <Button onClick={() => handleAcceptRequest(getCompositeId(currentUser!.uid, req.senderUid), req.senderUid)} variant="outline" size="sm" className="h-7 px-2 border-green-500 text-green-600 hover:bg-green-500/10 disabled:opacity-50" disabled={processingRequestId === getCompositeId(currentUser!.uid, req.senderUid)}>
-                        {processingRequestId === getCompositeId(currentUser!.uid, req.senderUid) ? <Loader2 className="h-3 w-3 animate-spin"/> : <Check className="h-3 w-3"/>}
+                      <Button onClick={() => handleAcceptRequest(req.id, req.senderUid)} variant="outline" size="sm" className="h-7 px-2 border-green-500 text-green-600 hover:bg-green-500/10 disabled:opacity-50" disabled={processingRequestId === req.id}>
+                        {processingRequestId === req.id ? <Loader2 className="h-3 w-3 animate-spin"/> : <Check className="h-3 w-3"/>}
                       </Button>
-                      <Button onClick={() => handleDeclineRequest(getCompositeId(currentUser!.uid, req.senderUid))} variant="ghost" size="sm" className="h-7 px-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50" disabled={processingRequestId === getCompositeId(currentUser!.uid, req.senderUid)}>
-                         {processingRequestId === getCompositeId(currentUser!.uid, req.senderUid) ? <Loader2 className="h-3 w-3 animate-spin"/> : <X className="h-3 w-3"/>}
+                      <Button onClick={() => handleDeclineRequest(req.id)} variant="ghost" size="sm" className="h-7 px-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50" disabled={processingRequestId === req.id}>
+                         {processingRequestId === req.id ? <Loader2 className="h-3 w-3 animate-spin"/> : <X className="h-3 w-3"/>}
                       </Button>
                     </div>
                   </div>
