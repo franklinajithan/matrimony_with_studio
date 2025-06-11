@@ -89,6 +89,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     console.log("Dashboard Auth: Setting up onAuthStateChanged listener.");
+    setIsLoadingRequests(true);
+    setIsLoadingSuggestions(true);
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       console.log("Dashboard Auth: Auth state changed. User:", user ? user.uid : 'null');
       setCurrentUser(user);
@@ -140,8 +142,6 @@ export default function DashboardPage() {
     setIsLoadingSuggestions(true);
     try {
       const usersRef = collection(db, "users");
-      // Fetch a slightly larger batch (e.g., 10) and then filter client-side.
-      // Firestore doesn't directly support multiple '!=' clauses or combining '!=' with range/orderBy effectively for this use case.
       const q = query(usersRef, limit(10)); 
       
       const querySnapshot = await getDocs(q);
@@ -149,7 +149,6 @@ export default function DashboardPage() {
 
       const suggestions: QuickSuggestionProfile[] = [];
       querySnapshot.forEach((docSnap) => {
-        // Filter out the current user and limit to 3 suggestions client-side
         if (docSnap.id === currentUserId || suggestions.length >= 3) { 
             return; 
         }
@@ -179,9 +178,7 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
-    setIsLoadingRequests(true);
-    setIsLoadingSuggestions(true);
-    console.log("Dashboard Effect: Initializing, isLoadingRequests and isLoadingSuggestions set to true.");
+    console.log("Dashboard Effect: Initializing data fetch based on currentUser.");
 
     if (!currentUser) {
       console.log("Dashboard Effect: No current user. Clearing requests and suggestions. Setting loading states to false.");
@@ -209,13 +206,12 @@ export default function DashboardPage() {
       
       if (snapshot.metadata.hasPendingWrites) {
         console.log("Dashboard Requests: Snapshot has pending writes, waiting for server confirmation...");
-        // Optionally, you could show a subtle indicator or just let it update when confirmed
       }
       
       if (snapshot.empty) {
           console.log("Dashboard Requests: No 'pending' matchRequests found for current user based on query. Clearing requests list.");
           setMatchRequests([]);
-          setIsLoadingRequests(false); // Important to set here if snapshot is empty
+          setIsLoadingRequests(false);
           return;
       }
 
@@ -274,7 +270,7 @@ export default function DashboardPage() {
 
       try {
         let fetchedRequests = await Promise.all(requestsPromises);
-        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); // Reverse for newest first
+        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); 
         console.log(`Dashboard Requests: Final processed requests (before setting state, count: ${fetchedRequests.length}):`, JSON.parse(JSON.stringify(fetchedRequests)));
         setMatchRequests(fetchedRequests as MatchRequest[]);
       } catch (processingError) {
@@ -406,6 +402,35 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
+           <div className="grid gap-6 md:grid-cols-2">
+            <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                  <UserCircle className="h-7 w-7 text-primary" /> My Profile
+                </CardTitle>
+                <CardDescription>Keep your story fresh and accurate. Update your details and photos.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                  <Link href="/dashboard/edit-profile">Edit Profile</Link>
+                </Button>
+              </CardContent>
+            </Card>
+            <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                  <Settings className="h-7 w-7 text-primary" /> Match Preferences
+                </CardTitle>
+                <CardDescription>Refine who you're looking for. Adjust age, location, and more.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                  <Link href="/dashboard/preferences">Update Preferences</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
            <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-headline text-2xl text-primary">
@@ -481,35 +506,6 @@ export default function DashboardPage() {
               )}
             </CardContent>
           </Card>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                  <UserCircle className="h-7 w-7 text-primary" /> My Profile
-                </CardTitle>
-                <CardDescription>Keep your story fresh and accurate. Update your details and photos.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                  <Link href="/dashboard/edit-profile">Edit Profile</Link>
-                </Button>
-              </CardContent>
-            </Card>
-            <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                  <Settings className="h-7 w-7 text-primary" /> Match Preferences
-                </CardTitle>
-                <CardDescription>Refine who you're looking for. Adjust age, location, and more.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                  <Link href="/dashboard/preferences">Update Preferences</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
         </div>
 
         <div className="lg:col-span-1 space-y-6">
