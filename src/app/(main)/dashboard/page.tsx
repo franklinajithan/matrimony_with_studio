@@ -11,13 +11,13 @@ import { Badge } from "@/components/ui/badge";
 import React, { useEffect, useState } from 'react';
 import { auth, db } from '@/lib/firebase/config';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, writeBatch, serverTimestamp, Timestamp, orderBy } from 'firebase/firestore'; // Ensure orderBy is imported
+import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, writeBatch, serverTimestamp, Timestamp, orderBy } from 'firebase/firestore';
 import { useToast } from "@/hooks/use-toast";
 
 const getCompositeId = (uid1: string, uid2: string): string => {
+  if (!uid1 || !uid2) return "invalid_composite_id";
   return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
 };
-
 
 interface MatchRequest {
   id: string; // Document ID of the request
@@ -79,15 +79,21 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      console.log("Dashboard: Auth state changed. User:", user ? user.uid : 'null');
       setCurrentUser(user);
       if (user) {
         setUserDisplayName(user.displayName || mockUser.name);
         setUserAvatarUrl(user.photoURL || mockUser.avatarUrl);
-        const userDocRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userDocRef);
-        if (userSnap.exists() && userSnap.data().dataAiHint) {
-            setUserAvatarHint(userSnap.data().dataAiHint);
-        } else {
+        try {
+            const userDocRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userDocRef);
+            if (userSnap.exists() && userSnap.data().dataAiHint) {
+                setUserAvatarHint(userSnap.data().dataAiHint);
+            } else {
+                setUserAvatarHint(user.photoURL && !user.photoURL.includes('placehold.co') ? "user avatar" : mockUser.dataAiHint);
+            }
+        } catch (e) {
+            console.error("Dashboard: Error fetching user doc for avatar hint:", e);
             setUserAvatarHint(user.photoURL ? "user avatar" : mockUser.dataAiHint);
         }
       } else {
@@ -101,67 +107,70 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!currentUser) {
+      console.log("Dashboard: No current user, clearing match requests and stopping listener setup.");
       setMatchRequests([]);
       setIsLoadingRequests(false);
-      console.log("Dashboard: No current user, clearing match requests.");
       return;
     }
 
     console.log(`Dashboard: Setting up match requests listener for user UID: ${currentUser.uid}`);
     setIsLoadingRequests(true);
+
     const requestsQuery = query(
       collection(db, "matchRequests"),
       where("receiverUid", "==", currentUser.uid),
       where("status", "==", "pending"),
-      orderBy("createdAt", "asc") // Querying ASC to match index, will reverse client-side
+      orderBy("createdAt", "asc")
     );
 
     const unsubscribeRequests = onSnapshot(requestsQuery, async (snapshot) => {
-      console.log(`Dashboard: Match requests snapshot received. Docs count: ${snapshot.docs.length}`);
+      console.log(`Dashboard: Match requests snapshot received. Empty: ${snapshot.empty}, Docs count: ${snapshot.docs.length}`);
       if (snapshot.empty) {
-          console.log("Dashboard: No documents found matching the matchRequests query for current user.");
           setMatchRequests([]);
           setIsLoadingRequests(false);
+          console.log("Dashboard: No 'pending' matchRequests found for current user.");
           return;
       }
 
       const requestsPromises = snapshot.docs.map(async (requestDoc) => {
         const data = requestDoc.data();
+        console.log(`Dashboard: Processing requestDoc ID: ${requestDoc.id}, Data:`, data);
         const senderUid = data.senderUid;
 
         if (!senderUid) {
-          console.error(`Dashboard: senderUid missing in requestDoc ${requestDoc.id}`, data);
+          console.error(`Dashboard: senderUid missing in requestDoc ${requestDoc.id}. Data:`, data);
           return null;
         }
 
-        let senderName = "User";
+        let senderName = "User (Default)";
         let senderAvatarUrl = "https://placehold.co/80x80.png";
         let senderDataAiHint = "person placeholder";
         let senderAge;
         let senderProfession;
 
         try {
+            console.log(`Dashboard: Fetching sender profile for UID ${senderUid} (request ${requestDoc.id})`);
             const senderDocRef = doc(db, "users", senderUid);
             const senderSnap = await getDoc(senderDocRef);
 
             if (senderSnap.exists()) {
               const senderData = senderSnap.data();
-              senderName = senderData.displayName || "User";
+              senderName = senderData.displayName || "User (Fetched)";
               senderAvatarUrl = senderData.photoURL || "https://placehold.co/80x80.png";
               senderDataAiHint = senderData.dataAiHint || (senderData.photoURL && !senderData.photoURL.includes('placehold.co') ? "person professional" : "person placeholder");
               senderAge = calculateAge(senderData.dob);
               senderProfession = senderData.profession;
-              // console.log(`Dashboard: Fetched sender ${senderName} for request ${requestDoc.id}`);
+              console.log(`Dashboard: Successfully fetched sender ${senderName} for request ${requestDoc.id}`);
             } else {
-              console.warn(`Dashboard: Sender profile for UID ${senderUid} not found for request ${requestDoc.id}. Using defaults.`);
+              console.warn(`Dashboard: Sender profile for UID ${senderUid} not found (request ${requestDoc.id}). Using defaults.`);
             }
         } catch (fetchError) {
             console.error(`Dashboard: Error fetching sender profile for UID ${senderUid} (request ${requestDoc.id}):`, fetchError);
         }
 
         if (!data.createdAt || !(data.createdAt instanceof Timestamp)) {
-            console.error(`Dashboard: Invalid or missing 'createdAt' timestamp for request ${requestDoc.id}`, data);
-            return null;
+            console.error(`Dashboard: Invalid or missing 'createdAt' timestamp for request ${requestDoc.id}. Data:`, data);
+            return null; // Skip this request if timestamp is invalid
         }
 
         return {
@@ -178,19 +187,19 @@ export default function DashboardPage() {
 
       try {
         let fetchedRequests = await Promise.all(requestsPromises);
-        // Reverse the array here to display newest first, as query is now 'asc'
-        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse();
-        console.log(`Dashboard: Processed ${fetchedRequests.length} valid match requests.`);
+        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); // Reverse for newest first
+        console.log(`Dashboard: Processed ${fetchedRequests.length} valid match requests. Setting state.`);
         setMatchRequests(fetchedRequests as MatchRequest[]);
       } catch (processingError) {
         console.error("Dashboard: Error processing request promises: ", processingError);
-        setMatchRequests([]);
+        setMatchRequests([]); // Clear requests on error
       } finally {
         setIsLoadingRequests(false);
+        console.log("Dashboard: Finished processing snapshot, isLoadingRequests set to false.");
       }
     }, (error) => {
-        console.error("Error fetching match requests: ", error);
-        toast({ title: "Error", description: "Could not load match requests. " + error.message, variant: "destructive"});
+        console.error("Dashboard: Error fetching match requests via onSnapshot: ", error);
+        toast({ title: "Error Loading Requests", description: "Could not load match requests. " + error.message, variant: "destructive"});
         setMatchRequests([]);
         setIsLoadingRequests(false);
     });
@@ -208,6 +217,7 @@ export default function DashboardPage() {
     const [user1Snap, user2Snap] = await Promise.all([getDoc(user1DocRef), getDoc(user2DocRef)]);
 
     if (!user1Snap.exists() || !user2Snap.exists()) {
+        console.error("Dashboard: One or both user profiles not found for chat creation.", {user1Uid, user2Uid, user1Exists: user1Snap.exists(), user2Exists: user2Snap.exists()});
         throw new Error("One or both user profiles not found for chat creation.");
     }
     const user1Data = user1Snap.data();
@@ -215,6 +225,8 @@ export default function DashboardPage() {
 
     const chatId = getCompositeId(user1Uid, user2Uid);
     const chatDocRef = doc(db, "chats", chatId);
+
+    console.log(`Dashboard: Creating chat document for ${user1Uid} and ${user2Uid} with chatId ${chatId}`);
 
     const batch = writeBatch(db);
     batch.set(chatDocRef, {
@@ -239,20 +251,22 @@ export default function DashboardPage() {
     }, { merge: true });
 
     await batch.commit();
+    console.log(`Dashboard: Chat document ${chatId} created/updated successfully.`);
     return chatId;
   };
 
   const handleAcceptRequest = async (request: MatchRequest) => {
     if (!currentUser) return;
+    console.log(`Dashboard: Accepting request ID: ${request.id}, from sender: ${request.senderUid}`);
     setProcessingRequestId(request.id);
-    const requestDocRef = doc(db, "matchRequests", request.id); // Use request.id
+    const requestDocRef = doc(db, "matchRequests", request.id);
     try {
       await updateDoc(requestDocRef, { status: "accepted", updatedAt: serverTimestamp() });
-      await createChatDocument(currentUser.uid, request.senderUid); // Use request.senderUid
-
+      await createChatDocument(currentUser.uid, request.senderUid);
       toast({ title: "Request Accepted!", description: "You are now matched." });
+      console.log(`Dashboard: Request ${request.id} accepted and chat created.`);
     } catch (error: any) {
-      console.error("Error accepting request:", error);
+      console.error("Dashboard: Error accepting request:", error);
       toast({ title: "Error", description: "Failed to accept request: " + error.message, variant: "destructive" });
     } finally {
       setProcessingRequestId(null);
@@ -261,19 +275,20 @@ export default function DashboardPage() {
 
   const handleDeclineRequest = async (requestId: string) => {
      if (!currentUser) return;
+    console.log(`Dashboard: Declining request ID: ${requestId}`);
     setProcessingRequestId(requestId);
     const requestDocRef = doc(db, "matchRequests", requestId);
     try {
       await updateDoc(requestDocRef, { status: "declined_by_receiver", updatedAt: serverTimestamp() });
       toast({ title: "Request Declined" });
-    } catch (error: any) {
-      console.error("Error declining request:", error);
+      console.log(`Dashboard: Request ${requestId} declined.`);
+    } catch (error: any)      {
+      console.error("Dashboard: Error declining request:", error);
       toast({ title: "Error", description: "Failed to decline request: " + error.message, variant: "destructive" });
     } finally {
       setProcessingRequestId(null);
     }
   };
-
 
   return (
     <div className="space-y-8">
@@ -439,7 +454,7 @@ export default function DashboardPage() {
                   </div>
                 ))
               ) : (
-                null // If not loading and no requests, render nothing here, as per user request
+                null // Render nothing here if not loading and no requests, as per your request
               )}
             </CardContent>
           </Card>
@@ -449,3 +464,4 @@ export default function DashboardPage() {
   );
 }
 
+    
