@@ -13,6 +13,7 @@ import { auth, db } from '@/lib/firebase/config';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { collection, query, where, onSnapshot, orderBy, Timestamp, doc, getDoc } from 'firebase/firestore';
 import { formatDistanceToNowStrict } from 'date-fns';
+import { useToast } from "@/hooks/use-toast"; // Ensure useToast is imported if you plan to use it
 
 interface Conversation {
   id: string; // Chat document ID (e.g., uid1_uid2)
@@ -29,8 +30,9 @@ interface Conversation {
 export default function MessagesPage() {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Initialize to true
   const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast(); // Initialize toast
 
   useEffect(() => {
     console.log("MessagesPage: Auth listener setup.");
@@ -38,11 +40,12 @@ export default function MessagesPage() {
       if (user) {
         console.log("MessagesPage: Auth state changed. Current user UID:", user.uid);
         setCurrentUser(user);
+        // setIsLoading(true) will be handled in the next useEffect when currentUser is set
       } else {
-        console.log("MessagesPage: Auth state changed. No current user.");
+        console.log("MessagesPage: Auth state changed. No current user. Clearing conversations and setting isLoading to false.");
         setCurrentUser(null);
-        setIsLoading(false);
         setConversations([]);
+        setIsLoading(false); 
       }
     });
     return () => {
@@ -53,14 +56,16 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (!currentUser) {
-      console.log("MessagesPage: No current user, skipping chats fetch.");
-      // Ensure loading is false if there's no user to fetch for
-      if (isLoading) setIsLoading(false); 
+      console.log("MessagesPage: No current user, skipping chats fetch. Ensuring isLoading is false.");
+      if (isLoading) { // Only set if it's currently true, to avoid unnecessary re-renders
+          setIsLoading(false);
+      }
+      setConversations([]); // Clear conversations if user logs out
       return;
     }
 
-    console.log(`MessagesPage: Current user UID: ${currentUser.uid}. Setting up chats listener.`);
-    setIsLoading(true);
+    console.log(`MessagesPage: Current user UID: ${currentUser.uid}. Setting up chats listener. Setting isLoading to true.`);
+    setIsLoading(true); 
     const chatsRef = collection(db, "chats");
     const q = query(
       chatsRef,
@@ -68,12 +73,15 @@ export default function MessagesPage() {
       orderBy("lastMessageTimestamp", "desc")
     );
 
+    console.log("MessagesPage: Subscribing to onSnapshot for chats query...");
     const unsubscribeChats = onSnapshot(q, async (querySnapshot) => {
-      console.log(`MessagesPage: Snapshot received. Empty: ${querySnapshot.empty}, Size: ${querySnapshot.size}, Docs count: ${querySnapshot.docs.length}`);
+      console.log(`MessagesPage: ON_SNAPSHOT_SUCCESS_CALLBACK_ENTERED. Empty: ${querySnapshot.empty}, Size: ${querySnapshot.size}, Docs count: ${querySnapshot.docs.length}`);
+      
       if (querySnapshot.empty) {
-        console.log("MessagesPage: No chat documents found for this user.");
+        console.log("MessagesPage: No chat documents found for this user. Clearing conversations.");
         setConversations([]);
-        setIsLoading(false);
+        setIsLoading(false); // Explicitly set isLoading to false
+        console.log("MessagesPage: Set isLoading to false (querySnapshot was empty).");
         return;
       }
 
@@ -87,7 +95,7 @@ export default function MessagesPage() {
           console.warn(`MessagesPage: Could not find other participant for chatDoc ID: ${chatDoc.id}. Skipping.`);
           return null;
         }
-        console.log(`MessagesPage: Chat ${chatDoc.id} - Other participant UID: ${otherParticipantUid}`);
+        // console.log(`MessagesPage: Chat ${chatDoc.id} - Other participant UID: ${otherParticipantUid}`);
 
         let otherUserName = "User";
         let otherUserAvatar = "https://placehold.co/100x100.png";
@@ -97,9 +105,9 @@ export default function MessagesPage() {
             otherUserName = chatData.participantDetails[otherParticipantUid].displayName || "User (from details)";
             otherUserAvatar = chatData.participantDetails[otherParticipantUid].photoURL || "https://placehold.co/100x100.png";
             otherUserAvatarHint = chatData.participantDetails[otherParticipantUid].dataAiHint || (otherUserAvatar.includes('placehold.co') ? "person placeholder" : "person avatar");
-            console.log(`MessagesPage: Chat ${chatDoc.id} - Loaded other user from participantDetails: ${otherUserName}`);
+            // console.log(`MessagesPage: Chat ${chatDoc.id} - Loaded other user from participantDetails: ${otherUserName}`);
         } else {
-            console.log(`MessagesPage: Chat ${chatDoc.id} - participantDetails not found for ${otherParticipantUid}, fetching from users collection.`);
+            // console.log(`MessagesPage: Chat ${chatDoc.id} - participantDetails not found for ${otherParticipantUid}, fetching from users collection.`);
             try {
                 const userDocRef = doc(db, "users", otherParticipantUid);
                 const userSnap = await getDoc(userDocRef);
@@ -108,7 +116,7 @@ export default function MessagesPage() {
                     otherUserName = userData.displayName || "User (from users collection)";
                     otherUserAvatar = userData.photoURL || "https://placehold.co/100x100.png";
                     otherUserAvatarHint = userData.dataAiHint || (userData.photoURL && !userData.photoURL.includes('placehold.co') ? "person avatar" : "person placeholder");
-                    console.log(`MessagesPage: Chat ${chatDoc.id} - Fetched other user from users collection: ${otherUserName}`);
+                    // console.log(`MessagesPage: Chat ${chatDoc.id} - Fetched other user from users collection: ${otherUserName}`);
                 } else {
                     console.warn(`MessagesPage: Chat ${chatDoc.id} - User document for ${otherParticipantUid} not found in users collection.`);
                 }
@@ -119,7 +127,7 @@ export default function MessagesPage() {
         
         const lastMessageTimestamp = chatData.lastMessageTimestamp as Timestamp | null;
         let formattedTimestamp = "N/A";
-        if (lastMessageTimestamp && typeof lastMessageTimestamp.toDate === 'function') { // Check if it's a Firestore Timestamp
+        if (lastMessageTimestamp && typeof lastMessageTimestamp.toDate === 'function') { 
           try {
             formattedTimestamp = formatDistanceToNowStrict(lastMessageTimestamp.toDate(), { addSuffix: true });
           } catch (e) {
@@ -130,11 +138,10 @@ export default function MessagesPage() {
             console.warn(`MessagesPage: Chat ${chatDoc.id} - lastMessageTimestamp is not a Firestore Timestamp object:`, lastMessageTimestamp);
             formattedTimestamp = "Date unavailable";
         }
-        console.log(`MessagesPage: Chat ${chatDoc.id} - Last message: "${chatData.lastMessageText}", Formatted Timestamp: ${formattedTimestamp}`);
+        // console.log(`MessagesPage: Chat ${chatDoc.id} - Last message: "${chatData.lastMessageText}", Formatted Timestamp: ${formattedTimestamp}`);
 
         const unreadCount = (chatData.unreadBy && chatData.unreadBy[currentUser.uid]) ? Number(chatData.unreadBy[currentUser.uid]) : 0;
-        console.log(`MessagesPage: Chat ${chatDoc.id} - Unread count for current user: ${unreadCount}`);
-
+        // console.log(`MessagesPage: Chat ${chatDoc.id} - Unread count for current user: ${unreadCount}`);
 
         return {
           id: chatDoc.id,
@@ -151,29 +158,29 @@ export default function MessagesPage() {
 
       try {
         let resolvedConvs = (await Promise.all(convsPromises)).filter(c => c !== null) as Conversation[];
-        // Secondary sort by original timestamp just in case Firestore's "desc" order on potentially null/varied timestamps isn't perfect
         resolvedConvs.sort((a, b) => (b.originalTimestamp?.toMillis() || 0) - (a.originalTimestamp?.toMillis() || 0));
         console.log("MessagesPage: Final resolved conversations (before setting state):", JSON.parse(JSON.stringify(resolvedConvs)));
         setConversations(resolvedConvs);
       } catch (processingError) {
         console.error("MessagesPage: Error processing conversation promises:", processingError);
-        setConversations([]); // Clear on error
+        setConversations([]); 
       } finally {
         setIsLoading(false);
-        console.log("MessagesPage: Finished processing snapshot, isLoading set to false.");
+        console.log("MessagesPage: Set isLoading to false (finished processing snapshot).");
       }
     }, (error) => {
-      console.error("MessagesPage: Error in onSnapshot for chats:", error);
+      console.error("MessagesPage: ON_SNAPSHOT_ERROR_CALLBACK_ENTERED. Error:", error);
       toast({title: "Error Loading Chats", description: "Could not load your conversations. " + error.message, variant: "destructive"});
       setConversations([]);
       setIsLoading(false);
+      console.log("MessagesPage: Set isLoading to false (onSnapshot error).");
     });
 
     return () => {
       console.log("MessagesPage: Unsubscribing chats listener.");
       unsubscribeChats();
     };
-  }, [currentUser]); // Added toast import, removed it from this array
+  }, [currentUser, toast]); // Added toast to dependency array
 
   const filteredConversations = conversations.filter(convo =>
     convo.otherUserName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -208,6 +215,7 @@ export default function MessagesPage() {
             <div className="p-12 text-center">
               <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary mb-4" />
               <p className="text-muted-foreground">Loading conversations...</p>
+              <p className="text-xs text-muted-foreground mt-2">If this takes too long, please check your internet connection and ensure Firestore database is correctly set up with necessary indexes.</p>
             </div>
           ) : filteredConversations.length > 0 ? (
             <ul className="divide-y divide-border">
@@ -248,3 +256,4 @@ export default function MessagesPage() {
     </div>
   );
 }
+    
