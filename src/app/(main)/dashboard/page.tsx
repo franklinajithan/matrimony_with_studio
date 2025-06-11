@@ -77,7 +77,7 @@ export default function DashboardPage() {
     let filledFields = 0;
     PROFILE_COMPLETION_FIELDS.forEach(field => {
       if (field === 'photoURL') {
-        if (userData[field] && !userData[field].includes('placehold.co')) {
+        if (userData[field] && !userData[field].includes('placehold.co') && !userData[field].includes('default_avatar.png') /* Add other placeholder checks if any */) {
           filledFields++;
         }
       } else if (userData[field] && String(userData[field]).trim() !== "") {
@@ -96,22 +96,28 @@ export default function DashboardPage() {
       setCurrentUser(user);
       if (user) {
         setUserDisplayName(user.displayName || mockUser.name);
-        setUserAvatarUrl(user.photoURL || mockUser.avatarUrl);
+        
+        // Fetch user document for avatar, hint, and profile completion
         try {
             const userDocRef = doc(db, "users", user.uid);
             const userSnap = await getDoc(userDocRef);
             if (userSnap.exists()) {
                 const userData = userSnap.data();
-                setUserAvatarHint(userData.dataAiHint || (user.photoURL && !user.photoURL.includes('placehold.co') ? "user avatar" : mockUser.dataAiHint));
+                setUserAvatarUrl(userData.photoURL || user.photoURL || mockUser.avatarUrl);
+                setUserAvatarHint(userData.dataAiHint || (userData.photoURL && !userData.photoURL.includes('placehold.co') ? "user avatar" : mockUser.dataAiHint));
                 setProfileCompletion(calculateProfileCompletion(userData));
+                 console.log(`Dashboard Auth: User document for ${user.uid} found. Avatar: ${userData.photoURL}, Hint: ${userData.dataAiHint}, Completion: ${calculateProfileCompletion(userData)}%`);
             } else {
-                setUserAvatarHint(user.photoURL ? "user avatar" : mockUser.dataAiHint);
-                setProfileCompletion(calculateProfileCompletion({ displayName: user.displayName, photoURL: user.photoURL })); // Basic completion if no doc
-                console.log(`Dashboard Auth: User document for ${user.uid} not found. Using auth data for display.`);
+                 // User doc doesn't exist, use auth data and default completion
+                setUserAvatarUrl(user.photoURL || mockUser.avatarUrl);
+                setUserAvatarHint(user.photoURL && !user.photoURL.includes('placehold.co') ? "user avatar" : mockUser.dataAiHint);
+                setProfileCompletion(calculateProfileCompletion({ displayName: user.displayName, photoURL: user.photoURL }));
+                console.log(`Dashboard Auth: User document for ${user.uid} not found. Using auth data for display. Completion: ${calculateProfileCompletion({ displayName: user.displayName, photoURL: user.photoURL })}%`);
             }
         } catch (e) {
-            console.error("Dashboard Auth: Error fetching user doc for avatar hint/completion:", e);
-            setUserAvatarHint(user.photoURL ? "user avatar" : mockUser.dataAiHint);
+            console.error("Dashboard Auth: Error fetching user doc for avatar/hint/completion:", e);
+            setUserAvatarUrl(user.photoURL || mockUser.avatarUrl);
+            setUserAvatarHint(user.photoURL && !user.photoURL.includes('placehold.co') ? "user avatar" : mockUser.dataAiHint);
             setProfileCompletion(calculateProfileCompletion({ displayName: user.displayName, photoURL: user.photoURL }));
         }
       } else {
@@ -143,8 +149,7 @@ export default function DashboardPage() {
     setIsLoadingSuggestions(true);
     try {
       const usersRef = collection(db, "users");
-      // Fetch more than needed initially to allow client-side filtering of self
-      const q = query(usersRef, limit(10)); 
+      const q = query(usersRef, limit(10)); // Fetch more to filter client-side
       
       const querySnapshot = await getDocs(q);
       console.log("Dashboard Suggestions: Query snapshot received. Empty:", querySnapshot.empty, "Docs count:", querySnapshot.docs.length);
@@ -155,11 +160,10 @@ export default function DashboardPage() {
             console.log("Dashboard Suggestions: Skipping current user from suggestions, ID:", docSnap.id);
             return; 
         }
-        if (suggestions.length >= 3) { // Limit to 3 suggestions
-            return;
-        }
+        if (suggestions.length >= 3) return; // Limit to 3 suggestions
+        
         const data = docSnap.data();
-        console.log("Dashboard Suggestions: Processing suggestion for user ID:", docSnap.id, "Data:", JSON.stringify(data));
+        console.log("Dashboard Suggestions: Processing suggestion for user ID:", docSnap.id, "Data:", JSON.stringify(data).substring(0, 100) + "..."); // Log snippet
         suggestions.push({
           id: docSnap.id,
           name: data.displayName || "User",
@@ -185,7 +189,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     console.log("Dashboard Effect: Initializing data fetch based on currentUser.");
-    // Reset states if currentUser changes to null (logout)
     if (!currentUser) {
       console.log("Dashboard Effect: No current user. Clearing requests and suggestions. Setting loading states to false.");
       setMatchRequests([]);
@@ -196,10 +199,12 @@ export default function DashboardPage() {
     }
 
     console.log(`Dashboard Effect: Current user available (UID: ${currentUser.uid}). Fetching suggestions and match requests.`);
+    setIsLoadingRequests(true); // Moved these up to ensure they are set before async calls
+    setIsLoadingSuggestions(true);
+    
     fetchQuickSuggestions(currentUser.uid); 
 
     console.log(`Dashboard Requests: Setting up match requests listener for user UID: ${currentUser.uid}`);
-    setIsLoadingRequests(true); // Ensure loading state is true before starting listener
     
     const requestsQuery = query(
       collection(db, "matchRequests"),
@@ -213,14 +218,13 @@ export default function DashboardPage() {
       
       if (snapshot.metadata.hasPendingWrites) {
         console.log("Dashboard Requests: Snapshot has pending writes, waiting for server confirmation...");
-        // Potentially don't update UI until writes are confirmed to avoid flicker, or handle optimistically
       }
       
       if (snapshot.empty) {
-          console.log("Dashboard Requests: No 'pending' matchRequests found for current user based on query. Clearing requests list.");
+          console.log("Dashboard Requests: No 'pending' matchRequests found for current user. Clearing requests list.");
           setMatchRequests([]);
-          setIsLoadingRequests(false); // Make sure to set loading to false here
-          return;
+          // setIsLoadingRequests(false); // Only set to false after all processing is done or if confirmed empty
+          return; // Still need to set loading to false in a finally or after processing
       }
 
       const requestsPromises = snapshot.docs.map(async (requestDoc) => {
@@ -278,13 +282,17 @@ export default function DashboardPage() {
 
       try {
         let fetchedRequests = await Promise.all(requestsPromises);
-        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); // Reverse here to show newest first
+        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); 
         console.log(`Dashboard Requests: Final processed requests (before setting state, count: ${fetchedRequests.length}):`, JSON.parse(JSON.stringify(fetchedRequests)));
         setMatchRequests(fetchedRequests as MatchRequest[]);
       } catch (processingError) {
         console.error("Dashboard Requests: Error processing request promises: ", processingError);
-        setMatchRequests([]); // Clear on error
+        setMatchRequests([]); 
       } finally {
+         // This ensures it's set after processing or if snapshot was initially empty and fully processed
+        if (snapshot.empty) { // If it was empty and we returned early, set it here.
+             setMatchRequests([]);
+        }
         setIsLoadingRequests(false);
         console.log("Dashboard Requests: Finished processing snapshot, isLoadingRequests set to false.");
       }
@@ -408,6 +416,30 @@ export default function DashboardPage() {
         </CardHeader>
       </Card>
 
+      <Card className="shadow-lg">
+        <CardHeader className="p-4">
+          <CardTitle className="flex items-center gap-2 font-headline text-lg text-primary">
+            <FileText className="h-5 w-5" /> Profile Completion
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 p-4 pt-0">
+          <Progress value={profileCompletion} className="h-2" />
+          <p className="text-xs text-muted-foreground text-center">
+            Your profile is {profileCompletion}% complete.
+          </p>
+          {profileCompletion < 100 && (
+            <div className="text-center">
+              <p className="text-xs text-foreground mb-1.5">
+                A complete profile gets more views and better matches!
+              </p>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/dashboard/edit-profile">Update Your Profile</Link>
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
            <div className="grid gap-6 md:grid-cols-2">
@@ -438,30 +470,6 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </div>
-
-           <Card className="shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-headline text-2xl text-primary">
-                <FileText className="h-6 w-6" /> Profile Completion
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Progress value={profileCompletion} className="h-3" />
-              <p className="text-sm text-muted-foreground text-center">
-                Your profile is {profileCompletion}% complete.
-              </p>
-              {profileCompletion < 100 && (
-                <div className="text-center">
-                  <p className="text-sm text-foreground mb-2">
-                    A complete profile gets more views and better matches!
-                  </p>
-                  <Button asChild variant="outline" size="sm">
-                    <Link href="/dashboard/edit-profile">Update Your Profile</Link>
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
           <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
