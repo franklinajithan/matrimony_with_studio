@@ -438,7 +438,7 @@ export default function DashboardPage() {
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">No new match requests.</p>
+                null // If not loading and no requests, render nothing here.
               )}
             </CardContent>
           </Card>
@@ -447,5 +447,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
