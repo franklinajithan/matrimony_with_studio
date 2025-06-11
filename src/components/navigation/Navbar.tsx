@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Heart, MessageCircle, Search, UserCircle, LogOut, LayoutDashboard, Settings, Star, Loader2 } from 'lucide-react';
+import { MessageCircle, LogOut, LayoutDashboard, Settings, UserCircle as UserCircleIcon, Loader2 } from 'lucide-react'; // Renamed UserCircle to UserCircleIcon to avoid conflict
 import { Logo } from '@/components/shared/Logo';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,16 +23,12 @@ import { auth } from '@/lib/firebase/config';
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-const mainNavLinks = [
-  { href: '/discover', label: 'Discover', icon: <Heart className="h-4 w-4" /> },
-  { href: '/suggestions', label: 'Suggestions', icon: <Star className="h-4 w-4" /> },
-  { href: '/search', label: 'Search', icon: <Search className="h-4 w-4" /> },
-];
+// Removed mainNavLinks array as these links are being removed.
 
 const messagesLinkData = {
   href: '/messages',
   label: 'Messages',
-  icon: <MessageCircle className="h-5 w-5" />, // Slightly larger icon
+  icon: <MessageCircle className="h-5 w-5" />, 
   notificationCount: 3, // Mock notification count
 };
 
@@ -74,26 +70,8 @@ export function Navbar() {
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
           <Logo />
-          {currentUser && (
-            <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-              {mainNavLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    "transition-colors hover:text-primary relative",
-                    pathname === link.href ? "text-primary font-semibold" : "text-foreground/70"
-                  )}
-                >
-                  <span className="flex items-center gap-1.5">
-                    {link.icon}
-                    {link.label}
-                  </span>
-                </Link>
-              ))}
-            </nav>
-          )}
-          <div className="flex items-center space-x-3"> {/* Adjusted space-x for better icon spacing */}
+          {/* Removed the main navigation links section */}
+          <div className="flex items-center space-x-3">
             {currentUser && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -149,7 +127,7 @@ export function Navbar() {
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard/edit-profile" className="flex items-center">
-                      <UserCircle className="mr-2 h-4 w-4" />
+                      <UserCircleIcon className="mr-2 h-4 w-4" />
                       Profile
                     </Link>
                   </DropdownMenuItem>
