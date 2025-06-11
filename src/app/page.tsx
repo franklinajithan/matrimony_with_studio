@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  HeartHandshake, Search, MessageSquareText, ShieldCheck, Loader2, Star, Lock, Globe, UserSquare, Settings2, Languages, Smartphone, BarChart3, Users, Zap
+  HeartHandshake, Search, MessageSquareText, ShieldCheck, Loader2, Star, Lock, Globe, UserSquare, Settings2, Languages, Smartphone, BarChart3, Users, Zap, Telescope, Brain, FileText, UserCheckIcon, LayoutList, ListFilter, SmartphoneNfc
 } from 'lucide-react';
 import { Logo } from '@/components/shared/Logo';
 import { Footer } from '@/components/navigation/Footer';
@@ -16,20 +16,17 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 
 const features = [
-  { icon: <Star className="h-8 w-8 text-primary" />, title: "Horoscope Matching", description: "Seamlessly match horoscopes for cosmic compatibility.", href:"/dashboard/horoscope" },
-  { icon: <Zap className="h-8 w-8 text-primary" />, title: "Smart Matching", description: "AI-powered suggestions tailored to your unique profile.", href:"/suggestions" },
-  { icon: <Lock className="h-8 w-8 text-primary" />, title: "Privacy Guaranteed", description: "Your data is safe with robust privacy controls.", href:"/privacy" }, // Assuming a privacy page
-  { icon: <Globe className="h-8 w-8 text-primary" />, title: "Global Reach", description: "Connect with profiles from around the world.", href:"/discover" },
-  { icon: <UserSquare className="h-8 w-8 text-primary" />, title: "In-Depth Profiles", description: "Comprehensive profiles to help you know more.", href:"/dashboard/edit-profile" },
-  { icon: <MessageSquareText className="h-8 w-8 text-primary" />, title: "Secure Messaging", description: "Chat safely with matches through encrypted conversations.", href:"/messages" },
-  { icon: <ShieldCheck className="h-8 w-8 text-primary" />, title: "Verified Profiles", description: "Connect with genuine users with verified badges.", href:"/discover" },
-  { icon: <Settings2 className="h-8 w-8 text-primary" />, title: "Custom Preferences", description: "Fine-tune your search for the perfect match.", href:"/dashboard/preferences" },
-  { icon: <Languages className="h-8 w-8 text-primary" />, title: "Language Preferences", description: "Communicate in languages you are comfortable with.", href:"/dashboard/preferences" },
-  { icon: <Smartphone className="h-8 w-8 text-primary" />, title: "Mobile App Support", description: "Access MatchCraft on the go (future feature).", href:"#" },
-  // "Profile Template" seems like an internal/dev term, "Real Time Chat" is covered by Secure Messaging.
-  // Adding a couple more relevant examples:
-  { icon: <BarChart3 className="h-8 w-8 text-primary" />, title: "Activity Insights", description: "Understand your interactions and profile views (future feature).", href:"#" },
-  { icon: <Users className="h-8 w-8 text-primary" />, title: "Community Events", description: "Participate in virtual or local community events (future feature).", href:"#" },
+  { icon: <Telescope className="h-8 w-8 text-primary" />, title: "Horoscope Matching", description: "Discover cosmic compatibility by matching horoscopes with potential partners.", href:"/dashboard/horoscope" },
+  { icon: <Brain className="h-8 w-8 text-primary" />, title: "Smart Matching", description: "Our AI provides intelligent suggestions based on your profile and preferences.", href:"/suggestions" },
+  { icon: <ShieldCheck className="h-8 w-8 text-primary" />, title: "Privacy Guaranteed", description: "Control your information with robust privacy settings and secure data handling.", href:"/privacy" },
+  { icon: <Globe className="h-8 w-8 text-primary" />, title: "Global Reach", description: "Connect with a diverse community of profiles from various backgrounds.", href:"/discover" },
+  { icon: <FileText className="h-8 w-8 text-primary" />, title: "In-Depth Profiles", description: "Get to know potential matches better through comprehensive profile details.", href:"/dashboard/edit-profile" },
+  { icon: <MessageSquareText className="h-8 w-8 text-primary" />, title: "Secure Messaging", description: "Chat safely and privately with your matches through our encrypted system.", href:"/messages" },
+  { icon: <UserCheckIcon className="h-8 w-8 text-primary" />, title: "Verified Profiles", description: "Look for verified badges to connect with genuine and authentic users.", href:"/discover" },
+  { icon: <LayoutList className="h-8 w-8 text-primary" />, title: "Structured Profiles", description: "Easily view and understand profiles with our clear and organized layout.", href:"/discover" },
+  { icon: <ListFilter className="h-8 w-8 text-primary" />, title: "Custom Preferences", description: "Refine your search criteria to find exactly who you're looking for.", href:"/dashboard/preferences" },
+  { icon: <Languages className="h-8 w-8 text-primary" />, title: "Language Options", description: "Set your language preferences for a more comfortable experience.", href:"/dashboard/preferences" },
+  { icon: <SmartphoneNfc className="h-8 w-8 text-primary" />, title: "Mobile Friendly", description: "Enjoy a seamless experience on your desktop or mobile browser.", href:"#" },
 ];
 
 
@@ -97,22 +94,19 @@ export default function LandingPage() {
             <h2 className="font-headline text-4xl font-semibold text-center mb-16 text-gray-800">Explore Our Features</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {features.map((feature, index) => (
-                <Card key={index} className="flex flex-col shadow-lg hover:shadow-2xl transition-shadow duration-300 ease-in-out bg-background">
-                  <CardHeader className="items-center text-center">
-                    <div className="p-3 rounded-full bg-primary/10 mb-3">
-                      {feature.icon}
-                    </div>
-                    <CardTitle className="font-headline text-2xl text-gray-700">{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex-grow text-center">
-                    <p className="text-foreground/70">{feature.description}</p>
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" className="w-full border-primary/50 text-primary hover:bg-primary/10" asChild>
-                       <Link href={feature.href || "#"}>Explore</Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
+                <Link key={index} href={feature.href || "#"} passHref>
+                  <Card className="flex flex-col shadow-lg hover:shadow-2xl transition-shadow duration-300 ease-in-out bg-background h-full cursor-pointer group">
+                    <CardHeader className="items-center text-center">
+                      <div className="p-3 rounded-full bg-primary/10 mb-3 transition-transform group-hover:scale-110">
+                        {feature.icon}
+                      </div>
+                      <CardTitle className="font-headline text-2xl text-gray-700 group-hover:text-primary transition-colors">{feature.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-grow text-center">
+                      <p className="text-foreground/70 text-sm">{feature.description}</p>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           </div>
