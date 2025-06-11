@@ -66,8 +66,11 @@ export default function DashboardPage() {
   const { toast } = useToast();
 
   useEffect(() => {
+    setIsLoadingRequests(true); // Set loading true initially for requests
+    setIsLoadingSuggestions(true); // Set loading true initially for suggestions
+
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
-      console.log("Dashboard: Auth state changed. User:", user ? user.uid : 'null');
+      console.log("Dashboard Auth: Auth state changed. User:", user ? user.uid : 'null');
       setCurrentUser(user);
       if (user) {
         setUserDisplayName(user.displayName || mockUser.name);
@@ -81,7 +84,7 @@ export default function DashboardPage() {
                 setUserAvatarHint(user.photoURL && !user.photoURL.includes('placehold.co') ? "user avatar" : mockUser.dataAiHint);
             }
         } catch (e) {
-            console.error("Dashboard: Error fetching user doc for avatar hint:", e);
+            console.error("Dashboard Auth: Error fetching user doc for avatar hint:", e);
             setUserAvatarHint(user.photoURL ? "user avatar" : mockUser.dataAiHint);
         }
       } else {
@@ -90,41 +93,50 @@ export default function DashboardPage() {
         setUserAvatarHint(mockUser.dataAiHint);
         setQuickSuggestions([]); 
         setIsLoadingSuggestions(false);
+        setMatchRequests([]);
+        setIsLoadingRequests(false);
+        console.log("Dashboard Auth: No user, cleared suggestions and requests, set loading to false.");
       }
     });
     return () => unsubscribeAuth();
   }, []);
 
   const fetchQuickSuggestions = useCallback(async (currentUserId: string) => {
-    console.log("Dashboard: Fetching quick suggestions. Current User ID:", currentUserId);
+    console.log("Dashboard Suggestions: Attempting to fetch. Current User ID:", currentUserId);
+    if (!currentUserId) {
+        console.log("Dashboard Suggestions: Fetch skipped, no currentUserId provided.");
+        setIsLoadingSuggestions(false);
+        setQuickSuggestions([]);
+        return;
+    }
     setIsLoadingSuggestions(true);
     try {
       const usersRef = collection(db, "users");
+      // Query for users whose UID is not equal to currentUserId.
+      // Firestore does not support direct not-equal queries on arbitrary fields in a scalable way.
+      // A common workaround is to fetch users and filter client-side, or use two queries if the set is small
+      // (e.g., where uid < currentUserId and where uid > currentUserId), or structure data to allow this.
+      // For simplicity with a limit, a single query ordering by a field and filtering client-side is often used,
+      // or if your dataset grows, consider more advanced data modeling or backend functions.
+      // Here, we'll try a simple query and filter.
+      // orderBy("uid") is important if you want consistent pagination later, but for a small limit, it's okay.
       const q = query(
         usersRef,
-        where("uid", "!=", currentUserId), 
-        orderBy("uid"), 
-        limit(3)
+        orderBy("uid"), // Order by UID to enable pagination if needed later, though more complex with '!='
+        limit(10) // Fetch a bit more to have higher chance of getting 3 non-self users
       );
       
       const querySnapshot = await getDocs(q);
-      console.log("Dashboard: Quick suggestions query snapshot received. Empty:", querySnapshot.empty, "Docs count:", querySnapshot.docs.length);
-
-      if (querySnapshot.empty) {
-        console.log("Dashboard: No other users found for quick suggestions.");
-        setQuickSuggestions([]);
-        setIsLoadingSuggestions(false); // Ensure loading is false
-        return;
-      }
+      console.log("Dashboard Suggestions: Query snapshot received. Empty:", querySnapshot.empty, "Docs count:", querySnapshot.docs.length);
 
       const suggestions: QuickSuggestionProfile[] = [];
       querySnapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        if (docSnap.id === currentUserId) { // Safeguard
-            console.warn("Dashboard: Safeguard triggered - current user was somehow returned by quick suggestions query:", docSnap.id);
+        if (docSnap.id === currentUserId || suggestions.length >=3) { 
+            // Skip self or if we already have 3 suggestions
             return; 
         }
-        console.log("Dashboard: Processing suggestion for user ID:", docSnap.id, "Data:", data);
+        const data = docSnap.data();
+        console.log("Dashboard Suggestions: Processing suggestion for user ID:", docSnap.id, "Data:", data);
         suggestions.push({
           id: docSnap.id,
           name: data.displayName || "User",
@@ -135,69 +147,80 @@ export default function DashboardPage() {
           dataAiHint: data.dataAiHint || (data.photoURL && !data.photoURL.includes('placehold.co') ? "person professional" : "person placeholder"),
         });
       });
-      console.log("Dashboard: Mapped quick suggestions:", suggestions);
+      console.log("Dashboard Suggestions: Mapped quick suggestions:", suggestions);
       setQuickSuggestions(suggestions);
     } catch (error) {
-      console.error("Dashboard: Error fetching quick suggestions:", error);
+      console.error("Dashboard Suggestions: Error fetching quick suggestions:", error);
       toast({ title: "Error", description: "Could not load quick suggestions.", variant: "destructive" });
       setQuickSuggestions([]);
     } finally {
       setIsLoadingSuggestions(false);
-      console.log("Dashboard: Finished fetching quick suggestions. isLoadingSuggestions set to false.");
+      console.log("Dashboard Suggestions: Finished fetching. isLoadingSuggestions set to false.");
     }
   }, [toast]);
 
 
   useEffect(() => {
     if (!currentUser) {
-      console.log("Dashboard: No current user, clearing match requests and suggestions. Stopping listener setup.");
+      console.log("Dashboard Requests: No current user, clearing match requests and stopping listener setup.");
       setMatchRequests([]);
       setIsLoadingRequests(false);
+      // Also ensure quick suggestions are handled if user logs out
       setQuickSuggestions([]);
       setIsLoadingSuggestions(false);
       return;
     }
 
-    console.log("Dashboard: Current user available, fetching quick suggestions. UID:", currentUser.uid);
+    console.log("Dashboard: Current user available (UID:", currentUser.uid, "), proceeding to fetch quick suggestions.");
     fetchQuickSuggestions(currentUser.uid); 
 
-    console.log(`Dashboard: Setting up match requests listener for user UID: ${currentUser.uid}`);
-    setIsLoadingRequests(true);
+    console.log(`Dashboard Requests: Setting up match requests listener for user UID: ${currentUser.uid}`);
+    setIsLoadingRequests(true); // Explicitly set loading true before starting listener
 
     const requestsQuery = query(
       collection(db, "matchRequests"),
       where("receiverUid", "==", currentUser.uid),
       where("status", "==", "pending"),
-      orderBy("createdAt", "asc") 
+      orderBy("createdAt", "asc") // Index should support this (createdAt ASC)
     );
 
     const unsubscribeRequests = onSnapshot(requestsQuery, async (snapshot) => {
-      console.log(`Dashboard: Match requests snapshot received. Empty: ${snapshot.empty}, Docs count: ${snapshot.docs.length}`);
+      console.log(`Dashboard Requests: Snapshot received. Empty: ${snapshot.empty}, Docs count: ${snapshot.docs.length}`);
+      if (snapshot.metadata.hasPendingWrites) {
+        console.log("Dashboard Requests: Snapshot has pending writes, waiting for server data.");
+        return;
+      }
+
       if (snapshot.empty) {
           setMatchRequests([]);
-          setIsLoadingRequests(false);
-          console.log("Dashboard: No 'pending' matchRequests found for current user.");
-          return;
+          console.log("Dashboard Requests: No 'pending' matchRequests found for current user.");
+          // setIsLoadingRequests(false) will be handled in finally block of promise resolution
       }
 
       const requestsPromises = snapshot.docs.map(async (requestDoc) => {
         const data = requestDoc.data();
-        console.log(`Dashboard: Processing requestDoc ID: ${requestDoc.id}, Raw Data:`, JSON.parse(JSON.stringify(data))); // Log raw data
+        console.log(`Dashboard Requests: Processing requestDoc ID: ${requestDoc.id}, Raw Data:`, JSON.parse(JSON.stringify(data)));
+        
         const senderUid = data.senderUid;
-
         if (!senderUid) {
-          console.error(`Dashboard: senderUid missing in requestDoc ${requestDoc.id}. Data:`, data);
-          return null;
+          console.error(`Dashboard Requests: senderUid missing in requestDoc ${requestDoc.id}. Data:`, data);
+          return null; // Skip this problematic request
         }
 
-        let senderName = "User (Default)";
+        if (!data.createdAt || !(data.createdAt instanceof Timestamp)) {
+            console.warn(`Dashboard Requests: Invalid or missing 'createdAt' timestamp for request ${requestDoc.id}. Actual value:`, data.createdAt);
+            // Consider returning null or a default timestamp if critical, or logging and proceeding
+             return null; 
+        }
+
+        let senderName = "User";
         let senderAvatarUrl = "https://placehold.co/80x80.png";
         let senderDataAiHint = "person placeholder";
         let senderAge;
         let senderProfession;
 
         try {
-            console.log(`Dashboard: Fetching sender profile for UID ${senderUid} (request ${requestDoc.id})`);
+            console.log(`Dashboard Requests: Fetching sender profile for UID ${senderUid} (request ${requestDoc.id})`);
             const senderDocRef = doc(db, "users", senderUid);
             const senderSnap = await getDoc(senderDocRef);
 
@@ -208,19 +231,15 @@ export default function DashboardPage() {
               senderDataAiHint = senderData.dataAiHint || (senderData.photoURL && !senderData.photoURL.includes('placehold.co') ? "person professional" : "person placeholder");
               senderAge = calculateAge(senderData.dob);
               senderProfession = senderData.profession;
-              console.log(`Dashboard: Successfully fetched sender ${senderName} for request ${requestDoc.id}`);
+              console.log(`Dashboard Requests: Successfully fetched sender ${senderName} for request ${requestDoc.id}`);
             } else {
-              console.warn(`Dashboard: Sender profile for UID ${senderUid} not found (request ${requestDoc.id}). Using defaults.`);
+              console.warn(`Dashboard Requests: Sender profile for UID ${senderUid} not found (request ${requestDoc.id}). Using defaults.`);
             }
         } catch (fetchError) {
-            console.error(`Dashboard: Error fetching sender profile for UID ${senderUid} (request ${requestDoc.id}):`, fetchError);
+            console.error(`Dashboard Requests: Error fetching sender profile for UID ${senderUid} (request ${requestDoc.id}):`, fetchError);
+            // Continue with default sender info
         }
         
-        if (!data.createdAt || !(data.createdAt instanceof Timestamp)) {
-            console.warn(`Dashboard: Invalid or missing 'createdAt' timestamp for request ${requestDoc.id}. Actual value:`, data.createdAt, "Using serverTimestamp as fallback for display if possible, but data is incorrect.");
-             // This request might be problematic due to data integrity.
-        }
-
         return {
           id: requestDoc.id,
           senderUid: senderUid,
@@ -229,35 +248,34 @@ export default function DashboardPage() {
           senderDataAiHint: senderDataAiHint,
           senderAge: senderAge,
           senderProfession: senderProfession,
-          timestamp: data.createdAt as Timestamp, // Assuming it is a Timestamp after the check
+          timestamp: data.createdAt as Timestamp, 
         } as MatchRequest;
       });
 
       try {
         let fetchedRequests = await Promise.all(requestsPromises);
-        // Filter out nulls (from errors) and then reverse for newest first display
-        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); 
-        console.log(`Dashboard: Processed ${fetchedRequests.length} valid match requests. Setting state. Requests:`, JSON.parse(JSON.stringify(fetchedRequests)));
+        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); // Reverse for newest first (as query is ASC)
+        console.log(`Dashboard Requests: Processed ${fetchedRequests.length} valid requests. Setting state. Requests:`, JSON.parse(JSON.stringify(fetchedRequests)));
         setMatchRequests(fetchedRequests as MatchRequest[]);
       } catch (processingError) {
-        console.error("Dashboard: Error processing request promises: ", processingError);
+        console.error("Dashboard Requests: Error processing request promises: ", processingError);
         setMatchRequests([]); 
       } finally {
         setIsLoadingRequests(false);
-        console.log("Dashboard: Finished processing match requests snapshot, isLoadingRequests set to false.");
+        console.log("Dashboard Requests: Finished processing snapshot, isLoadingRequests set to false.");
       }
     }, (error) => {
-        console.error("Dashboard: Error fetching match requests via onSnapshot: ", error);
+        console.error("Dashboard Requests: Error fetching match requests via onSnapshot: ", error);
         toast({ title: "Error Loading Requests", description: "Could not load match requests. " + error.message, variant: "destructive"});
         setMatchRequests([]);
-        setIsLoadingRequests(false);
+        setIsLoadingRequests(false); // Ensure loading is false on error too
     });
 
     return () => {
-      console.log("Dashboard: Unsubscribing from match requests listener.");
+      console.log("Dashboard Requests: Unsubscribing from match requests listener.");
       unsubscribeRequests();
     }
-  }, [currentUser, toast, fetchQuickSuggestions]);
+  }, [currentUser, toast, fetchQuickSuggestions]); // fetchQuickSuggestions is stable, currentUser is key trigger
 
   const createChatDocument = async (user1Uid: string, user2Uid: string) => {
     const user1DocRef = doc(db, "users", user1Uid);
@@ -266,7 +284,7 @@ export default function DashboardPage() {
     const [user1Snap, user2Snap] = await Promise.all([getDoc(user1DocRef), getDoc(user2DocRef)]);
 
     if (!user1Snap.exists() || !user2Snap.exists()) {
-        console.error("Dashboard: One or both user profiles not found for chat creation.", {user1Uid, user2Uid, user1Exists: user1Snap.exists(), user2Exists: user2Snap.exists()});
+        console.error("Dashboard Chat: One or both user profiles not found for chat creation.", {user1Uid, user2Uid, user1Exists: user1Snap.exists(), user2Exists: user2Snap.exists()});
         throw new Error("One or both user profiles not found for chat creation.");
     }
     const user1Data = user1Snap.data();
@@ -275,7 +293,7 @@ export default function DashboardPage() {
     const chatId = getCompositeId(user1Uid, user2Uid);
     const chatDocRef = doc(db, "chats", chatId);
 
-    console.log(`Dashboard: Creating chat document for ${user1Uid} and ${user2Uid} with chatId ${chatId}`);
+    console.log(`Dashboard Chat: Creating chat document for ${user1Uid} and ${user2Uid} with chatId ${chatId}`);
 
     const batch = writeBatch(db);
     batch.set(chatDocRef, {
@@ -300,39 +318,45 @@ export default function DashboardPage() {
     }, { merge: true });
 
     await batch.commit();
-    console.log(`Dashboard: Chat document ${chatId} created/updated successfully.`);
+    console.log(`Dashboard Chat: Chat document ${chatId} created/updated successfully.`);
     return chatId;
   };
 
   const handleAcceptRequest = async (request: MatchRequest) => {
-    if (!currentUser) return;
-    console.log(`Dashboard: Accepting request ID: ${request.id}, from sender: ${request.senderUid}`);
+    if (!currentUser) {
+        console.error("Dashboard Accept: No current user, cannot accept request.");
+        return;
+    }
+    console.log(`Dashboard Accept: Accepting request ID: ${request.id}, from sender: ${request.senderUid} by user: ${currentUser.uid}`);
     setProcessingRequestId(request.id);
     const requestDocRef = doc(db, "matchRequests", request.id);
     try {
       await updateDoc(requestDocRef, { status: "accepted", updatedAt: serverTimestamp() });
       await createChatDocument(currentUser.uid, request.senderUid);
-      toast({ title: "Request Accepted!", description: "You are now matched." });
-      console.log(`Dashboard: Request ${request.id} accepted and chat created.`);
+      toast({ title: "Request Accepted!", description: `You are now matched with ${request.senderName}.` });
+      console.log(`Dashboard Accept: Request ${request.id} accepted and chat created.`);
     } catch (error: any) {
-      console.error("Dashboard: Error accepting request:", error);
+      console.error("Dashboard Accept: Error accepting request:", error);
       toast({ title: "Error", description: "Failed to accept request: " + error.message, variant: "destructive" });
     } finally {
       setProcessingRequestId(null);
     }
   };
 
-  const handleDeclineRequest = async (requestId: string) => {
-     if (!currentUser) return;
-    console.log(`Dashboard: Declining request ID: ${requestId}`);
+  const handleDeclineRequest = async (requestId: string, senderName: string = "User") => {
+     if (!currentUser) {
+        console.error("Dashboard Decline: No current user, cannot decline request.");
+        return;
+     }
+    console.log(`Dashboard Decline: Declining request ID: ${requestId} by user: ${currentUser.uid}`);
     setProcessingRequestId(requestId);
     const requestDocRef = doc(db, "matchRequests", requestId);
     try {
       await updateDoc(requestDocRef, { status: "declined_by_receiver", updatedAt: serverTimestamp() });
-      toast({ title: "Request Declined" });
-      console.log(`Dashboard: Request ${requestId} declined.`);
-    } catch (error: any)      {
-      console.error("Dashboard: Error declining request:", error);
+      toast({ title: "Request Declined", description: `You have declined the request from ${senderName}.` });
+      console.log(`Dashboard Decline: Request ${requestId} declined.`);
+    } catch (error: any) {
+      console.error("Dashboard Decline: Error declining request:", error);
       toast({ title: "Error", description: "Failed to decline request: " + error.message, variant: "destructive" });
     } finally {
       setProcessingRequestId(null);
@@ -498,9 +522,10 @@ export default function DashboardPage() {
               <CardDescription>People who want to connect with you.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {isLoadingRequests ? (
+              {isLoadingRequests && (
                 <div className="flex justify-center items-center py-4"> <Loader2 className="h-6 w-6 animate-spin text-primary" /> </div>
-              ) : matchRequests.length > 0 ? (
+              )}
+              {!isLoadingRequests && matchRequests.length > 0 && (
                 matchRequests.map(req => (
                   <div key={req.id} className="flex items-center justify-between p-2.5 bg-muted/20 hover:bg-muted/40 rounded-md transition-colors">
                     <div className="flex items-center gap-2.5">
@@ -517,14 +542,15 @@ export default function DashboardPage() {
                       <Button onClick={() => handleAcceptRequest(req)} variant="outline" size="sm" className="h-7 px-2 border-green-500 text-green-600 hover:bg-green-500/10 disabled:opacity-50" disabled={processingRequestId === req.id}>
                         {processingRequestId === req.id ? <Loader2 className="h-3 w-3 animate-spin"/> : <Check className="h-3 w-3"/>}
                       </Button>
-                      <Button onClick={() => handleDeclineRequest(req.id)} variant="ghost" size="sm" className="h-7 px-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50" disabled={processingRequestId === req.id}>
+                      <Button onClick={() => handleDeclineRequest(req.id, req.senderName)} variant="ghost" size="sm" className="h-7 px-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50" disabled={processingRequestId === req.id}>
                          {processingRequestId === req.id ? <Loader2 className="h-3 w-3 animate-spin"/> : <X className="h-3 w-3"/>}
                       </Button>
                     </div>
                   </div>
                 ))
-              ) : (
-                null 
+              )}
+              {!isLoadingRequests && matchRequests.length === 0 && (
+                null // Show nothing if no requests and not loading, as per user's request
               )}
             </CardContent>
           </Card>
@@ -533,6 +559,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-
-    
