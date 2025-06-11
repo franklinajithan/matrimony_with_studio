@@ -27,15 +27,20 @@ import {
   Timestamp,
   writeBatch,
 } from 'firebase/firestore';
-import { format } from 'date-fns';
+import { format, isToday, isYesterday, parseISO } from 'date-fns';
 
 
-interface Message {
+interface RawMessageData {
   id: string;
   senderId: string;
   text: string;
-  timestamp: Timestamp | null; // Firestore Timestamp
-  formattedTimestamp?: string; // For display
+  timestamp: Timestamp | null;
+}
+
+interface ProcessedMessage extends RawMessageData {
+  displayTimestamp: string;
+  showDateSeparator: boolean;
+  dateSeparatorLabel: string;
 }
 
 interface OtherUserDetails {
@@ -45,6 +50,22 @@ interface OtherUserDetails {
   avatarHint: string;
 }
 
+function formatDisplayTimestamp(timestamp: Timestamp | null): string {
+  if (!timestamp) return 'Sending...';
+  const date = timestamp.toDate();
+  const now = new Date();
+
+  if (isToday(date)) {
+    return format(date, 'p'); // e.g., 2:30 PM
+  } else if (isYesterday(date)) {
+    return `Yesterday, ${format(date, 'p')}`;
+  } else if (now.getFullYear() === date.getFullYear()) {
+    return format(date, 'MMM d, p'); // e.g., Mar 15, 2:30 PM
+  } else {
+    return format(date, 'MMM d, yyyy, p'); // e.g., Mar 15, 2023, 2:30 PM
+  }
+}
+
 export default function ChatPage() {
   const params = useParams();
   const router = useRouter();
@@ -52,13 +73,13 @@ export default function ChatPage() {
   
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [otherUser, setOtherUser] = useState<OtherUserDetails | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ProcessedMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-   const viewportRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
 
 
   useEffect(() => {
@@ -89,8 +110,7 @@ export default function ChatPage() {
             let name = "User";
             let avatarUrl = "https://placehold.co/100x100.png";
             let avatarHint = "person placeholder";
-            let detailsUpdated = false;
-
+            
             if (chatData.participantDetails && chatData.participantDetails[otherParticipantUid]) {
                 name = chatData.participantDetails[otherParticipantUid].displayName || "User";
                 avatarUrl = chatData.participantDetails[otherParticipantUid].photoURL || "https://placehold.co/100x100.png";
@@ -104,7 +124,6 @@ export default function ChatPage() {
                     avatarUrl = userData.photoURL || "https://placehold.co/100x100.png";
                     avatarHint = userData.dataAiHint || (avatarUrl.includes('placehold.co') ? "person placeholder" : "person avatar");
                     
-                    // Update chatDoc with these details if they weren't in chatData.participantDetails
                     await updateDoc(chatDocRef, {
                         [`participantDetails.${otherParticipantUid}`]: {
                             displayName: name,
@@ -112,12 +131,10 @@ export default function ChatPage() {
                             dataAiHint: avatarHint
                         }
                     });
-                    detailsUpdated = true;
                 }
             }
             setOtherUser({ id: otherParticipantUid, name, avatarUrl, avatarHint });
 
-            // Mark messages as read for current user
             if (chatData.unreadBy && chatData.unreadBy[currentUser.uid] > 0) {
               await updateDoc(chatDocRef, {
                 [`unreadBy.${currentUser.uid}`]: 0
@@ -149,17 +166,39 @@ export default function ChatPage() {
     const q = query(messagesColRef, orderBy("timestamp", "asc"));
 
     const unsubscribeMessages = onSnapshot(q, (querySnapshot) => {
-      const msgs = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        const timestamp = data.timestamp as Timestamp | null;
+      let lastMessageDateString: string | null = null;
+      const processedMsgs = querySnapshot.docs.map(docSnap => {
+        const data = docSnap.data() as Omit<RawMessageData, 'id'>;
+        const rawMessage: RawMessageData = { id: docSnap.id, ...data };
+        
+        let showDateSeparator = false;
+        let dateSeparatorLabel = '';
+        
+        if (rawMessage.timestamp) {
+          const messageDate = rawMessage.timestamp.toDate();
+          const currentMessageDateString = format(messageDate, 'yyyy-MM-dd');
+          
+          if (currentMessageDateString !== lastMessageDateString) {
+            showDateSeparator = true;
+            if (isToday(messageDate)) {
+              dateSeparatorLabel = 'Today';
+            } else if (isYesterday(messageDate)) {
+              dateSeparatorLabel = 'Yesterday';
+            } else {
+              dateSeparatorLabel = format(messageDate, 'MMMM d, yyyy');
+            }
+            lastMessageDateString = currentMessageDateString;
+          }
+        }
+
         return {
-          id: doc.id,
-          ...data,
-          timestamp,
-          formattedTimestamp: timestamp ? format(timestamp.toDate(), 'p') : 'Sending...'
-        } as Message;
+          ...rawMessage,
+          displayTimestamp: formatDisplayTimestamp(rawMessage.timestamp),
+          showDateSeparator,
+          dateSeparatorLabel,
+        } as ProcessedMessage;
       });
-      setMessages(msgs);
+      setMessages(processedMsgs);
     }, (error) => {
       console.error("Error fetching messages:", error);
     });
@@ -186,7 +225,6 @@ export default function ChatPage() {
 
     try {
       const batch = writeBatch(db);
-
       const newMessageDocRef = doc(collection(db, "chats", chatId, "messages"));
       batch.set(newMessageDocRef, {
         senderId: currentUser.uid,
@@ -200,9 +238,7 @@ export default function ChatPage() {
         lastMessageSenderId: currentUser.uid,
         [`unreadBy.${otherUser.id}`]: increment(1),
       });
-
       await batch.commit();
-
     } catch (error) {
       console.error("Error sending message:", error);
       setNewMessage(textToSend); 
@@ -227,7 +263,6 @@ export default function ChatPage() {
     );
   }
 
-
   return (
     <Card className="h-[calc(100vh-10rem)] md:h-[calc(100vh-12rem)] flex flex-col shadow-xl">
       {otherUser && (
@@ -250,44 +285,52 @@ export default function ChatPage() {
 
       <CardContent className="flex-grow p-0 overflow-hidden">
         <ScrollArea className="h-full" viewportRef={viewportRef} ref={scrollAreaRef}>
-          <div className="p-4 space-y-4">
+          <div className="p-4 space-y-1"> {/* Reduced space-y for tighter message groups */}
             {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={cn(
-                  "flex items-end space-x-2",
-                  msg.senderId === currentUser.uid ? "justify-end" : "justify-start"
-                )}
-              >
-                {msg.senderId !== currentUser.uid && otherUser && (
-                  <Avatar className="h-8 w-8 self-start">
-                    <AvatarImage src={otherUser.avatarUrl} alt={otherUser.name} data-ai-hint={otherUser.avatarHint} />
-                    <AvatarFallback>{otherUser.name.substring(0, 1).toUpperCase()}</AvatarFallback>
-                  </Avatar>
+              <React.Fragment key={msg.id}>
+                {msg.showDateSeparator && (
+                  <div className="flex justify-center my-3">
+                    <span className="px-3 py-1 text-xs text-muted-foreground bg-muted rounded-full">
+                      {msg.dateSeparatorLabel}
+                    </span>
+                  </div>
                 )}
                 <div
                   className={cn(
-                    "max-w-[70%] rounded-lg px-3 py-2 text-sm shadow",
-                    msg.senderId === currentUser.uid
-                      ? "bg-primary text-primary-foreground rounded-br-none"
-                      : "bg-muted text-foreground rounded-bl-none"
+                    "flex items-end space-x-2 py-1", // Added py-1 to message rows
+                    msg.senderId === currentUser.uid ? "justify-end" : "justify-start"
                   )}
                 >
-                  <p className="whitespace-pre-wrap">{msg.text}</p>
-                  <p className={cn(
-                      "text-xs mt-1",
-                       msg.senderId === currentUser.uid ? "text-primary-foreground/70 text-right" : "text-muted-foreground text-left"
-                    )}>
-                    {msg.formattedTimestamp}
-                  </p>
+                  {msg.senderId !== currentUser.uid && otherUser && (
+                    <Avatar className="h-8 w-8 self-start">
+                      <AvatarImage src={otherUser.avatarUrl} alt={otherUser.name} data-ai-hint={otherUser.avatarHint} />
+                      <AvatarFallback>{otherUser.name.substring(0, 1).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  )}
+                  <div
+                    className={cn(
+                      "max-w-[70%] rounded-lg px-3 py-2 text-sm shadow",
+                      msg.senderId === currentUser.uid
+                        ? "bg-primary text-primary-foreground rounded-br-none"
+                        : "bg-muted text-foreground rounded-bl-none"
+                    )}
+                  >
+                    <p className="whitespace-pre-wrap">{msg.text}</p>
+                    <p className={cn(
+                        "text-xs mt-1",
+                         msg.senderId === currentUser.uid ? "text-primary-foreground/70 text-right" : "text-muted-foreground text-left"
+                      )}>
+                      {msg.displayTimestamp}
+                    </p>
+                  </div>
+                   {msg.senderId === currentUser.uid && (
+                     <Avatar className="h-8 w-8 self-start">
+                      <AvatarImage src={currentUser.photoURL || undefined} alt={currentUser.displayName || "You"} data-ai-hint={currentUser.photoURL ? "user avatar" : "user placeholder"} />
+                      <AvatarFallback>{currentUser.displayName ? currentUser.displayName.substring(0,1).toUpperCase() : "Y"}</AvatarFallback> 
+                    </Avatar>
+                  )}
                 </div>
-                 {msg.senderId === currentUser.uid && (
-                   <Avatar className="h-8 w-8 self-start">
-                    <AvatarImage src={currentUser.photoURL || undefined} alt={currentUser.displayName || "You"} data-ai-hint={currentUser.photoURL ? "user avatar" : "user placeholder"} />
-                    <AvatarFallback>{currentUser.displayName ? currentUser.displayName.substring(0,1).toUpperCase() : "Y"}</AvatarFallback> 
-                  </Avatar>
-                )}
-              </div>
+              </React.Fragment>
             ))}
           </div>
         </ScrollArea>
@@ -321,3 +364,4 @@ export default function ChatPage() {
     </Card>
   );
 }
+
