@@ -4,82 +4,84 @@
 
 @layer base {
   :root {
-    --background: 300 40% 97%; /* Very Light Lavender/Off-White */
-    --foreground: 270 30% 25%; /* Dark Muted Purple */
+    /* Cupid Knots Palette - Light Mode */
+    --background: 240 50% 98%; /* Very Light Cool Gray / Almost White */
+    --foreground: 240 10% 20%; /* Dark Cool Gray */
 
-    --muted: 300 30% 90%; /* Light Greyish Lavender */
-    --muted-foreground: 270 25% 45%; /* Muted Purple-Gray */
+    --muted: 240 30% 94%; /* Light Cool Gray */
+    --muted-foreground: 240 10% 45%; /* Muted Cool Gray */
 
-    --popover: 300 40% 98%; /* Lighter Lavender for Popover */
-    --popover-foreground: 270 30% 25%; /* Dark Muted Purple */
+    --popover: 0 0% 100%; /* White */
+    --popover-foreground: 240 10% 20%;
 
-    --card: 300 50% 96%; /* Slightly Saturated Light Lavender for Cards */
-    --card-foreground: 270 30% 25%; /* Dark Muted Purple */
+    --card: 0 0% 100%; /* White for feature cards */
+    --card-foreground: 240 10% 20%;
 
-    --border: 300 30% 85%; /* Lavender-toned border */
-    --input: 300 30% 88%; /* Lavender-toned input background */
+    --border: 240 10% 85%; /* Light Gray border */
+    --input: 240 10% 90%; 
 
-    --primary: 270 60% 55%; /* Medium Purple */
-    --primary-foreground: 270 60% 97%; /* Very Light Purple/Almost White */
+    --primary: 280 75% 55%; /* Vibrant Purple (Sign In button, Hero elements) */
+    --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 330 70% 65%; /* Vibrant Pink */
-    --secondary-foreground: 330 70% 97%; /* Very Light Pink/Almost White */
+    --secondary: 320 80% 60%; /* Bright Pink (Hero gradient accent) */
+    --secondary-foreground: 0 0% 100%; /* White */
     
-    --accent: 330 80% 75%; /* Lighter, Softer Pink/Rose */
-    --accent-foreground: 330 50% 20%; /* Darker Pink/Rose for text on accent */
+    --accent: 260 80% 65%; /* Medium Blue (Why Choose Us title) */
+    --accent-foreground: 0 0% 100%; /* White */
 
-    --destructive: 0 70% 50%; /* Standard Red */
-    --destructive-foreground: 0 0% 100%; /* White */
+    --destructive: 0 70% 50%; 
+    --destructive-foreground: 0 0% 100%; 
 
-    --ring: 270 60% 65%; /* Purple for focus rings */
+    --ring: 280 75% 65%; /* Lighter Purple for focus rings */
     --radius: 0.5rem;
 
-    --chart-1: 270 70% 60%; /* Purple */
-    --chart-2: 330 75% 70%; /* Pink */
-    --chart-3: 290 60% 65%; /* Magenta/Violet */
-    --chart-4: 250 65% 70%; /* Indigo */
-    --chart-5: 310 70% 60%; /* Deep Pink */
+    /* Chart colors can remain or be adjusted if charts are used with new theme */
+    --chart-1: 270 70% 60%;
+    --chart-2: 330 75% 70%;
+    --chart-3: 290 60% 65%;
+    --chart-4: 250 65% 70%;
+    --chart-5: 310 70% 60%;
 
-    /* Sidebar specific variables if they need to differ significantly, otherwise they inherit */
-    --sidebar-background: 285 40% 94%; /* Light Lilac, slightly different from main bg */
-    --sidebar-foreground: 270 30% 25%;
-    --sidebar-primary: 270 60% 55%; 
-    --sidebar-primary-foreground: 270 60% 97%;
-    --sidebar-accent: 330 70% 70%; /* Slightly adjusted accent for sidebar */
-    --sidebar-accent-foreground: 330 50% 20%;
-    --sidebar-border: 285 30% 85%;
-    --sidebar-ring: 270 60% 65%;
+    --sidebar-background: 240 20% 96%; 
+    --sidebar-foreground: 240 10% 25%;
+    --sidebar-primary: 280 75% 55%; 
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 320 80% 65%; 
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 240 10% 88%;
+    --sidebar-ring: 280 75% 65%;
   }
 
   .dark {
-    --background: 270 30% 12%; /* Dark Purple */
-    --foreground: 300 40% 90%; /* Light Lavender for text */
+    /* Cupid Knots Palette - Dark Mode (Example, can be refined) */
+    --background: 240 10% 10%; /* Very Dark Blue/Gray */
+    --foreground: 240 20% 90%; /* Light Gray/Off-white */
 
-    --muted: 270 25% 22%; /* Darker Muted Purple */
-    --muted-foreground: 300 30% 70%; /* Lighter Muted Lavender */
+    --muted: 240 10% 20%; 
+    --muted-foreground: 240 10% 65%;
 
-    --popover: 270 30% 15%; /* Dark Popover Purple */
-    --popover-foreground: 300 40% 90%; /* Light Lavender */
+    --popover: 240 10% 12%;
+    --popover-foreground: 240 20% 90%;
 
-    --card: 270 30% 17%; /* Dark Card Purple */
-    --card-foreground: 300 40% 90%; /* Light Lavender */
+    --card: 240 10% 15%; /* Darker card for features */
+    --card-foreground: 240 20% 90%;
 
-    --border: 270 20% 30%; /* Darker Border Purple */
-    --input: 270 20% 28%; /* Darker Input Purple */
+    --border: 240 10% 30%;
+    --input: 240 10% 25%;
 
-    --primary: 270 60% 70%; /* Lighter Purple for Dark Mode */
-    --primary-foreground: 270 30% 10%; /* Dark text on Primary */
+    --primary: 280 70% 65%; /* Lighter Purple for Dark Mode */
+    --primary-foreground: 280 10% 10%; /* Darker text on primary */
 
-    --secondary: 330 70% 75%; /* Lighter Pink for Dark Mode */
-    --secondary-foreground: 330 70% 15%; /* Dark text on Secondary */
+    --secondary: 320 75% 70%; /* Lighter Pink for Dark Mode */
+    --secondary-foreground: 320 10% 10%;
+
+    --accent: 260 70% 75%; /* Lighter Blue for Dark Mode */
+    --accent-foreground: 260 10% 10%;
     
-    --accent: 330 80% 65%; /* Bright Pink for Dark Mode */
-    --accent-foreground: 330 80% 10%; /* Dark text on Accent */
-    
-    --destructive: 0 60% 45%; /* Slightly desaturated red for dark mode */
+    --destructive: 0 60% 50%; 
     --destructive-foreground: 0 0% 98%;
 
-    --ring: 270 60% 70%; /* Lighter Purple for focus rings */
+    --ring: 280 70% 70%; 
     
     --chart-1: 270 70% 70%;
     --chart-2: 330 75% 75%;
@@ -87,14 +89,14 @@
     --chart-4: 250 65% 75%;
     --chart-5: 310 70% 65%;
 
-    --sidebar-background: 270 25% 15%;
-    --sidebar-foreground: 300 40% 90%;
-    --sidebar-primary: 270 60% 70%;
-    --sidebar-primary-foreground: 270 30% 10%;
-    --sidebar-accent: 330 70% 75%;
-    --sidebar-accent-foreground: 330 70% 15%;
-    --sidebar-border: 270 20% 30%;
-    --sidebar-ring: 270 60% 70%;
+    --sidebar-background: 240 10% 12%;
+    --sidebar-foreground: 240 20% 90%;
+    --sidebar-primary: 280 70% 65%;
+    --sidebar-primary-foreground: 280 10% 10%;
+    --sidebar-accent: 320 75% 70%;
+    --sidebar-accent-foreground: 320 10% 10%;
+    --sidebar-border: 240 10% 30%;
+    --sidebar-ring: 280 70% 70%;
   }
 }
 
@@ -104,5 +106,9 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* Define a specific hero gradient */
+  .hero-gradient {
+    background-image: linear-gradient(to right, theme('colors.pink.400'), theme('colors.purple.500'), theme('colors.indigo.600'));
   }
 }

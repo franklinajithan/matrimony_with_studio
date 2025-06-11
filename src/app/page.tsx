@@ -4,29 +4,38 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  HeartHandshake, Search, MessageSquareText, ShieldCheck, Loader2, Star, Lock, Globe, UserSquare, Settings2, Languages, Smartphone, BarChart3, Users, Zap, Telescope, Brain, FileText, UserCheckIcon, LayoutList, ListFilter, SmartphoneNfc, Palette
+  Heart, Search, MessageSquareText, ShieldCheck, Users, Zap, Telescope, Brain, FileText, UserCheckIcon, Palette, ListFilter, SmartphoneNfc, Globe, Languages, Maximize
 } from 'lucide-react';
 import { Logo } from '@/components/shared/Logo';
 import { Footer } from '@/components/navigation/Footer';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
+import { Loader2 } from 'lucide-react';
 
-const features = [
-  { icon: <Telescope className="h-8 w-8 text-primary" />, title: "Horoscope Matching", description: "Discover cosmic compatibility by matching horoscopes with potential partners from India and Sri Lanka.", href:"/dashboard/horoscope" },
-  { icon: <Brain className="h-8 w-8 text-primary" />, title: "Smart Matching", description: "Our AI provides intelligent suggestions based on your profile and preferences, tailored for you.", href:"/suggestions" },
-  { icon: <ShieldCheck className="h-8 w-8 text-primary" />, title: "Privacy Guaranteed", description: "Control your information with robust privacy settings and secure data handling.", href:"/privacy" }, // Assuming a privacy page exists or will be created
-  { icon: <Globe className="h-8 w-8 text-primary" />, title: "Global & Local Reach", description: "Connect with a diverse community, with a special focus on Indian and Sri Lankan profiles.", href:"/discover" },
-  { icon: <FileText className="h-8 w-8 text-primary" />, title: "In-Depth Profiles", description: "Get to know potential matches better through comprehensive profile details and preferences.", href:"/dashboard/edit-profile" },
-  { icon: <MessageSquareText className="h-8 w-8 text-primary" />, title: "Secure Messaging", description: "Chat safely and privately with your matches through our encrypted system for real-time connections.", href:"/messages" },
-  { icon: <UserCheckIcon className="h-8 w-8 text-primary" />, title: "Verified Profiles", description: "Look for verified badges to connect with genuine and authentic users with confidence.", href:"/discover" },
-  { icon: <Palette className="h-8 w-8 text-primary" />, title: "Profile Template", description: "Our structured profile templates make it easy to showcase yourself and find information.", href:"/dashboard/edit-profile" },
-  { icon: <ListFilter className="h-8 w-8 text-primary" />, title: "Custom Preferences", description: "Refine your search criteria including community and lifestyle to find exactly who you're looking for.", href:"/dashboard/preferences" },
-  { icon: <Languages className="h-8 w-8 text-primary" />, title: "Language Options", description: "Set your language preferences, including Tamil and Sinhala, for a comfortable experience.", href:"/dashboard/preferences" },
-  { icon: <SmartphoneNfc className="h-8 w-8 text-primary" />, title: "Mobile Friendly", description: "Enjoy a seamless experience on your desktop or mobile browser, anytime, anywhere.", href:"#" },
+const navLinks = [
+  { href: "#home", label: "Home" },
+  { href: "#about", label: "About Us" },
+  { href: "#features", label: "Features" },
+  { href: "#contact", label: "Contact" },
+];
+
+const featuresData = [
+  { icon: <Telescope className="h-10 w-10 text-red-500" />, title: "Horoscope Matching", description: "Explore cosmic compatibility with potential partners.", borderColor: "border-red-500", href:"/dashboard/horoscope" },
+  { icon: <Brain className="h-10 w-10 text-blue-500" />, title: "Smart Matching", description: "AI suggestions based on your profile and preferences.", borderColor: "border-blue-500", href:"/suggestions" },
+  { icon: <ShieldCheck className="h-10 w-10 text-green-500" />, title: "Privacy Guaranteed", description: "Control your information with robust privacy settings.", borderColor: "border-green-500", href:"/privacy" },
+  { icon: <Globe className="h-10 w-10 text-yellow-500" />, title: "Global Reach", description: "Connect with diverse Indian & Sri Lankan profiles.", borderColor: "border-yellow-500", href:"/discover" },
+  { icon: <FileText className="h-10 w-10 text-purple-500" />, title: "In-Depth Profiles", description: "Comprehensive details to know matches better.", borderColor: "border-purple-500", href:"/dashboard/edit-profile" },
+  { icon: <MessageSquareText className="h-10 w-10 text-orange-500" />, title: "Secure Messaging", description: "Chat safely via our encrypted system.", borderColor: "border-orange-500", href:"/messages" },
+  { icon: <UserCheckIcon className="h-10 w-10 text-cyan-500" />, title: "Verified Profiles", description: "Connect with genuine and authentic users.", borderColor: "border-cyan-500", href:"/discover" },
+  { icon: <Palette className="h-10 w-10 text-lime-500" />, title: "Profile Template", description: "Easy-to-use templates to showcase yourself.", borderColor: "border-lime-500", href:"/dashboard/edit-profile" },
+  { icon: <ListFilter className="h-10 w-10 text-pink-500" />, title: "Custom Preferences", description: "Refine criteria to find your ideal match.", borderColor: "border-pink-500", href:"/dashboard/preferences" },
+  { icon: <Maximize className="h-10 w-10 text-teal-500" />, title: "Real Time Chat", description: "Engage in instant conversations with matches.", borderColor: "border-teal-500", href:"/messages"},
+  { icon: <Languages className="h-10 w-10 text-amber-500" />, title: "Language Preferences", description: "Set language options, including Tamil & Sinhala.", borderColor: "border-amber-500", href:"/dashboard/preferences"},
+  { icon: <SmartphoneNfc className="h-10 w-10 text-rose-500" />, title: "Mobile App Support", description: "Seamless experience on all your devices.", borderColor: "border-rose-500", href:"#"},
 ];
 
 
@@ -38,7 +47,6 @@ export default function LandingPage() {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         router.replace('/dashboard');
-        setLoading(false); 
       } else {
         setLoading(false);
       }
@@ -48,78 +56,92 @@ export default function LandingPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen items-center justify-center bg-gradient-to-br from-background to-rose-50">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="mt-4 text-muted-foreground">Loading...</p>
+      <div className="flex flex-col min-h-screen items-center justify-center bg-slate-50">
+        <Loader2 className="h-12 w-12 animate-spin text-purple-600" />
+        <p className="mt-4 text-slate-500">Loading Cupid Knots...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-background to-rose-50">
-      <header className="py-6 px-4 sm:px-6 lg:px-8">
+    <div className="flex flex-col min-h-screen bg-slate-50 text-slate-800">
+      <header className="py-4 px-4 sm:px-6 lg:px-8 shadow-sm bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto flex justify-between items-center">
-          <Logo />
-          <div className="space-x-2">
-            <Button variant="ghost" asChild>
-              <Link href="/login">Log In</Link>
-            </Button>
-            <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg">
-              <Link href="/signup">Sign Up Free</Link>
-            </Button>
-          </div>
+          <Logo textColor="text-purple-600" iconSize={24} textSize="text-2xl"/>
+          <nav className="hidden md:flex items-center space-x-6">
+            {navLinks.map((link) => (
+              <Link key={link.label} href={link.href} className="text-sm font-medium text-slate-600 hover:text-purple-600 transition-colors">
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+          <Button asChild className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 text-sm shadow-md">
+            <Link href="/login">Sign In</Link>
+          </Button>
         </div>
       </header>
 
       <main className="flex-grow">
-        <section className="container mx-auto px-4 py-16 sm:py-24 text-center">
-          <h1 className="font-headline text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight text-gray-800">
-            Find Your <span className="text-primary">Perfect Match</span> with CupidMatch
-          </h1>
-          <p className="mt-6 max-w-2xl mx-auto text-lg sm:text-xl text-foreground/80">
-            Join a community dedicated to helping you find genuine connections and lasting relationships, with a focus on Indian and Sri Lankan singles. Our intelligent platform makes finding love simpler and more meaningful.
-          </p>
-          <div className="mt-10 flex justify-center space-x-4">
-            <Button size="lg" asChild className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl px-8 py-6 text-lg">
-              <Link href="/signup">Get Started</Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild className="px-8 py-6 text-lg border-primary text-primary hover:bg-primary/10 shadow-lg">
-              <Link href="/discover">Explore Profiles</Link>
-            </Button>
+        <section id="home" className="relative hero-gradient text-white py-20 md:py-32 overflow-hidden">
+          <div className="container mx-auto px-4 z-10 relative">
+            <div className="flex flex-col md:flex-row items-center">
+              <div className="md:w-3/5 text-center md:text-left mb-10 md:mb-0">
+                <h1 className="font-headline text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight">
+                  Welcome to <span className="inline-flex items-center">CUPID<Heart className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 mx-1 fill-white"/>KNOTS</span>
+                </h1>
+                <p className="mt-6 text-lg sm:text-xl max-w-xl mx-auto md:mx-0">
+                  Find your perfect match with our advanced matchmaking platform.
+                </p>
+                <div className="mt-10">
+                  <Button size="lg" asChild className="bg-white hover:bg-slate-100 text-purple-600 shadow-xl px-8 py-3 text-base font-semibold rounded-lg">
+                    <Link href="/signup">Get Started</Link>
+                  </Button>
+                </div>
+              </div>
+              <div className="md:w-2/5 flex justify-center md:justify-end">
+                <Image 
+                  src="https://placehold.co/400x500.png?text=Namaste" 
+                  alt="Indian Welcome" 
+                  width={350} 
+                  height={450} 
+                  className="rounded-lg shadow-2xl object-cover"
+                  data-ai-hint="indian woman traditional" 
+                  priority
+                />
+              </div>
+            </div>
           </div>
         </section>
 
-        <section className="py-16 sm:py-24 bg-card/50">
+        <section id="features" className="py-16 sm:py-24 bg-slate-50">
           <div className="container mx-auto px-4">
-            <h2 className="font-headline text-4xl font-semibold text-center mb-16 text-gray-800">Explore CupidMatch Features</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {features.map((feature, index) => (
-                <Link key={index} href={feature.href || "#"} passHref>
-                  <Card className="flex flex-col shadow-lg hover:shadow-2xl transition-shadow duration-300 ease-in-out bg-background h-full cursor-pointer group">
-                    <CardHeader className="items-center text-center">
-                      <div className="p-3 rounded-full bg-primary/10 mb-3 transition-transform group-hover:scale-110">
-                        {feature.icon}
-                      </div>
-                      <CardTitle className="font-headline text-2xl text-gray-700 group-hover:text-primary transition-colors">{feature.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex-grow text-center">
-                      <p className="text-foreground/70 text-sm">{feature.description}</p>
-                    </CardContent>
-                  </Card>
-                </Link>
+            <h2 className="font-headline text-4xl font-bold text-center mb-16 text-blue-700">Why Choose Us</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8">
+              {featuresData.map((feature) => (
+                <Card key={feature.title} className={`flex flex-col shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out bg-white border-t-4 ${feature.borderColor} rounded-b-lg rounded-t-sm`}>
+                  <CardHeader className="items-center text-center pt-6 pb-3">
+                    <div className="p-3 rounded-full bg-slate-100 mb-3">
+                      {React.cloneElement(feature.icon, { className: `${feature.icon.props.className} h-8 w-8`})}
+                    </div>
+                    <CardTitle className="font-headline text-xl text-slate-700">{feature.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex-grow text-center px-6 pb-6">
+                    <p className="text-slate-500 text-sm">{feature.description}</p>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>
         </section>
         
-        <section className="py-16 sm:py-24">
+        <section className="py-16 sm:py-24 hero-gradient">
           <div className="container mx-auto px-4 text-center">
-             <h2 className="font-headline text-4xl font-semibold mb-8 text-gray-800">Ready to Find The One?</h2>
-             <p className="text-lg text-foreground/80 mb-8 max-w-xl mx-auto">
-               Your journey to a happy and fulfilling partnership starts here. Create your profile today and let CupidMatch guide you to your soulmate.
+             <h2 className="font-headline text-4xl font-semibold mb-8 text-white">Ready to Find The One?</h2>
+             <p className="text-lg text-white/90 mb-8 max-w-xl mx-auto">
+               Your journey to a happy and fulfilling partnership starts here. Create your profile today and let Cupid Knots guide you to your soulmate.
              </p>
-             <Button size="lg" asChild className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-xl px-10 py-6 text-lg">
-               <Link href="/signup">Join CupidMatch Now</Link>
+             <Button size="lg" asChild className="bg-white hover:bg-slate-100 text-purple-600 shadow-xl px-10 py-3 text-base font-semibold rounded-lg">
+               <Link href="/signup">Join Cupid Knots Now</Link>
              </Button>
           </div>
         </section>

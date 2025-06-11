@@ -1,17 +1,24 @@
 import Link from 'next/link';
-import { HeartHandshake } from 'lucide-react';
+import { Heart } from 'lucide-react'; // Using Lucide Heart, can be replaced with custom SVG
 
 interface LogoProps {
   className?: string;
   iconSize?: number;
   textSize?: string;
+  textColor?: string; // Added for flexibility
 }
 
-export function Logo({ className, iconSize = 28, textSize = "text-3xl" }: LogoProps) {
+export function Logo({ 
+  className, 
+  iconSize = 28, 
+  textSize = "text-3xl",
+  textColor = "text-primary" // Default to primary, can be overridden
+}: LogoProps) {
   return (
-    <Link href="/" className={`flex items-center gap-2 ${className}`}>
-      <HeartHandshake className="text-primary" size={iconSize} />
-      <span className={`font-headline font-bold ${textSize} text-primary`}>CupidMatch</span>
+    <Link href="/" className={`flex items-center gap-1.5 ${className}`}>
+      <span className={`font-headline font-bold ${textSize} ${textColor} tracking-tight`}>CUPID</span>
+      <Heart className={`${textColor} fill-current`} size={iconSize * 0.8} /> {/* Adjusted icon size slightly */}
+      <span className={`font-headline font-bold ${textSize} ${textColor} tracking-tight`}>KNOTS</span>
     </Link>
   );
 }
