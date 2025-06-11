@@ -57,11 +57,11 @@ export default function DashboardPage() {
   const [userAvatarHint, setUserAvatarHint] = useState(mockUser.dataAiHint);
 
   const [matchRequests, setMatchRequests] = useState<MatchRequest[]>([]);
-  const [isLoadingRequests, setIsLoadingRequests] = useState(true); // Initialize to true
+  const [isLoadingRequests, setIsLoadingRequests] = useState(true);
   const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
   
   const [quickSuggestions, setQuickSuggestions] = useState<QuickSuggestionProfile[]>([]);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true); // Initialize to true
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
 
   const { toast } = useToast();
 
@@ -91,7 +91,6 @@ export default function DashboardPage() {
         setUserAvatarHint(mockUser.dataAiHint);
         setQuickSuggestions([]); 
         setMatchRequests([]);
-        // Ensure loading states are reset if user logs out
         setIsLoadingSuggestions(false);
         setIsLoadingRequests(false);
         console.log("Dashboard Auth: No user, cleared suggestions and requests, set loading to false.");
@@ -111,15 +110,10 @@ export default function DashboardPage() {
         setQuickSuggestions([]);
         return;
     }
-    setIsLoadingSuggestions(true); // Set loading true at the start
+    setIsLoadingSuggestions(true);
     try {
       const usersRef = collection(db, "users");
-      // Fetch a slightly larger batch to filter client-side, as Firestore doesn't support != efficiently with limits/ordering.
-      const q = query(
-        usersRef,
-        orderBy("uid"), // Order by something to make pagination possible if needed, though not strictly necessary for a small limit
-        limit(10) // Fetch 10 potential users
-      );
+      const q = query(usersRef, limit(10)); // Fetch 10 users
       
       const querySnapshot = await getDocs(q);
       console.log("Dashboard Suggestions: Query snapshot received. Empty:", querySnapshot.empty, "Docs count:", querySnapshot.docs.length);
@@ -127,11 +121,10 @@ export default function DashboardPage() {
       const suggestions: QuickSuggestionProfile[] = [];
       querySnapshot.forEach((docSnap) => {
         if (docSnap.id === currentUserId || suggestions.length >= 3) { 
-            // Skip self or if we already have 3 suggestions
             return; 
         }
         const data = docSnap.data();
-        console.log("Dashboard Suggestions: Processing suggestion for user ID:", docSnap.id, "Data:", data);
+        console.log("Dashboard Suggestions: Processing suggestion for user ID:", docSnap.id, "Data:", JSON.stringify(data));
         suggestions.push({
           id: docSnap.id,
           name: data.displayName || "User",
@@ -147,7 +140,7 @@ export default function DashboardPage() {
     } catch (error) {
       console.error("Dashboard Suggestions: Error fetching quick suggestions:", error);
       toast({ title: "Error", description: "Could not load quick suggestions.", variant: "destructive" });
-      setQuickSuggestions([]); // Clear on error
+      setQuickSuggestions([]);
     } finally {
       setIsLoadingSuggestions(false);
       console.log("Dashboard Suggestions: Finished fetching. isLoadingSuggestions set to false.");
@@ -156,11 +149,11 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
-    setIsLoadingRequests(true); // Initialize loading state for requests
-    setIsLoadingSuggestions(true); // Initialize loading state for suggestions
+    setIsLoadingRequests(true);
+    setIsLoadingSuggestions(true);
 
     if (!currentUser) {
-      console.log("Dashboard Effect: No current user, clearing match requests and suggestions. Setting loading to false.");
+      console.log("Dashboard Effect: No current user. Clearing requests and suggestions. Setting loading states to false.");
       setMatchRequests([]);
       setQuickSuggestions([]);
       setIsLoadingRequests(false);
@@ -168,32 +161,26 @@ export default function DashboardPage() {
       return;
     }
 
-    console.log(`Dashboard Effect: Current user available (UID: ${currentUser.uid}), proceeding to fetch quick suggestions and match requests.`);
+    console.log(`Dashboard Effect: Current user available (UID: ${currentUser.uid}). Fetching suggestions and match requests.`);
     fetchQuickSuggestions(currentUser.uid); 
 
     console.log(`Dashboard Requests: Setting up match requests listener for user UID: ${currentUser.uid}`);
-    // Explicitly set loading true before starting listener if not already true.
-    // Already set true at start of effect.
-
+    
     const requestsQuery = query(
       collection(db, "matchRequests"),
       where("receiverUid", "==", currentUser.uid),
       where("status", "==", "pending"),
-      orderBy("createdAt", "asc") // Query ASC, reverse client-side
+      orderBy("createdAt", "asc") 
     );
 
     const unsubscribeRequests = onSnapshot(requestsQuery, async (snapshot) => {
-      console.log(`Dashboard Requests: Snapshot received. Empty: ${snapshot.empty}, Docs count: ${snapshot.docs.length}`);
-      if (snapshot.metadata.hasPendingWrites) {
-        console.log("Dashboard Requests: Snapshot has pending writes, waiting for server data.");
-        // We still process the current snapshot data, Firestore will send updates.
-      }
-
+      console.log(`Dashboard Requests: Snapshot received. Empty: ${snapshot.empty}, Docs count: ${snapshot.docs.length}, HasPendingWrites: ${snapshot.metadata.hasPendingWrites}`);
+      
       if (snapshot.empty) {
           console.log("Dashboard Requests: No 'pending' matchRequests found for current user based on query. Clearing requests list.");
           setMatchRequests([]);
-          // setIsLoadingRequests(false); // Let the finally block handle this
-          // return; // Don't return, allow Promise.all([]) to run
+          setIsLoadingRequests(false); // Important to set here if snapshot is empty
+          return;
       }
 
       const requestsPromises = snapshot.docs.map(async (requestDoc) => {
@@ -213,7 +200,7 @@ export default function DashboardPage() {
 
         let senderName = "User";
         let senderAvatarUrl = "https://placehold.co/80x80.png";
-        let senderDataAiHint = "person placeholder"; // Consistent default
+        let senderDataAiHint = "person placeholder";
         let senderAge;
         let senderProfession;
 
@@ -235,7 +222,6 @@ export default function DashboardPage() {
             }
         } catch (fetchError) {
             console.error(`Dashboard Requests: Error fetching sender profile for UID ${senderUid} (request ${requestDoc.id}):`, fetchError);
-            // Defaults are already set, so we continue
         }
         
         return {
@@ -257,13 +243,13 @@ export default function DashboardPage() {
         setMatchRequests(fetchedRequests as MatchRequest[]);
       } catch (processingError) {
         console.error("Dashboard Requests: Error processing request promises: ", processingError);
-        setMatchRequests([]); // Clear on error
+        setMatchRequests([]);
       } finally {
         setIsLoadingRequests(false);
         console.log("Dashboard Requests: Finished processing snapshot, isLoadingRequests set to false.");
       }
     }, (error) => {
-        console.error("Dashboard Requests: Error fetching match requests via onSnapshot: ", error);
+        console.error("Dashboard Requests: Error in onSnapshot for match requests: ", error);
         toast({ title: "Error Loading Requests", description: "Could not load match requests. " + error.message, variant: "destructive"});
         setMatchRequests([]);
         setIsLoadingRequests(false);
@@ -561,6 +547,5 @@ export default function DashboardPage() {
     </div>
   );
 }
-
 
     
