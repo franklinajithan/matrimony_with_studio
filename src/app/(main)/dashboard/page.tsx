@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import React, { useEffect, useState } from 'react';
 import { auth, db } from '@/lib/firebase/config';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, writeBatch, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, writeBatch, serverTimestamp, Timestamp, orderBy } from 'firebase/firestore';
 import { useToast } from "@/hooks/use-toast";
 
 const getCompositeId = (uid1: string, uid2: string): string => {
@@ -408,3 +408,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
