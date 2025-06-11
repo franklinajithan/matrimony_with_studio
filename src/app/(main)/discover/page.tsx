@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Heart, X, MapPin, Briefcase, CheckCircle, Search as SearchIcon, Loader2, AlertTriangle } from 'lucide-react';
 import React, { useEffect, useState, useCallback } from 'react';
 import { db, auth } from '@/lib/firebase/config';
-import { collection, getDocs, query, where, limit, startAfter, DocumentData, QueryDocumentSnapshot, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit, startAfter, DocumentData, QueryDocumentSnapshot, orderBy, documentId } from 'firebase/firestore'; // Added documentId
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from '@/components/ui/skeleton';
@@ -31,6 +31,7 @@ const calculateAge = (dobString?: string): number | undefined => {
   if (!dobString) return undefined;
   try {
     const birthDate = new Date(dobString);
+    if (isNaN(birthDate.getTime())) return undefined; // Check for invalid date
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
@@ -68,9 +69,9 @@ export default function DiscoverPage() {
       setIsLoading(true);
       setProfiles([]);
       setLastVisible(null);
-      setHasMore(true); // Reset hasMore on initial load
+      setHasMore(true); 
     } else {
-      if (isFetchingMore) return; // Prevent multiple simultaneous fetches for "load more"
+      if (isFetchingMore) return; 
       setIsFetchingMore(true);
     }
     setError(null);
@@ -79,21 +80,14 @@ export default function DiscoverPage() {
       let profilesQuery;
       const usersCollectionRef = collection(db, "users");
       
-      // Define a default order by, e.g., displayName, or a creation timestamp if you have one
-      // Firestore requires an orderBy clause when using startAfter/startAt with a cursor.
-      // If you don't have a specific field to order by, you might need to add one,
-      // or order by document ID, though that's less predictable for user experience.
-      // For now, let's assume an order by 'displayName' for consistent pagination.
-      // If 'displayName' can be non-unique, consider adding a secondary sort field or a creation timestamp.
-
       if (initialLoad) {
-        profilesQuery = query(usersCollectionRef, orderBy("displayName"), limit(PROFILES_PER_PAGE));
+        profilesQuery = query(usersCollectionRef, orderBy(documentId()), limit(PROFILES_PER_PAGE));
       } else if (lastVisible) {
-        profilesQuery = query(usersCollectionRef, orderBy("displayName"), startAfter(lastVisible), limit(PROFILES_PER_PAGE));
+        profilesQuery = query(usersCollectionRef, orderBy(documentId()), startAfter(lastVisible), limit(PROFILES_PER_PAGE));
       } else {
          setIsLoading(false);
          setIsFetchingMore(false);
-         if (!initialLoad) setHasMore(false); // No lastVisible to start after, so no more if not initial load
+         if (!initialLoad) setHasMore(false); 
         return;
       }
       
@@ -103,7 +97,7 @@ export default function DiscoverPage() {
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         if (currentUser && doc.id === currentUser.uid) {
-          return; // Exclude current user from discover list
+          return; 
         }
         fetchedProfiles.push({
           id: doc.id,
@@ -127,14 +121,13 @@ export default function DiscoverPage() {
 
     } catch (e: any) {
       console.error("Error fetching profiles: ", e);
-      setError("Failed to load profiles. Please try again later.");
-      // If error occurs during "load more", reset hasMore to prevent infinite loading attempts on error
+      setError("Failed to load profiles. Please try again later. Error: " + e.message);
       if (!initialLoad) setHasMore(false);
     } finally {
       setIsLoading(false);
       setIsFetchingMore(false);
     }
-  }, [currentUser, hasMore, isFetchingMore]); // Added dependencies
+  }, [currentUser, hasMore, isFetchingMore, lastVisible]); // lastVisible is needed here if it's used to construct the query
 
   useEffect(() => {
     fetchProfiles(true);
