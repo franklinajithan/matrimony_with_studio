@@ -19,6 +19,7 @@ interface Conversation {
   otherUserId: string;
   otherUserName: string;
   otherUserAvatar: string;
+  otherUserAvatarHint: string;
   lastMessage: string;
   unreadCount: number;
   timestamp: string; // Formatted timestamp
@@ -32,19 +33,33 @@ export default function MessagesPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
+    console.log("MessagesPage: Auth listener setup.");
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-      if (!user) {
+      if (user) {
+        console.log("MessagesPage: Auth state changed. Current user UID:", user.uid);
+        setCurrentUser(user);
+      } else {
+        console.log("MessagesPage: Auth state changed. No current user.");
+        setCurrentUser(null);
         setIsLoading(false);
         setConversations([]);
       }
     });
-    return () => unsubscribeAuth();
+    return () => {
+      console.log("MessagesPage: Unsubscribing auth listener.");
+      unsubscribeAuth();
+    };
   }, []);
 
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      console.log("MessagesPage: No current user, skipping chats fetch.");
+      // Ensure loading is false if there's no user to fetch for
+      if (isLoading) setIsLoading(false); 
+      return;
+    }
 
+    console.log(`MessagesPage: Current user UID: ${currentUser.uid}. Setting up chats listener.`);
     setIsLoading(true);
     const chatsRef = collection(db, "chats");
     const q = query(
@@ -54,42 +69,71 @@ export default function MessagesPage() {
     );
 
     const unsubscribeChats = onSnapshot(q, async (querySnapshot) => {
+      console.log(`MessagesPage: Snapshot received. Empty: ${querySnapshot.empty}, Size: ${querySnapshot.size}, Docs count: ${querySnapshot.docs.length}`);
+      if (querySnapshot.empty) {
+        console.log("MessagesPage: No chat documents found for this user.");
+        setConversations([]);
+        setIsLoading(false);
+        return;
+      }
+
       const convsPromises = querySnapshot.docs.map(async (chatDoc) => {
         const chatData = chatDoc.data();
+        console.log(`MessagesPage: Processing chatDoc ID: ${chatDoc.id}, Raw Data:`, JSON.parse(JSON.stringify(chatData)));
+        
         const otherParticipantUid = chatData.participants.find((p: string) => p !== currentUser.uid);
 
-        if (!otherParticipantUid) return null;
+        if (!otherParticipantUid) {
+          console.warn(`MessagesPage: Could not find other participant for chatDoc ID: ${chatDoc.id}. Skipping.`);
+          return null;
+        }
+        console.log(`MessagesPage: Chat ${chatDoc.id} - Other participant UID: ${otherParticipantUid}`);
 
-        // Use participantDetails if available, otherwise fetch live (fallback)
         let otherUserName = "User";
-        let otherUserAvatar = "https://placehold.co/100x100.png"; // Default placeholder
+        let otherUserAvatar = "https://placehold.co/100x100.png";
+        let otherUserAvatarHint = "person placeholder";
 
         if (chatData.participantDetails && chatData.participantDetails[otherParticipantUid]) {
-            otherUserName = chatData.participantDetails[otherParticipantUid].displayName || "User";
+            otherUserName = chatData.participantDetails[otherParticipantUid].displayName || "User (from details)";
             otherUserAvatar = chatData.participantDetails[otherParticipantUid].photoURL || "https://placehold.co/100x100.png";
+            otherUserAvatarHint = chatData.participantDetails[otherParticipantUid].dataAiHint || (otherUserAvatar.includes('placehold.co') ? "person placeholder" : "person avatar");
+            console.log(`MessagesPage: Chat ${chatDoc.id} - Loaded other user from participantDetails: ${otherUserName}`);
         } else {
-            // Fallback: Fetch from users collection if participantDetails is missing/incomplete
-            const userDocRef = doc(db, "users", otherParticipantUid);
-            const userSnap = await getDoc(userDocRef);
-            if (userSnap.exists()) {
-                const userData = userSnap.data();
-                otherUserName = userData.displayName || "User";
-                otherUserAvatar = userData.photoURL || "https://placehold.co/100x100.png";
+            console.log(`MessagesPage: Chat ${chatDoc.id} - participantDetails not found for ${otherParticipantUid}, fetching from users collection.`);
+            try {
+                const userDocRef = doc(db, "users", otherParticipantUid);
+                const userSnap = await getDoc(userDocRef);
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    otherUserName = userData.displayName || "User (from users collection)";
+                    otherUserAvatar = userData.photoURL || "https://placehold.co/100x100.png";
+                    otherUserAvatarHint = userData.dataAiHint || (userData.photoURL && !userData.photoURL.includes('placehold.co') ? "person avatar" : "person placeholder");
+                    console.log(`MessagesPage: Chat ${chatDoc.id} - Fetched other user from users collection: ${otherUserName}`);
+                } else {
+                    console.warn(`MessagesPage: Chat ${chatDoc.id} - User document for ${otherParticipantUid} not found in users collection.`);
+                }
+            } catch (userFetchError) {
+                 console.error(`MessagesPage: Chat ${chatDoc.id} - Error fetching user ${otherParticipantUid} from users collection:`, userFetchError);
             }
         }
         
         const lastMessageTimestamp = chatData.lastMessageTimestamp as Timestamp | null;
         let formattedTimestamp = "N/A";
-        if (lastMessageTimestamp) {
+        if (lastMessageTimestamp && typeof lastMessageTimestamp.toDate === 'function') { // Check if it's a Firestore Timestamp
           try {
             formattedTimestamp = formatDistanceToNowStrict(lastMessageTimestamp.toDate(), { addSuffix: true });
           } catch (e) {
-            console.warn("Could not format timestamp:", lastMessageTimestamp);
-            // Fallback for potentially non-Timestamp values if data is inconsistent
-            if (typeof lastMessageTimestamp === 'string') formattedTimestamp = lastMessageTimestamp;
-            else if (lastMessageTimestamp.seconds) formattedTimestamp = formatDistanceToNowStrict(new Date(lastMessageTimestamp.seconds * 1000), {addSuffix: true});
+            console.warn(`MessagesPage: Chat ${chatDoc.id} - Could not format timestamp:`, lastMessageTimestamp, e);
+            formattedTimestamp = "Invalid date";
           }
+        } else if (lastMessageTimestamp) {
+            console.warn(`MessagesPage: Chat ${chatDoc.id} - lastMessageTimestamp is not a Firestore Timestamp object:`, lastMessageTimestamp);
+            formattedTimestamp = "Date unavailable";
         }
+        console.log(`MessagesPage: Chat ${chatDoc.id} - Last message: "${chatData.lastMessageText}", Formatted Timestamp: ${formattedTimestamp}`);
+
+        const unreadCount = (chatData.unreadBy && chatData.unreadBy[currentUser.uid]) ? Number(chatData.unreadBy[currentUser.uid]) : 0;
+        console.log(`MessagesPage: Chat ${chatDoc.id} - Unread count for current user: ${unreadCount}`);
 
 
         return {
@@ -97,26 +141,39 @@ export default function MessagesPage() {
           otherUserId: otherParticipantUid,
           otherUserName: otherUserName,
           otherUserAvatar: otherUserAvatar,
+          otherUserAvatarHint: otherUserAvatarHint,
           lastMessage: chatData.lastMessageText || "No messages yet",
-          unreadCount: chatData.unreadBy && chatData.unreadBy[currentUser.uid] ? chatData.unreadBy[currentUser.uid] : 0,
+          unreadCount: unreadCount,
           timestamp: formattedTimestamp,
           originalTimestamp: lastMessageTimestamp,
         } as Conversation;
       });
 
-      const resolvedConvs = (await Promise.all(convsPromises)).filter(c => c !== null) as Conversation[];
-      // Secondary sort by original timestamp if primary (desc) needs refinement for same-second messages.
-      resolvedConvs.sort((a, b) => (b.originalTimestamp?.toMillis() || 0) - (a.originalTimestamp?.toMillis() || 0));
-      setConversations(resolvedConvs);
-      setIsLoading(false);
+      try {
+        let resolvedConvs = (await Promise.all(convsPromises)).filter(c => c !== null) as Conversation[];
+        // Secondary sort by original timestamp just in case Firestore's "desc" order on potentially null/varied timestamps isn't perfect
+        resolvedConvs.sort((a, b) => (b.originalTimestamp?.toMillis() || 0) - (a.originalTimestamp?.toMillis() || 0));
+        console.log("MessagesPage: Final resolved conversations (before setting state):", JSON.parse(JSON.stringify(resolvedConvs)));
+        setConversations(resolvedConvs);
+      } catch (processingError) {
+        console.error("MessagesPage: Error processing conversation promises:", processingError);
+        setConversations([]); // Clear on error
+      } finally {
+        setIsLoading(false);
+        console.log("MessagesPage: Finished processing snapshot, isLoading set to false.");
+      }
     }, (error) => {
-      console.error("Error fetching conversations: ", error);
+      console.error("MessagesPage: Error in onSnapshot for chats:", error);
+      toast({title: "Error Loading Chats", description: "Could not load your conversations. " + error.message, variant: "destructive"});
+      setConversations([]);
       setIsLoading(false);
-      // Potentially set an error state to show in UI
     });
 
-    return () => unsubscribeChats();
-  }, [currentUser]);
+    return () => {
+      console.log("MessagesPage: Unsubscribing chats listener.");
+      unsubscribeChats();
+    };
+  }, [currentUser]); // Added toast import, removed it from this array
 
   const filteredConversations = conversations.filter(convo =>
     convo.otherUserName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -159,7 +216,7 @@ export default function MessagesPage() {
                   <Link href={`/messages/${convo.id}`} className="block hover:bg-muted/50 transition-colors">
                     <div className="flex items-center p-4 space-x-4">
                       <Avatar className="h-12 w-12">
-                        <AvatarImage src={convo.otherUserAvatar} alt={convo.otherUserName} data-ai-hint="person avatar" />
+                        <AvatarImage src={convo.otherUserAvatar} alt={convo.otherUserName} data-ai-hint={convo.otherUserAvatarHint} />
                         <AvatarFallback>{convo.otherUserName.substring(0, 1).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
