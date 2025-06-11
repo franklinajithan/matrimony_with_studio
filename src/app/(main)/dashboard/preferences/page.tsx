@@ -19,7 +19,7 @@ const currentUserPreferences = {
   heightRange: { min: "5'2\"", max: "6'0\"" }, // Store as string for input, convert for logic
   religion: ["Hinduism", "Sikhism"],
   caste: "Any",
-  language: ["English", "Hindi", "Punjabi"],
+  language: ["English", "Hindi", "Punjabi", "Tamil", "Sinhala"],
   locationProximity: "100km", // Or specific cities
   professionType: ["Technology", "Healthcare"],
   showOnlyVerified: true,
@@ -31,9 +31,9 @@ const preferencesSchema = z.object({
   ageMax: z.coerce.number().min(18).max(99),
   heightMin: z.string().optional(), // Can add regex for "X'Y\"" format
   heightMax: z.string().optional(),
-  religion: z.array(z.string()).optional(), // Example for multi-select, would need a multi-select component
+  religion: z.array(z.string()).optional(), 
   caste: z.string().optional(),
-  language: z.array(z.string()).optional(), // Example for multi-select
+  language: z.array(z.string()).optional(), 
   location: z.string().optional(),
   profession: z.string().optional(),
   rasiNakshatraPref: z.enum(["Strict", "Consider", "Ignore"]),
@@ -42,6 +42,22 @@ const preferencesSchema = z.object({
   message: "Min age cannot be greater than max age.",
   path: ["ageMax"],
 });
+
+
+const religionOptionsForCheckboxes = [
+  { id: "Hinduism", label: "Hinduism" },
+  { id: "Islam", label: "Islam" },
+  { id: "Christianity", label: "Christianity" },
+  { id: "Sikhism", label: "Sikhism" },
+  { id: "Buddhism", label: "Buddhism" },
+  { id: "Jainism", label: "Jainism" },
+  { id: "Zoroastrianism", label: "Zoroastrianism" },
+  { id: "Atheism", label: "Atheism" },
+  { id: "Agnosticism", label: "Agnosticism" },
+  { id: "Spiritual", label: "Spiritual but not religious" },
+  { id: "Other", label: "Other" },
+  { id: "NoPreferenceReligion", label: "Any/No Preference" },
+];
 
 
 export default function EditPreferencesPage() {
@@ -53,11 +69,11 @@ export default function EditPreferencesPage() {
       ageMax: currentUserPreferences.ageRange.max,
       heightMin: currentUserPreferences.heightRange.min,
       heightMax: currentUserPreferences.heightRange.max,
-      // For multi-select, you'd typically initialize from an array.
-      // This setup is simplified for basic shadcn select.
+      religion: currentUserPreferences.religion,
       caste: currentUserPreferences.caste,
+      language: currentUserPreferences.language,
       location: currentUserPreferences.locationProximity,
-      profession: currentUserPreferences.professionType.join(', '), // Simplified
+      profession: currentUserPreferences.professionType.join(', '), 
       rasiNakshatraPref: currentUserPreferences.rasiNakshatraPref as "Strict" | "Consider" | "Ignore",
       showOnlyVerified: currentUserPreferences.showOnlyVerified,
     },
@@ -72,10 +88,6 @@ export default function EditPreferencesPage() {
     // Here you would save preferences to Firestore
   }
   
-  // Placeholder for multi-select religions
-  const religions = ["Hinduism", "Islam", "Christianity", "Sikhism", "Buddhism", "Jainism", "Other"];
-
-
   return (
     <Card className="w-full max-w-2xl mx-auto shadow-xl">
       <CardHeader>
@@ -83,7 +95,7 @@ export default function EditPreferencesPage() {
           <SlidersHorizontal className="h-7 w-7" />
           Edit Match Preferences
         </CardTitle>
-        <CardDescription>Refine your criteria to find the most compatible partners on MatchCraft.</CardDescription>
+        <CardDescription>Refine your criteria to find the most compatible partners on CupidMatch.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -110,29 +122,32 @@ export default function EditPreferencesPage() {
 
             <div className="space-y-4 p-4 border rounded-md shadow-sm">
                 <h3 className="font-semibold text-lg">Community & Location</h3>
-                {/* Simplified Religion select, real multi-select component would be better */}
-                 <FormField control={form.control} name="religion" render={({ field }) => (
+                 <FormField control={form.control} name="religion" render={() => (
                     <FormItem>
                         <FormLabel>Preferred Religion(s)</FormLabel>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {religions.map(r => (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">
+                        {religionOptionsForCheckboxes.map(option => (
                             <FormField
-                                key={r}
+                                key={option.id}
                                 control={form.control}
                                 name="religion"
-                                render={({ field: f }) => (
+                                render={({ field }) => (
                                     <FormItem className="flex flex-row items-center space-x-2 space-y-0">
                                     <FormControl>
                                         <Checkbox
-                                        checked={f.value?.includes(r)}
-                                        onCheckedChange={(checked) => {
-                                            return checked
-                                            ? f.onChange([...(f.value || []), r])
-                                            : f.onChange(f.value?.filter((value) => value !== r))
-                                        }}
+                                            checked={field.value?.includes(option.id)}
+                                            onCheckedChange={(checked) => {
+                                                const currentValue = field.value || [];
+                                                if (option.id === "NoPreferenceReligion") {
+                                                    return checked ? field.onChange([]) : field.onChange(currentValue.filter(v => v !== option.id)); // Special handling for "Any"
+                                                }
+                                                return checked
+                                                    ? field.onChange([...currentValue, option.id])
+                                                    : field.onChange(currentValue.filter((value) => value !== option.id))
+                                            }}
                                         />
                                     </FormControl>
-                                    <FormLabel className="font-normal">{r}</FormLabel>
+                                    <FormLabel className="font-normal text-sm">{option.label}</FormLabel>
                                     </FormItem>
                                 )}
                             />
@@ -142,13 +157,17 @@ export default function EditPreferencesPage() {
                     </FormItem>
                 )} />
                 <FormField control={form.control} name="caste" render={({ field }) => (
-                    <FormItem><FormLabel>Caste/Community (Type 'Any' if no preference)</FormLabel><FormControl><Input placeholder="e.g., Brahmin, Jat, Any" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Caste/Community (Type 'Any' if no preference)</FormLabel><FormControl><Input placeholder="e.g., Brahmin, Gounder, Any" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                  <FormField control={form.control} name="language" render={({ field }) => (
-                    <FormItem><FormLabel className="flex items-center"><Languages className="mr-2 h-4 w-4 text-muted-foreground" />Preferred Language(s) (comma-separated)</FormLabel><FormControl><Input placeholder="e.g., English, Tamil, Sinhala" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem>
+                        <FormLabel className="flex items-center"><Languages className="mr-2 h-4 w-4 text-muted-foreground" />Preferred Language(s)</FormLabel>
+                         <FormControl><Input placeholder="e.g., English, Tamil, Sinhala (comma-separated)" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
                 )} />
                 <FormField control={form.control} name="location" render={({ field }) => (
-                    <FormItem><FormLabel className="flex items-center"><MapPin className="mr-2 h-4 w-4 text-muted-foreground" />Preferred Location / Proximity</FormLabel><FormControl><Input placeholder="e.g., Delhi NCR, Within 100km" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel className="flex items-center"><MapPin className="mr-2 h-4 w-4 text-muted-foreground" />Preferred Location / Proximity</FormLabel><FormControl><Input placeholder="e.g., Colombo, Chennai, Within 100km" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
             </div>
             

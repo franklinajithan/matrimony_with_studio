@@ -61,7 +61,7 @@ export default function SignupPage() {
 
       toast({
         title: "Account Created!",
-        description: "Welcome to MatchCraft! Please log in to continue.",
+        description: "Welcome to CupidMatch! Please log in to continue.",
         variant: "default",
       });
       router.push('/login');
@@ -116,7 +116,7 @@ export default function SignupPage() {
     <Card className="w-full max-w-md shadow-2xl">
       <CardHeader className="text-center">
         <CardTitle className="font-headline text-3xl text-primary">Create Your Account</CardTitle>
-        <CardDescription>Join MatchCraft today and start your journey to find love.</CardDescription>
+        <CardDescription>Join CupidMatch today and start your journey to find love.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -265,4 +265,3 @@ export default function SignupPage() {
     </Card>
   );
 }
-

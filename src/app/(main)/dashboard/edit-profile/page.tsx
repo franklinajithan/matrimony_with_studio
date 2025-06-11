@@ -14,7 +14,7 @@ import { User as UserIconLucide, Image as ImageIcon, Info, MapPin, Briefcase, Ru
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect, useRef } from "react";
-import Image from "next/image";
+import NextImage from "next/image"; // Renamed to avoid conflict
 import {
   AlertDialog,
   AlertDialogAction,
@@ -93,6 +93,22 @@ const defaultFirestoreProfile = {
   sunSign: "", moonSign: "", nakshatra: "", horoscopeInfo: "", 
   horoscopeFileName: "", horoscopeFileUrl: "", additionalPhotoUrls: [],
 };
+
+const religionOptions = [
+  { value: "Hinduism", label: "Hinduism" },
+  { value: "Islam", label: "Islam" },
+  { value: "Christianity", label: "Christianity" },
+  { value: "Sikhism", label: "Sikhism" },
+  { value: "Buddhism", label: "Buddhism" },
+  { value: "Jainism", label: "Jainism" },
+  { value: "Zoroastrianism", label: "Zoroastrianism" },
+  { value: "Atheism", label: "Atheism" },
+  { value: "Agnosticism", label: "Agnosticism" },
+  { value: "Spiritual but not religious", label: "Spiritual but not religious" },
+  { value: "Other", label: "Other" },
+  { value: "Prefer not to say", label: "Prefer not to say" },
+];
+
 
 export default function EditProfilePage() {
   const { toast } = useToast();
@@ -486,7 +502,7 @@ export default function EditProfilePage() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="flex flex-col items-center space-y-4 mb-4">
                 <div className="relative group">
-                    <Image 
+                    <NextImage 
                         src={profilePhotoPreview || currentProfilePhotoUrl || defaultFirestoreProfile.profilePhotoUrl} 
                         alt={form.getValues("fullName") || "User"} 
                         width={128} 
@@ -582,9 +598,9 @@ export default function EditProfilePage() {
                 <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving || anyEnhancementLoading} value={field.value}>
                     <FormControl><SelectTrigger><SelectValue placeholder="Select Religion" /></SelectTrigger></FormControl>
                     <SelectContent>
-                        <SelectItem value="Hinduism">Hinduism</SelectItem><SelectItem value="Islam">Islam</SelectItem>
-                        <SelectItem value="Christianity">Christianity</SelectItem><SelectItem value="Sikhism">Sikhism</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
+                        {religionOptions.map(option => (
+                           <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                        ))}
                     </SelectContent>
                 </Select><FormMessage /></FormItem>
             )} />
@@ -737,7 +753,7 @@ export default function EditProfilePage() {
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                     {managedExistingPhotos.map(photo => (
                         <div key={`existing-${photo.id}`} className="aspect-square bg-muted rounded-md flex items-center justify-center relative group">
-                            <Image src={photo.url} alt={`Photo ${photo.id}`} width={100} height={100} className="object-cover rounded-md h-full w-full" data-ai-hint={photo.hint}/>
+                            <NextImage src={photo.url} alt={`Photo ${photo.id}`} width={100} height={100} className="object-cover rounded-md h-full w-full" data-ai-hint={photo.hint}/>
                             <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeExistingPhoto(photo.id)} disabled={isSaving || anyEnhancementLoading}>
                                 <Trash2 className="h-3 w-3" />
                             </Button>
@@ -745,7 +761,7 @@ export default function EditProfilePage() {
                     ))}
                     {additionalPhotosPreview.map((previewUrl, index) => (
                          <div key={`new-${index}`} className="aspect-square bg-muted rounded-md flex items-center justify-center relative group">
-                            <Image src={previewUrl} alt={`New Photo ${index + 1}`} width={100} height={100} className="object-cover rounded-md h-full w-full" data-ai-hint="new upload preview"/>
+                            <NextImage src={previewUrl} alt={`New Photo ${index + 1}`} width={100} height={100} className="object-cover rounded-md h-full w-full" data-ai-hint="new upload preview"/>
                              <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeAdditionalPhotoPreview(index)} disabled={isSaving || anyEnhancementLoading}>
                                 <Trash2 className="h-3 w-3" />
                             </Button>
@@ -809,7 +825,7 @@ export default function EditProfilePage() {
                     <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Deactivating your account will hide your profile from MatchCraft. You will not be able to log in or be discovered by others. 
+                        Deactivating your account will hide your profile from CupidMatch. You will not be able to log in or be discovered by others. 
                         You can usually reactivate your account by contacting support. This action is not immediate deletion.
                     </AlertDialogDescription>
                     </AlertDialogHeader>
@@ -829,4 +845,3 @@ export default function EditProfilePage() {
     </div>
   );
 }
-

@@ -14,7 +14,7 @@ export default function AuthLayout({
         {children}
       </div>
        <p className="mt-8 text-center text-sm text-muted-foreground">
-        &copy; {new Date().getFullYear()} MatchCraft. All rights reserved.
+        &copy; {new Date().getFullYear()} CupidMatch. All rights reserved.
       </p>
     </div>
   );

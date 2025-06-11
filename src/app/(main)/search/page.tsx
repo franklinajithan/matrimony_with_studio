@@ -6,6 +6,21 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SearchIcon, Filter } from "lucide-react";
 
+const religionOptions = [
+  { value: "Hinduism", label: "Hinduism" },
+  { value: "Islam", label: "Islam" },
+  { value: "Christianity", label: "Christianity" },
+  { value: "Sikhism", label: "Sikhism" },
+  { value: "Buddhism", label: "Buddhism" },
+  { value: "Jainism", label: "Jainism" },
+  { value: "Zoroastrianism", label: "Zoroastrianism" },
+  { value: "Atheism", label: "Atheism" },
+  { value: "Agnosticism", label: "Agnosticism" },
+  { value: "Spiritual", label: "Spiritual but not religious" },
+  { value: "Other", label: "Other" },
+  { value: "any", label: "Any" },
+];
+
 export default function SearchPage() {
   return (
     <div className="space-y-8">
@@ -46,20 +61,15 @@ export default function SearchPage() {
                 <SelectValue placeholder="Select Religion" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="hinduism">Hinduism</SelectItem>
-                <SelectItem value="islam">Islam</SelectItem>
-                <SelectItem value="christianity">Christianity</SelectItem>
-                <SelectItem value="sikhism">Sikhism</SelectItem>
-                <SelectItem value="buddhism">Buddhism</SelectItem>
-                <SelectItem value="jainism">Jainism</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-                 <SelectItem value="any">Any</SelectItem>
+                {religionOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="caste">Caste/Community</Label>
-            <Input id="caste" placeholder="Enter Caste or Community" />
+            <Input id="caste" placeholder="Enter Caste or Community (e.g., Gounder, Vellalar)" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="language">Mother Tongue</Label>
@@ -67,7 +77,7 @@ export default function SearchPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="location">Location</Label>
-            <Input id="location" placeholder="City, State, Country" />
+            <Input id="location" placeholder="City, State, Country (e.g., Colombo, Chennai)" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="profession">Profession</Label>

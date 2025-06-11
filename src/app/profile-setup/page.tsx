@@ -137,8 +137,8 @@ export default function ProfileSetupPage() {
       </div>
       <Card className="w-full max-w-lg shadow-2xl">
         <CardHeader className="text-center">
-          <CardTitle className="font-headline text-3xl text-primary">Set Up Your Profile</CardTitle>
-          <CardDescription>Tell us a bit about yourself to get started on MatchCraft.</CardDescription>
+          <CardTitle className="font-headline text-3xl text-primary">Set Up Your Profile on CupidMatch</CardTitle>
+          <CardDescription>Tell us a bit about yourself to get started.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -150,7 +150,7 @@ export default function ProfileSetupPage() {
                   <FormItem>
                     <FormLabel className="flex items-center"><User className="mr-2 h-4 w-4 text-muted-foreground" />Full Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="E.g., Aisha Khan" {...field} disabled={isSaving} />
+                      <Input placeholder="E.g., Priya Sharma" {...field} disabled={isSaving} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -202,9 +202,8 @@ export default function ProfileSetupPage() {
         </CardFooter>
       </Card>
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        &copy; {new Date().getFullYear()} MatchCraft. All rights reserved.
+        &copy; {new Date().getFullYear()} CupidMatch. All rights reserved.
       </p>
     </div>
   );
 }
-

@@ -4,8 +4,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'MatchCraft - Find Your Perfect Match',
-  description: 'Matrimony site powered by intelligent suggestions.',
+  title: 'CupidMatch - Find Your Perfect Match in India & Sri Lanka',
+  description: 'Matrimony site for Indian and Sri Lankan communities, powered by intelligent suggestions and horoscope matching.',
 };
 
 export default function RootLayout({
