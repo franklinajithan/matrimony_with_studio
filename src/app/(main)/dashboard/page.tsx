@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import React, { useEffect, useState, useCallback } from 'react';
 import { auth, db } from '@/lib/firebase/config';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, writeBatch, serverTimestamp, Timestamp, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, writeBatch, serverTimestamp, Timestamp, orderBy, limit, getDocs } from 'firebase/firestore';
 import { useToast } from "@/hooks/use-toast";
 import { calculateAge, getCompositeId } from '@/lib/utils';
 import { Skeleton } from "@/components/ui/skeleton";
@@ -96,26 +96,35 @@ export default function DashboardPage() {
   }, []);
 
   const fetchQuickSuggestions = useCallback(async (currentUserId: string) => {
-    console.log("Dashboard: Fetching quick suggestions, excluding user:", currentUserId);
+    console.log("Dashboard: Fetching quick suggestions. Current User ID:", currentUserId);
     setIsLoadingSuggestions(true);
     try {
       const usersRef = collection(db, "users");
-      // Fetch users, filter out current user, limit to 3.
-      // For more "AI-like" suggestions, this query would be more complex or feed into an AI flow.
       const q = query(
         usersRef,
-        where("uid", "!=", currentUserId), // Exclude current user
-        orderBy("uid"), // Basic ordering for consistent pagination if needed
+        where("uid", "!=", currentUserId), 
+        orderBy("uid"), 
         limit(3)
       );
       
       const querySnapshot = await getDocs(q);
+      console.log("Dashboard: Quick suggestions query snapshot received. Empty:", querySnapshot.empty, "Docs count:", querySnapshot.docs.length);
+
+      if (querySnapshot.empty) {
+        console.log("Dashboard: No other users found for quick suggestions.");
+        setQuickSuggestions([]);
+        setIsLoadingSuggestions(false); // Ensure loading is false
+        return;
+      }
+
       const suggestions: QuickSuggestionProfile[] = [];
       querySnapshot.forEach((docSnap) => {
         const data = docSnap.data();
-        // Skip if current user somehow gets through (shouldn't with where clause)
-        if (docSnap.id === currentUserId) return; 
-
+        if (docSnap.id === currentUserId) { // Safeguard
+            console.warn("Dashboard: Safeguard triggered - current user was somehow returned by quick suggestions query:", docSnap.id);
+            return; 
+        }
+        console.log("Dashboard: Processing suggestion for user ID:", docSnap.id, "Data:", data);
         suggestions.push({
           id: docSnap.id,
           name: data.displayName || "User",
@@ -126,7 +135,7 @@ export default function DashboardPage() {
           dataAiHint: data.dataAiHint || (data.photoURL && !data.photoURL.includes('placehold.co') ? "person professional" : "person placeholder"),
         });
       });
-      console.log("Dashboard: Fetched quick suggestions:", suggestions);
+      console.log("Dashboard: Mapped quick suggestions:", suggestions);
       setQuickSuggestions(suggestions);
     } catch (error) {
       console.error("Dashboard: Error fetching quick suggestions:", error);
@@ -134,13 +143,14 @@ export default function DashboardPage() {
       setQuickSuggestions([]);
     } finally {
       setIsLoadingSuggestions(false);
+      console.log("Dashboard: Finished fetching quick suggestions. isLoadingSuggestions set to false.");
     }
   }, [toast]);
 
 
   useEffect(() => {
     if (!currentUser) {
-      console.log("Dashboard: No current user, clearing match requests and stopping listener setup.");
+      console.log("Dashboard: No current user, clearing match requests and suggestions. Stopping listener setup.");
       setMatchRequests([]);
       setIsLoadingRequests(false);
       setQuickSuggestions([]);
@@ -148,7 +158,8 @@ export default function DashboardPage() {
       return;
     }
 
-    fetchQuickSuggestions(currentUser.uid); // Fetch suggestions when user is available
+    console.log("Dashboard: Current user available, fetching quick suggestions. UID:", currentUser.uid);
+    fetchQuickSuggestions(currentUser.uid); 
 
     console.log(`Dashboard: Setting up match requests listener for user UID: ${currentUser.uid}`);
     setIsLoadingRequests(true);
@@ -157,7 +168,7 @@ export default function DashboardPage() {
       collection(db, "matchRequests"),
       where("receiverUid", "==", currentUser.uid),
       where("status", "==", "pending"),
-      orderBy("createdAt", "asc")
+      orderBy("createdAt", "asc") 
     );
 
     const unsubscribeRequests = onSnapshot(requestsQuery, async (snapshot) => {
@@ -171,7 +182,7 @@ export default function DashboardPage() {
 
       const requestsPromises = snapshot.docs.map(async (requestDoc) => {
         const data = requestDoc.data();
-        console.log(`Dashboard: Processing requestDoc ID: ${requestDoc.id}, Data:`, data);
+        console.log(`Dashboard: Processing requestDoc ID: ${requestDoc.id}, Raw Data:`, JSON.parse(JSON.stringify(data))); // Log raw data
         const senderUid = data.senderUid;
 
         if (!senderUid) {
@@ -206,8 +217,8 @@ export default function DashboardPage() {
         }
         
         if (!data.createdAt || !(data.createdAt instanceof Timestamp)) {
-            console.error(`Dashboard: Invalid or missing 'createdAt' timestamp for request ${requestDoc.id}. Data:`, data);
-            return null; 
+            console.warn(`Dashboard: Invalid or missing 'createdAt' timestamp for request ${requestDoc.id}. Actual value:`, data.createdAt, "Using serverTimestamp as fallback for display if possible, but data is incorrect.");
+             // This request might be problematic due to data integrity.
         }
 
         return {
@@ -218,21 +229,22 @@ export default function DashboardPage() {
           senderDataAiHint: senderDataAiHint,
           senderAge: senderAge,
           senderProfession: senderProfession,
-          timestamp: data.createdAt as Timestamp,
+          timestamp: data.createdAt as Timestamp, // Assuming it is a Timestamp after the check
         } as MatchRequest;
       });
 
       try {
         let fetchedRequests = await Promise.all(requestsPromises);
+        // Filter out nulls (from errors) and then reverse for newest first display
         fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); 
-        console.log(`Dashboard: Processed ${fetchedRequests.length} valid match requests. Setting state.`);
+        console.log(`Dashboard: Processed ${fetchedRequests.length} valid match requests. Setting state. Requests:`, JSON.parse(JSON.stringify(fetchedRequests)));
         setMatchRequests(fetchedRequests as MatchRequest[]);
       } catch (processingError) {
         console.error("Dashboard: Error processing request promises: ", processingError);
         setMatchRequests([]); 
       } finally {
         setIsLoadingRequests(false);
-        console.log("Dashboard: Finished processing snapshot, isLoadingRequests set to false.");
+        console.log("Dashboard: Finished processing match requests snapshot, isLoadingRequests set to false.");
       }
     }, (error) => {
         console.error("Dashboard: Error fetching match requests via onSnapshot: ", error);
@@ -521,3 +533,6 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+
+    
