@@ -99,7 +99,7 @@ export default function LandingPage() {
         <section id="home" className="relative bg-gradient-to-br from-purple-500 to-red-400 text-white overflow-hidden ">
           <div className="container mx-auto relative px-4">
             <div className="flex flex-col md:flex-row items-center">
-              <div className="flex flex-col items-center justify-center text-center md:mb-0 animate-fade-in-up">
+              <div className="flex flex-col items-center justify-center text-center mb-16 md:mb-2 animate-fade-in-up">
                 <h1 className="font-headline text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight tracking-tight drop-shadow-lg whitespace-nowrap">
                   Welcome to{" "}
                   <span className="inline-flex items-center">
@@ -125,7 +125,7 @@ export default function LandingPage() {
                     alt="Indian woman in traditional attire with a welcoming gesture"
                     width={450}
                     height={570}
-                    className="rounded-3xl hover:scale-105 duration-500"
+                    className="rounded-3xl transition-transform transform hover:scale-105 duration-500"
                     data-ai-hint="indian woman traditional"
                     priority
                   />
