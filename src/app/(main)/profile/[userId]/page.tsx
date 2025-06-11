@@ -6,8 +6,8 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Heart, MessageSquare, Briefcase, MapPin, Cake, Languages, CheckCircle, Ruler, Sparkles as SparklesIcon, Brain, Loader2, BookOpen, Film, Music, School, Droplet, Cigarette, Image as ImageIconLucide, GalleryHorizontal, UserPlus, UserCheck, UserX, XCircle } from 'lucide-react';
-import React, { useEffect, useState, useCallback } from 'react';
+import { Heart, MessageSquare, Briefcase, MapPin, Cake, Languages, CheckCircle, Ruler, Sparkles as SparklesIcon, Brain, Loader2, BookOpen, Film, Music, School, Droplet, Cigarette, Image as ImageIconLucide, GalleryHorizontal, UserPlus, UserCheck, UserX, XCircle, ArrowLeftCircle, ArrowRightCircle } from 'lucide-react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase/config';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
@@ -18,11 +18,13 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils'; // Added missing import
+import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogTrigger, DialogClose, DialogOverlay, DialogPortal } from '@/components/ui/dialog';
+
 
 interface StoredPhoto {
   id: string;
-  url: string;
+  url:string;
   hint: string;
   storagePath?: string;
 }
@@ -32,7 +34,7 @@ interface ViewedUserProfileData extends AIPotentialMatchProfileSchema {
   photoURL?: string;
   additionalPhotoUrls?: StoredPhoto[];
   isVerified?: boolean;
-  dataAiHint?: string; // Added for main image from user doc
+  dataAiHint?: string;
 }
 
 type MatchRequestStatus = 'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'declined_by_me' | 'declined_by_them';
@@ -56,6 +58,10 @@ const calculateAge = (dobString?: string): number | undefined => {
 };
 
 const getCompositeId = (uid1: string, uid2: string): string => {
+  if (!uid1 || !uid2) {
+    console.warn("getCompositeId received undefined or null UID");
+    return "invalid_composite_id"; 
+  }
   return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
 };
 
@@ -74,7 +80,11 @@ export default function ProfilePage() {
   const [isLoadingAiAnalysis, setIsLoadingAiAnalysis] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentFirebaseUser, setCurrentFirebaseUser] = useState<FirebaseUser | null>(null);
-  const [mainImage, setMainImage] = useState<StoredPhoto | null>(null);
+  
+  const [mainPageImage, setMainPageImage] = useState<StoredPhoto | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentModalImageIndex, setCurrentModalImageIndex] = useState(0);
+
 
   const [hasLiked, setHasLiked] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
@@ -166,11 +176,11 @@ export default function ProfilePage() {
           };
           setViewedUserProfile(profileData);
           if (profileData.photoURL) {
-            setMainImage({ id: 'main', url: profileData.photoURL, hint: profileData.dataAiHint || 'profile main' });
+            setMainPageImage({ id: 'main', url: profileData.photoURL, hint: profileData.dataAiHint || 'profile main' });
           } else if (profileData.additionalPhotoUrls && profileData.additionalPhotoUrls.length > 0) {
-            setMainImage(profileData.additionalPhotoUrls[0]);
+            setMainPageImage(profileData.additionalPhotoUrls[0]);
           } else {
-            setMainImage({ id: 'placeholder', url: `https://placehold.co/600x800.png?text=${profileData.name ? profileData.name.substring(0, 1) : 'P'}`, hint: 'placeholder person' });
+            setMainPageImage({ id: 'placeholder', url: `https://placehold.co/600x800.png?text=${profileData.name ? profileData.name.substring(0, 1) : 'P'}`, hint: 'placeholder person' });
           }
         } else {
           setError("Profile not found.");
@@ -189,7 +199,7 @@ export default function ProfilePage() {
   // Fetch Like Status
   useEffect(() => {
     if (!currentFirebaseUser || !viewedUserId || currentFirebaseUser.uid === viewedUserId) return;
-    const likeId = getCompositeId(currentFirebaseUser.uid, viewedUserId); // Use composite ID for likes too
+    const likeId = getCompositeId(currentFirebaseUser.uid, viewedUserId); 
     const likeDocRef = doc(db, "likes", likeId);
     const unsubscribe = onSnapshot(likeDocRef, (docSnap) => {
       setHasLiked(docSnap.exists());
@@ -200,7 +210,7 @@ export default function ProfilePage() {
   // Fetch Match Request Status
   useEffect(() => {
     if (!currentFirebaseUser || !viewedUserId || currentFirebaseUser.uid === viewedUserId) {
-      setRequestStatus('none'); // Reset if no user or viewing own profile
+      setRequestStatus('none'); 
       return;
     }
     
@@ -220,11 +230,11 @@ export default function ProfilePage() {
             setRequestStatus('pending_received');
           }
         } else if (data.status === 'declined_by_sender' && data.senderUid === currentFirebaseUser.uid) {
-            setRequestStatus('none'); // Or a specific "you declined" state
+            setRequestStatus('none');
         } else if (data.status === 'declined_by_receiver' && data.receiverUid === currentFirebaseUser.uid) {
-            setRequestStatus('none'); // Or a specific "you declined" state
+            setRequestStatus('none'); 
         } else if (data.status.startsWith('declined')) {
-            setRequestStatus('none'); // Other party declined
+            setRequestStatus('none'); 
         } else {
           setRequestStatus('none');
         }
@@ -275,7 +285,6 @@ export default function ProfilePage() {
             setAiMatchResult(null);
           }
         } catch (e: any) {
-          // setError("Failed to get AI compatibility: " + e.message); // Commented to avoid overwriting profile load errors
           setAiMatchResult(null);
         } finally {
           setIsLoadingAiAnalysis(false);
@@ -288,7 +297,7 @@ export default function ProfilePage() {
     }
   }, [loggedInUserProfile, viewedUserProfile, currentFirebaseUser, viewedUserId]);
 
-  const allPhotos = React.useMemo(() => {
+  const allPhotos = useMemo(() => {
     const photos: StoredPhoto[] = [];
     if (viewedUserProfile?.photoURL) {
       photos.push({ id: 'main-profile', url: viewedUserProfile.photoURL, hint: viewedUserProfile.dataAiHint || 'profile main' });
@@ -303,10 +312,27 @@ export default function ProfilePage() {
   }, [viewedUserProfile]);
 
   useEffect(() => {
-    if (allPhotos.length > 0 && !mainImage) {
-      setMainImage(allPhotos[0]);
+    if (allPhotos.length > 0 && !mainPageImage) {
+      setMainPageImage(allPhotos[0]);
     }
-  }, [allPhotos, mainImage]);
+  }, [allPhotos, mainPageImage]);
+  
+  const handleThumbnailClick = (photo: StoredPhoto, index: number) => {
+    setMainPageImage(photo);
+    setCurrentModalImageIndex(index); // Keep modal in sync if it's open
+  };
+
+  const openImageModal = (index: number) => {
+    setCurrentModalImageIndex(index);
+    setIsModalOpen(true);
+  };
+  
+  const changeModalImage = (direction: 'next' | 'prev') => {
+    const newIndex = direction === 'next' 
+      ? (currentModalImageIndex + 1) % allPhotos.length
+      : (currentModalImageIndex - 1 + allPhotos.length) % allPhotos.length;
+    setCurrentModalImageIndex(newIndex);
+  };
 
   const handleLikeToggle = async () => {
     if (!currentFirebaseUser || !viewedUserId || isLiking || currentFirebaseUser.uid === viewedUserId) return;
@@ -346,7 +372,6 @@ export default function ProfilePage() {
         status: 'pending',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        // Store participant UIDs for easier querying of who is involved, if needed
         participants: [currentFirebaseUser.uid, viewedUserProfile.userId].sort() 
       });
       setRequestStatus('pending_sent');
@@ -363,7 +388,7 @@ export default function ProfilePage() {
     setIsProcessingRequest(true);
     const requestDocRef = doc(db, "matchRequests", matchRequestId);
     try {
-      await deleteDoc(requestDocRef); // Or update status to 'cancelled_by_sender'
+      await deleteDoc(requestDocRef); 
       setRequestStatus('none');
       toast({ title: "Request Cancelled", description: "Your match request has been cancelled." });
     } catch (e: any) {
@@ -402,11 +427,11 @@ export default function ProfilePage() {
             }
         },
         lastMessageText: "You are now connected!",
-        lastMessageSenderId: null, // System message or null
+        lastMessageSenderId: null, 
         lastMessageTimestamp: serverTimestamp(),
         createdAt: serverTimestamp(),
         unreadBy: { [user1Uid]: 0, [user2Uid]: 0 } 
-    }, { merge: true }); // Merge true to avoid overwriting if a chat somehow pre-existed with different partial data
+    }, { merge: true }); 
     await batch.commit();
     return chatId;
   };
@@ -432,7 +457,6 @@ export default function ProfilePage() {
     setIsProcessingRequest(true);
     const requestDocRef = doc(db, "matchRequests", matchRequestId);
     try {
-      // Determine if current user is sender or receiver to set decline status correctly
       const requestSnap = await getDoc(requestDocRef);
       if(!requestSnap.exists()) {
         throw new Error("Request document not found.");
@@ -441,7 +465,7 @@ export default function ProfilePage() {
       const declineStatus = currentFirebaseUser.uid === requestData.senderUid ? 'declined_by_sender' : 'declined_by_receiver';
 
       await updateDoc(requestDocRef, { status: declineStatus, updatedAt: serverTimestamp() });
-      setRequestStatus('none'); // Or a more specific 'declined_by_me' status
+      setRequestStatus('none'); 
       toast({ title: "Request Declined" });
     } catch (e: any) {
       toast({ title: "Error", description: "Failed to decline request: " + e.message, variant: "destructive" });
@@ -548,37 +572,88 @@ export default function ProfilePage() {
       </div>
     );
   }
+  
+  const currentModalPhoto = allPhotos[currentModalImageIndex];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
       <Card className="overflow-hidden shadow-xl">
         <div className="md:flex">
           <div className="md:w-1/2 relative">
-            {mainImage ? (
-              <Image
-                src={mainImage.url}
-                alt={mainImage.hint || `Profile photo of ${viewedUserProfile.name}`}
-                width={600}
-                height={800}
-                className="object-cover w-full h-[400px] md:h-full bg-muted"
-                priority
-                data-ai-hint={mainImage.hint}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = `https://placehold.co/600x800.png?text=${viewedUserProfile.name ? viewedUserProfile.name.substring(0, 1) : 'P'}`;
-                  (e.target as HTMLImageElement).setAttribute('data-ai-hint', 'placeholder error');
-                }}
-              />
+            {mainPageImage ? (
+                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                    <DialogTrigger asChild>
+                        <button onClick={() => openImageModal(allPhotos.findIndex(p => p.id === mainPageImage.id))} className="w-full h-[400px] md:h-full block cursor-pointer">
+                            <Image
+                                src={mainPageImage.url}
+                                alt={mainPageImage.hint || `Profile photo of ${viewedUserProfile.name}`}
+                                width={600}
+                                height={800}
+                                className="object-cover w-full h-full bg-muted"
+                                priority
+                                data-ai-hint={mainPageImage.hint}
+                                onError={(e) => {
+                                (e.target as HTMLImageElement).src = `https://placehold.co/600x800.png?text=${viewedUserProfile.name ? viewedUserProfile.name.substring(0, 1) : 'P'}`;
+                                (e.target as HTMLImageElement).setAttribute('data-ai-hint', 'placeholder error');
+                                }}
+                            />
+                        </button>
+                    </DialogTrigger>
+                    {currentModalPhoto && (
+                    <DialogPortal>
+                        <DialogOverlay className="bg-black/80 backdrop-blur-sm" />
+                        <DialogContent className="max-w-3xl w-auto p-2 bg-transparent border-none shadow-none !rounded-none sm:!rounded-none !gap-0">
+                        <div className="relative">
+                            <Image
+                            src={currentModalPhoto.url}
+                            alt={currentModalPhoto.hint || `Photo of ${viewedUserProfile.name}`}
+                            width={800}
+                            height={1000}
+                            className="object-contain max-h-[85vh] w-auto rounded-md"
+                            data-ai-hint={currentModalPhoto.hint}
+                            />
+                             <DialogClose className="absolute -top-3 -right-3 sm:top-2 sm:right-2 bg-background/50 hover:bg-background/80 text-foreground rounded-full p-1.5 z-10">
+                                <XCircle className="h-6 w-6" />
+                                <span className="sr-only">Close</span>
+                            </DialogClose>
+                            {allPhotos.length > 1 && (
+                            <>
+                                <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => changeModalImage('prev')}
+                                className="absolute left-1 sm:left-3 top-1/2 -translate-y-1/2 rounded-full h-10 w-10 bg-black/30 hover:bg-black/50 text-white"
+                                aria-label="Previous image"
+                                >
+                                <ArrowLeftCircle className="h-6 w-6" />
+                                </Button>
+                                <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => changeModalImage('next')}
+                                className="absolute right-1 sm:right-3 top-1/2 -translate-y-1/2 rounded-full h-10 w-10 bg-black/30 hover:bg-black/50 text-white"
+                                aria-label="Next image"
+                                >
+                                <ArrowRightCircle className="h-6 w-6" />
+                                </Button>
+                            </>
+                            )}
+                        </div>
+                        </DialogContent>
+                    </DialogPortal>
+                    )}
+                </Dialog>
             ) : <Skeleton className="h-[400px] md:h-full w-full" />}
 
             {allPhotos.length > 1 && (
               <div className="absolute bottom-4 left-0 right-0 px-2">
                 <div className="flex space-x-2 bg-black/30 backdrop-blur-sm p-1.5 rounded-lg overflow-x-auto max-w-full justify-center">
-                  {allPhotos.map((photo) => (
+                  {allPhotos.map((photo, index) => (
                     <button
                       key={photo.id}
-                      onClick={() => setMainImage(photo)}
+                      onClick={() => handleThumbnailClick(photo, index)}
                       aria-label={`View photo ${photo.id}`}
-                      className={`block w-12 h-12 rounded-md overflow-hidden border-2 transition-all ${mainImage?.id === photo.id ? 'border-primary scale-110' : 'border-transparent hover:border-white/50'}`}
+                      className={`block w-12 h-12 rounded-md overflow-hidden border-2 transition-all ${mainPageImage?.id === photo.id ? 'border-primary scale-110' : 'border-transparent hover:border-white/50'}`}
                     >
                       <Image src={photo.url} alt={photo.hint || 'thumbnail'} width={48} height={48} className="object-cover w-full h-full" data-ai-hint={photo.hint} />
                     </button>
@@ -741,8 +816,15 @@ export default function ProfilePage() {
             <CardDescription>More photos from {viewedUserProfile.name}.</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-            {allPhotos.map((photo) => (
-              <button key={photo.id} onClick={() => setMainImage(photo)} className="aspect-square rounded-md overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary ring-offset-2 block">
+            {allPhotos.map((photo, index) => (
+              <button 
+                key={photo.id} 
+                onClick={() => {
+                    handleThumbnailClick(photo, index); // Updates main page image
+                    openImageModal(index); // Opens modal with the clicked image
+                }}
+                className="aspect-square rounded-md overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary ring-offset-2 block"
+              >
                 <Image
                   src={photo.url}
                   alt={photo.hint || `Photo from ${viewedUserProfile.name}`}
@@ -759,3 +841,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
