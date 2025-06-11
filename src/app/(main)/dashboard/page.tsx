@@ -4,7 +4,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import Image from "next/image"; // Added for profile picture in request
+import Image from "next/image";
 import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles, Users, UserPlus, CalendarCheck, Briefcase, MapPin, Loader2, Check, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -23,8 +23,8 @@ interface MatchRequest {
   id: string; // Document ID of the request
   senderUid: string;
   senderName: string;
-  senderAge?: number; // Optional
-  senderProfession?: string; // Optional
+  senderAge?: number; 
+  senderProfession?: string; 
   senderAvatarUrl: string;
   senderDataAiHint: string;
   timestamp: Timestamp;
@@ -83,7 +83,6 @@ export default function DashboardPage() {
       if (user) {
         setUserDisplayName(user.displayName || mockUser.name);
         setUserAvatarUrl(user.photoURL || mockUser.avatarUrl);
-        // Fetch dataAiHint if stored with user profile, otherwise use a default
         const userDocRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userDocRef);
         if (userSnap.exists() && userSnap.data().dataAiHint) {
@@ -104,23 +103,36 @@ export default function DashboardPage() {
     if (!currentUser) {
       setMatchRequests([]);
       setIsLoadingRequests(false);
+      console.log("Dashboard: No current user, clearing match requests.");
       return;
     }
 
+    console.log(`Dashboard: Setting up match requests listener for user UID: ${currentUser.uid}`);
     setIsLoadingRequests(true);
     const requestsQuery = query(
       collection(db, "matchRequests"),
       where("receiverUid", "==", currentUser.uid),
       where("status", "==", "pending"),
-      orderBy("createdAt", "asc") // Changed to 'asc'
+      orderBy("createdAt", "asc") 
     );
 
     const unsubscribeRequests = onSnapshot(requestsQuery, async (snapshot) => {
+      console.log(`Dashboard: Match requests snapshot received. Docs count: ${snapshot.docs.length}`);
+      if (snapshot.empty) {
+          console.log("Dashboard: No documents found matching the matchRequests query for current user.");
+          setMatchRequests([]);
+          setIsLoadingRequests(false);
+          return;
+      }
+
       const requestsPromises = snapshot.docs.map(async (requestDoc) => {
         const data = requestDoc.data();
         const senderUid = data.senderUid;
-        const senderDocRef = doc(db, "users", senderUid);
-        const senderSnap = await getDoc(senderDocRef);
+
+        if (!senderUid) {
+          console.error(`Dashboard: senderUid missing in requestDoc ${requestDoc.id}`, data);
+          return null; 
+        }
         
         let senderName = "User";
         let senderAvatarUrl = "https://placehold.co/80x80.png";
@@ -128,13 +140,28 @@ export default function DashboardPage() {
         let senderAge;
         let senderProfession;
 
-        if (senderSnap.exists()) {
-          const senderData = senderSnap.data();
-          senderName = senderData.displayName || "User";
-          senderAvatarUrl = senderData.photoURL || "https://placehold.co/80x80.png";
-          senderDataAiHint = senderData.dataAiHint || (senderData.photoURL ? "person professional" : "person placeholder");
-          senderAge = calculateAge(senderData.dob);
-          senderProfession = senderData.profession;
+        try {
+            const senderDocRef = doc(db, "users", senderUid);
+            const senderSnap = await getDoc(senderDocRef);
+
+            if (senderSnap.exists()) {
+              const senderData = senderSnap.data();
+              senderName = senderData.displayName || "User";
+              senderAvatarUrl = senderData.photoURL || "https://placehold.co/80x80.png";
+              senderDataAiHint = senderData.dataAiHint || (senderData.photoURL ? "person professional" : "person placeholder");
+              senderAge = calculateAge(senderData.dob);
+              senderProfession = senderData.profession;
+              console.log(`Dashboard: Fetched sender ${senderName} for request ${requestDoc.id}`);
+            } else {
+              console.warn(`Dashboard: Sender profile for UID ${senderUid} not found for request ${requestDoc.id}. Using defaults.`);
+            }
+        } catch (fetchError) {
+            console.error(`Dashboard: Error fetching sender profile for UID ${senderUid} (request ${requestDoc.id}):`, fetchError);
+        }
+        
+        if (!data.createdAt || !(data.createdAt instanceof Timestamp)) {
+            console.error(`Dashboard: Invalid or missing 'createdAt' timestamp for request ${requestDoc.id}`, data);
+            return null; // Skip if timestamp is invalid, as it's crucial
         }
 
         return {
@@ -148,17 +175,29 @@ export default function DashboardPage() {
           timestamp: data.createdAt as Timestamp,
         } as MatchRequest;
       });
-      let fetchedRequests = await Promise.all(requestsPromises);
-      fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); // Reverse here to show newest first
-      setMatchRequests(fetchedRequests as MatchRequest[]);
-      setIsLoadingRequests(false);
+
+      try {
+        let fetchedRequests = await Promise.all(requestsPromises);
+        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); 
+        console.log(`Dashboard: Processed ${fetchedRequests.length} valid match requests.`);
+        setMatchRequests(fetchedRequests as MatchRequest[]);
+      } catch (processingError) {
+        console.error("Dashboard: Error processing request promises: ", processingError);
+        setMatchRequests([]); // Clear on error to avoid stale data
+      } finally {
+        setIsLoadingRequests(false);
+      }
     }, (error) => {
         console.error("Error fetching match requests: ", error);
         toast({ title: "Error", description: "Could not load match requests. " + error.message, variant: "destructive"});
+        setMatchRequests([]);
         setIsLoadingRequests(false);
     });
 
-    return () => unsubscribeRequests();
+    return () => {
+      console.log("Dashboard: Unsubscribing from match requests listener.");
+      unsubscribeRequests();
+    }
   }, [currentUser, toast]);
 
   const createChatDocument = async (user1Uid: string, user2Uid: string) => {
@@ -196,31 +235,31 @@ export default function DashboardPage() {
         unreadBy: { [user1Uid]: 0, [user2Uid]: 0 } 
     }, { merge: true });
     
-    // Also update the request status using the correct composite ID for the request
-    const requestDocRef = doc(db, "matchRequests", getCompositeId(user1Uid, user2Uid)); 
-    batch.update(requestDocRef, { status: "accepted", updatedAt: serverTimestamp() });
-    
+    // This function originally assumed the request ID was the composite ID.
+    // However, on the dashboard, `requestId` is the actual document ID.
+    // The request update needs to happen using the actual `requestId`.
+    // The calling function `handleAcceptRequest` will use the `requestId` state.
+
     await batch.commit();
     return chatId;
   };
 
-  const handleAcceptRequest = async (requestId: string, senderUid: string) => {
+  const handleAcceptRequest = async (request: MatchRequest) => {
     if (!currentUser) return;
-    setProcessingRequestId(requestId); // Use actual request ID for processing state
+    setProcessingRequestId(request.id); 
+    const requestDocRef = doc(db, "matchRequests", request.id);
     try {
-      // The request document ID (requestId) is what needs to be updated.
-      // createChatDocument will handle updating the specific request ID if it's the composite one.
-      // If requestId is ALREADY the composite ID, then createChatDocument is fine.
-      // If requestId is the individual Firestore doc ID, then createChatDocument needs that one.
-      // For now, let's assume createChatDocument correctly identifies the request to update based on its internal logic or params.
-      // The key is that createChatDocument takes user1Uid and user2Uid.
+      // Update the request status first
+      await updateDoc(requestDocRef, { status: "accepted", updatedAt: serverTimestamp() });
+      // Then create the chat document
+      await createChatDocument(currentUser.uid, request.senderUid); 
       
-      await createChatDocument(currentUser.uid, senderUid); // This function now also updates the request
       toast({ title: "Request Accepted!", description: "You are now matched." });
-      // The onSnapshot listener will update the local list
+      // The onSnapshot listener will update the local list by removing the pending request.
     } catch (error: any) {
       console.error("Error accepting request:", error);
       toast({ title: "Error", description: "Failed to accept request: " + error.message, variant: "destructive" });
+      // Revert status if chat creation failed? Complex, usually handled by retries or manual cleanup.
     } finally {
       setProcessingRequestId(null);
     }
@@ -228,13 +267,11 @@ export default function DashboardPage() {
 
   const handleDeclineRequest = async (requestId: string) => {
      if (!currentUser) return;
-    setProcessingRequestId(requestId); // Use actual request ID for processing state
-    // requestId here is the actual document ID from the matchRequests collection
+    setProcessingRequestId(requestId); 
     const requestDocRef = doc(db, "matchRequests", requestId); 
     try {
       await updateDoc(requestDocRef, { status: "declined_by_receiver", updatedAt: serverTimestamp() });
       toast({ title: "Request Declined" });
-      // The onSnapshot listener will update the local list
     } catch (error: any) {
       console.error("Error declining request:", error);
       toast({ title: "Error", description: "Failed to decline request: " + error.message, variant: "destructive" });
@@ -398,7 +435,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <div className="flex gap-1.5">
-                      <Button onClick={() => handleAcceptRequest(req.id, req.senderUid)} variant="outline" size="sm" className="h-7 px-2 border-green-500 text-green-600 hover:bg-green-500/10 disabled:opacity-50" disabled={processingRequestId === req.id}>
+                      <Button onClick={() => handleAcceptRequest(req)} variant="outline" size="sm" className="h-7 px-2 border-green-500 text-green-600 hover:bg-green-500/10 disabled:opacity-50" disabled={processingRequestId === req.id}>
                         {processingRequestId === req.id ? <Loader2 className="h-3 w-3 animate-spin"/> : <Check className="h-3 w-3"/>}
                       </Button>
                       <Button onClick={() => handleDeclineRequest(req.id)} variant="ghost" size="sm" className="h-7 px-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50" disabled={processingRequestId === req.id}>
