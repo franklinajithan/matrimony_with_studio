@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles, Users, UserPlus, CalendarCheck, Briefcase, MapPin, Loader2, Check, X, Eye, FileText } from "lucide-react";
+import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles, Users, UserPlus, CalendarCheck, Briefcase, MapPin, Cake, Loader2, Check, X, Eye, FileText } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import React, { useEffect, useState, useCallback } from 'react';
@@ -23,6 +23,7 @@ interface MatchRequest {
   senderName: string;
   senderAge?: number;
   senderProfession?: string;
+  senderLocation?: string;
   senderAvatarUrl: string;
   senderDataAiHint: string;
   timestamp: Timestamp;
@@ -97,7 +98,6 @@ export default function DashboardPage() {
       if (user) {
         setUserDisplayName(user.displayName || mockUser.name);
         
-        // Fetch user document for avatar, hint, and profile completion
         try {
             const userDocRef = doc(db, "users", user.uid);
             const userSnap = await getDoc(userDocRef);
@@ -108,7 +108,6 @@ export default function DashboardPage() {
                 setProfileCompletion(calculateProfileCompletion(userData));
                  console.log(`Dashboard Auth: User document for ${user.uid} found. Avatar: ${userData.photoURL}, Hint: ${userData.dataAiHint}, Completion: ${calculateProfileCompletion(userData)}%`);
             } else {
-                 // User doc doesn't exist, use auth data and default completion
                 setUserAvatarUrl(user.photoURL || mockUser.avatarUrl);
                 setUserAvatarHint(user.photoURL && !user.photoURL.includes('placehold.co') ? "user avatar" : mockUser.dataAiHint);
                 setProfileCompletion(calculateProfileCompletion({ displayName: user.displayName, photoURL: user.photoURL }));
@@ -149,7 +148,7 @@ export default function DashboardPage() {
     setIsLoadingSuggestions(true);
     try {
       const usersRef = collection(db, "users");
-      const q = query(usersRef, limit(10)); // Fetch more to filter client-side
+      const q = query(usersRef, limit(10)); 
       
       const querySnapshot = await getDocs(q);
       console.log("Dashboard Suggestions: Query snapshot received. Empty:", querySnapshot.empty, "Docs count:", querySnapshot.docs.length);
@@ -160,10 +159,10 @@ export default function DashboardPage() {
             console.log("Dashboard Suggestions: Skipping current user from suggestions, ID:", docSnap.id);
             return; 
         }
-        if (suggestions.length >= 3) return; // Limit to 3 suggestions
+        if (suggestions.length >= 3) return; 
         
         const data = docSnap.data();
-        console.log("Dashboard Suggestions: Processing suggestion for user ID:", docSnap.id, "Data:", JSON.stringify(data).substring(0, 100) + "..."); // Log snippet
+        console.log("Dashboard Suggestions: Processing suggestion for user ID:", docSnap.id, "Data snippet:", JSON.stringify(data).substring(0, 100) + "...");
         suggestions.push({
           id: docSnap.id,
           name: data.displayName || "User",
@@ -199,7 +198,7 @@ export default function DashboardPage() {
     }
 
     console.log(`Dashboard Effect: Current user available (UID: ${currentUser.uid}). Fetching suggestions and match requests.`);
-    setIsLoadingRequests(true); // Moved these up to ensure they are set before async calls
+    setIsLoadingRequests(true);
     setIsLoadingSuggestions(true);
     
     fetchQuickSuggestions(currentUser.uid); 
@@ -223,8 +222,7 @@ export default function DashboardPage() {
       if (snapshot.empty) {
           console.log("Dashboard Requests: No 'pending' matchRequests found for current user. Clearing requests list.");
           setMatchRequests([]);
-          // setIsLoadingRequests(false); // Only set to false after all processing is done or if confirmed empty
-          return; // Still need to set loading to false in a finally or after processing
+          return; 
       }
 
       const requestsPromises = snapshot.docs.map(async (requestDoc) => {
@@ -247,6 +245,7 @@ export default function DashboardPage() {
         let senderDataAiHint = "person placeholder";
         let senderAge;
         let senderProfession;
+        let senderLocation;
 
         try {
             console.log(`Dashboard Requests: Fetching sender profile for UID ${senderUid} (request ${requestDoc.id})`);
@@ -260,7 +259,8 @@ export default function DashboardPage() {
               senderDataAiHint = senderData.dataAiHint || (senderData.photoURL && !senderData.photoURL.includes('placehold.co') ? "person professional" : "person placeholder");
               senderAge = calculateAge(senderData.dob);
               senderProfession = senderData.profession;
-              console.log(`Dashboard Requests: Successfully fetched sender ${senderName} (UID: ${senderUid}) for request ${requestDoc.id}`);
+              senderLocation = senderData.location;
+              console.log(`Dashboard Requests: Successfully fetched sender ${senderName} (UID: ${senderUid}) for request ${requestDoc.id}. Age: ${senderAge}, Location: ${senderLocation}`);
             } else {
               console.warn(`Dashboard Requests: Sender profile for UID ${senderUid} not found (request ${requestDoc.id}). Using defaults.`);
             }
@@ -276,6 +276,7 @@ export default function DashboardPage() {
           senderDataAiHint: senderDataAiHint,
           senderAge: senderAge,
           senderProfession: senderProfession,
+          senderLocation: senderLocation,
           timestamp: data.createdAt as Timestamp, 
         } as MatchRequest;
       });
@@ -289,8 +290,7 @@ export default function DashboardPage() {
         console.error("Dashboard Requests: Error processing request promises: ", processingError);
         setMatchRequests([]); 
       } finally {
-         // This ensures it's set after processing or if snapshot was initially empty and fully processed
-        if (snapshot.empty) { // If it was empty and we returned early, set it here.
+        if (snapshot.empty) { 
              setMatchRequests([]);
         }
         setIsLoadingRequests(false);
@@ -415,7 +415,7 @@ export default function DashboardPage() {
           </div>
         </CardHeader>
       </Card>
-
+      
       <Card className="shadow-lg">
         <CardHeader className="p-4">
           <CardTitle className="flex items-center gap-2 font-headline text-lg text-primary">
@@ -588,8 +588,23 @@ export default function DashboardPage() {
                         <AvatarFallback>{req.senderName.substring(0, 1).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium text-sm text-foreground">{req.senderName}{req.senderAge ? `, ${req.senderAge}` : ''}</p>
-                        <p className="text-xs text-muted-foreground">{req.senderProfession || 'Not specified'}</p>
+                        <p className="font-medium text-sm text-foreground">{req.senderName}</p>
+                        <div className="text-xs text-muted-foreground mt-0.5 space-y-px">
+                          {req.senderAge != null && req.senderAge > 0 && (
+                            <p className="flex items-center">
+                              <Cake className="mr-1.5 h-3 w-3 text-muted-foreground/80" /> {req.senderAge} years old
+                            </p>
+                          )}
+                          <p className="flex items-center">
+                            <Briefcase className="mr-1.5 h-3 w-3 text-muted-foreground/80" />
+                            {req.senderProfession || 'Profession not specified'}
+                          </p>
+                          {req.senderLocation && (
+                            <p className="flex items-center">
+                              <MapPin className="mr-1.5 h-3 w-3 text-muted-foreground/80" /> {req.senderLocation}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="flex gap-1.5">
