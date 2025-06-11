@@ -18,6 +18,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils'; // Added missing import
 
 interface StoredPhoto {
   id: string;
@@ -431,8 +432,16 @@ export default function ProfilePage() {
     setIsProcessingRequest(true);
     const requestDocRef = doc(db, "matchRequests", matchRequestId);
     try {
-      await updateDoc(requestDocRef, { status: `declined_by_${currentFirebaseUser.uid === (await getDoc(requestDocRef)).data()?.senderUid ? 'receiver' : 'sender'}`, updatedAt: serverTimestamp() });
-      setRequestStatus('none'); // Or declined_by_me
+      // Determine if current user is sender or receiver to set decline status correctly
+      const requestSnap = await getDoc(requestDocRef);
+      if(!requestSnap.exists()) {
+        throw new Error("Request document not found.");
+      }
+      const requestData = requestSnap.data();
+      const declineStatus = currentFirebaseUser.uid === requestData.senderUid ? 'declined_by_sender' : 'declined_by_receiver';
+
+      await updateDoc(requestDocRef, { status: declineStatus, updatedAt: serverTimestamp() });
+      setRequestStatus('none'); // Or a more specific 'declined_by_me' status
       toast({ title: "Request Declined" });
     } catch (e: any) {
       toast({ title: "Error", description: "Failed to decline request: " + e.message, variant: "destructive" });
