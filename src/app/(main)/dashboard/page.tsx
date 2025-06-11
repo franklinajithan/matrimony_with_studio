@@ -5,22 +5,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles, Users, UserPlus, CalendarCheck, Briefcase, MapPin, Loader2, Check, X } from "lucide-react";
+import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles, Users, UserPlus, CalendarCheck, Briefcase, MapPin, Loader2, Check, X, Eye } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { auth, db } from '@/lib/firebase/config';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, writeBatch, serverTimestamp, Timestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, writeBatch, serverTimestamp, Timestamp, orderBy, limit } from 'firebase/firestore';
 import { useToast } from "@/hooks/use-toast";
-
-const getCompositeId = (uid1: string, uid2: string): string => {
-  if (!uid1 || !uid2) return "invalid_composite_id";
-  return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
-};
+import { calculateAge, getCompositeId } from '@/lib/utils';
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MatchRequest {
-  id: string; // Document ID of the request
+  id: string; 
   senderUid: string;
   senderName: string;
   senderAge?: number;
@@ -30,34 +27,21 @@ interface MatchRequest {
   timestamp: Timestamp;
 }
 
-const calculateAge = (dobString?: string): number | undefined => {
-  if (!dobString) return undefined;
-  try {
-    const birthDate = new Date(dobString);
-    if (isNaN(birthDate.getTime())) return undefined;
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age > 0 ? age : undefined;
-  } catch (e) {
-    return undefined;
-  }
-};
+interface QuickSuggestionProfile {
+  id: string;
+  name: string;
+  age?: number;
+  profession?: string;
+  location?: string;
+  avatarUrl: string;
+  dataAiHint: string;
+}
 
 const mockUser = {
   name: "User",
   avatarUrl: "https://placehold.co/100x100.png",
   dataAiHint: "person placeholder"
 };
-
-const mockQuickSuggestions = [
-  { id: 's1', name: 'Vikram Singh', age: 31, profession: 'Architect', location: 'Mumbai', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: 'man outdoor' },
-  { id: 's2', name: 'Neha Reddy', age: 28, profession: 'Marketing', location: 'Bangalore', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: 'woman creative' },
-  { id: 's3', name: 'Arjun Mehta', age: 33, profession: 'Doctor', location: 'Delhi', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: 'man indian' },
-];
 
 const mockTodaysHoroscope = {
   sign: "Your Sign",
@@ -75,6 +59,10 @@ export default function DashboardPage() {
   const [matchRequests, setMatchRequests] = useState<MatchRequest[]>([]);
   const [isLoadingRequests, setIsLoadingRequests] = useState(true);
   const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
+  
+  const [quickSuggestions, setQuickSuggestions] = useState<QuickSuggestionProfile[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -100,18 +88,67 @@ export default function DashboardPage() {
         setUserDisplayName(mockUser.name);
         setUserAvatarUrl(mockUser.avatarUrl);
         setUserAvatarHint(mockUser.dataAiHint);
+        setQuickSuggestions([]); 
+        setIsLoadingSuggestions(false);
       }
     });
     return () => unsubscribeAuth();
   }, []);
+
+  const fetchQuickSuggestions = useCallback(async (currentUserId: string) => {
+    console.log("Dashboard: Fetching quick suggestions, excluding user:", currentUserId);
+    setIsLoadingSuggestions(true);
+    try {
+      const usersRef = collection(db, "users");
+      // Fetch users, filter out current user, limit to 3.
+      // For more "AI-like" suggestions, this query would be more complex or feed into an AI flow.
+      const q = query(
+        usersRef,
+        where("uid", "!=", currentUserId), // Exclude current user
+        orderBy("uid"), // Basic ordering for consistent pagination if needed
+        limit(3)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const suggestions: QuickSuggestionProfile[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        // Skip if current user somehow gets through (shouldn't with where clause)
+        if (docSnap.id === currentUserId) return; 
+
+        suggestions.push({
+          id: docSnap.id,
+          name: data.displayName || "User",
+          age: calculateAge(data.dob),
+          profession: data.profession || "Not specified",
+          location: data.location || "Not specified",
+          avatarUrl: data.photoURL || `https://placehold.co/100x100.png?text=${data.displayName ? data.displayName.substring(0,1) : 'S'}`,
+          dataAiHint: data.dataAiHint || (data.photoURL && !data.photoURL.includes('placehold.co') ? "person professional" : "person placeholder"),
+        });
+      });
+      console.log("Dashboard: Fetched quick suggestions:", suggestions);
+      setQuickSuggestions(suggestions);
+    } catch (error) {
+      console.error("Dashboard: Error fetching quick suggestions:", error);
+      toast({ title: "Error", description: "Could not load quick suggestions.", variant: "destructive" });
+      setQuickSuggestions([]);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  }, [toast]);
+
 
   useEffect(() => {
     if (!currentUser) {
       console.log("Dashboard: No current user, clearing match requests and stopping listener setup.");
       setMatchRequests([]);
       setIsLoadingRequests(false);
+      setQuickSuggestions([]);
+      setIsLoadingSuggestions(false);
       return;
     }
+
+    fetchQuickSuggestions(currentUser.uid); // Fetch suggestions when user is available
 
     console.log(`Dashboard: Setting up match requests listener for user UID: ${currentUser.uid}`);
     setIsLoadingRequests(true);
@@ -167,10 +204,10 @@ export default function DashboardPage() {
         } catch (fetchError) {
             console.error(`Dashboard: Error fetching sender profile for UID ${senderUid} (request ${requestDoc.id}):`, fetchError);
         }
-
+        
         if (!data.createdAt || !(data.createdAt instanceof Timestamp)) {
             console.error(`Dashboard: Invalid or missing 'createdAt' timestamp for request ${requestDoc.id}. Data:`, data);
-            return null; // Skip this request if timestamp is invalid
+            return null; 
         }
 
         return {
@@ -187,12 +224,12 @@ export default function DashboardPage() {
 
       try {
         let fetchedRequests = await Promise.all(requestsPromises);
-        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); // Reverse for newest first
+        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); 
         console.log(`Dashboard: Processed ${fetchedRequests.length} valid match requests. Setting state.`);
         setMatchRequests(fetchedRequests as MatchRequest[]);
       } catch (processingError) {
         console.error("Dashboard: Error processing request promises: ", processingError);
-        setMatchRequests([]); // Clear requests on error
+        setMatchRequests([]); 
       } finally {
         setIsLoadingRequests(false);
         console.log("Dashboard: Finished processing snapshot, isLoadingRequests set to false.");
@@ -208,7 +245,7 @@ export default function DashboardPage() {
       console.log("Dashboard: Unsubscribing from match requests listener.");
       unsubscribeRequests();
     }
-  }, [currentUser, toast]);
+  }, [currentUser, toast, fetchQuickSuggestions]);
 
   const createChatDocument = async (user1Uid: string, user2Uid: string) => {
     const user1DocRef = doc(db, "users", user1Uid);
@@ -320,29 +357,50 @@ export default function DashboardPage() {
               <CardTitle className="flex items-center gap-2 font-headline text-2xl text-primary">
                 <Star className="h-6 w-6" /> AI Quick Suggestions
               </CardTitle>
-              <CardDescription>Our AI has found some profiles you might like.</CardDescription>
+              <CardDescription>Our AI has found some profiles you might like. (Displaying real users)</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {mockQuickSuggestions.map(profile => (
-                <div key={profile.id} className="flex items-center justify-between p-3 bg-muted/30 hover:bg-muted/50 rounded-lg transition-colors">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={profile.avatarUrl} alt={profile.name} data-ai-hint={profile.dataAiHint} />
-                      <AvatarFallback>{profile.name.substring(0, 1)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <Link href={`/profile/${profile.id}`} className="font-semibold text-foreground hover:text-primary hover:underline">{profile.name}, {profile.age}</Link>
-                      <p className="text-xs text-muted-foreground flex items-center"><Briefcase className="mr-1 h-3 w-3" />{profile.profession} <MapPin className="ml-2 mr-1 h-3 w-3" />{profile.location}</p>
+              {isLoadingSuggestions ? (
+                <>
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-12 w-12 rounded-full" />
+                        <div className="space-y-1.5">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-40" />
+                        </div>
+                      </div>
+                      <Skeleton className="h-8 w-24 rounded-md" />
                     </div>
+                  ))}
+                </>
+              ) : quickSuggestions.length > 0 ? (
+                quickSuggestions.map(profile => (
+                  <div key={profile.id} className="flex items-center justify-between p-3 bg-muted/30 hover:bg-muted/50 rounded-lg transition-colors">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={profile.avatarUrl} alt={profile.name} data-ai-hint={profile.dataAiHint} />
+                        <AvatarFallback>{profile.name.substring(0, 1).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <Link href={`/profile/${profile.id}`} className="font-semibold text-foreground hover:text-primary hover:underline">{profile.name}{profile.age ? `, ${profile.age}` : ''}</Link>
+                        <p className="text-xs text-muted-foreground flex items-center"><Briefcase className="mr-1 h-3 w-3" />{profile.profession} <MapPin className="ml-2 mr-1 h-3 w-3" />{profile.location}</p>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/profile/${profile.id}`}><Eye className="mr-1.5 h-3.5 w-3.5" />View</Link>
+                    </Button>
                   </div>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/profile/${profile.id}`}>View Profile</Link>
-                  </Button>
-                </div>
-              ))}
-              <Button variant="link" className="w-full text-primary mt-2" asChild>
-                <Link href="/suggestions">See All AI Matches</Link>
-              </Button>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">No suggestions available at the moment.</p>
+              )}
+              {!isLoadingSuggestions && quickSuggestions.length > 0 && (
+                 <Button variant="link" className="w-full text-primary mt-2" asChild>
+                    <Link href="/suggestions">See All AI Matches</Link>
+                 </Button>
+              )}
             </CardContent>
           </Card>
 
@@ -454,7 +512,7 @@ export default function DashboardPage() {
                   </div>
                 ))
               ) : (
-                null // Render nothing here if not loading and no requests, as per your request
+                null 
               )}
             </CardContent>
           </Card>
@@ -463,5 +521,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
