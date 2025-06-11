@@ -126,7 +126,7 @@ export default function DashboardPage() {
 
         {/* Sidebar Area - Right Column */}
         <div className="lg:col-span-1 space-y-6">
-          {/* Quick Navigation Links */}
+           {/* Quick Navigation Links */}
           <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
                  <CardTitle className="flex items-center gap-2 font-headline text-xl text-primary">
