@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Heart, X, MapPin, Briefcase, CheckCircle, Search as SearchIcon, Loader2, AlertTriangle } from 'lucide-react';
 import React, { useEffect, useState, useCallback } from 'react';
 import { db, auth } from '@/lib/firebase/config';
-import { collection, getDocs, query, where, limit, startAfter, DocumentData, QueryDocumentSnapshot, orderBy, documentId } from 'firebase/firestore'; // Added documentId
+import { collection, getDocs, query, where, limit, startAfter, DocumentData, QueryDocumentSnapshot, orderBy, documentId } from 'firebase/firestore';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from '@/components/ui/skeleton';
@@ -50,31 +50,40 @@ export default function DiscoverPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null); // Initialized to null
   const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
+      setCurrentUser(user); // Can be user object or null
+      // Initial fetch will be triggered by the useEffect below that depends on currentUser
     });
     return () => unsubscribe();
   }, []);
 
   const fetchProfiles = useCallback(async (initialLoad = true) => {
-    if (!hasMore && !initialLoad && !isFetchingMore) return;
+    setError(null);
 
     if (initialLoad) {
       setIsLoading(true);
       setProfiles([]);
       setLastVisible(null);
-      setHasMore(true); 
-    } else {
-      if (isFetchingMore) return; 
+      setHasMore(true); // Assume there are more until the first fetch proves otherwise
+    } else { // This is for "Load More"
+      if (isFetchingMore || !hasMore) return; // Already fetching or no more profiles
+      if (!lastVisible && hasMore) { // Inconsistent state for "load more", means previous fetch might have issues
+          console.warn("Attempting to load more, but lastVisible is null while hasMore is true. Resetting hasMore.");
+          setHasMore(false);
+          return;
+      }
+      if (!lastVisible) { // Should be covered by !hasMore if logic is correct, but as a safeguard
+          setHasMore(false);
+          return;
+      }
       setIsFetchingMore(true);
     }
-    setError(null);
 
     try {
       let profilesQuery;
@@ -82,13 +91,9 @@ export default function DiscoverPage() {
       
       if (initialLoad) {
         profilesQuery = query(usersCollectionRef, orderBy(documentId()), limit(PROFILES_PER_PAGE));
-      } else if (lastVisible) {
-        profilesQuery = query(usersCollectionRef, orderBy(documentId()), startAfter(lastVisible), limit(PROFILES_PER_PAGE));
       } else {
-         setIsLoading(false);
-         setIsFetchingMore(false);
-         if (!initialLoad) setHasMore(false); 
-        return;
+        // This 'else' block implies lastVisible is not null because of the checks above for !initialLoad
+        profilesQuery = query(usersCollectionRef, orderBy(documentId()), startAfter(lastVisible!), limit(PROFILES_PER_PAGE));
       }
       
       const querySnapshot = await getDocs(profilesQuery);
@@ -96,6 +101,7 @@ export default function DiscoverPage() {
 
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        // Skip current user's profile
         if (currentUser && doc.id === currentUser.uid) {
           return; 
         }
@@ -107,7 +113,7 @@ export default function DiscoverPage() {
           location: data.location || "N/A",
           imageUrl: data.photoURL || `https://placehold.co/300x400.png?text=${data.displayName ? data.displayName.substring(0,1) : 'P'}`,
           dataAiHint: data.photoURL ? "person profile" : "placeholder person",
-          isVerified: data.isVerified || false,
+          isVerified: data.isVerified || false, // Assuming a boolean field in Firestore
           interests: data.hobbies ? data.hobbies.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
           dob: data.dob,
         });
@@ -115,24 +121,26 @@ export default function DiscoverPage() {
       
       setProfiles(prevProfiles => initialLoad ? fetchedProfiles : [...prevProfiles, ...fetchedProfiles]);
       
-      const newLastVisible = querySnapshot.docs.length > 0 ? querySnapshot.docs[querySnapshot.docs.length - 1] : null;
-      setLastVisible(newLastVisible);
+      const newLastVisibleDoc = querySnapshot.docs.length > 0 ? querySnapshot.docs[querySnapshot.docs.length - 1] : null;
+      setLastVisible(newLastVisibleDoc);
       setHasMore(querySnapshot.docs.length === PROFILES_PER_PAGE);
 
     } catch (e: any) {
       console.error("Error fetching profiles: ", e);
       setError("Failed to load profiles. Please try again later. Error: " + e.message);
-      if (!initialLoad) setHasMore(false);
+      if (!initialLoad) setHasMore(false); // If error on "load more", assume no more for now
     } finally {
-      setIsLoading(false);
+      if (initialLoad) setIsLoading(false);
       setIsFetchingMore(false);
     }
-  }, [currentUser, hasMore, isFetchingMore, lastVisible]); // lastVisible is needed here if it's used to construct the query
+  }, [currentUser]); // fetchProfiles will be re-created only if currentUser changes.
 
   useEffect(() => {
+    // This effect triggers the initial load when currentUser state is determined (either user or null)
+    // It will run once when currentUser initializes (to user or null after auth check)
+    // and again if currentUser changes (e.g., login/logout)
     fetchProfiles(true);
-  }, [currentUser, fetchProfiles]);
-
+  }, [currentUser, fetchProfiles]); // fetchProfiles is stable unless currentUser changes
 
   if (isLoading && profiles.length === 0) {
     return (
@@ -174,7 +182,8 @@ export default function DiscoverPage() {
       <div className="space-y-8 text-center">
         <h1 className="font-headline text-4xl font-semibold text-gray-800">Discover Your Match</h1>
         <p className="mt-2 text-lg text-muted-foreground">No profiles found. Check back later or adjust your preferences!</p>
-        <p className="text-sm text-muted-foreground">If you're testing, ensure there are user documents in your Firestore 'users' collection.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Showing {profiles.length} profiles. {hasMore ? "More available." : "All loaded."}</p>
+        {/* You can add a button to retry or refresh here if desired */}
       </div>
     );
   }
@@ -252,7 +261,7 @@ export default function DiscoverPage() {
       </div>
        <div className="text-center mt-12">
         {hasMore && (
-          <Button onClick={() => fetchProfiles(false)} variant="outline" size="lg" disabled={isFetchingMore}>
+          <Button onClick={() => fetchProfiles(false)} variant="outline" size="lg" disabled={isFetchingMore || isLoading}>
             {isFetchingMore ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Load More Profiles
           </Button>
