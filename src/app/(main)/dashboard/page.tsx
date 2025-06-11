@@ -148,7 +148,7 @@ export default function DashboardPage() {
               const senderData = senderSnap.data();
               senderName = senderData.displayName || "User";
               senderAvatarUrl = senderData.photoURL || "https://placehold.co/80x80.png";
-              senderDataAiHint = senderData.dataAiHint || (senderData.photoURL ? "person professional" : "person placeholder");
+              senderDataAiHint = senderData.dataAiHint || (senderData.photoURL && !senderData.photoURL.includes('placehold.co') ? "person professional" : "person placeholder");
               senderAge = calculateAge(senderData.dob);
               senderProfession = senderData.profession;
               console.log(`Dashboard: Fetched sender ${senderName} for request ${requestDoc.id}`);
@@ -178,7 +178,7 @@ export default function DashboardPage() {
 
       try {
         let fetchedRequests = await Promise.all(requestsPromises);
-        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); // Reverse here for newest first display
+        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); 
         console.log(`Dashboard: Processed ${fetchedRequests.length} valid match requests.`);
         setMatchRequests(fetchedRequests as MatchRequest[]);
       } catch (processingError) {
@@ -221,11 +221,13 @@ export default function DashboardPage() {
         participantDetails: {
             [user1Uid]: {
                 displayName: user1Data.displayName || "User",
-                photoURL: user1Data.photoURL || "https://placehold.co/100x100.png"
+                photoURL: user1Data.photoURL || "https://placehold.co/100x100.png",
+                dataAiHint: user1Data.dataAiHint || (user1Data.photoURL && !user1Data.photoURL.includes('placehold.co') ? "person avatar" : "person placeholder")
             },
             [user2Uid]: {
                 displayName: user2Data.displayName || "User",
-                photoURL: user2Data.photoURL || "https://placehold.co/100x100.png"
+                photoURL: user2Data.photoURL || "https://placehold.co/100x100.png",
+                dataAiHint: user2Data.dataAiHint || (user2Data.photoURL && !user2Data.photoURL.includes('placehold.co') ? "person avatar" : "person placeholder")
             }
         },
         lastMessageText: "You are now connected!",
@@ -446,3 +448,4 @@ export default function DashboardPage() {
   );
 }
 
+    
