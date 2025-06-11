@@ -161,7 +161,7 @@ export default function DashboardPage() {
         
         if (!data.createdAt || !(data.createdAt instanceof Timestamp)) {
             console.error(`Dashboard: Invalid or missing 'createdAt' timestamp for request ${requestDoc.id}`, data);
-            return null; // Skip if timestamp is invalid, as it's crucial
+            return null; 
         }
 
         return {
@@ -178,12 +178,12 @@ export default function DashboardPage() {
 
       try {
         let fetchedRequests = await Promise.all(requestsPromises);
-        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); 
+        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); // Reverse here for newest first display
         console.log(`Dashboard: Processed ${fetchedRequests.length} valid match requests.`);
         setMatchRequests(fetchedRequests as MatchRequest[]);
       } catch (processingError) {
         console.error("Dashboard: Error processing request promises: ", processingError);
-        setMatchRequests([]); // Clear on error to avoid stale data
+        setMatchRequests([]); 
       } finally {
         setIsLoadingRequests(false);
       }
@@ -235,11 +235,6 @@ export default function DashboardPage() {
         unreadBy: { [user1Uid]: 0, [user2Uid]: 0 } 
     }, { merge: true });
     
-    // This function originally assumed the request ID was the composite ID.
-    // However, on the dashboard, `requestId` is the actual document ID.
-    // The request update needs to happen using the actual `requestId`.
-    // The calling function `handleAcceptRequest` will use the `requestId` state.
-
     await batch.commit();
     return chatId;
   };
@@ -249,17 +244,13 @@ export default function DashboardPage() {
     setProcessingRequestId(request.id); 
     const requestDocRef = doc(db, "matchRequests", request.id);
     try {
-      // Update the request status first
       await updateDoc(requestDocRef, { status: "accepted", updatedAt: serverTimestamp() });
-      // Then create the chat document
       await createChatDocument(currentUser.uid, request.senderUid); 
       
       toast({ title: "Request Accepted!", description: "You are now matched." });
-      // The onSnapshot listener will update the local list by removing the pending request.
     } catch (error: any) {
       console.error("Error accepting request:", error);
       toast({ title: "Error", description: "Failed to accept request: " + error.message, variant: "destructive" });
-      // Revert status if chat creation failed? Complex, usually handled by retries or manual cleanup.
     } finally {
       setProcessingRequestId(null);
     }
