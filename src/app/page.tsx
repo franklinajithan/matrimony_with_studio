@@ -24,18 +24,18 @@ const navLinks = [
 ];
 
 const featuresData = [
-  { icon: <Telescope className="h-10 w-10 text-red-500" />, title: "Horoscope Matching", description: "Explore cosmic compatibility with potential partners.", borderColor: "border-red-500", href:"/dashboard/horoscope" },
-  { icon: <Brain className="h-10 w-10 text-blue-500" />, title: "Smart Matching", description: "AI suggestions based on your profile and preferences.", borderColor: "border-blue-500", href:"/suggestions" },
-  { icon: <ShieldCheck className="h-10 w-10 text-green-500" />, title: "Privacy Guaranteed", description: "Control your information with robust privacy settings.", borderColor: "border-green-500", href:"/privacy" },
-  { icon: <Globe className="h-10 w-10 text-yellow-500" />, title: "Global Reach", description: "Connect with diverse Indian & Sri Lankan profiles.", borderColor: "border-yellow-500", href:"/discover" },
-  { icon: <FileText className="h-10 w-10 text-purple-500" />, title: "In-Depth Profiles", description: "Comprehensive details to know matches better.", borderColor: "border-purple-500", href:"/dashboard/edit-profile" },
-  { icon: <MessageSquareText className="h-10 w-10 text-orange-500" />, title: "Secure Messaging", description: "Chat safely via our encrypted system.", borderColor: "border-orange-500", href:"/messages" },
-  { icon: <UserCheckIcon className="h-10 w-10 text-cyan-500" />, title: "Verified Profiles", description: "Connect with genuine and authentic users.", borderColor: "border-cyan-500", href:"/discover" },
-  { icon: <Palette className="h-10 w-10 text-lime-500" />, title: "Profile Template", description: "Easy-to-use templates to showcase yourself.", borderColor: "border-lime-500", href:"/dashboard/edit-profile" },
-  { icon: <ListFilter className="h-10 w-10 text-pink-500" />, title: "Custom Preferences", description: "Refine criteria to find your ideal match.", borderColor: "border-pink-500", href:"/dashboard/preferences" },
-  { icon: <Maximize className="h-10 w-10 text-teal-500" />, title: "Real Time Chat", description: "Engage in instant conversations with matches.", borderColor: "border-teal-500", href:"/messages"},
-  { icon: <Languages className="h-10 w-10 text-amber-500" />, title: "Language Preferences", description: "Set language options, including Tamil & Sinhala.", borderColor: "border-amber-500", href:"/dashboard/preferences"},
-  { icon: <SmartphoneNfc className="h-10 w-10 text-rose-500" />, title: "Mobile App Support", description: "Seamless experience on all your devices.", borderColor: "border-rose-500", href:"#"},
+  { icon: <Telescope className="h-8 w-8" />, title: "Horoscope Matching", description: "Explore cosmic compatibility with potential partners.", borderColor: "border-red-500", href:"/dashboard/horoscope" },
+  { icon: <Brain className="h-8 w-8" />, title: "Smart Matching", description: "AI suggestions based on your profile and preferences.", borderColor: "border-blue-500", href:"/suggestions" },
+  { icon: <ShieldCheck className="h-8 w-8" />, title: "Privacy Guaranteed", description: "Control your information with robust privacy settings.", borderColor: "border-green-500", href:"/privacy" },
+  { icon: <Globe className="h-8 w-8" />, title: "Global Reach", description: "Connect with diverse Indian & Sri Lankan profiles.", borderColor: "border-yellow-500", href:"/discover" },
+  { icon: <FileText className="h-8 w-8" />, title: "In-Depth Profiles", description: "Comprehensive details to know matches better.", borderColor: "border-purple-500", href:"/dashboard/edit-profile" },
+  { icon: <MessageSquareText className="h-8 w-8" />, title: "Secure Messaging", description: "Chat safely via our encrypted system.", borderColor: "border-orange-500", href:"/messages" },
+  { icon: <UserCheckIcon className="h-8 w-8" />, title: "Verified Profiles", description: "Connect with genuine and authentic users.", borderColor: "border-cyan-500", href:"/discover" },
+  { icon: <Palette className="h-8 w-8" />, title: "Profile Template", description: "Easy-to-use templates to showcase yourself.", borderColor: "border-lime-500", href:"/dashboard/edit-profile" },
+  { icon: <ListFilter className="h-8 w-8" />, title: "Custom Preferences", description: "Refine criteria to find your ideal match.", borderColor: "border-pink-500", href:"/dashboard/preferences" },
+  { icon: <Maximize className="h-8 w-8" />, title: "Real Time Chat", description: "Engage in instant conversations with matches.", borderColor: "border-teal-500", href:"/messages"},
+  { icon: <Languages className="h-8 w-8" />, title: "Language Preferences", description: "Set language options, including Tamil & Sinhala.", borderColor: "border-amber-500", href:"/dashboard/preferences"},
+  { icon: <SmartphoneNfc className="h-8 w-8" />, title: "Mobile App Support", description: "Seamless experience on all your devices.", borderColor: "border-rose-500", href:"#"},
 ];
 
 
@@ -85,7 +85,7 @@ export default function LandingPage() {
         <section id="home" className="relative hero-gradient text-white py-20 md:py-32 overflow-hidden">
           <div className="container mx-auto px-4 z-10 relative">
             <div className="flex flex-col md:flex-row items-center">
-              <div className="md:w-3/5 text-center md:text-left mb-10 md:mb-0">
+              <div className="md:w-1/2 text-center md:text-left mb-10 md:mb-0">
                 <h1 className="font-headline text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight">
                   Welcome to <span className="inline-flex items-center">CUPID<Heart className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 mx-1 fill-white"/>KNOTS</span>
                 </h1>
@@ -98,12 +98,12 @@ export default function LandingPage() {
                   </Button>
                 </div>
               </div>
-              <div className="md:w-2/5 flex justify-center md:justify-end">
+              <div className="md:w-1/2 flex justify-center md:justify-end">
                 <Image 
                   src="https://firebasestorage.googleapis.com/v0/b/matrimony-09-06-2025.firebasestorage.app/o/image%2Fwelcome-BxM6HCre.png?alt=media&token=b0b044e1-cadc-4168-ad27-6f6e15d4c54e" 
                   alt="Indian woman in traditional attire with a welcoming gesture" 
-                  width={350} 
-                  height={450} 
+                  width={420} 
+                  height={539} 
                   className=""
                   data-ai-hint="indian woman traditional" 
                   priority
@@ -118,17 +118,19 @@ export default function LandingPage() {
             <h2 className="font-headline text-4xl font-bold text-center mb-16 text-blue-700">Why Choose Us</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8">
               {featuresData.map((feature) => (
-                <Card key={feature.title} className={`flex flex-col shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out bg-white border-t-4 ${feature.borderColor} rounded-b-lg rounded-t-sm`}>
-                  <CardHeader className="items-center text-center pt-6 pb-3">
-                    <div className="p-3 rounded-full bg-slate-100 mb-3">
-                      {React.cloneElement(feature.icon, { className: `${feature.icon.props.className} h-8 w-8`})}
-                    </div>
-                    <CardTitle className="font-headline text-xl text-slate-700">{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex-grow text-center px-6 pb-6">
-                    <p className="text-slate-500 text-sm">{feature.description}</p>
-                  </CardContent>
-                </Card>
+                 <Link href={feature.href || "#"} key={feature.title} className="block group">
+                    <Card className={`flex flex-col shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out bg-white border-t-4 ${feature.borderColor} rounded-b-lg rounded-t-sm h-full`}>
+                    <CardHeader className="items-center text-center pt-6 pb-3">
+                        <div className={`p-3 rounded-full bg-slate-100 mb-3 text- ${feature.borderColor.replace('border-','text-')}`}>
+                        {React.cloneElement(feature.icon, { className: `${feature.icon.props.className} h-8 w-8`})}
+                        </div>
+                        <CardTitle className="font-headline text-xl text-slate-700 group-hover:text-primary transition-colors">{feature.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-grow text-center px-6 pb-6">
+                        <p className="text-slate-500 text-sm">{feature.description}</p>
+                    </CardContent>
+                    </Card>
+                </Link>
               ))}
             </div>
           </div>
