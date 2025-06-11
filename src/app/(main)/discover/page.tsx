@@ -7,9 +7,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Heart, X, MapPin, Briefcase, CheckCircle, Search as SearchIcon, Loader2, AlertTriangle } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { db, auth } from '@/lib/firebase/config';
-import { collection, getDocs, query, where, limit, startAfter, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit, startAfter, DocumentData, QueryDocumentSnapshot, orderBy } from 'firebase/firestore';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,14 +17,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 interface Profile {
   id: string;
   name: string;
-  age?: number; // Age calculation can be complex, making it optional for now
+  age?: number;
   profession: string;
   location: string;
   imageUrl: string;
   dataAiHint: string;
   isVerified: boolean;
   interests: string[];
-  dob?: string; // To potentially calculate age
+  dob?: string;
 }
 
 const calculateAge = (dobString?: string): number | undefined => {
@@ -61,14 +61,16 @@ export default function DiscoverPage() {
     return () => unsubscribe();
   }, []);
 
-  const fetchProfiles = async (initialLoad = true) => {
-    if (!hasMore && !initialLoad) return;
+  const fetchProfiles = useCallback(async (initialLoad = true) => {
+    if (!hasMore && !initialLoad && !isFetchingMore) return;
+
     if (initialLoad) {
       setIsLoading(true);
-      setProfiles([]); // Reset for initial load
+      setProfiles([]);
       setLastVisible(null);
-      setHasMore(true);
+      setHasMore(true); // Reset hasMore on initial load
     } else {
+      if (isFetchingMore) return; // Prevent multiple simultaneous fetches for "load more"
       setIsFetchingMore(true);
     }
     setError(null);
@@ -76,15 +78,23 @@ export default function DiscoverPage() {
     try {
       let profilesQuery;
       const usersCollectionRef = collection(db, "users");
+      
+      // Define a default order by, e.g., displayName, or a creation timestamp if you have one
+      // Firestore requires an orderBy clause when using startAfter/startAt with a cursor.
+      // If you don't have a specific field to order by, you might need to add one,
+      // or order by document ID, though that's less predictable for user experience.
+      // For now, let's assume an order by 'displayName' for consistent pagination.
+      // If 'displayName' can be non-unique, consider adding a secondary sort field or a creation timestamp.
 
       if (initialLoad) {
-        profilesQuery = query(usersCollectionRef, limit(PROFILES_PER_PAGE));
+        profilesQuery = query(usersCollectionRef, orderBy("displayName"), limit(PROFILES_PER_PAGE));
       } else if (lastVisible) {
-        profilesQuery = query(usersCollectionRef, startAfter(lastVisible), limit(PROFILES_PER_PAGE));
+        profilesQuery = query(usersCollectionRef, orderBy("displayName"), startAfter(lastVisible), limit(PROFILES_PER_PAGE));
       } else {
          setIsLoading(false);
          setIsFetchingMore(false);
-        return; // Should not happen if hasMore is true
+         if (!initialLoad) setHasMore(false); // No lastVisible to start after, so no more if not initial load
+        return;
       }
       
       const querySnapshot = await getDocs(profilesQuery);
@@ -92,9 +102,8 @@ export default function DiscoverPage() {
 
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        // Exclude current user from discover list
         if (currentUser && doc.id === currentUser.uid) {
-          return;
+          return; // Exclude current user from discover list
         }
         fetchedProfiles.push({
           id: doc.id,
@@ -104,7 +113,7 @@ export default function DiscoverPage() {
           location: data.location || "N/A",
           imageUrl: data.photoURL || `https://placehold.co/300x400.png?text=${data.displayName ? data.displayName.substring(0,1) : 'P'}`,
           dataAiHint: data.photoURL ? "person profile" : "placeholder person",
-          isVerified: data.isVerified || false, // Assuming an isVerified field
+          isVerified: data.isVerified || false,
           interests: data.hobbies ? data.hobbies.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
           dob: data.dob,
         });
@@ -112,24 +121,24 @@ export default function DiscoverPage() {
       
       setProfiles(prevProfiles => initialLoad ? fetchedProfiles : [...prevProfiles, ...fetchedProfiles]);
       
-      const newLastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+      const newLastVisible = querySnapshot.docs.length > 0 ? querySnapshot.docs[querySnapshot.docs.length - 1] : null;
       setLastVisible(newLastVisible);
       setHasMore(querySnapshot.docs.length === PROFILES_PER_PAGE);
 
     } catch (e: any) {
       console.error("Error fetching profiles: ", e);
       setError("Failed to load profiles. Please try again later.");
+      // If error occurs during "load more", reset hasMore to prevent infinite loading attempts on error
+      if (!initialLoad) setHasMore(false);
     } finally {
       setIsLoading(false);
       setIsFetchingMore(false);
     }
-  };
+  }, [currentUser, hasMore, isFetchingMore]); // Added dependencies
 
   useEffect(() => {
-    // Initial fetch when component mounts or current user changes (to re-filter)
     fetchProfiles(true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser]);
+  }, [currentUser, fetchProfiles]);
 
 
   if (isLoading && profiles.length === 0) {
@@ -172,6 +181,7 @@ export default function DiscoverPage() {
       <div className="space-y-8 text-center">
         <h1 className="font-headline text-4xl font-semibold text-gray-800">Discover Your Match</h1>
         <p className="mt-2 text-lg text-muted-foreground">No profiles found. Check back later or adjust your preferences!</p>
+        <p className="text-sm text-muted-foreground">If you're testing, ensure there are user documents in your Firestore 'users' collection.</p>
       </div>
     );
   }
@@ -182,6 +192,7 @@ export default function DiscoverPage() {
       <div className="text-center">
         <h1 className="font-headline text-4xl font-semibold text-gray-800">Discover Your Match</h1>
         <p className="mt-2 text-lg text-muted-foreground">Swipe, like, and connect with potential partners.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Showing {profiles.length} profiles. {hasMore ? "More available." : "All loaded."}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -194,7 +205,7 @@ export default function DiscoverPage() {
                   alt={profile.name}
                   width={300}
                   height={400}
-                  className="w-full h-80 object-cover cursor-pointer bg-muted" // Added bg-muted for placeholder state
+                  className="w-full h-80 object-cover cursor-pointer bg-muted"
                   data-ai-hint={profile.dataAiHint}
                   onError={(e) => {
                       (e.target as HTMLImageElement).src = `https://placehold.co/300x400.png?text=${profile.name ? profile.name.substring(0,1) : 'P'}`;
@@ -220,7 +231,7 @@ export default function DiscoverPage() {
             <CardContent className="p-4 pt-0 flex-grow">
               {profile.interests.length > 0 ? (
                 <div className="flex flex-wrap gap-1">
-                  {profile.interests.slice(0, 3).map(interest => ( // Show max 3 interests
+                  {profile.interests.slice(0, 3).map(interest => (
                     <Badge key={interest} variant="secondary" className="text-xs">{interest}</Badge>
                   ))}
                   {profile.interests.length > 3 && <Badge variant="outline" className="text-xs">+{profile.interests.length - 3} more</Badge>}
@@ -253,11 +264,10 @@ export default function DiscoverPage() {
             Load More Profiles
           </Button>
         )}
-        {!hasMore && profiles.length > 0 && (
+        {!hasMore && profiles.length > 0 && !isLoading && (
           <p className="text-muted-foreground">You've reached the end of the list!</p>
         )}
       </div>
     </div>
   );
 }
-
