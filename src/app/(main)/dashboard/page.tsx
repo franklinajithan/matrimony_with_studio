@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import React, { useEffect, useState } from 'react';
 import { auth, db } from '@/lib/firebase/config';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, writeBatch, serverTimestamp, Timestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, writeBatch, serverTimestamp, Timestamp, orderBy } from 'firebase/firestore'; // Ensure orderBy is imported
 import { useToast } from "@/hooks/use-toast";
 
 const getCompositeId = (uid1: string, uid2: string): string => {
@@ -23,8 +23,8 @@ interface MatchRequest {
   id: string; // Document ID of the request
   senderUid: string;
   senderName: string;
-  senderAge?: number; 
-  senderProfession?: string; 
+  senderAge?: number;
+  senderProfession?: string;
   senderAvatarUrl: string;
   senderDataAiHint: string;
   timestamp: Timestamp;
@@ -48,7 +48,7 @@ const calculateAge = (dobString?: string): number | undefined => {
 };
 
 const mockUser = {
-  name: "User", 
+  name: "User",
   avatarUrl: "https://placehold.co/100x100.png",
   dataAiHint: "person placeholder"
 };
@@ -60,7 +60,7 @@ const mockQuickSuggestions = [
 ];
 
 const mockTodaysHoroscope = {
-  sign: "Your Sign", 
+  sign: "Your Sign",
   summary: "Today's horoscope summary will appear here once the feature is implemented.",
   luckyColor: "Varies",
   luckyNumber: 0,
@@ -113,7 +113,7 @@ export default function DashboardPage() {
       collection(db, "matchRequests"),
       where("receiverUid", "==", currentUser.uid),
       where("status", "==", "pending"),
-      orderBy("createdAt", "asc") 
+      orderBy("createdAt", "asc") // Querying ASC to match index, will reverse client-side
     );
 
     const unsubscribeRequests = onSnapshot(requestsQuery, async (snapshot) => {
@@ -131,9 +131,9 @@ export default function DashboardPage() {
 
         if (!senderUid) {
           console.error(`Dashboard: senderUid missing in requestDoc ${requestDoc.id}`, data);
-          return null; 
+          return null;
         }
-        
+
         let senderName = "User";
         let senderAvatarUrl = "https://placehold.co/80x80.png";
         let senderDataAiHint = "person placeholder";
@@ -151,17 +151,17 @@ export default function DashboardPage() {
               senderDataAiHint = senderData.dataAiHint || (senderData.photoURL && !senderData.photoURL.includes('placehold.co') ? "person professional" : "person placeholder");
               senderAge = calculateAge(senderData.dob);
               senderProfession = senderData.profession;
-              console.log(`Dashboard: Fetched sender ${senderName} for request ${requestDoc.id}`);
+              // console.log(`Dashboard: Fetched sender ${senderName} for request ${requestDoc.id}`);
             } else {
               console.warn(`Dashboard: Sender profile for UID ${senderUid} not found for request ${requestDoc.id}. Using defaults.`);
             }
         } catch (fetchError) {
             console.error(`Dashboard: Error fetching sender profile for UID ${senderUid} (request ${requestDoc.id}):`, fetchError);
         }
-        
+
         if (!data.createdAt || !(data.createdAt instanceof Timestamp)) {
             console.error(`Dashboard: Invalid or missing 'createdAt' timestamp for request ${requestDoc.id}`, data);
-            return null; 
+            return null;
         }
 
         return {
@@ -178,12 +178,13 @@ export default function DashboardPage() {
 
       try {
         let fetchedRequests = await Promise.all(requestsPromises);
-        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); 
+        // Reverse the array here to display newest first, as query is now 'asc'
+        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse();
         console.log(`Dashboard: Processed ${fetchedRequests.length} valid match requests.`);
         setMatchRequests(fetchedRequests as MatchRequest[]);
       } catch (processingError) {
         console.error("Dashboard: Error processing request promises: ", processingError);
-        setMatchRequests([]); 
+        setMatchRequests([]);
       } finally {
         setIsLoadingRequests(false);
       }
@@ -203,7 +204,7 @@ export default function DashboardPage() {
   const createChatDocument = async (user1Uid: string, user2Uid: string) => {
     const user1DocRef = doc(db, "users", user1Uid);
     const user2DocRef = doc(db, "users", user2Uid);
-    
+
     const [user1Snap, user2Snap] = await Promise.all([getDoc(user1DocRef), getDoc(user2DocRef)]);
 
     if (!user1Snap.exists() || !user2Snap.exists()) {
@@ -231,24 +232,24 @@ export default function DashboardPage() {
             }
         },
         lastMessageText: "You are now connected!",
-        lastMessageSenderId: null, 
+        lastMessageSenderId: null,
         lastMessageTimestamp: serverTimestamp(),
         createdAt: serverTimestamp(),
-        unreadBy: { [user1Uid]: 0, [user2Uid]: 0 } 
+        unreadBy: { [user1Uid]: 0, [user2Uid]: 0 }
     }, { merge: true });
-    
+
     await batch.commit();
     return chatId;
   };
 
   const handleAcceptRequest = async (request: MatchRequest) => {
     if (!currentUser) return;
-    setProcessingRequestId(request.id); 
-    const requestDocRef = doc(db, "matchRequests", request.id);
+    setProcessingRequestId(request.id);
+    const requestDocRef = doc(db, "matchRequests", request.id); // Use request.id
     try {
       await updateDoc(requestDocRef, { status: "accepted", updatedAt: serverTimestamp() });
-      await createChatDocument(currentUser.uid, request.senderUid); 
-      
+      await createChatDocument(currentUser.uid, request.senderUid); // Use request.senderUid
+
       toast({ title: "Request Accepted!", description: "You are now matched." });
     } catch (error: any) {
       console.error("Error accepting request:", error);
@@ -260,8 +261,8 @@ export default function DashboardPage() {
 
   const handleDeclineRequest = async (requestId: string) => {
      if (!currentUser) return;
-    setProcessingRequestId(requestId); 
-    const requestDocRef = doc(db, "matchRequests", requestId); 
+    setProcessingRequestId(requestId);
+    const requestDocRef = doc(db, "matchRequests", requestId);
     try {
       await updateDoc(requestDocRef, { status: "declined_by_receiver", updatedAt: serverTimestamp() });
       toast({ title: "Request Declined" });
@@ -407,7 +408,7 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-headline text-xl text-primary">
                 <UserPlus className="h-5 w-5" /> Match Requests
-                {matchRequests.length > 0 && <Badge variant="destructive" className="ml-auto">{matchRequests.length}</Badge>}
+                {!isLoadingRequests && matchRequests.length > 0 && <Badge variant="destructive" className="ml-auto">{matchRequests.length}</Badge>}
               </CardTitle>
               <CardDescription>People who want to connect with you.</CardDescription>
             </CardHeader>
@@ -438,7 +439,7 @@ export default function DashboardPage() {
                   </div>
                 ))
               ) : (
-                null // If not loading and no requests, render nothing here.
+                null // If not loading and no requests, render nothing here, as per user request
               )}
             </CardContent>
           </Card>
@@ -447,3 +448,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
