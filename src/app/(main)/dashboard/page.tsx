@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles, Users, UserPlus, CalendarCheck, Briefcase, MapPin, Loader2, Check, X, Eye } from "lucide-react";
+import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles, Users, UserPlus, CalendarCheck, Briefcase, MapPin, Loader2, Check, X, Eye, FileText } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import React, { useEffect, useState, useCallback } from 'react';
@@ -15,6 +15,7 @@ import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, writeBatc
 import { useToast } from "@/hooks/use-toast";
 import { calculateAge, getCompositeId } from '@/lib/utils';
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 
 interface MatchRequest {
   id: string; 
@@ -50,11 +51,17 @@ const mockTodaysHoroscope = {
   luckyNumber: 0,
 };
 
+const PROFILE_COMPLETION_FIELDS = [
+  'displayName', 'bio', 'photoURL', 'location', 'profession', 
+  'height', 'dob', 'religion', 'caste', 'language', 'hobbies'
+];
+
 export default function DashboardPage() {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [userDisplayName, setUserDisplayName] = useState(mockUser.name);
   const [userAvatarUrl, setUserAvatarUrl] = useState(mockUser.avatarUrl);
   const [userAvatarHint, setUserAvatarHint] = useState(mockUser.dataAiHint);
+  const [profileCompletion, setProfileCompletion] = useState(0);
 
   const [matchRequests, setMatchRequests] = useState<MatchRequest[]>([]);
   const [isLoadingRequests, setIsLoadingRequests] = useState(true);
@@ -64,6 +71,21 @@ export default function DashboardPage() {
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
 
   const { toast } = useToast();
+
+  const calculateProfileCompletion = (userData: any) => {
+    if (!userData) return 0;
+    let filledFields = 0;
+    PROFILE_COMPLETION_FIELDS.forEach(field => {
+      if (field === 'photoURL') {
+        if (userData[field] && !userData[field].includes('placehold.co')) {
+          filledFields++;
+        }
+      } else if (userData[field] && String(userData[field]).trim() !== "") {
+        filledFields++;
+      }
+    });
+    return Math.round((filledFields / PROFILE_COMPLETION_FIELDS.length) * 100);
+  };
 
   useEffect(() => {
     console.log("Dashboard Auth: Setting up onAuthStateChanged listener.");
@@ -76,14 +98,18 @@ export default function DashboardPage() {
         try {
             const userDocRef = doc(db, "users", user.uid);
             const userSnap = await getDoc(userDocRef);
-            if (userSnap.exists() && userSnap.data().dataAiHint) {
-                setUserAvatarHint(userSnap.data().dataAiHint);
+            if (userSnap.exists()) {
+                const userData = userSnap.data();
+                setUserAvatarHint(userData.dataAiHint || (user.photoURL && !user.photoURL.includes('placehold.co') ? "user avatar" : mockUser.dataAiHint));
+                setProfileCompletion(calculateProfileCompletion(userData));
             } else {
-                setUserAvatarHint(user.photoURL && !user.photoURL.includes('placehold.co') ? "user avatar" : mockUser.dataAiHint);
+                setUserAvatarHint(user.photoURL ? "user avatar" : mockUser.dataAiHint);
+                setProfileCompletion(calculateProfileCompletion({ displayName: user.displayName, photoURL: user.photoURL })); // Basic completion if no doc
             }
         } catch (e) {
-            console.error("Dashboard Auth: Error fetching user doc for avatar hint:", e);
+            console.error("Dashboard Auth: Error fetching user doc for avatar hint/completion:", e);
             setUserAvatarHint(user.photoURL ? "user avatar" : mockUser.dataAiHint);
+            setProfileCompletion(calculateProfileCompletion({ displayName: user.displayName, photoURL: user.photoURL }));
         }
       } else {
         setUserDisplayName(mockUser.name);
@@ -93,6 +119,7 @@ export default function DashboardPage() {
         setMatchRequests([]);
         setIsLoadingSuggestions(false);
         setIsLoadingRequests(false);
+        setProfileCompletion(0);
         console.log("Dashboard Auth: No user, cleared suggestions and requests, set loading to false.");
       }
     });
@@ -113,13 +140,16 @@ export default function DashboardPage() {
     setIsLoadingSuggestions(true);
     try {
       const usersRef = collection(db, "users");
-      const q = query(usersRef, limit(10)); // Fetch 10 users
+      // Fetch a slightly larger batch (e.g., 10) and then filter client-side.
+      // Firestore doesn't directly support multiple '!=' clauses or combining '!=' with range/orderBy effectively for this use case.
+      const q = query(usersRef, limit(10)); 
       
       const querySnapshot = await getDocs(q);
       console.log("Dashboard Suggestions: Query snapshot received. Empty:", querySnapshot.empty, "Docs count:", querySnapshot.docs.length);
 
       const suggestions: QuickSuggestionProfile[] = [];
       querySnapshot.forEach((docSnap) => {
+        // Filter out the current user and limit to 3 suggestions client-side
         if (docSnap.id === currentUserId || suggestions.length >= 3) { 
             return; 
         }
@@ -151,6 +181,7 @@ export default function DashboardPage() {
   useEffect(() => {
     setIsLoadingRequests(true);
     setIsLoadingSuggestions(true);
+    console.log("Dashboard Effect: Initializing, isLoadingRequests and isLoadingSuggestions set to true.");
 
     if (!currentUser) {
       console.log("Dashboard Effect: No current user. Clearing requests and suggestions. Setting loading states to false.");
@@ -175,6 +206,11 @@ export default function DashboardPage() {
 
     const unsubscribeRequests = onSnapshot(requestsQuery, async (snapshot) => {
       console.log(`Dashboard Requests: Snapshot received. Empty: ${snapshot.empty}, Docs count: ${snapshot.docs.length}, HasPendingWrites: ${snapshot.metadata.hasPendingWrites}`);
+      
+      if (snapshot.metadata.hasPendingWrites) {
+        console.log("Dashboard Requests: Snapshot has pending writes, waiting for server confirmation...");
+        // Optionally, you could show a subtle indicator or just let it update when confirmed
+      }
       
       if (snapshot.empty) {
           console.log("Dashboard Requests: No 'pending' matchRequests found for current user based on query. Clearing requests list.");
@@ -365,17 +401,35 @@ export default function DashboardPage() {
               <CardDescription className="text-muted-foreground mt-1">Ready to find your perfect match today?</CardDescription>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground">Profile Views Today</p>
-              <p className="font-semibold text-lg text-primary">12</p>
-            </div>
-          </div>
         </CardHeader>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
+           <Card className="shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-headline text-2xl text-primary">
+                <FileText className="h-6 w-6" /> Profile Completion
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Progress value={profileCompletion} className="h-3" />
+              <p className="text-sm text-muted-foreground text-center">
+                Your profile is {profileCompletion}% complete.
+              </p>
+              {profileCompletion < 100 && (
+                <div className="text-center">
+                  <p className="text-sm text-foreground mb-2">
+                    A complete profile gets more views and better matches!
+                  </p>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href="/dashboard/edit-profile">Update Your Profile</Link>
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-headline text-2xl text-primary">
@@ -547,5 +601,4 @@ export default function DashboardPage() {
     </div>
   );
 }
-
     
