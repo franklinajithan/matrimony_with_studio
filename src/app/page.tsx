@@ -100,8 +100,8 @@ export default function LandingPage() {
               </div>
               <div className="md:w-2/5 flex justify-center md:justify-end">
                 <Image 
-                  src="https://placehold.co/400x500.png?text=Namaste" 
-                  alt="Indian Welcome" 
+                  src="https://firebasestorage.googleapis.com/v0/b/testing-idx.appspot.com/o/01J4Y0W16V233A7T901QWY9C33?alt=media&token=33a28663-72e4-4779-b666-1776785d6a30" 
+                  alt="Indian woman in traditional attire with a welcoming gesture" 
                   width={350} 
                   height={450} 
                   className="rounded-lg shadow-2xl object-cover"
