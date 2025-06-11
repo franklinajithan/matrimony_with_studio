@@ -592,7 +592,12 @@ export default function EditProfilePage() {
               <FormItem><FormLabel>Caste/Community</FormLabel><FormControl><Input {...field} disabled={isSaving || anyEnhancementLoading} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="language" render={({ field }) => (
-              <FormItem><FormLabel className="flex items-center"><Languages className="mr-2 h-4 w-4 text-muted-foreground" />Primary Language(s)</FormLabel><FormControl><Input placeholder="e.g., English, Hindi" {...field} disabled={isSaving || anyEnhancementLoading} /></FormControl><FormMessage /></FormItem>
+                <FormItem>
+                    <FormLabel className="flex items-center"><Languages className="mr-2 h-4 w-4 text-muted-foreground" />Primary Language(s)</FormLabel>
+                    <FormControl><Input placeholder="e.g., English, Tamil, Sinhala" {...field} disabled={isSaving || anyEnhancementLoading} /></FormControl>
+                    <FormDescription>Enter one or more languages, separated by commas.</FormDescription>
+                    <FormMessage />
+                </FormItem>
             )} />
 
             <FormField control={form.control} name="hobbies" render={({ field }) => (

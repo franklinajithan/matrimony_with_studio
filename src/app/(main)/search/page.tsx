@@ -1,3 +1,4 @@
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -62,7 +63,7 @@ export default function SearchPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="language">Mother Tongue</Label>
-            <Input id="language" placeholder="Enter Mother Tongue" />
+            <Input id="language" placeholder="e.g., Tamil, Sinhala, English" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="location">Location</Label>

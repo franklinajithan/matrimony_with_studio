@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -144,7 +145,7 @@ export default function EditPreferencesPage() {
                     <FormItem><FormLabel>Caste/Community (Type 'Any' if no preference)</FormLabel><FormControl><Input placeholder="e.g., Brahmin, Jat, Any" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                  <FormField control={form.control} name="language" render={({ field }) => (
-                    <FormItem><FormLabel className="flex items-center"><Languages className="mr-2 h-4 w-4 text-muted-foreground" />Preferred Language(s) (comma-separated)</FormLabel><FormControl><Input placeholder="e.g., Hindi, English" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel className="flex items-center"><Languages className="mr-2 h-4 w-4 text-muted-foreground" />Preferred Language(s) (comma-separated)</FormLabel><FormControl><Input placeholder="e.g., English, Tamil, Sinhala" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="location" render={({ field }) => (
                     <FormItem><FormLabel className="flex items-center"><MapPin className="mr-2 h-4 w-4 text-muted-foreground" />Preferred Location / Proximity</FormLabel><FormControl><Input placeholder="e.g., Delhi NCR, Within 100km" {...field} /></FormControl><FormMessage /></FormItem>
