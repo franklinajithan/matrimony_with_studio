@@ -42,6 +42,7 @@ interface OtherUserDetails {
   id: string;
   name: string;
   avatarUrl: string;
+  avatarHint: string;
 }
 
 export default function ChatPage() {
@@ -64,7 +65,7 @@ export default function ChatPage() {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       if (!user) {
-        router.push('/login'); // Redirect if not logged in
+        router.push('/login'); 
       }
     });
     return () => unsubscribeAuth();
@@ -87,10 +88,13 @@ export default function ChatPage() {
           if (otherParticipantUid) {
             let name = "User";
             let avatarUrl = "https://placehold.co/100x100.png";
+            let avatarHint = "person placeholder";
+            let detailsUpdated = false;
 
             if (chatData.participantDetails && chatData.participantDetails[otherParticipantUid]) {
                 name = chatData.participantDetails[otherParticipantUid].displayName || "User";
                 avatarUrl = chatData.participantDetails[otherParticipantUid].photoURL || "https://placehold.co/100x100.png";
+                avatarHint = chatData.participantDetails[otherParticipantUid].dataAiHint || (avatarUrl.includes('placehold.co') ? "person placeholder" : "person avatar");
             } else {
                 const userDocRef = doc(db, "users", otherParticipantUid);
                 const userSnap = await getDoc(userDocRef);
@@ -98,9 +102,20 @@ export default function ChatPage() {
                     const userData = userSnap.data();
                     name = userData.displayName || "User";
                     avatarUrl = userData.photoURL || "https://placehold.co/100x100.png";
+                    avatarHint = userData.dataAiHint || (avatarUrl.includes('placehold.co') ? "person placeholder" : "person avatar");
+                    
+                    // Update chatDoc with these details if they weren't in chatData.participantDetails
+                    await updateDoc(chatDocRef, {
+                        [`participantDetails.${otherParticipantUid}`]: {
+                            displayName: name,
+                            photoURL: avatarUrl,
+                            dataAiHint: avatarHint
+                        }
+                    });
+                    detailsUpdated = true;
                 }
             }
-            setOtherUser({ id: otherParticipantUid, name, avatarUrl });
+            setOtherUser({ id: otherParticipantUid, name, avatarUrl, avatarHint });
 
             // Mark messages as read for current user
             if (chatData.unreadBy && chatData.unreadBy[currentUser.uid] > 0) {
@@ -110,11 +125,11 @@ export default function ChatPage() {
             }
           } else {
             console.error("Other participant not found in chat.");
-            router.push('/messages'); // Or show an error
+            router.push('/messages'); 
           }
         } else {
           console.error("Chat document not found.");
-          router.push('/messages'); // Or show an error
+          router.push('/messages'); 
         }
       } catch (error) {
         console.error("Error fetching participant details:", error);
@@ -147,7 +162,6 @@ export default function ChatPage() {
       setMessages(msgs);
     }, (error) => {
       console.error("Error fetching messages:", error);
-      // Potentially set an error state
     });
 
     return () => unsubscribeMessages();
@@ -168,37 +182,30 @@ export default function ChatPage() {
     const textToSend = newMessage;
     setNewMessage("");
 
-    const messagesColRef = collection(db, "chats", chatId, "messages");
     const chatDocRef = doc(db, "chats", chatId);
 
     try {
       const batch = writeBatch(db);
 
-      // Add new message
-      const newMessageDocRef = doc(collection(db, "chats", chatId, "messages")); // auto-generate ID
+      const newMessageDocRef = doc(collection(db, "chats", chatId, "messages"));
       batch.set(newMessageDocRef, {
         senderId: currentUser.uid,
         text: textToSend,
         timestamp: serverTimestamp(),
-        readBy: [currentUser.uid] // Sender has "read" it
       });
 
-      // Update chat document
       batch.update(chatDocRef, {
         lastMessageText: textToSend,
         lastMessageTimestamp: serverTimestamp(),
         lastMessageSenderId: currentUser.uid,
         [`unreadBy.${otherUser.id}`]: increment(1),
-        // Ensure participantDetails exists before trying to update specific fields if that's a strategy
-        // For simplicity, we assume participantDetails are set up when chat is created/first message.
       });
 
       await batch.commit();
 
     } catch (error) {
       console.error("Error sending message:", error);
-      // Handle error, maybe show a toast
-      setNewMessage(textToSend); // Put message back in input if send failed
+      setNewMessage(textToSend); 
     } finally {
       setIsSending(false);
     }
@@ -214,8 +221,8 @@ export default function ChatPage() {
   
   if (!otherUser && !isLoading) {
      return (
-        <div className="flex items-center justify-center h-full">
-            <p>Could not load chat details. The user may not exist or the chat is invalid.</p>
+        <div className="flex items-center justify-center h-full p-4 text-center">
+            <p className="text-muted-foreground">Could not load chat details. The user may not exist or the chat is invalid.</p>
         </div>
     );
   }
@@ -232,13 +239,11 @@ export default function ChatPage() {
             </Link>
           </Button>
           <Avatar>
-            <AvatarImage src={otherUser.avatarUrl} alt={otherUser.name} data-ai-hint="person avatar" />
+            <AvatarImage src={otherUser.avatarUrl} alt={otherUser.name} data-ai-hint={otherUser.avatarHint} />
             <AvatarFallback>{otherUser.name.substring(0, 1).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div>
             <h2 className="font-semibold text-lg">{otherUser.name}</h2>
-            {/* Online status could be a future enhancement */}
-            {/* <p className="text-xs text-muted-foreground">Online</p> */}
           </div>
         </CardHeader>
       )}
@@ -256,7 +261,7 @@ export default function ChatPage() {
               >
                 {msg.senderId !== currentUser.uid && otherUser && (
                   <Avatar className="h-8 w-8 self-start">
-                    <AvatarImage src={otherUser.avatarUrl} alt={otherUser.name} data-ai-hint="person avatar" />
+                    <AvatarImage src={otherUser.avatarUrl} alt={otherUser.name} data-ai-hint={otherUser.avatarHint} />
                     <AvatarFallback>{otherUser.name.substring(0, 1).toUpperCase()}</AvatarFallback>
                   </Avatar>
                 )}
@@ -278,7 +283,7 @@ export default function ChatPage() {
                 </div>
                  {msg.senderId === currentUser.uid && (
                    <Avatar className="h-8 w-8 self-start">
-                    <AvatarImage src={currentUser.photoURL || undefined} alt={currentUser.displayName || "You"} data-ai-hint="user avatar" />
+                    <AvatarImage src={currentUser.photoURL || undefined} alt={currentUser.displayName || "You"} data-ai-hint={currentUser.photoURL ? "user avatar" : "user placeholder"} />
                     <AvatarFallback>{currentUser.displayName ? currentUser.displayName.substring(0,1).toUpperCase() : "Y"}</AvatarFallback> 
                   </Avatar>
                 )}
