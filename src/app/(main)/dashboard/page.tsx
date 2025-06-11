@@ -107,6 +107,7 @@ export default function DashboardPage() {
             } else {
                 setUserAvatarHint(user.photoURL ? "user avatar" : mockUser.dataAiHint);
                 setProfileCompletion(calculateProfileCompletion({ displayName: user.displayName, photoURL: user.photoURL })); // Basic completion if no doc
+                console.log(`Dashboard Auth: User document for ${user.uid} not found. Using auth data for display.`);
             }
         } catch (e) {
             console.error("Dashboard Auth: Error fetching user doc for avatar hint/completion:", e);
@@ -142,6 +143,7 @@ export default function DashboardPage() {
     setIsLoadingSuggestions(true);
     try {
       const usersRef = collection(db, "users");
+      // Fetch more than needed initially to allow client-side filtering of self
       const q = query(usersRef, limit(10)); 
       
       const querySnapshot = await getDocs(q);
@@ -149,8 +151,12 @@ export default function DashboardPage() {
 
       const suggestions: QuickSuggestionProfile[] = [];
       querySnapshot.forEach((docSnap) => {
-        if (docSnap.id === currentUserId || suggestions.length >= 3) { 
+        if (docSnap.id === currentUserId) { 
+            console.log("Dashboard Suggestions: Skipping current user from suggestions, ID:", docSnap.id);
             return; 
+        }
+        if (suggestions.length >= 3) { // Limit to 3 suggestions
+            return;
         }
         const data = docSnap.data();
         console.log("Dashboard Suggestions: Processing suggestion for user ID:", docSnap.id, "Data:", JSON.stringify(data));
@@ -179,7 +185,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     console.log("Dashboard Effect: Initializing data fetch based on currentUser.");
-
+    // Reset states if currentUser changes to null (logout)
     if (!currentUser) {
       console.log("Dashboard Effect: No current user. Clearing requests and suggestions. Setting loading states to false.");
       setMatchRequests([]);
@@ -193,6 +199,7 @@ export default function DashboardPage() {
     fetchQuickSuggestions(currentUser.uid); 
 
     console.log(`Dashboard Requests: Setting up match requests listener for user UID: ${currentUser.uid}`);
+    setIsLoadingRequests(true); // Ensure loading state is true before starting listener
     
     const requestsQuery = query(
       collection(db, "matchRequests"),
@@ -206,12 +213,13 @@ export default function DashboardPage() {
       
       if (snapshot.metadata.hasPendingWrites) {
         console.log("Dashboard Requests: Snapshot has pending writes, waiting for server confirmation...");
+        // Potentially don't update UI until writes are confirmed to avoid flicker, or handle optimistically
       }
       
       if (snapshot.empty) {
           console.log("Dashboard Requests: No 'pending' matchRequests found for current user based on query. Clearing requests list.");
           setMatchRequests([]);
-          setIsLoadingRequests(false);
+          setIsLoadingRequests(false); // Make sure to set loading to false here
           return;
       }
 
@@ -270,12 +278,12 @@ export default function DashboardPage() {
 
       try {
         let fetchedRequests = await Promise.all(requestsPromises);
-        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); 
+        fetchedRequests = fetchedRequests.filter(req => req !== null).reverse(); // Reverse here to show newest first
         console.log(`Dashboard Requests: Final processed requests (before setting state, count: ${fetchedRequests.length}):`, JSON.parse(JSON.stringify(fetchedRequests)));
         setMatchRequests(fetchedRequests as MatchRequest[]);
       } catch (processingError) {
         console.error("Dashboard Requests: Error processing request promises: ", processingError);
-        setMatchRequests([]);
+        setMatchRequests([]); // Clear on error
       } finally {
         setIsLoadingRequests(false);
         console.log("Dashboard Requests: Finished processing snapshot, isLoadingRequests set to false.");
@@ -515,7 +523,7 @@ export default function DashboardPage() {
                 <CalendarCheck className="h-5 w-5" /> Quick Links
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-3">
+            <CardContent className="flex flex-col gap-3">
               <Button variant="outline" className="w-full justify-start" asChild>
                 <Link href="/discover"><Search className="mr-2 h-4 w-4" />Discover</Link>
               </Button>
