@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
@@ -148,6 +148,7 @@ export default function DashboardPage() {
     setIsLoadingSuggestions(true);
     try {
       const usersRef = collection(db, "users");
+      // Fetch more than 3 initially to allow filtering out the current user and still have 3 if possible.
       const q = query(usersRef, limit(10)); 
       
       const querySnapshot = await getDocs(q);
@@ -159,6 +160,7 @@ export default function DashboardPage() {
             console.log("Dashboard Suggestions: Skipping current user from suggestions, ID:", docSnap.id);
             return; 
         }
+        // Limit to 3 suggestions after filtering
         if (suggestions.length >= 3) return; 
         
         const data = docSnap.data();
@@ -169,7 +171,7 @@ export default function DashboardPage() {
           age: calculateAge(data.dob),
           profession: data.profession || "Not specified",
           location: data.location || "Not specified",
-          avatarUrl: data.photoURL || `https://placehold.co/100x100.png?text=${data.displayName ? data.displayName.substring(0,1) : 'S'}`,
+          avatarUrl: data.photoURL || `https://placehold.co/300x400.png?text=${data.displayName ? data.displayName.substring(0,1) : 'S'}`,
           dataAiHint: data.dataAiHint || (data.photoURL && !data.photoURL.includes('placehold.co') ? "person professional" : "person placeholder"),
         });
       });
@@ -417,9 +419,9 @@ export default function DashboardPage() {
         </CardHeader>
       </Card>
       
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Sidebar */}
-        <div className="lg:col-span-3 space-y-6">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        {/* Left Sidebar (takes 3 columns on xl) */}
+        <div className="xl:col-span-3 space-y-6">
           <Card className="shadow-lg">
             <CardHeader className="p-4">
               <CardTitle className="flex items-center gap-2 font-headline text-lg text-primary">
@@ -469,8 +471,8 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Center Content Area */}
-        <div className="lg:col-span-6 space-y-6">
+        {/* Center Content Area (takes 6 columns on xl) */}
+        <div className="xl:col-span-6 space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
             <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader>
@@ -505,47 +507,61 @@ export default function DashboardPage() {
               <CardTitle className="flex items-center gap-2 font-headline text-2xl text-primary">
                 <Star className="h-6 w-6" /> AI Quick Suggestions
               </CardTitle>
-              <CardDescription>Our AI has found some profiles you might like. (Displaying real users)</CardDescription>
+              <CardDescription>Our AI has found some profiles you might like.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               {isLoadingSuggestions ? (
-                <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <Skeleton className="h-12 w-12 rounded-full" />
-                        <div className="space-y-1.5">
-                          <Skeleton className="h-4 w-32" />
-                          <Skeleton className="h-3 w-40" />
-                        </div>
-                      </div>
-                      <Skeleton className="h-8 w-24 rounded-md" />
-                    </div>
+                     <Card key={i} className="overflow-hidden">
+                        <Skeleton className="h-48 w-full" />
+                        <CardContent className="p-3 space-y-1.5">
+                            <Skeleton className="h-4 w-3/4" />
+                            <Skeleton className="h-3 w-1/2" />
+                            <Skeleton className="h-3 w-full" />
+                        </CardContent>
+                        <CardFooter className="p-3">
+                            <Skeleton className="h-8 w-full" />
+                        </CardFooter>
+                    </Card>
                   ))}
-                </>
+                </div>
               ) : quickSuggestions.length > 0 ? (
-                quickSuggestions.map(profile => (
-                  <div key={profile.id} className="flex items-center justify-between p-3 bg-muted/30 hover:bg-muted/50 rounded-lg transition-colors">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={profile.avatarUrl} alt={profile.name} data-ai-hint={profile.dataAiHint} />
-                        <AvatarFallback>{profile.name.substring(0, 1).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <Link href={`/profile/${profile.id}`} className="font-semibold text-foreground hover:text-primary hover:underline">{profile.name}{profile.age ? `, ${profile.age}` : ''}</Link>
-                        <p className="text-xs text-muted-foreground flex items-center"><Briefcase className="mr-1 h-3 w-3" />{profile.profession} <MapPin className="ml-2 mr-1 h-3 w-3" />{profile.location}</p>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/profile/${profile.id}`}><Eye className="mr-1.5 h-3.5 w-3.5" />View</Link>
-                    </Button>
-                  </div>
-                ))
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {quickSuggestions.map(profile => (
+                    <Card key={profile.id} className="overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+                      <Link href={`/profile/${profile.id}`} className="block">
+                        <div className="relative w-full h-48 bg-muted">
+                           <Image 
+                            src={profile.avatarUrl} 
+                            alt={profile.name} 
+                            fill 
+                            className="object-cover"
+                            data-ai-hint={profile.dataAiHint}
+                            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+                           />
+                        </div>
+                      </Link>
+                      <CardContent className="p-3 space-y-1">
+                        <Link href={`/profile/${profile.id}`}>
+                          <h3 className="font-semibold text-foreground hover:text-primary truncate">{profile.name}{profile.age ? `, ${profile.age}` : ''}</h3>
+                        </Link>
+                        <p className="text-xs text-muted-foreground flex items-center truncate"><Briefcase className="mr-1 h-3 w-3 flex-shrink-0" />{profile.profession}</p>
+                        <p className="text-xs text-muted-foreground flex items-center truncate"><MapPin className="mr-1 h-3 w-3 flex-shrink-0" />{profile.location}</p>
+                      </CardContent>
+                      <CardFooter className="p-3 border-t">
+                        <Button variant="outline" size="sm" className="w-full" asChild>
+                          <Link href={`/profile/${profile.id}`}><Eye className="mr-1.5 h-3.5 w-3.5" />View Profile</Link>
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">No suggestions available at the moment.</p>
               )}
               {!isLoadingSuggestions && quickSuggestions.length > 0 && (
-                 <Button variant="link" className="w-full text-primary mt-2" asChild>
+                 <Button variant="link" className="w-full text-primary mt-4" asChild>
                     <Link href="/suggestions">See All AI Matches</Link>
                  </Button>
               )}
@@ -553,8 +569,8 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Right Sidebar */}
-        <div className="lg:col-span-3 space-y-6">
+        {/* Right Sidebar (takes 3 columns on xl) */}
+        <div className="xl:col-span-3 space-y-6">
            <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-headline text-xl text-secondary">
@@ -635,3 +651,5 @@ export default function DashboardPage() {
   );
 }
     
+
+      
