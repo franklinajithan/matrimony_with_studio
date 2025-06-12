@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles, Users, UserPlus, CalendarCheck, Briefcase, MapPin, Cake, Loader2, Check, X, Eye, FileText, Heart, Edit3 } from "lucide-react";
+import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles, Users, UserPlus, CalendarCheck, Briefcase, MapPin, Cake, Loader2, Check, X, Eye, FileText, Heart, Edit3, Zap, Rocket } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import React, { useEffect, useState, useCallback } from 'react';
@@ -645,6 +645,27 @@ export default function DashboardPage() {
               </Button>
             </CardContent>
           </Card>
+          
+          <Card className="shadow-lg hover:shadow-xl transition-shadow border-accent/50">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 font-headline text-xl text-accent">
+                    <Rocket className="h-5 w-5"/> Profile Boost
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+                <p className="text-sm text-muted-foreground mb-3">
+                    Get noticed faster! Boost your profile to appear higher in search results and suggestions.
+                </p>
+                <Button variant="default" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+                   <Zap className="mr-2 h-4 w-4"/> Boost Now
+                </Button>
+            </CardContent>
+            <CardFooter>
+                <Link href="/pricing#boosts" className="text-xs text-muted-foreground hover:text-accent mx-auto">
+                    Learn more about profile boosts
+                </Link>
+            </CardFooter>
+          </Card>
 
           <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
@@ -710,6 +731,7 @@ export default function DashboardPage() {
     
 
       
+
 
 
 
