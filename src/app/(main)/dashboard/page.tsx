@@ -64,6 +64,7 @@ const dashboardQuickLinks = [
   { href: '/discover', label: 'Discover', icon: <Search className="mr-3 h-5 w-5" /> },
   { href: '/messages', label: 'Messages', icon: <MessageCircle className="mr-3 h-5 w-5" /> },
   { href: '/dashboard/horoscope', label: 'Horoscope', icon: <Sparkles className="mr-3 h-5 w-5" /> },
+  { href: '/dashboard/profile-views', label: 'Profile Views', icon: <Eye className="mr-3 h-5 w-5" /> },
   { href: '/pricing', label: 'Subscription', icon: <CreditCard className="mr-3 h-5 w-5" /> },
 ];
 
@@ -731,6 +732,7 @@ export default function DashboardPage() {
     
 
       
+
 
 
 
