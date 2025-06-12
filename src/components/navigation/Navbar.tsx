@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { MessageCircle, LogOut, LayoutDashboard, Settings, UserCircle as UserCircleIcon, Loader2, Info, Zap, HelpCircle, Menu } from 'lucide-react';
+import { MessageCircle, LogOut, LayoutDashboard, Settings, UserCircle as UserCircleIcon, Loader2, Info, Zap, HelpCircle, Menu, CreditCard } from 'lucide-react';
 import { Logo } from '@/components/shared/Logo';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,6 +27,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/s
 const mainAppNavLinks = [
   { href: '/about', label: 'About Us', icon: <Info className="h-5 w-5" /> },
   { href: '/features', label: 'Features', icon: <Zap className="h-5 w-5" /> },
+  { href: '/pricing', label: 'Pricing', icon: <CreditCard className="h-5 w-5" /> },
   { href: '/contact', label: 'Contact', icon: <HelpCircle className="h-5 w-5" /> },
 ];
 

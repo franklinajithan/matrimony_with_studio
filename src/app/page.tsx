@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"; // Added CardFooter
-import { Heart, Search, MessageSquareText, ShieldCheck, Users, Zap, Telescope, Brain, FileText, UserCheckIcon, Palette, ListFilter, SmartphoneNfc, Globe, Languages, Maximize } from "lucide-react";
+import { Heart, Search, MessageSquareText, ShieldCheck, Users, Zap, Telescope, Brain, FileText, UserCheckIcon, Palette, ListFilter, SmartphoneNfc, Globe, Languages, Maximize, CreditCard } from "lucide-react";
 import { Navbar } from "@/components/navigation/Navbar"; 
 import { Footer } from "@/components/navigation/Footer";
 import React, { useEffect, useState } from "react";
@@ -23,7 +23,7 @@ const featuresData = [
     href: "/dashboard/horoscope",
   },
   { icon: <Brain className="h-8 w-8" />, title: "Smart Matching", description: "AI suggestions based on your profile and preferences.", borderColor: "border-blue-500", href: "/suggestions" },
-  { icon: <ShieldCheck className="h-8 w-8" />, title: "Privacy Guaranteed", description: "Control your information with robust privacy settings.", borderColor: "border-green-500", href: "/privacy" },
+  { icon: <ShieldCheck className="h-8 w-8" />, title: "Privacy Guaranteed", description: "Control your information with robust privacy settings.", borderColor: "border-green-500", href: "/privacy" }, // Assuming /privacy route exists or will be created
   { icon: <Globe className="h-8 w-8" />, title: "Global Reach", description: "Connect with diverse Indian & Sri Lankan profiles.", borderColor: "border-yellow-500", href: "/discover" },
   {
     icon: <FileText className="h-8 w-8" />,
@@ -36,7 +36,7 @@ const featuresData = [
   { icon: <UserCheckIcon className="h-8 w-8" />, title: "Verified Profiles", description: "Connect with genuine and authentic users.", borderColor: "border-cyan-500", href: "/discover" },
   { icon: <Palette className="h-8 w-8" />, title: "Profile Template", description: "Easy-to-use templates to showcase yourself.", borderColor: "border-lime-500", href: "/dashboard/edit-profile" },
   { icon: <ListFilter className="h-8 w-8" />, title: "Custom Preferences", description: "Refine criteria to find your ideal match.", borderColor: "border-pink-500", href: "/dashboard/preferences" },
-  { icon: <Maximize className="h-8 w-8" />, title: "Real Time Chat", description: "Engage in instant conversations with matches.", borderColor: "border-teal-500", href: "/messages" },
+  { icon: <SmartphoneNfc className="h-8 w-8" />, title: "Subscription Plans", description: "Premium plans with Razorpay/Stripe, push notifications for matches, messages, and profile views.", borderColor: "border-rose-500", href: "/pricing" },
   {
     icon: <Languages className="h-8 w-8" />,
     title: "Language Preferences",
@@ -44,7 +44,7 @@ const featuresData = [
     borderColor: "border-amber-500",
     href: "/dashboard/preferences",
   },
-  { icon: <SmartphoneNfc className="h-8 w-8" />, title: "Mobile App Support", description: "Seamless experience on all your devices.", borderColor: "border-rose-500", href: "#" },
+  { icon: <Maximize className="h-8 w-8" />, title: "Real Time Chat", description: "Engage in instant conversations with matches.", borderColor: "border-teal-500", href: "/messages" },
 ];
 
 const successStoriesData = [
@@ -150,7 +150,7 @@ export default function LandingPage() {
                 <Link href={feature.href || "#"} key={feature.title} className="block group">
                   <Card className={`flex flex-col shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out bg-white border-t-4 ${feature.borderColor} rounded-b-lg rounded-t-sm h-full`}>
                     <CardHeader className="items-center text-center pt-6 pb-3">
-                      <div className={`p-3 rounded-full bg-slate-100 mb-3 text- ${feature.borderColor.replace("border-", "text-")}`}>
+                      <div className={`p-3 rounded-full bg-slate-100 mb-3 text-${feature.borderColor.replace("border-", "text-")}`}>
                         {React.cloneElement(feature.icon, { className: `${feature.icon.props.className || ''} h-8 w-8` })}
                       </div>
                       <CardTitle className="font-headline text-xl text-slate-700 group-hover:text-primary transition-colors">{feature.title}</CardTitle>
