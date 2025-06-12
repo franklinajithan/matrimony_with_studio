@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { ArrowLeft, Send, Paperclip, Smile, Loader2, Check } from 'lucide-react'; // Added Check
+import { ArrowLeft, Send, Paperclip, Smile, Loader2, CheckCheck } from 'lucide-react'; // Changed Check to CheckCheck
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { auth, db } from '@/lib/firebase/config';
@@ -322,7 +322,7 @@ export default function ChatPage() {
                       )}>
                       <span>{msg.displayTimestamp}</span>
                       {msg.senderId === currentUser.uid && msg.timestamp && (
-                        <Check className="ml-1 h-3.5 w-3.5" />
+                        <CheckCheck className="ml-1 h-4 w-4 text-blue-300" /> // Changed to CheckCheck and colored blue for "Read" placeholder
                       )}
                     </div>
                   </div>
@@ -367,3 +367,4 @@ export default function ChatPage() {
     </Card>
   );
 }
+
