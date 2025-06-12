@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heart, Search, MessageSquareText, ShieldCheck, Users, Zap, Telescope, Brain, FileText, UserCheckIcon, Palette, ListFilter, SmartphoneNfc, Globe, Languages, Maximize } from "lucide-react";
-import { Logo } from "@/components/shared/Logo";
+import { Navbar } from "@/components/navigation/Navbar"; // Import the common Navbar
 import { Footer } from "@/components/navigation/Footer";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,12 +14,13 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { Loader2 } from "lucide-react";
 
-const navLinks = [
-  { href: "#home", label: "Home" },
-  { href: "/about", label: "About Us" },
-  { href: "/features", label: "Features" },
-  { href: "/contact", label: "Contact" },
-];
+// navLinks from here are no longer needed as Navbar handles its own links
+// const navLinks = [
+//   { href: "#home", label: "Home" },
+//   { href: "/about", label: "About Us" },
+//   { href: "/features", label: "Features" },
+//   { href: "/contact", label: "Contact" },
+// ];
 
 const featuresData = [
   {
@@ -73,28 +74,14 @@ export default function LandingPage() {
     return (
       <div className="flex flex-col min-h-screen items-center justify-center bg-slate-50">
         <Loader2 className="h-12 w-12 animate-spin text-purple-600" />
-        <p className="mt-4 text-slate-500">Loading Cupid Knots...</p>
+        <p className="mt-4 text-slate-500">Loading CupidMatch...</p>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 text-slate-800">
-      <header className="py-4 px-4 sm:px-6 lg:px-8 shadow-sm bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="container mx-auto flex justify-between items-center">
-          <Logo textColor="text-purple-600" iconSize={24} textSize="text-2xl" />
-          <nav className="hidden md:flex items-center space-x-6">
-            {navLinks.map((link) => (
-              <Link key={link.label} href={link.href} className="text-sm font-medium text-slate-600 hover:text-purple-600 transition-colors">
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-          <Button asChild className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 text-sm shadow-md">
-            <Link href="/login">Sign In</Link>
-          </Button>
-        </div>
-      </header>
+      <Navbar /> {/* Use the common Navbar component */}
 
       <main className="flex-grow">
         <section id="home" className="relative bg-gradient-to-br from-purple-500 to-red-400 text-white overflow-hidden ">
@@ -163,10 +150,10 @@ export default function LandingPage() {
           <div className="container mx-auto px-4 text-center">
             <h2 className="font-headline text-4xl font-semibold mb-8 text-white">Ready to Find The One?</h2>
             <p className="text-lg text-white/90 mb-8 max-w-xl mx-auto">
-              Your journey to a happy and fulfilling partnership starts here. Create your profile today and let Cupid Knots guide you to your soulmate.
+              Your journey to a happy and fulfilling partnership starts here. Create your profile today and let CupidMatch guide you to your soulmate.
             </p>
             <Button size="lg" asChild className="bg-white hover:bg-slate-100 text-purple-600 shadow-xl px-10 py-3 text-base font-semibold rounded-lg">
-              <Link href="/signup">Join Cupid Knots Now</Link>
+              <Link href="/signup">Join CupidMatch Now</Link>
             </Button>
           </div>
         </section>
