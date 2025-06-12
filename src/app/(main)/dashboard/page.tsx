@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles, Users, UserPlus, CalendarCheck, Briefcase, MapPin, Cake, Loader2, Check, X, Eye, FileText, Heart } from "lucide-react";
+import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles, Users, UserPlus, CalendarCheck, Briefcase, MapPin, Cake, Loader2, Check, X, Eye, FileText, Heart, Edit3 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import React, { useEffect, useState, useCallback } from 'react';
@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation"; 
+import { Separator } from "@/components/ui/separator";
 
 interface MatchRequest {
   id: string; 
@@ -491,34 +492,42 @@ export default function DashboardPage() {
 
         {/* Center Content Area */}
         <div className="lg:col-span-6 space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                  <UserCircle className="h-7 w-7 text-primary" /> My Profile
-                </CardTitle>
-                <CardDescription>Keep your story fresh and accurate. Update your details and photos.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                  <Link href="/dashboard/edit-profile">Edit Profile</Link>
-                </Button>
-              </CardContent>
-            </Card>
-            <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                  <Settings className="h-7 w-7 text-primary" /> Match Preferences
-                </CardTitle>
-                <CardDescription>Refine who you're looking for. Adjust age, location, and more.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                  <Link href="/dashboard/preferences">Update Preferences</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+          <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                 <Edit3 className="h-7 w-7 text-primary" /> Your Profile & Preferences
+              </CardTitle>
+              <CardDescription>Keep your story fresh and refine who you're looking for.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="space-y-2">
+                    <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground/90">
+                        <UserCircle className="h-5 w-5 text-primary/80" />
+                        My Profile
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                        Update your personal details, photos, bio, and more.
+                    </p>
+                    <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                        <Link href="/dashboard/edit-profile">Edit Profile</Link>
+                    </Button>
+                </div>
+                <Separator className="my-4" />
+                <div className="space-y-2">
+                    <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground/90">
+                        <Settings className="h-5 w-5 text-primary/80" />
+                        Match Preferences
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                        Adjust age, location, community, and other criteria.
+                    </p>
+                     <Button asChild variant="outline" className="w-full">
+                        <Link href="/dashboard/preferences">Update Preferences</Link>
+                    </Button>
+                </div>
+            </CardContent>
+          </Card>
+
 
           <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
@@ -701,6 +710,7 @@ export default function DashboardPage() {
     
 
       
+
 
 
 
