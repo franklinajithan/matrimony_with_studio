@@ -4,23 +4,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"; // Added CardFooter
 import { Heart, Search, MessageSquareText, ShieldCheck, Users, Zap, Telescope, Brain, FileText, UserCheckIcon, Palette, ListFilter, SmartphoneNfc, Globe, Languages, Maximize } from "lucide-react";
-import { Navbar } from "@/components/navigation/Navbar"; // Import the common Navbar
+import { Navbar } from "@/components/navigation/Navbar"; 
 import { Footer } from "@/components/navigation/Footer";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { Loader2 } from "lucide-react";
-
-// navLinks from here are no longer needed as Navbar handles its own links
-// const navLinks = [
-//   { href: "#home", label: "Home" },
-//   { href: "/about", label: "About Us" },
-//   { href: "/features", label: "Features" },
-//   { href: "/contact", label: "Contact" },
-// ];
 
 const featuresData = [
   {
@@ -55,6 +47,33 @@ const featuresData = [
   { icon: <SmartphoneNfc className="h-8 w-8" />, title: "Mobile App Support", description: "Seamless experience on all your devices.", borderColor: "border-rose-500", href: "#" },
 ];
 
+const successStoriesData = [
+  {
+    imageSrc: "https://placehold.co/600x400.png",
+    imageAlt: "Priya & Rohan",
+    dataAiHint: "happy couple wedding",
+    names: "Priya & Rohan",
+    story: "\"CupidKnots connected us across cities! We found instant chemistry and are now happily married. Thank you for making our dream come true!\"",
+    href: "/success-stories/priya-rohan"
+  },
+  {
+    imageSrc: "https://placehold.co/600x400.png",
+    imageAlt: "Aisha & Sameer",
+    dataAiHint: "couple smiling park",
+    names: "Aisha & Sameer",
+    story: "\"We never thought online matrimony would work for us, but CupidKnots proved us wrong. The AI suggestions were surprisingly accurate!\"",
+    href: "/success-stories/aisha-sameer"
+  },
+  {
+    imageSrc: "https://placehold.co/600x400.png",
+    imageAlt: "Lakshmi & Arjun",
+    dataAiHint: "traditional couple portrait",
+    names: "Lakshmi & Arjun",
+    story: "\"Finding someone with similar cultural values was important. CupidKnots helped us connect with someone perfect for our family and for us.\"",
+    href: "/success-stories/lakshmi-arjun"
+  }
+];
+
 export default function LandingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -81,7 +100,7 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 text-slate-800">
-      <Navbar /> {/* Use the common Navbar component */}
+      <Navbar /> 
 
       <main className="flex-grow">
         <section id="home" className="relative bg-gradient-to-br from-purple-500 to-red-400 text-white overflow-hidden ">
@@ -142,6 +161,43 @@ export default function LandingPage() {
                   </Card>
                 </Link>
               ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="success-stories" className="py-16 sm:py-24 bg-rose-50">
+          <div className="container mx-auto px-4">
+            <h2 className="font-headline text-4xl font-bold text-center mb-16 text-pink-700">Hear From Our Happy Couples</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {successStoriesData.map((story) => (
+                <Card key={story.names} className="flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out overflow-hidden rounded-lg bg-white">
+                  <div className="relative w-full h-56">
+                    <Image
+                      src={story.imageSrc}
+                      alt={story.imageAlt}
+                      fill
+                      className="object-cover"
+                      data-ai-hint={story.dataAiHint}
+                    />
+                  </div>
+                  <CardHeader className="pt-5 pb-2">
+                    <CardTitle className="font-headline text-2xl text-slate-700 text-center">{story.names}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex-grow px-6 pb-5">
+                    <p className="text-slate-600 text-sm italic text-center leading-relaxed">"{story.story}"</p>
+                  </CardContent>
+                  <CardFooter className="p-5 border-t">
+                    <Button variant="link" asChild className="w-full text-pink-600 hover:text-pink-700">
+                      <Link href={story.href}>Read Their Full Story</Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+            <div className="text-center mt-12">
+                <Button size="lg" asChild className="bg-pink-600 hover:bg-pink-700 text-white shadow-lg px-8 py-3 text-base font-semibold rounded-md">
+                    <Link href="/success-stories">View More Success Stories</Link>
+                </Button>
             </div>
           </div>
         </section>
