@@ -470,7 +470,7 @@ export default function DashboardPage() {
                       "w-full justify-start px-3 py-2 text-sm h-auto",
                       isActive
                         ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                        : "text-foreground/80 hover:text-primary hover:bg-accent/50"
+                        : "text-foreground/70 hover:text-primary hover:bg-accent/50"
                     )}
                   >
                     <Link href={link.href} aria-label={link.label}>
@@ -701,5 +701,6 @@ export default function DashboardPage() {
     
 
       
+
 
 
