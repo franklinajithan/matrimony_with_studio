@@ -106,10 +106,12 @@ export default function AdminEditUserPage() {
     setIsSaving(true);
     const userDocRef = doc(db, "users", userId);
     try {
-      const dataToUpdate: Partial<AdminEditUserFormData> = {};
-      // Only include fields that are explicitly part of the form schema to avoid unintended writes
+      const dataToUpdate: Partial<AdminEditUserFormData & { updatedAt: string }> = {};
+      
+      // Only include fields that are part of the form schema and intended for update
       if (data.displayName !== undefined) dataToUpdate.displayName = data.displayName;
-      // For optional text fields, save as empty string if null/undefined, or the value itself
+      
+      // For optional text fields, save as empty string if null/undefined from form, or the value itself
       dataToUpdate.bio = data.bio ?? ""; 
       dataToUpdate.location = data.location ?? "";
       dataToUpdate.profession = data.profession ?? "";
@@ -117,9 +119,9 @@ export default function AdminEditUserPage() {
       if (data.isVerified !== undefined) dataToUpdate.isVerified = data.isVerified;
       if (data.isAdmin !== undefined) dataToUpdate.isAdmin = data.isAdmin;
       
-      // Note: Email is not updated here intentionally to avoid desync with Firebase Auth email.
+      dataToUpdate.updatedAt = new Date().toISOString(); // Add/update the timestamp
 
-      console.log("Admin Edit User: Data to update Firestore:", dataToUpdate); // Added log
+      console.log("Admin Edit User: Data to update Firestore:", dataToUpdate);
       await updateDoc(userDocRef, dataToUpdate);
       
       toast({
@@ -128,8 +130,15 @@ export default function AdminEditUserPage() {
       });
       router.push('/admin/users');
     } catch (error: any) {
-      console.error("Error updating user:", error);
-      toast({ title: "Update Failed", description: "Could not update user profile. " + error.message, variant: "destructive" });
+      let description = "Could not update user profile. Please check console for details.";
+      if (error.message) {
+        description = error.message;
+      }
+      if (error.code) { // Firebase errors often have a code
+        description = `${error.message} (Code: ${error.code})`;
+      }
+      console.error("Error updating user:", error); // Ensure full error is logged
+      toast({ title: "Update Failed", description, variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
@@ -166,7 +175,6 @@ export default function AdminEditUserPage() {
   }
 
   if (!user) {
-    // This case should ideally be handled by the redirect in useEffect if user is not found
     return <div className="text-center p-8">User data could not be loaded or user does not exist.</div>;
   }
 
