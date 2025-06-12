@@ -6,7 +6,7 @@ import { Check } from "lucide-react";
 const plans = [
   {
     name: "Free",
-    price: "$0",
+    price: "£0",
     frequency: "/ month",
     description: "Get started and explore basic features.",
     features: [
@@ -21,7 +21,7 @@ const plans = [
   },
   {
     name: "Premium",
-    price: "$9.99",
+    price: "£9.99",
     frequency: "/ month",
     description: "Unlock advanced features for serious matchmaking.",
     features: [
@@ -39,7 +39,7 @@ const plans = [
   },
   {
     name: "Elite",
-    price: "$19.99",
+    price: "£19.99",
     frequency: "/ month",
     description: "For those who want the best experience and support.",
     features: [
