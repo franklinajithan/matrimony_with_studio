@@ -17,6 +17,7 @@ import { calculateAge, getCompositeId } from '@/lib/utils';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation"; // Import usePathname
 
 interface MatchRequest {
   id: string; 
@@ -58,6 +59,14 @@ const PROFILE_COMPLETION_FIELDS = [
   'height', 'dob', 'religion', 'caste', 'language', 'hobbies'
 ];
 
+const dashboardQuickLinks = [
+  { href: '/discover', label: 'Discover', icon: <Search className="mr-3 h-5 w-5" /> },
+  { href: '/messages', label: 'Messages', icon: <MessageCircle className="mr-3 h-5 w-5" /> },
+  { href: '/dashboard/horoscope', label: 'Horoscope', icon: <Sparkles className="mr-3 h-5 w-5" /> },
+  { href: '/pricing', label: 'Subscription', icon: <CreditCard className="mr-3 h-5 w-5" /> },
+];
+
+
 export default function DashboardPage() {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [userDisplayName, setUserDisplayName] = useState(mockUser.name);
@@ -73,6 +82,7 @@ export default function DashboardPage() {
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
 
   const { toast } = useToast();
+  const pathname = usePathname(); // Get current pathname
 
   const calculateProfileCompletion = (userData: any) => {
     if (!userData) return 0;
@@ -294,9 +304,6 @@ export default function DashboardPage() {
         console.error("Dashboard Requests: Error processing request promises: ", processingError);
         setMatchRequests([]); 
       } finally {
-        // if (snapshot.empty) { // This check is already at the top
-        //      setMatchRequests([]);
-        // }
         setIsLoadingRequests(false);
         console.log("Dashboard Requests: Finished processing snapshot, isLoadingRequests set to false.");
       }
@@ -422,7 +429,7 @@ export default function DashboardPage() {
       
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
         {/* Left Sidebar */}
-        <div className="space-y-6 lg:col-span-3">
+        <div className="lg:col-span-3 space-y-6">
           <Card className="shadow-lg">
             <CardHeader className="p-4">
               <CardTitle className="flex items-center gap-2 font-headline text-lg text-primary">
@@ -453,31 +460,39 @@ export default function DashboardPage() {
                 <CalendarCheck className="h-5 w-5" /> Quick Links
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-1">
-              <Link href="/discover" className="group flex items-center p-2.5 rounded-md hover:bg-accent transition-colors">
-                <Search className="mr-3 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                <span className="text-sm font-medium text-foreground/90 group-hover:text-primary transition-colors">Discover</span>
-              </Link>
-              <Link href="/messages" className="group flex items-center p-2.5 rounded-md hover:bg-accent transition-colors relative">
-                <MessageCircle className="mr-3 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                <span className="text-sm font-medium text-foreground/90 group-hover:text-primary transition-colors">Messages</span>
-                {/* Example notification badge, logic needed separately */}
-                {/* <Badge variant="destructive" className="absolute top-1 right-1 h-2 w-2 p-0"/> */}
-              </Link>
-              <Link href="/dashboard/horoscope" className="group flex items-center p-2.5 rounded-md hover:bg-accent transition-colors">
-                <Sparkles className="mr-3 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                <span className="text-sm font-medium text-foreground/90 group-hover:text-primary transition-colors">Horoscope</span>
-              </Link>
-              <Link href="/pricing" className="group flex items-center p-2.5 rounded-md hover:bg-accent transition-colors">
-                <CreditCard className="mr-3 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                <span className="text-sm font-medium text-foreground/90 group-hover:text-primary transition-colors">Subscription</span>
-              </Link>
+            <CardContent className="flex flex-col gap-1 p-2">
+              {dashboardQuickLinks.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <Button
+                    key={link.label}
+                    variant={isActive ? "default" : "ghost"}
+                    asChild
+                    className={cn(
+                      "w-full justify-start px-3 py-2 text-sm h-auto",
+                      isActive
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                        : "text-foreground/80 hover:text-primary hover:bg-accent/50"
+                    )}
+                  >
+                    <Link href={link.href} aria-label={link.label}>
+                      {React.cloneElement(link.icon, { 
+                        className: cn(
+                          "mr-3 h-5 w-5", 
+                          isActive ? "text-primary-foreground/90" : "text-muted-foreground group-hover:text-primary"
+                        )
+                      })}
+                      {link.label}
+                    </Link>
+                  </Button>
+                );
+              })}
             </CardContent>
           </Card>
         </div>
 
         {/* Center Content Area */}
-        <div className="space-y-6 lg:col-span-6">
+        <div className="lg:col-span-6 space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
             <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader>
@@ -575,7 +590,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Right Sidebar */}
-        <div className="space-y-6 lg:col-span-3">
+        <div className="lg:col-span-3 space-y-6">
            <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-headline text-xl text-secondary">
@@ -658,3 +673,4 @@ export default function DashboardPage() {
     
 
       
+
