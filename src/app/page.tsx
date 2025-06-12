@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"; // Added CardFooter
-import { Heart, Search, MessageSquareText, ShieldCheck, Users, Zap, Telescope, Brain, FileText, UserCheckIcon, Palette, ListFilter, SmartphoneNfc, Globe, Languages, Maximize, CreditCard } from "lucide-react";
+import { Heart, Search, MessageSquareText, ShieldCheck, Users, Zap, Telescope, Brain, FileText, UserCheckIcon, Palette, ListFilter, SmartphoneNfc, Globe, Languages, Maximize, CreditCard, Send } from "lucide-react";
 import { Navbar } from "@/components/navigation/Navbar"; 
 import { Footer } from "@/components/navigation/Footer";
 import React, { useEffect, useState } from "react";
@@ -194,7 +194,14 @@ export default function LandingPage() {
                 </Card>
               ))}
             </div>
-            <div className="text-center mt-12">
+            <div className="text-center mt-10">
+                <Button size="lg" asChild variant="outline" className="border-pink-500 text-pink-600 hover:bg-pink-500/10 hover:text-pink-700 shadow-md px-8 py-3 text-base font-semibold rounded-md">
+                    <Link href="/success-stories/submit">
+                       <Send className="mr-2 h-5 w-5" /> Share Your Story
+                    </Link>
+                </Button>
+            </div>
+            <div className="text-center mt-8">
                 <Button size="lg" asChild className="bg-pink-600 hover:bg-pink-700 text-white shadow-lg px-8 py-3 text-base font-semibold rounded-md">
                     <Link href="/success-stories">View More Success Stories</Link>
                 </Button>
