@@ -94,8 +94,8 @@ export function Navbar() {
   return (
     <TooltipProvider delayDuration={0}>
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
-          <Logo className="ml-2" /> {/* Added ml-2 for a bit more left spacing */}
+        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+          <Logo /> 
           
           <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 ml-auto mr-3">
             {commonNavLinks()}
