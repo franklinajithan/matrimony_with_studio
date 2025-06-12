@@ -7,29 +7,31 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { SlidersHorizontal, Users, MapPin, Briefcase, Ruler, Languages } from 'lucide-react';
+import { SlidersHorizontal, Users, MapPin, Briefcase, Ruler, Languages, EyeOff } from 'lucide-react'; // Added EyeOff
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch"; // Added Switch import
 
 // Mock existing user preferences
 const currentUserPreferences = {
   ageRange: { min: 25, max: 35 },
-  heightRange: { min: "5'2\"", max: "6'0\"" }, // Store as string for input, convert for logic
+  heightRange: { min: "5'2\"", max: "6'0\"" }, 
   religion: ["Hinduism", "Sikhism"],
   caste: "Any",
   language: ["English", "Hindi", "Punjabi", "Tamil", "Sinhala"],
-  locationProximity: "100km", // Or specific cities
+  locationProximity: "100km", 
   professionType: ["Technology", "Healthcare"],
   showOnlyVerified: true,
-  rasiNakshatraPref: "Consider", // 'Strict', 'Consider', 'Ignore'
+  rasiNakshatraPref: "Consider", 
+  incognitoMode: false, // Added for mock data consistency
 };
 
 const preferencesSchema = z.object({
   ageMin: z.coerce.number().min(18).max(99),
   ageMax: z.coerce.number().min(18).max(99),
-  heightMin: z.string().optional(), // Can add regex for "X'Y\"" format
+  heightMin: z.string().optional(), 
   heightMax: z.string().optional(),
   religion: z.array(z.string()).optional(), 
   caste: z.string().optional(),
@@ -38,6 +40,7 @@ const preferencesSchema = z.object({
   profession: z.string().optional(),
   rasiNakshatraPref: z.enum(["Strict", "Consider", "Ignore"]),
   showOnlyVerified: z.boolean(),
+  incognitoMode: z.boolean().optional(), // Added incognitoMode to schema
 }).refine(data => data.ageMin <= data.ageMax, {
   message: "Min age cannot be greater than max age.",
   path: ["ageMax"],
@@ -76,6 +79,7 @@ export default function EditPreferencesPage() {
       profession: currentUserPreferences.professionType.join(', '), 
       rasiNakshatraPref: currentUserPreferences.rasiNakshatraPref as "Strict" | "Consider" | "Ignore",
       showOnlyVerified: currentUserPreferences.showOnlyVerified,
+      incognitoMode: currentUserPreferences.incognitoMode || false, // Added default value
     },
   });
 
@@ -139,7 +143,7 @@ export default function EditPreferencesPage() {
                                             onCheckedChange={(checked) => {
                                                 const currentValue = field.value || [];
                                                 if (option.id === "NoPreferenceReligion") {
-                                                    return checked ? field.onChange([]) : field.onChange(currentValue.filter(v => v !== option.id)); // Special handling for "Any"
+                                                    return checked ? field.onChange([]) : field.onChange(currentValue.filter(v => v !== option.id)); 
                                                 }
                                                 return checked
                                                     ? field.onChange([...currentValue, option.id])
@@ -179,7 +183,7 @@ export default function EditPreferencesPage() {
             </div>
 
             <div className="space-y-4 p-4 border rounded-md shadow-sm">
-                 <h3 className="font-semibold text-lg">Horoscope & Verification</h3>
+                 <h3 className="font-semibold text-lg">Advanced Settings</h3>
                  <FormField control={form.control} name="rasiNakshatraPref" render={({ field }) => (
                     <FormItem><FormLabel>Rasi/Nakshatra Matching</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -192,11 +196,38 @@ export default function EditPreferencesPage() {
                     </Select><FormMessage /></FormItem>
                 )} />
                  <FormField control={form.control} name="showOnlyVerified" render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-2 space-y-0 mt-4">
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-muted/20">
+                        <div className="space-y-0.5">
+                            <FormLabel>Show only Admin-Verified Profiles</FormLabel>
+                            <FormDescription>Filter out profiles that haven't been verified by our team.</FormDescription>
+                        </div>
                         <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                        <FormLabel className="font-normal">Show only Admin-Verified Profiles</FormLabel>
                     </FormItem>
                 )} />
+                 <FormField
+                    control={form.control}
+                    name="incognitoMode"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-muted/20 mt-4">
+                        <div className="space-y-0.5">
+                            <FormLabel className="flex items-center">
+                            <EyeOff className="mr-2 h-4 w-4 text-muted-foreground" />
+                            Incognito Mode
+                            </FormLabel>
+                            <FormDescription>
+                            Browse profiles without appearing in others' "Viewed Me" list. (May be a premium feature)
+                            </FormDescription>
+                        </div>
+                        <FormControl>
+                            <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            aria-label="Toggle Incognito Mode"
+                            />
+                        </FormControl>
+                        </FormItem>
+                    )}
+                />
             </div>
 
             <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-3">
@@ -208,3 +239,5 @@ export default function EditPreferencesPage() {
     </Card>
   );
 }
+
+    
