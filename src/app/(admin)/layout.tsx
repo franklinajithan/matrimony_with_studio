@@ -14,8 +14,8 @@ import { Loader2 } from 'lucide-react';
 const toast = (options: {title: string, description?: string, variant?: string}) => {
     console.log(`Toast (${options.variant || 'default'}): ${options.title} - ${options.description || ''}`);
     // Activate alert for critical messages
-    if (typeof window !== 'undefined' && window.alert && (options.variant === 'destructive' || options.title === 'Authentication Required')) {
-      window.alert(`${options.title}${options.description ? ': ' + options.description : ''}`);
+    if (typeof window !== 'undefined' && (options.variant === 'destructive' || options.title === 'Authentication Required' || options.title === "Access Denied" || options.title === "Error")) {
+      alert(`${options.title}${options.description ? ': ' + options.description : ''}`);
     }
 };
 
@@ -41,26 +41,48 @@ export default function AdminLayout({
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
 
   useEffect(() => {
+    console.log("AdminLayout: useEffect triggered");
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log("AdminLayout: onAuthStateChanged callback. User:", user ? user.uid : 'null');
       setCurrentUser(user);
       if (user) {
         try {
+          console.log("AdminLayout: Current user UID:", user.uid);
           const userDocRef = doc(db, "users", user.uid);
           const userDocSnap = await getDoc(userDocRef);
 
-          if (userDocSnap.exists() && userDocSnap.data()?.isAdmin === true) {
-            setIsAdmin(true);
+          console.log("AdminLayout: userDocSnap.exists():", userDocSnap.exists());
+          if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            console.log("AdminLayout: User data from Firestore:", userData);
+            console.log("AdminLayout: userData.isAdmin value:", userData?.isAdmin);
+            console.log("AdminLayout: typeof userData.isAdmin:", typeof userData?.isAdmin);
+
+            if (userData?.isAdmin === true) {
+              console.log("AdminLayout: User IS admin.");
+              setIsAdmin(true);
+            } else {
+              console.log("AdminLayout: User IS NOT admin or isAdmin field missing/false.");
+              setIsAdmin(false);
+              toast({
+                title: "Access Denied",
+                description: "You do not have permission to access the admin panel.",
+                variant: "destructive",
+              });
+              router.replace('/');
+            }
           } else {
+            console.log("AdminLayout: User document does not exist in Firestore.");
             setIsAdmin(false);
             toast({
               title: "Access Denied",
-              description: "You do not have permission to access the admin panel.",
+              description: "User profile not found. Cannot verify admin status.",
               variant: "destructive",
             });
-            router.replace('/'); 
+            router.replace('/');
           }
         } catch (error) {
-          console.error("Error checking admin status:", error);
+          console.error("AdminLayout: Error checking admin status:", error);
           setIsAdmin(false);
            toast({
               title: "Error",
@@ -70,22 +92,28 @@ export default function AdminLayout({
           router.replace('/');
         }
       } else {
+        console.log("AdminLayout: No user logged in.");
         // No user logged in
         setIsAdmin(false);
         toast({
           title: "Authentication Required",
           description: "Please log in to access this area.",
-          variant: "default", // Default variant, but title matches alert condition
+          variant: "default",
         });
-        router.replace('/login'); 
+        router.replace('/login');
       }
       setIsLoading(false);
+      console.log("AdminLayout: setIsLoading(false)");
     });
 
-    return () => unsubscribe();
+    return () => {
+      console.log("AdminLayout: Unsubscribing from onAuthStateChanged.");
+      unsubscribe();
+    };
   }, [router]);
 
   if (isLoading) {
+    console.log("AdminLayout: Rendering loading state.");
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100">
         <Loader2 className="h-12 w-12 animate-spin text-slate-700" />
@@ -95,6 +123,7 @@ export default function AdminLayout({
   }
 
   if (!isAdmin) {
+    console.log("AdminLayout: Rendering non-admin state (redirecting or showing access denied).");
     // This content will be shown briefly if a non-admin attempts access
     // before the router.replace('/') or router.replace('/login') takes full effect.
     // The alert from the toast function should appear first.
@@ -105,14 +134,15 @@ export default function AdminLayout({
             <p className="text-slate-600 mb-6">
             You are not authorized to view this page. You are being redirected.
             </p>
-            <Button onClick={() => router.push('/')} className="mt-4">
-            Go to Homepage
+            <Button onClick={() => router.push(currentUser ? '/' : '/login')} className="mt-4">
+            {currentUser ? 'Go to Homepage' : 'Go to Login'}
             </Button>
         </div>
       </div>
     );
   }
 
+  console.log("AdminLayout: Rendering admin content.");
   // If user is admin and not loading, render the admin layout
   return (
     <div className="min-h-screen flex flex-col bg-slate-100">
