@@ -1,6 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heart, Users, Globe, ShieldCheck } from "lucide-react"; // Added ShieldCheck
+import Image from "next/image"; // Added import for Image component
 
 export default function AboutUsPage() {
   return (
