@@ -1,13 +1,14 @@
 
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Edit3, UserCheck, UserX, ShieldCheck, ShieldOff, Loader2 } from 'lucide-react';
+import { Eye, Edit3, UserCheck, UserX, ShieldCheck, ShieldOff, Loader2, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -27,21 +28,22 @@ interface UserData {
   displayName?: string;
   email?: string;
   isAdmin?: boolean;
-  isVerified?: boolean; // Assuming you might have this field
-  createdAt?: any; // Can be Timestamp or string
-  // Add other fields you expect from your user documents
+  isVerified?: boolean; 
+  createdAt?: any; 
+  photoURL?: string; // For potential display
 }
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [processingUserId, setProcessingUserId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
     setIsLoading(true);
     const usersColRef = collection(db, 'users');
-    const q = query(usersColRef, orderBy('displayName', 'asc')); // Order by name for consistency
+    const q = query(usersColRef, orderBy('displayName', 'asc')); 
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const fetchedUsers: UserData[] = [];
@@ -63,6 +65,15 @@ export default function UserManagementPage() {
     return () => unsubscribe();
   }, [toast]);
 
+  const filteredUsers = useMemo(() => {
+    if (!searchTerm) return users;
+    return users.filter(user =>
+      (user.displayName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (user.id?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+    );
+  }, [users, searchTerm]);
+
   const toggleAdminStatus = async (userId: string, currentIsAdmin: boolean | undefined) => {
     setProcessingUserId(userId);
     const userDocRef = doc(db, "users", userId);
@@ -72,7 +83,7 @@ export default function UserManagementPage() {
       });
       toast({
         title: "Admin Status Updated",
-        description: `User ${userId} is ${!currentIsAdmin ? 'now an admin' : 'no longer an admin'}.`,
+        description: `User ${users.find(u=>u.id === userId)?.displayName || userId} is ${!currentIsAdmin ? 'now an admin' : 'no longer an admin'}.`,
       });
     } catch (error) {
       console.error("Error updating admin status:", error);
@@ -87,18 +98,25 @@ export default function UserManagementPage() {
   };
   
   const handleBanUser = async (userId: string) => {
-    // Placeholder for ban logic
-    // In a real app, this might set an `isBanned: true` field on the user doc
-    // or add the user to a 'bannedUsers' collection.
-    // It would also require rules to prevent banned users from logging in/accessing data.
     setProcessingUserId(userId);
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+    // Placeholder: Actual ban logic needs backend implementation
+    // e.g., set an `isBanned: true` field and enforce via Firestore rules / Cloud Functions
+    await new Promise(resolve => setTimeout(resolve, 1000)); 
     toast({
       title: "User Banned (Mock)",
-      description: `User ${userId} would be banned. Actual ban logic needs implementation.`,
+      description: `User ${users.find(u=>u.id === userId)?.displayName || userId} would be banned. Actual ban logic needs implementation.`,
       variant: "destructive"
     });
     setProcessingUserId(null);
+  };
+
+  const handleEditUser = (userId: string) => {
+    toast({
+        title: "Edit User",
+        description: `Admin editing for user ${users.find(u=>u.id === userId)?.displayName || userId} is a planned feature.`,
+        variant: "default"
+    });
+    // Future: router.push(`/admin/users/edit/${userId}`);
   };
 
 
@@ -115,6 +133,17 @@ export default function UserManagementPage() {
       <h1 className="text-3xl font-bold text-slate-700">User Management</h1>
       <p className="text-slate-600">View and manage user accounts in CupidMatch.</p>
 
+      <div className="flex items-center gap-2 p-1 rounded-md border border-input bg-card focus-within:ring-2 focus-within:ring-ring">
+        <Search className="h-5 w-5 ml-2 text-muted-foreground" />
+        <Input
+            type="text"
+            placeholder="Filter by name, email, or ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full border-none shadow-none focus-visible:ring-0 h-9"
+        />
+      </div>
+
       <div className="overflow-x-auto bg-card p-4 rounded-lg shadow">
         <Table>
           <TableHeader>
@@ -128,7 +157,7 @@ export default function UserManagementPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
+            {filteredUsers.map((user) => (
               <TableRow key={user.id}>
                 <TableCell className="font-medium text-xs truncate max-w-[100px]" title={user.id}>{user.id}</TableCell>
                 <TableCell>{user.displayName || 'N/A'}</TableCell>
@@ -141,10 +170,10 @@ export default function UserManagementPage() {
                   )}
                 </TableCell>
                 <TableCell className="text-center">
-                  {user.isVerified ? ( // Assuming you have an isVerified field
-                    <Badge variant="outline" className="border-blue-500 text-blue-600">Yes</Badge>
+                  {user.isVerified ? (
+                    <Badge variant="outline" className="border-blue-500 text-blue-600 bg-blue-500/10">Yes</Badge>
                   ) : (
-                    <Badge variant="outline">No</Badge>
+                    <Badge variant="outline" className="border-amber-500 text-amber-600 bg-amber-500/10">No</Badge>
                   )}
                 </TableCell>
                 <TableCell className="text-right space-x-1">
@@ -153,7 +182,7 @@ export default function UserManagementPage() {
                       <Eye className="h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button variant="ghost" size="icon" title="Edit User (Placeholder)">
+                  <Button variant="ghost" size="icon" title="Edit User" onClick={() => handleEditUser(user.id)}>
                     <Edit3 className="h-4 w-4" />
                   </Button>
                    <AlertDialog>
@@ -198,7 +227,7 @@ export default function UserManagementPage() {
                         <AlertDialogHeader>
                         <AlertDialogTitle>Confirm Ban User</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to ban {user.displayName || user.id}? This action might be irreversible depending on your ban implementation.
+                            Are you sure you want to ban {user.displayName || user.id}? This action would typically prevent them from accessing the service.
                         </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -215,8 +244,10 @@ export default function UserManagementPage() {
             ))}
           </TableBody>
         </Table>
-        {users.length === 0 && !isLoading && (
-          <p className="text-center text-slate-500 py-8">No users found.</p>
+        {filteredUsers.length === 0 && !isLoading && (
+          <p className="text-center text-slate-500 py-8">
+            {users.length > 0 && searchTerm ? `No users found matching "${searchTerm}".` : "No users found."}
+          </p>
         )}
       </div>
     </div>
