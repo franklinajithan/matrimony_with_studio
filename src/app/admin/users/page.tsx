@@ -28,9 +28,9 @@ interface UserData {
   displayName?: string;
   email?: string;
   isAdmin?: boolean;
-  isVerified?: boolean; 
-  createdAt?: any; 
-  photoURL?: string; // For potential display
+  isVerified?: boolean;
+  createdAt?: any;
+  photoURL?: string;
 }
 
 export default function UserManagementPage() {
@@ -43,7 +43,7 @@ export default function UserManagementPage() {
   useEffect(() => {
     setIsLoading(true);
     const usersColRef = collection(db, 'users');
-    const q = query(usersColRef, orderBy('displayName', 'asc')); 
+    const q = query(usersColRef, orderBy('displayName', 'asc'));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const fetchedUsers: UserData[] = [];
@@ -96,12 +96,10 @@ export default function UserManagementPage() {
       setProcessingUserId(null);
     }
   };
-  
+
   const handleBanUser = async (userId: string) => {
     setProcessingUserId(userId);
-    // Placeholder: Actual ban logic needs backend implementation
-    // e.g., set an `isBanned: true` field and enforce via Firestore rules / Cloud Functions
-    await new Promise(resolve => setTimeout(resolve, 1000)); 
+    await new Promise(resolve => setTimeout(resolve, 1000));
     toast({
       title: "User Banned (Mock)",
       description: `User ${users.find(u=>u.id === userId)?.displayName || userId} would be banned. Actual ban logic needs implementation.`,
@@ -109,16 +107,6 @@ export default function UserManagementPage() {
     });
     setProcessingUserId(null);
   };
-
-  const handleEditUser = (userId: string) => {
-    toast({
-        title: "Edit User",
-        description: `Admin editing for user ${users.find(u=>u.id === userId)?.displayName || userId} is a planned feature.`,
-        variant: "default"
-    });
-    // Future: router.push(`/admin/users/edit/${userId}`);
-  };
-
 
   if (isLoading) {
     return (
@@ -182,14 +170,16 @@ export default function UserManagementPage() {
                       <Eye className="h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button variant="ghost" size="icon" title="Edit User" onClick={() => handleEditUser(user.id)}>
-                    <Edit3 className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" title="Edit User" asChild>
+                    <Link href={`/admin/users/edit/${user.id}`}>
+                        <Edit3 className="h-4 w-4" />
+                    </Link>
                   </Button>
                    <AlertDialog>
                     <AlertDialogTrigger asChild>
-                       <Button 
-                          variant="ghost" 
-                          size="icon" 
+                       <Button
+                          variant="ghost"
+                          size="icon"
                           title={user.isAdmin ? "Remove Admin" : "Make Admin"}
                           disabled={processingUserId === user.id}
                           className={user.isAdmin ? "text-orange-600 hover:text-orange-700 hover:bg-orange-100" : "text-green-600 hover:text-green-700 hover:bg-green-100"}
@@ -206,7 +196,7 @@ export default function UserManagementPage() {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                         <AlertDialogCancel disabled={processingUserId === user.id}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
+                        <AlertDialogAction
                             onClick={() => toggleAdminStatus(user.id, user.isAdmin)}
                             disabled={processingUserId === user.id}
                             className={user.isAdmin ? "bg-orange-600 hover:bg-orange-700" : "bg-green-600 hover:bg-green-700"}
