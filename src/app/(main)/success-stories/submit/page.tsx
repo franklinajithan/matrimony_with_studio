@@ -13,6 +13,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Users, BookOpen, Image as ImageIcon, Mail, CheckSquare, Loader2, Send } from 'lucide-react';
 import { Checkbox } from "@/components/ui/checkbox";
 import React, { useState } from "react";
+import { db, auth } from '@/lib/firebase/config';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { uploadFile } from '@/lib/firebase/storageService';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -50,18 +53,54 @@ export default function SubmitSuccessStoryPage() {
 
   async function onSubmit(values: z.infer<typeof successStorySchema>) {
     setIsSubmitting(true);
-    console.log("Success story submission:", values);
-    // Mock submission
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const currentUser = auth.currentUser;
 
-    toast({
-      title: "Story Submitted! (Mock)",
-      description: "Thank you for sharing your beautiful story with CupidMatch. We'll review it shortly.",
-      variant: "default",
-    });
-    form.reset();
-    setSelectedFileName(null);
-    setIsSubmitting(false);
+    try {
+      let photoUrl: string | null = null;
+      let photoStoragePath: string | null = null;
+
+      if (values.photo) {
+        const timestamp = Date.now();
+        const fileName = `${timestamp}-${values.photo.name.replace(/\s+/g, '_')}`;
+        const filePath = `success_stories_photos/${fileName}`;
+        photoUrl = await uploadFile(values.photo, filePath);
+        photoStoragePath = filePath;
+      }
+
+      const storyData = {
+        coupleNames: values.coupleNames,
+        storyText: values.storyText,
+        originalStoryText: values.storyText, // Store the original text
+        photoUrl: photoUrl,
+        photoStoragePath: photoStoragePath,
+        contactEmail: values.email || null,
+        submittedByUid: currentUser ? currentUser.uid : null,
+        status: "pending", // Initial status
+        submittedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        adminNotes: null,
+        approvedAt: null,
+      };
+
+      await addDoc(collection(db, "successStories"), storyData);
+
+      toast({
+        title: "Story Submitted!",
+        description: "Thank you for sharing your beautiful story with CupidMatch. We'll review it shortly.",
+        variant: "default",
+      });
+      form.reset();
+      setSelectedFileName(null);
+    } catch (error: any) {
+      console.error("Error submitting success story:", error);
+      toast({
+        title: "Submission Failed",
+        description: error.message || "Could not submit your story. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
   
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,7 +153,7 @@ export default function SubmitSuccessStoryPage() {
               <FormField
                 control={form.control}
                 name="photo"
-                render={({ field: { onChange, ...rest } }) => (
+                render={({ field: { onChange, ...rest } }) => ( // Destructure onChange for RHF
                   <FormItem>
                     <FormLabel className="flex items-center"><ImageIcon className="mr-2 h-4 w-4 text-muted-foreground" />Share a Photo (Optional)</FormLabel>
                     <FormControl>
