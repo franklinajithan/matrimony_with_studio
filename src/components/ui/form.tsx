@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -128,16 +129,30 @@ FormControl.displayName = "FormControl"
 const FormDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => {
+>(({ className, children, ...props }, ref) => {
   const { formDescriptionId } = useFormField()
+  const [isMounted, setIsMounted] = React.useState(false)
 
+  React.useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted) {
+    // Render null on the server and during the initial client render (before useEffect runs)
+    // This prevents the hydration mismatch.
+    return null
+  }
+
+  // Render the actual content only on the client after the component has mounted.
   return (
     <p
       ref={ref}
       id={formDescriptionId}
       className={cn("text-sm text-muted-foreground", className)}
-      {...props}
-    />
+      {...props} // Pass down other props like data attributes etc.
+    >
+      {children}
+    </p>
   )
 })
 FormDescription.displayName = "FormDescription"
