@@ -222,6 +222,7 @@ export default function DashboardPage() {
       if (snapshot.empty) {
           console.log("Dashboard Requests: No 'pending' matchRequests found for current user. Clearing requests list.");
           setMatchRequests([]);
+          setIsLoadingRequests(false); // Ensure loading is false if empty
           return; 
       }
 
@@ -290,9 +291,9 @@ export default function DashboardPage() {
         console.error("Dashboard Requests: Error processing request promises: ", processingError);
         setMatchRequests([]); 
       } finally {
-        if (snapshot.empty) { 
-             setMatchRequests([]);
-        }
+        // if (snapshot.empty) { // This check is already at the top
+        //      setMatchRequests([]);
+        // }
         setIsLoadingRequests(false);
         console.log("Dashboard Requests: Finished processing snapshot, isLoadingRequests set to false.");
       }
@@ -416,33 +417,61 @@ export default function DashboardPage() {
         </CardHeader>
       </Card>
       
-      <Card className="shadow-lg">
-        <CardHeader className="p-4">
-          <CardTitle className="flex items-center gap-2 font-headline text-lg text-primary">
-            <FileText className="h-5 w-5" /> Profile Completion
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 p-4 pt-0">
-          <Progress value={profileCompletion} className="h-2" />
-          <p className="text-xs text-muted-foreground text-center">
-            Your profile is {profileCompletion}% complete.
-          </p>
-          {profileCompletion < 100 && (
-            <div className="text-center">
-              <p className="text-xs text-foreground mb-1.5">
-                A complete profile gets more views and better matches!
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Sidebar */}
+        <div className="lg:col-span-3 space-y-6">
+          <Card className="shadow-lg">
+            <CardHeader className="p-4">
+              <CardTitle className="flex items-center gap-2 font-headline text-lg text-primary">
+                <FileText className="h-5 w-5" /> Profile Completion
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 p-4 pt-0">
+              <Progress value={profileCompletion} className="h-2" />
+              <p className="text-xs text-muted-foreground text-center">
+                Your profile is {profileCompletion}% complete.
               </p>
-              <Button asChild variant="outline" size="sm">
-                <Link href="/dashboard/edit-profile">Update Your Profile</Link>
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              {profileCompletion < 100 && (
+                <div className="text-center">
+                  <p className="text-xs text-foreground mb-1.5">
+                    A complete profile gets more views and better matches!
+                  </p>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href="/dashboard/edit-profile">Update Your Profile</Link>
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-           <div className="grid gap-6 md:grid-cols-2">
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-headline text-xl text-primary">
+                <CalendarCheck className="h-5 w-5" /> Quick Links
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <Link href="/discover"><Search className="mr-2 h-4 w-4" />Discover</Link>
+              </Button>
+              <Button variant="outline" className="w-full justify-start relative" asChild>
+                <Link href="/messages">
+                  <MessageCircle className="mr-2 h-4 w-4" />Messages
+                </Link>
+              </Button>
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <Link href="/dashboard/horoscope"><Sparkles className="mr-2 h-4 w-4" />Horoscope</Link>
+              </Button>
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <Link href="/pricing"><CreditCard className="mr-2 h-4 w-4" />Subscription</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Center Content Area */}
+        <div className="lg:col-span-6 space-y-6">
+          <div className="grid gap-6 md:grid-cols-2">
             <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 font-headline text-2xl">
@@ -524,32 +553,9 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <div className="lg:col-span-1 space-y-6">
-          <Card className="shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-headline text-xl text-primary">
-                <CalendarCheck className="h-5 w-5" /> Quick Links
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href="/discover"><Search className="mr-2 h-4 w-4" />Discover</Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start relative" asChild>
-                <Link href="/messages">
-                  <MessageCircle className="mr-2 h-4 w-4" />Messages
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href="/dashboard/horoscope"><Sparkles className="mr-2 h-4 w-4" />Horoscope</Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href="/pricing"><CreditCard className="mr-2 h-4 w-4" />Subscription</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-lg hover:shadow-xl transition-shadow">
+        {/* Right Sidebar */}
+        <div className="lg:col-span-3 space-y-6">
+           <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-headline text-xl text-secondary">
                 <Sparkles className="h-5 w-5" /> Today's Horoscope ({mockTodaysHoroscope.sign})
@@ -619,7 +625,7 @@ export default function DashboardPage() {
                 ))
               )}
               {!isLoadingRequests && matchRequests.length === 0 && (
-                null 
+                 <p className="text-sm text-muted-foreground text-center py-4">No pending match requests.</p>
               )}
             </CardContent>
           </Card>
