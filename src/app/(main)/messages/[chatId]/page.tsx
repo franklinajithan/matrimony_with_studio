@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { ArrowLeft, Send, Paperclip, Smile, Loader2 } from 'lucide-react';
+import { ArrowLeft, Send, Paperclip, Smile, Loader2, Check } from 'lucide-react'; // Added Check
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { auth, db } from '@/lib/firebase/config';
@@ -316,12 +316,15 @@ export default function ChatPage() {
                     )}
                   >
                     <p className="whitespace-pre-wrap">{msg.text}</p>
-                    <p className={cn(
-                        "text-xs mt-1",
-                         msg.senderId === currentUser.uid ? "text-primary-foreground/70 text-right" : "text-muted-foreground text-left"
+                    <div className={cn(
+                        "text-xs mt-1 flex items-center",
+                         msg.senderId === currentUser.uid ? "text-primary-foreground/70 justify-end" : "text-muted-foreground justify-start"
                       )}>
-                      {msg.displayTimestamp}
-                    </p>
+                      <span>{msg.displayTimestamp}</span>
+                      {msg.senderId === currentUser.uid && msg.timestamp && (
+                        <Check className="ml-1 h-3.5 w-3.5" />
+                      )}
+                    </div>
                   </div>
                    {msg.senderId === currentUser.uid && (
                      <Avatar className="h-8 w-8 self-start">
@@ -364,4 +367,3 @@ export default function ChatPage() {
     </Card>
   );
 }
-
