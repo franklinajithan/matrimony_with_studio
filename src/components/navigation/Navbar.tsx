@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { MessageCircle, LogOut, LayoutDashboard, Settings, UserCircle as UserCircleIcon, Loader2, Info, Zap, HelpCircle, Menu, CreditCard } from 'lucide-react';
+import { MessageCircle, LogOut, LayoutDashboard, Settings, UserCircle as UserCircleIcon, Loader2, Info, Zap, HelpCircle, Menu, CreditCard, BookOpen } from 'lucide-react';
 import { Logo } from '@/components/shared/Logo';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,6 +28,7 @@ const mainAppNavLinks = [
   { href: '/about', label: 'About Us', icon: <Info className="h-5 w-5" /> },
   { href: '/features', label: 'Features', icon: <Zap className="h-5 w-5" /> },
   { href: '/pricing', label: 'Pricing', icon: <CreditCard className="h-5 w-5" /> },
+  { href: '/blog', label: 'Blog', icon: <BookOpen className="h-5 w-5" /> },
   { href: '/contact', label: 'Contact', icon: <HelpCircle className="h-5 w-5" /> },
 ];
 
@@ -95,7 +96,7 @@ export function Navbar() {
   return (
     <TooltipProvider delayDuration={0}>
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        <div className="container mx-auto px-4 flex h-16 items-center justify-between">
           <Logo /> 
           
           <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 ml-auto mr-3">
