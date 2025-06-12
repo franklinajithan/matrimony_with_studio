@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { calculateAge, getCompositeId } from '@/lib/utils';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 interface MatchRequest {
   id: string; 
@@ -419,9 +420,9 @@ export default function DashboardPage() {
         </CardHeader>
       </Card>
       
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-        {/* Left Sidebar (takes 3 columns on xl) */}
-        <div className="xl:col-span-3 space-y-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
+        {/* Left Sidebar */}
+        <div className="space-y-6 lg:col-span-3">
           <Card className="shadow-lg">
             <CardHeader className="p-4">
               <CardTitle className="flex items-center gap-2 font-headline text-lg text-primary">
@@ -452,27 +453,31 @@ export default function DashboardPage() {
                 <CalendarCheck className="h-5 w-5" /> Quick Links
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href="/discover"><Search className="mr-2 h-4 w-4" />Discover</Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start relative" asChild>
-                <Link href="/messages">
-                  <MessageCircle className="mr-2 h-4 w-4" />Messages
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href="/dashboard/horoscope"><Sparkles className="mr-2 h-4 w-4" />Horoscope</Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href="/pricing"><CreditCard className="mr-2 h-4 w-4" />Subscription</Link>
-              </Button>
+            <CardContent className="flex flex-col gap-1">
+              <Link href="/discover" className="group flex items-center p-2.5 rounded-md hover:bg-accent transition-colors">
+                <Search className="mr-3 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                <span className="text-sm font-medium text-foreground/90 group-hover:text-primary transition-colors">Discover</span>
+              </Link>
+              <Link href="/messages" className="group flex items-center p-2.5 rounded-md hover:bg-accent transition-colors relative">
+                <MessageCircle className="mr-3 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                <span className="text-sm font-medium text-foreground/90 group-hover:text-primary transition-colors">Messages</span>
+                {/* Example notification badge, logic needed separately */}
+                {/* <Badge variant="destructive" className="absolute top-1 right-1 h-2 w-2 p-0"/> */}
+              </Link>
+              <Link href="/dashboard/horoscope" className="group flex items-center p-2.5 rounded-md hover:bg-accent transition-colors">
+                <Sparkles className="mr-3 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                <span className="text-sm font-medium text-foreground/90 group-hover:text-primary transition-colors">Horoscope</span>
+              </Link>
+              <Link href="/pricing" className="group flex items-center p-2.5 rounded-md hover:bg-accent transition-colors">
+                <CreditCard className="mr-3 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                <span className="text-sm font-medium text-foreground/90 group-hover:text-primary transition-colors">Subscription</span>
+              </Link>
             </CardContent>
           </Card>
         </div>
 
-        {/* Center Content Area (takes 6 columns on xl) */}
-        <div className="xl:col-span-6 space-y-6">
+        {/* Center Content Area */}
+        <div className="space-y-6 lg:col-span-6">
           <div className="grid gap-6 md:grid-cols-2">
             <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader>
@@ -569,8 +574,8 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Right Sidebar (takes 3 columns on xl) */}
-        <div className="xl:col-span-3 space-y-6">
+        {/* Right Sidebar */}
+        <div className="space-y-6 lg:col-span-3">
            <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-headline text-xl text-secondary">
