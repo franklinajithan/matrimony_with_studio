@@ -77,7 +77,7 @@ export default function AdminEditUserPage() {
           const userData: UserDataForEditForm = {
             id: docSnap.id,
             displayName: data.displayName || "",
-            email: data.email || "",
+            email: data.email || "", // Assuming email is stored in Firestore user doc
             bio: data.bio || "",
             location: data.location || "",
             profession: data.profession || "",
@@ -107,26 +107,29 @@ export default function AdminEditUserPage() {
     const userDocRef = doc(db, "users", userId);
     try {
       const dataToUpdate: Partial<AdminEditUserFormData> = {};
-      // Only include fields that are present in the form data
+      // Only include fields that are explicitly part of the form schema to avoid unintended writes
       if (data.displayName !== undefined) dataToUpdate.displayName = data.displayName;
-      if (data.bio !== undefined) dataToUpdate.bio = data.bio ?? ""; // Handle null from optional textarea
-      if (data.location !== undefined) dataToUpdate.location = data.location ?? "";
-      if (data.profession !== undefined) dataToUpdate.profession = data.profession ?? "";
+      // For optional text fields, save as empty string if null/undefined, or the value itself
+      dataToUpdate.bio = data.bio ?? ""; 
+      dataToUpdate.location = data.location ?? "";
+      dataToUpdate.profession = data.profession ?? "";
+      
       if (data.isVerified !== undefined) dataToUpdate.isVerified = data.isVerified;
       if (data.isAdmin !== undefined) dataToUpdate.isAdmin = data.isAdmin;
       
       // Note: Email is not updated here intentionally to avoid desync with Firebase Auth email.
-      // That should be handled via Firebase Admin SDK or specific user actions.
 
+      console.log("Admin Edit User: Data to update Firestore:", dataToUpdate); // Added log
       await updateDoc(userDocRef, dataToUpdate);
+      
       toast({
         title: "User Updated",
         description: `${data.displayName}'s profile has been successfully updated.`,
       });
       router.push('/admin/users');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating user:", error);
-      toast({ title: "Update Failed", description: "Could not update user profile.", variant: "destructive" });
+      toast({ title: "Update Failed", description: "Could not update user profile. " + error.message, variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
@@ -163,6 +166,7 @@ export default function AdminEditUserPage() {
   }
 
   if (!user) {
+    // This case should ideally be handled by the redirect in useEffect if user is not found
     return <div className="text-center p-8">User data could not be loaded or user does not exist.</div>;
   }
 
