@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles, Users, UserPlus, CalendarCheck, Briefcase, MapPin, Cake, Loader2, Check, X, Eye, FileText } from "lucide-react";
+import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles, Users, UserPlus, CalendarCheck, Briefcase, MapPin, Cake, Loader2, Check, X, Eye, FileText, Heart } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import React, { useEffect, useState, useCallback } from 'react';
@@ -17,7 +17,7 @@ import { calculateAge, getCompositeId } from '@/lib/utils';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { usePathname } from "next/navigation"; // Import usePathname
+import { usePathname } from "next/navigation"; 
 
 interface MatchRequest {
   id: string; 
@@ -82,7 +82,7 @@ export default function DashboardPage() {
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
 
   const { toast } = useToast();
-  const pathname = usePathname(); // Get current pathname
+  const pathname = usePathname(); 
 
   const calculateProfileCompletion = (userData: any) => {
     if (!userData) return 0;
@@ -159,7 +159,6 @@ export default function DashboardPage() {
     setIsLoadingSuggestions(true);
     try {
       const usersRef = collection(db, "users");
-      // Fetch more than 3 initially to allow filtering out the current user and still have 3 if possible.
       const q = query(usersRef, limit(10)); 
       
       const querySnapshot = await getDocs(q);
@@ -171,7 +170,6 @@ export default function DashboardPage() {
             console.log("Dashboard Suggestions: Skipping current user from suggestions, ID:", docSnap.id);
             return; 
         }
-        // Limit to 3 suggestions after filtering
         if (suggestions.length >= 3) return; 
         
         const data = docSnap.data();
@@ -235,7 +233,7 @@ export default function DashboardPage() {
       if (snapshot.empty) {
           console.log("Dashboard Requests: No 'pending' matchRequests found for current user. Clearing requests list.");
           setMatchRequests([]);
-          setIsLoadingRequests(false); // Ensure loading is false if empty
+          setIsLoadingRequests(false); 
           return; 
       }
 
@@ -587,6 +585,36 @@ export default function DashboardPage() {
               )}
             </CardContent>
           </Card>
+
+          <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-headline text-2xl text-pink-500">
+                <Heart className="h-6 w-6 fill-pink-500 text-pink-500" />
+                Success Story
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="relative w-full h-56 mb-3 rounded-md overflow-hidden">
+                <Image
+                  src="https://placehold.co/600x400.png"
+                  alt="Riya & Rohan"
+                  fill
+                  className="object-cover"
+                  data-ai-hint="happy couple wedding"
+                />
+              </div>
+              <h3 className="font-semibold text-xl text-foreground">Riya & Rohan Found Love!</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                "We connected on CupidMatch and instantly knew there was something special. Thank you for helping us find our happily ever after!"
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button variant="link" className="text-primary p-0 h-auto" asChild>
+                <Link href="/success-stories">Read More Stories</Link> 
+              </Button>
+            </CardFooter>
+          </Card>
+
         </div>
 
         {/* Right Sidebar */}
@@ -673,4 +701,5 @@ export default function DashboardPage() {
     
 
       
+
 
