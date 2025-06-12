@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -15,9 +16,9 @@ import { Loader2 } from "lucide-react";
 
 const navLinks = [
   { href: "#home", label: "Home" },
-  { href: "#about", label: "About Us" },
-  { href: "#features", label: "Features" },
-  { href: "#contact", label: "Contact" },
+  { href: "/about", label: "About Us" },
+  { href: "/features", label: "Features" },
+  { href: "/contact", label: "Contact" },
 ];
 
 const featuresData = [
@@ -121,7 +122,7 @@ export default function LandingPage() {
               <div className="md:w-1/2 flex justify-center md:justify-end">
                 <div className="relative">
                   <Image
-                    src="https://firebasestorage.googleapis.com/v0/b/matrimony-09-06-2025.firebasestorage.app/o/image%2Fwelcome-BxM6HCre.png?alt=media&token=b0b044e1-cadc-4168-ad27-6f6e15d4c54e"
+                    src="https://firebasestorage.googleapis.com/v0/b/matrimony-09-06-2025.firebasestorage.app/o/image%2FChatGPT_Image_Jun_12__2025__11_55_51_AM-removebg-preview.png?alt=media&token=90a533a7-8a7c-4c71-bd8a-1215b26f304e"
                     alt="Indian woman in traditional attire with a welcoming gesture"
                     width={450}
                     height={570}
@@ -144,7 +145,7 @@ export default function LandingPage() {
                   <Card className={`flex flex-col shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out bg-white border-t-4 ${feature.borderColor} rounded-b-lg rounded-t-sm h-full`}>
                     <CardHeader className="items-center text-center pt-6 pb-3">
                       <div className={`p-3 rounded-full bg-slate-100 mb-3 text- ${feature.borderColor.replace("border-", "text-")}`}>
-                        {React.cloneElement(feature.icon, { className: `${feature.icon.props.className} h-8 w-8` })}
+                        {React.cloneElement(feature.icon, { className: `${feature.icon.props.className || ''} h-8 w-8` })}
                       </div>
                       <CardTitle className="font-headline text-xl text-slate-700 group-hover:text-primary transition-colors">{feature.title}</CardTitle>
                     </CardHeader>
