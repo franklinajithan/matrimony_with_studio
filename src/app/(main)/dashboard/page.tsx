@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import React, { useEffect, useState, useCallback } from "react";
 import { auth, db } from "@/lib/firebase/config";
 import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
-import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, writeBatch, serverTimestamp, Timestamp, orderBy, limit, getDocs } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, writeBatch, serverTimestamp, Timestamp, orderBy, limit, getDocs, addDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { calculateAge, getCompositeId } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,6 +20,7 @@ import { usePathname } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { formatDistanceToNow } from "date-fns";
+import { Textarea } from "@/components/ui/textarea";
 
 interface MatchRequest {
   id: string;
@@ -63,8 +64,9 @@ interface Post {
   userName: string;
   userAvatar: string;
   content: string;
-  timestamp: Date;
+  timestamp: any; // Firestore Timestamp
   likes: number;
+  likedBy: string[]; // Array of user IDs who liked the post
   comments: number;
   isLiked?: boolean;
 }
@@ -96,111 +98,121 @@ const dummyPosts: Post[] = [
     id: "1",
     userId: "user1",
     userName: "Sarah Johnson",
-    userAvatar: "https://placehold.co/100x100.png",
-    content: "Just found my perfect match on Matrimony! Can't wait to start this new chapter of my life. 💑",
-    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-    likes: 24,
-    comments: 5,
+    userAvatar: "https://placehold.co/400x400.png",
+    content: "Just completed my profile! Looking forward to meeting new people.",
+    timestamp: new Date(),
+    likes: 12,
+    comments: 3,
     isLiked: false,
+    likedBy: [],
   },
   {
     id: "2",
     userId: "user2",
     userName: "Michael Chen",
-    userAvatar: "https://placehold.co/100x100.png",
-    content: "Attending a community event this weekend to meet new people. Anyone else going? Would love to connect! 🤝",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    likes: 15,
-    comments: 3,
+    userAvatar: "https://placehold.co/400x400.png",
+    content: "Beautiful day for a coffee date! ☕️",
+    timestamp: new Date(Date.now() - 3600000),
+    likes: 8,
+    comments: 2,
     isLiked: true,
+    likedBy: ["currentUserId"],
   },
   {
     id: "3",
     userId: "user3",
-    userName: "Priya Sharma",
-    userAvatar: "https://placehold.co/100x100.png",
-    content: "Success story: Met my soulmate here 6 months ago, and we're getting married next month! Thank you Matrimony for making this possible! 💕",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5), // 5 hours ago
-    likes: 89,
-    comments: 12,
+    userName: "Priya Patel",
+    userAvatar: "https://placehold.co/400x400.png",
+    content: "Excited to be part of this community! 💕",
+    timestamp: new Date(Date.now() - 7200000),
+    likes: 15,
+    comments: 4,
     isLiked: false,
+    likedBy: [],
   },
   {
     id: "4",
     userId: "user4",
-    userName: "David Kumar",
-    userAvatar: "https://placehold.co/100x100.png",
-    content: "Looking forward to the community meetup this weekend! It's a great opportunity to meet like-minded people. Who else is attending? 👥",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8), // 8 hours ago
-    likes: 32,
-    comments: 7,
+    userName: "David Kim",
+    userAvatar: "https://placehold.co/400x400.png",
+    content: "Just moved to the city and looking to make new connections!",
+    timestamp: new Date(Date.now() - 10800000),
+    likes: 6,
+    comments: 1,
     isLiked: false,
+    likedBy: [],
   },
   {
     id: "5",
     userId: "user5",
     userName: "Emma Wilson",
-    userAvatar: "https://placehold.co/100x100.png",
-    content: "Just updated my profile with new photos and interests. Excited to connect with new people! 🌟",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
-    likes: 45,
-    comments: 4,
+    userAvatar: "https://placehold.co/400x400.png",
+    content: "Weekend plans: Exploring the city and meeting new people!",
+    timestamp: new Date(Date.now() - 14400000),
+    likes: 20,
+    comments: 5,
     isLiked: true,
+    likedBy: ["currentUserId"],
   },
   {
     id: "6",
     userId: "user6",
-    userName: "Raj Patel",
-    userAvatar: "https://placehold.co/100x100.png",
-    content: "Happy to share that I've found my life partner through this platform. The journey has been amazing! 🙏",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-    likes: 156,
-    comments: 23,
+    userName: "James Anderson",
+    userAvatar: "https://placehold.co/400x400.png",
+    content: "Love the new features on the platform!",
+    timestamp: new Date(Date.now() - 18000000),
+    likes: 9,
+    comments: 2,
     isLiked: false,
+    likedBy: [],
   },
   {
     id: "7",
     userId: "user7",
-    userName: "Sophie Anderson",
-    userAvatar: "https://placehold.co/100x100.png",
-    content: "Just had a wonderful first meeting with someone special. The compatibility is amazing! 💫",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 36), // 1.5 days ago
-    likes: 67,
-    comments: 9,
+    userName: "Sophia Lee",
+    userAvatar: "https://placehold.co/400x400.png",
+    content: "Just had an amazing first date! 💫",
+    timestamp: new Date(Date.now() - 21600000),
+    likes: 25,
+    comments: 7,
     isLiked: false,
+    likedBy: [],
   },
   {
     id: "8",
     userId: "user8",
-    userName: "Arjun Singh",
-    userAvatar: "https://placehold.co/100x100.png",
-    content: "Attending a cultural event this weekend. Would love to meet people who share similar interests in music and dance! 🎵",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48), // 2 days ago
-    likes: 42,
-    comments: 6,
+    userName: "Alex Martinez",
+    userAvatar: "https://placehold.co/400x400.png",
+    content: "Looking forward to the weekend events!",
+    timestamp: new Date(Date.now() - 25200000),
+    likes: 11,
+    comments: 3,
     isLiked: true,
+    likedBy: ["currentUserId"],
   },
   {
     id: "9",
     userId: "user9",
-    userName: "Maya Gupta",
-    userAvatar: "https://placehold.co/100x100.png",
-    content: "Just completed my profile verification. Looking forward to meaningful connections! ✨",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 72), // 3 days ago
-    likes: 38,
-    comments: 5,
+    userName: "Olivia Brown",
+    userAvatar: "https://placehold.co/400x400.png",
+    content: "New profile picture! What do you think?",
+    timestamp: new Date(Date.now() - 28800000),
+    likes: 18,
+    comments: 4,
     isLiked: false,
+    likedBy: [],
   },
   {
     id: "10",
     userId: "user10",
-    userName: "James Wilson",
-    userAvatar: "https://placehold.co/100x100.png",
-    content: "New to the platform and excited to be part of this community. Hoping to find someone special! 🌟",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 96), // 4 days ago
-    likes: 29,
-    comments: 8,
+    userName: "Daniel Taylor",
+    userAvatar: "https://placehold.co/400x400.png",
+    content: "Just joined the platform and already loving it!",
+    timestamp: new Date(Date.now() - 32400000),
+    likes: 7,
+    comments: 2,
     isLiked: false,
+    likedBy: [],
   },
 ];
 
@@ -222,7 +234,8 @@ export default function DashboardPage() {
   const [isLoadingConnections, setIsLoadingConnections] = useState(true);
 
   const [newPost, setNewPost] = useState("");
-  const [posts, setPosts] = useState<Post[]>(dummyPosts);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(true);
 
   const { toast } = useToast();
   const pathname = usePathname();
@@ -540,6 +553,30 @@ export default function DashboardPage() {
     };
   }, [currentUser, toast, fetchQuickSuggestions]);
 
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const postsQuery = query(
+      collection(db, "posts"),
+      orderBy("timestamp", "desc")
+    );
+
+    const unsubscribe = onSnapshot(postsQuery, (snapshot) => {
+      const postsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          isLiked: data.likedBy?.includes(currentUser.uid) || false,
+        } as Post;
+      });
+      setPosts(postsData);
+      setIsLoadingPosts(false);
+    });
+
+    return () => unsubscribe();
+  }, [currentUser]);
+
   const createChatDocument = async (user1Uid: string, user2Uid: string) => {
     const user1DocRef = doc(db, "users", user1Uid);
     const user2DocRef = doc(db, "users", user2Uid);
@@ -633,43 +670,79 @@ export default function DashboardPage() {
     }
   };
 
-  const handlePostSubmit = (e: React.FormEvent) => {
+  const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPost.trim() || !currentUser) return;
 
-    const post: Post = {
-      id: Date.now().toString(),
-      userId: currentUser.uid,
-      userName: userDisplayName,
-      userAvatar: userAvatarUrl,
-      content: newPost.trim(),
-      timestamp: new Date(),
-      likes: 0,
-      comments: 0,
-      isLiked: false,
-    };
+    try {
+      const postData = {
+        userId: currentUser.uid,
+        userName: userDisplayName,
+        userAvatar: userAvatarUrl,
+        content: newPost.trim(),
+        timestamp: serverTimestamp(),
+        likes: 0,
+        likedBy: [],
+        comments: 0,
+      };
 
-    setPosts([post, ...posts]);
-    setNewPost("");
-    toast({
-      title: "Posted successfully!",
-      description: "Your update has been shared with your connections.",
-    });
+      await addDoc(collection(db, "posts"), postData);
+      setNewPost("");
+      toast({
+        title: "Posted successfully!",
+        description: "Your update has been shared with your connections.",
+      });
+    } catch (error: any) {
+      console.error("Error creating post:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create post: " + error.message,
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleLikePost = (postId: string) => {
-    setPosts(
-      posts.map((post) => {
+  const handleLikePost = async (postId: string) => {
+    if (!currentUser) return;
+
+    try {
+      const postRef = doc(db, "posts", postId);
+      const postDoc = await getDoc(postRef);
+      
+      if (!postDoc.exists()) {
+        throw new Error("Post not found");
+      }
+
+      const postData = postDoc.data();
+      const likedBy = postData.likedBy || [];
+      const isLiked = likedBy.includes(currentUser.uid);
+
+      await updateDoc(postRef, {
+        likes: isLiked ? postData.likes - 1 : postData.likes + 1,
+        likedBy: isLiked 
+          ? arrayRemove(currentUser.uid)
+          : arrayUnion(currentUser.uid)
+      });
+
+      // Update local state
+      setPosts(posts.map(post => {
         if (post.id === postId) {
           return {
             ...post,
-            likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-            isLiked: !post.isLiked,
+            likes: isLiked ? post.likes - 1 : post.likes + 1,
+            isLiked: !isLiked,
           };
         }
         return post;
-      })
-    );
+      }));
+    } catch (error: any) {
+      console.error("Error liking post:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update like: " + error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -823,18 +896,25 @@ export default function DashboardPage() {
           {/* Timeline - 6 columns, centered */}
           <div className="col-span-6 space-y-4">
             {/* Post Creation Card */}
-            <Card className="bg-white border-none shadow-sm sticky top-4 z-10">
+            <Card className="bg-white border-none shadow-sm">
               <CardContent className="p-4">
                 <form onSubmit={handlePostSubmit} className="space-y-4">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={userAvatarUrl} alt={userDisplayName} />
-                      <AvatarFallback>{userDisplayName.substring(0, 1).toUpperCase()}</AvatarFallback>
+                      <AvatarFallback>{userDisplayName?.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <Input placeholder={`What's on your mind, ${userDisplayName}?`} className="bg-[#f0f2f5] border-none focus-visible:ring-0" value={newPost} onChange={(e) => setNewPost(e.target.value)} />
+                    <div className="flex-1">
+                      <Textarea
+                        placeholder="What's on your mind?"
+                        value={newPost}
+                        onChange={(e) => setNewPost(e.target.value)}
+                        className="min-h-[50px] resize-none border-none bg-accent/50 focus-visible:ring-1"
+                      />
+                    </div>
                   </div>
                   <div className="flex justify-end">
-                    <Button type="submit" disabled={!newPost.trim()} className="bg-primary hover:bg-primary/90">
+                    <Button type="submit" disabled={!newPost.trim()}>
                       Post
                     </Button>
                   </div>
@@ -843,41 +923,75 @@ export default function DashboardPage() {
             </Card>
 
             {/* Posts Feed */}
-            <div className="space-y-4">
-              {posts.map((post) => (
-                <Card key={post.id} className="bg-white border-none shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={post.userAvatar} alt={post.userName} />
-                        <AvatarFallback>{post.userName.substring(0, 1).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <Link href={`/profile/${post.userId}`} className="font-semibold hover:underline">
-                          {post.userName}
-                        </Link>
-                        <p className="text-xs text-muted-foreground">{formatDistanceToNow(post.timestamp, { addSuffix: true })}</p>
+            {isLoadingPosts ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <Card key={i} className="bg-white border-none shadow-sm">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-24" />
+                        </div>
                       </div>
-                    </div>
-                    <p className="text-[15px] mb-4 whitespace-pre-wrap">{post.content}</p>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <Button variant="ghost" size="sm" className={`gap-1.5 ${post.isLiked ? "text-primary" : ""}`} onClick={() => handleLikePost(post.id)}>
-                        <Heart className={`h-4 w-4 ${post.isLiked ? "fill-primary" : ""}`} />
-                        {post.likes} {post.likes === 1 ? "Like" : "Likes"}
-                      </Button>
-                      <Button variant="ghost" size="sm" className="gap-1.5">
-                        <MessageCircle className="h-4 w-4" />
-                        {post.comments} {post.comments === 1 ? "Comment" : "Comments"}
-                      </Button>
-                      <Button variant="ghost" size="sm" className="gap-1.5">
-                        <Share2 className="h-4 w-4" />
-                        Share
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      <Skeleton className="h-20 w-full" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : posts.length > 0 ? (
+              <div className="space-y-4">
+                {posts.map((post) => (
+                  <Card key={post.id} className="bg-white border-none shadow-sm">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={post.userAvatar} alt={post.userName} />
+                          <AvatarFallback>{post.userName?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{post.userName}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {post.timestamp?.toDate().toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="mb-2">{post.content}</p>
+                      <div className="flex items-center gap-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={cn(
+                            "flex items-center gap-2",
+                            post.isLiked && "text-primary"
+                          )}
+                          onClick={() => handleLikePost(post.id)}
+                        >
+                          <Heart
+                            className={cn(
+                              "h-5 w-5",
+                              post.isLiked && "fill-primary text-primary"
+                            )}
+                          />
+                          <span>{post.likes}</span>
+                        </Button>
+                        <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                          <MessageCircle className="h-5 w-5" />
+                          <span>{post.comments}</span>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="bg-white border-none shadow-sm">
+                <CardContent className="p-8 text-center">
+                  <p className="text-muted-foreground">No posts yet. Be the first to share something!</p>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Right Sidebar - 3 columns */}

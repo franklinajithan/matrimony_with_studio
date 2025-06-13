@@ -1,4 +1,3 @@
-
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +18,7 @@ import { auth, db } from "@/lib/firebase/config";
 import { updateProfile } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { uploadFile } from "@/lib/firebase/storageService";
+import { createUserProfile } from "@/lib/firebase/userService";
 
 const profileSetupSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters."),
@@ -76,7 +76,6 @@ export default function ProfileSetupPage() {
         photoURL: finalPhotoURL, 
       });
 
-      const userDocRef = doc(db, "users", user.uid);
       const initialProfileData = {
         uid: user.uid,
         email: user.email,
@@ -105,12 +104,9 @@ export default function ProfileSetupPage() {
         horoscopeFileName: "",
         horoscopeFileUrl: "",
         additionalPhotoUrls: [], 
-        
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       };
 
-      await setDoc(userDocRef, initialProfileData, { merge: true });
+      await createUserProfile(user.uid, initialProfileData);
 
       toast({
         title: "Profile Setup Complete!",

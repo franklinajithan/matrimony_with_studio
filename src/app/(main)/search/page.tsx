@@ -1,113 +1,177 @@
+"use client";
 
-import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { db } from "@/lib/firebase/config";
+import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SearchIcon, Filter } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Search, Loader2, UserPlus, MapPin, Briefcase, Cake } from "lucide-react";
+import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
-const religionOptions = [
-  { value: "Hinduism", label: "Hinduism" },
-  { value: "Islam", label: "Islam" },
-  { value: "Christianity", label: "Christianity" },
-  { value: "Sikhism", label: "Sikhism" },
-  { value: "Buddhism", label: "Buddhism" },
-  { value: "Jainism", label: "Jainism" },
-  { value: "Zoroastrianism", label: "Zoroastrianism" },
-  { value: "Atheism", label: "Atheism" },
-  { value: "Agnosticism", label: "Agnosticism" },
-  { value: "Spiritual", label: "Spiritual but not religious" },
-  { value: "Other", label: "Other" },
-  { value: "any", label: "Any" },
-];
+interface SearchResult {
+  id: string;
+  displayName: string;
+  photoURL: string;
+  age?: number;
+  profession?: string;
+  location?: string;
+  bio?: string;
+  dataAiHint?: string;
+}
 
 export default function SearchPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    await performSearch(searchQuery.trim());
+  };
+
+  const performSearch = async (query: string) => {
+    setIsLoading(true);
+    try {
+      const usersRef = collection(db, "users");
+      const searchTerms = query.toLowerCase().split(" ").filter(term => term.length > 0);
+
+      // Create a query that searches across multiple fields
+      const q = query(
+        usersRef,
+        where("searchTerms", "array-contains-any", searchTerms),
+        orderBy("displayName"),
+        limit(20)
+      );
+
+      const querySnapshot = await getDocs(q);
+      const searchResults: SearchResult[] = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        searchResults.push({
+          id: doc.id,
+          displayName: data.displayName || "User",
+          photoURL: data.photoURL || "https://placehold.co/400x400.png",
+          age: data.age,
+          profession: data.profession,
+          location: data.location,
+          bio: data.bio,
+          dataAiHint: data.dataAiHint,
+        });
+      });
+
+      setResults(searchResults);
+    } catch (error) {
+      console.error("Error searching users:", error);
+      toast({
+        title: "Search Error",
+        description: "Failed to search users. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const query = searchParams.get("q");
+    if (query) {
+      setSearchQuery(query);
+      performSearch(query);
+    }
+  }, [searchParams]);
+
   return (
-    <div className="space-y-8">
-      <div className="text-center">
-        <h1 className="font-headline text-4xl font-semibold text-gray-800">Find Your Match</h1>
-        <p className="mt-2 text-lg text-muted-foreground">Use advanced filters to find compatible profiles.</p>
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto mb-8">
+        <form onSubmit={handleSearch} className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search by name, profession, or location..."
+            className="w-full pl-10 h-12 text-lg"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </form>
       </div>
 
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-            <Filter className="h-6 w-6 text-primary" />
-            Search Filters
-          </CardTitle>
-          <CardDescription>Specify your criteria to narrow down your search.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="age-min">Age Range</Label>
-            <div className="flex items-center gap-2">
-              <Input id="age-min" type="number" placeholder="Min Age" className="w-1/2" />
-              <span className="text-muted-foreground">-</span>
-              <Input id="age-max" type="number" placeholder="Max Age" className="w-1/2" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="height">Height</Label>
-             <div className="flex items-center gap-2">
-              <Input id="height-min" type="text" placeholder="Min (e.g. 5'0&quot;)" className="w-1/2" />
-               <span className="text-muted-foreground">-</span>
-              <Input id="height-max" type="text" placeholder="Max (e.g. 6'0&quot;)" className="w-1/2" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="religion">Religion</Label>
-            <Select>
-              <SelectTrigger id="religion">
-                <SelectValue placeholder="Select Religion" />
-              </SelectTrigger>
-              <SelectContent>
-                {religionOptions.map(option => (
-                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="caste">Caste/Community</Label>
-            <Input id="caste" placeholder="Enter Caste or Community (e.g., Gounder, Vellalar)" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="language">Mother Tongue</Label>
-            <Input id="language" placeholder="e.g., Tamil, Sinhala, English" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
-            <Input id="location" placeholder="City, State, Country (e.g., Colombo, Chennai)" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="profession">Profession</Label>
-            <Input id="profession" placeholder="Enter Profession" />
-          </div>
-           <div className="space-y-2">
-            <Label htmlFor="nakshatra">Nakshatra (Star)</Label>
-            <Input id="nakshatra" placeholder="Enter Nakshatra" />
-          </div>
-           <div className="space-y-2">
-            <Label htmlFor="rasi">Rasi (Zodiac)</Label>
-            <Input id="rasi" placeholder="Enter Rasi" />
-          </div>
-          <div className="md:col-span-2 lg:col-span-3 flex justify-end mt-4">
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              <SearchIcon className="mr-2 h-5 w-5" /> Search Matches
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="mt-12">
-        <h2 className="font-headline text-3xl font-semibold text-gray-700 mb-6 text-center">Search Results</h2>
-        {/* Placeholder for search results. Could be a grid of profile cards similar to DiscoverPage */}
-        <div className="text-center p-12 border-2 border-dashed border-border rounded-lg">
-          <SearchIcon className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Your search results will appear here.</p>
-          <p className="text-sm text-muted-foreground">Adjust your filters above to find potential matches.</p>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </div>
+      ) : results.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {results.map((user) => (
+            <Card key={user.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-4">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={user.photoURL} alt={user.displayName} data-ai-hint={user.dataAiHint} />
+                    <AvatarFallback>{user.displayName.substring(0, 1).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <Link href={`/profile/${user.id}`} className="font-semibold hover:underline block truncate">
+                      {user.displayName}
+                    </Link>
+                    <div className="text-sm text-muted-foreground space-y-1 mt-1">
+                      {user.age && (
+                        <p className="flex items-center">
+                          <Cake className="mr-1.5 h-3.5 w-3.5" /> {user.age} years
+                        </p>
+                      )}
+                      {user.profession && (
+                        <p className="flex items-center">
+                          <Briefcase className="mr-1.5 h-3.5 w-3.5" /> {user.profession}
+                        </p>
+                      )}
+                      {user.location && (
+                        <p className="flex items-center">
+                          <MapPin className="mr-1.5 h-3.5 w-3.5" /> {user.location}
+                        </p>
+                      )}
+                    </div>
+                    {user.bio && (
+                      <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{user.bio}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/profile/${user.id}`} className="flex items-center gap-2">
+                      <UserPlus className="h-4 w-4" />
+                      View Profile
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : searchQuery ? (
+        <div className="text-center py-12">
+          <Search className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">No results found</h3>
+          <p className="text-muted-foreground">Try different keywords or check your spelling</p>
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <Search className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Search for people</h3>
+          <p className="text-muted-foreground">Enter a name, profession, or location to find matches</p>
+        </div>
+      )}
     </div>
   );
 }

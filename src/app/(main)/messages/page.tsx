@@ -49,6 +49,7 @@ export default function MessagesPage() {
   const [lastMessageDoc, setLastMessageDoc] = useState<any>(null);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [newMessage, setNewMessage] = useState("");
 
   useEffect(() => {
     console.log("MessagesPage: Auth listener setup.");
@@ -344,11 +345,7 @@ export default function MessagesPage() {
   // Update the message sending to handle read status
   const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.target as HTMLFormElement;
-    const input = form.elements.namedItem("message") as HTMLInputElement;
-    const message = input.value.trim();
-
-    if (!message || !currentUser || !selectedChatId) return;
+    if (!newMessage.trim() || !currentUser || !selectedChatId) return;
 
     try {
       const batch = writeBatch(db);
@@ -357,7 +354,7 @@ export default function MessagesPage() {
 
       // Add the new message
       batch.set(newMessageRef, {
-        text: message,
+        text: newMessage.trim(),
         senderId: currentUser.uid,
         timestamp: Timestamp.now(),
         isRead: false,
@@ -366,13 +363,13 @@ export default function MessagesPage() {
       // Update the chat document
       const chatRef = doc(db, "chats", selectedChatId);
       batch.update(chatRef, {
-        lastMessageText: message,
+        lastMessageText: newMessage.trim(),
         lastMessageTimestamp: Timestamp.now(),
         [`unreadBy.${selectedConversation?.otherUserId}`]: increment(1),
       });
 
       await batch.commit();
-      input.value = "";
+      setNewMessage(""); // Clear the input after sending
     } catch (error) {
       console.error("Error sending message:", error);
       toast({
@@ -497,7 +494,13 @@ export default function MessagesPage() {
             {/* Chat input area */}
             <div className="p-4 border-t bg-background">
               <form className="flex items-center gap-2" onSubmit={handleSendMessage}>
-                <Input name="message" placeholder="Type a message..." className="flex-1" />
+                <Input
+                  name="message"
+                  placeholder="Type a message..."
+                  className="flex-1"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                />
                 <Button type="submit" size="icon" className="rounded-full">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                     <path d="m22 2-7 20-4-9-9-4Z" />
