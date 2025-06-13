@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -11,14 +11,16 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, Telescope, FileText } from 'lucide-react';
+import { Loader2, Sparkles, Telescope, FileText, Info } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { HoroscopeChartDisplay } from './HoroscopeChartDisplay'; // Import the new component
+import { HoroscopeChartDisplay } from './HoroscopeChartDisplay';
+import { auth, db } from '@/lib/firebase/config';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/jpg", "image/png", "image/webp"];
 
-// Schema for client-side form validation, needs to be self-contained
 const ExtractHoroscopeDetailsFormClientSchema = z.object({
   dateOfBirth: z.string().min(1, { message: "Date of birth is required."}).regex(/^\d{4}-\d{2}-\d{2}$/, "Date of birth must be in YYYY-MM-DD format."),
   timeOfBirth: z.string().min(1, { message: "Time of birth is required."}),
@@ -38,21 +40,92 @@ type FormData = z.infer<typeof ExtractHoroscopeDetailsFormClientSchema>;
 export function ExtractHoroscopeDetailsForm() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [analysisResult, setAnalysisResult] = useState<ExtractHoroscopeDetailsOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
-
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [profileHoroscopeFileName, setProfileHoroscopeFileName] = useState<string | null>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(ExtractHoroscopeDetailsFormClientSchema),
     defaultValues: {
-      dateOfBirth: "1990-01-01",
-      timeOfBirth: "12:00 PM", 
-      placeOfBirth: "Delhi, India",
+      dateOfBirth: "", // Will be pre-filled from profile or default
+      timeOfBirth: "", 
+      placeOfBirth: "",
       horoscopeFileDataUri: undefined,
       horoscopeFile: undefined,
     },
   });
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (currentUser) {
+        setIsLoadingProfile(true);
+        try {
+          const userDocRef = doc(db, "users", currentUser.uid);
+          const docSnap = await getDoc(userDocRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            form.reset({
+              dateOfBirth: data.dob || "1990-01-01",
+              timeOfBirth: data.timeOfBirth || "12:00 PM", // Assuming timeOfBirth is stored
+              placeOfBirth: data.location || "Delhi, India", // Using location as a proxy for placeOfBirth for now
+              horoscopeFileDataUri: undefined,
+              horoscopeFile: undefined,
+            });
+            if (data.horoscopeFileName) {
+              setProfileHoroscopeFileName(data.horoscopeFileName);
+            }
+            toast({
+                title: "Profile Data Loaded",
+                description: "Form pre-filled with your saved details. Modify as needed for this analysis.",
+                variant: "default",
+                duration: 2000,
+            });
+          } else {
+             // Set default values if profile doesn't exist or is empty
+            form.reset({
+              dateOfBirth: "1990-01-01",
+              timeOfBirth: "12:00 PM",
+              placeOfBirth: "Delhi, India",
+              horoscopeFileDataUri: undefined,
+              horoscopeFile: undefined,
+            });
+          }
+        } catch (e) {
+          console.error("Failed to fetch profile data:", e);
+          toast({ title: "Error", description: "Could not load your profile data for pre-filling.", variant: "destructive" });
+           form.reset({ // Fallback to defaults on error
+              dateOfBirth: "1990-01-01",
+              timeOfBirth: "12:00 PM",
+              placeOfBirth: "Delhi, India",
+            });
+        } finally {
+          setIsLoadingProfile(false);
+        }
+      } else {
+         // No user logged in, set default values
+        form.reset({
+          dateOfBirth: "1990-01-01",
+          timeOfBirth: "12:00 PM",
+          placeOfBirth: "Delhi, India",
+          horoscopeFileDataUri: undefined,
+          horoscopeFile: undefined,
+        });
+        setIsLoadingProfile(false);
+      }
+    };
+    fetchProfileData();
+  }, [currentUser, form, toast]);
+
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -117,6 +190,15 @@ export function ExtractHoroscopeDetailsForm() {
     }
   }
 
+  if (isLoadingProfile) {
+    return (
+        <div className="flex flex-col items-center justify-center p-8 space-y-2">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading your profile data...</p>
+        </div>
+    );
+  }
+
   return (
     <>
       <Form {...form}>
@@ -178,7 +260,12 @@ export function ExtractHoroscopeDetailsForm() {
                     className="text-sm"
                   />
                 </FormControl>
-                {selectedFileName && <FormDescription className="text-xs">Selected: {selectedFileName}. Will be used to supplement analysis.</FormDescription>}
+                {selectedFileName && <FormDescription className="text-xs">Selected for this analysis: {selectedFileName}.</FormDescription>}
+                {!selectedFileName && profileHoroscopeFileName && (
+                     <FormDescription className="text-xs flex items-center gap-1 text-blue-600">
+                        <Info size={14}/> Your profile has a stored horoscope: '{profileHoroscopeFileName}'. Select a file above to use it or upload a new one for this analysis.
+                    </FormDescription>
+                )}
                 <FormMessage />
               </FormItem>
             )}
