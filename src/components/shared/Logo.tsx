@@ -18,7 +18,7 @@ export function Logo({
   return (
     <Link href="/" className={`flex items-center gap-1.5 ${className}`}>
       <span className={`font-headline font-bold ${textSize} ${textColor} tracking-tight`}>CUPID</span>
-      <Heart className="text-red-500 fill-current animate-bounce" size={iconSize * 0.8} /> {/* Heart is now red */}
+      <Heart className="text-red-500 fill-current" size={iconSize * 0.8} /> {/* Heart is now red, removed animate-bounce */}
       <span className={`font-headline font-bold ${textSize} ${textColor} tracking-tight`}>KNOTS</span>
     </Link>
   );
