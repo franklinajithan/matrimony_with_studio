@@ -39,6 +39,7 @@ import { enhanceMusic } from "@/ai/flows/enhance-music-flow";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const ACCEPTED_HOROSCOPE_FILE_TYPES = [...ACCEPTED_IMAGE_TYPES, "application/pdf"];
+const MAX_ADDITIONAL_PHOTOS = 5;
 
 interface StoredPhoto {
   id: string;
@@ -57,6 +58,7 @@ const editProfileSchema = z.object({
     .refine(file => !file || ACCEPTED_IMAGE_TYPES.includes(file.type), ".jpg, .jpeg, .png and .webp files are accepted."),
   additionalPhotos: z 
     .array(z.instanceof(File))
+    .max(MAX_ADDITIONAL_PHOTOS, `You can select up to ${MAX_ADDITIONAL_PHOTOS} new photos at a time.`)
     .optional()
     .refine(files => !files || files.every(file => file.size <= MAX_FILE_SIZE), `Max file size for each additional photo is 5MB.`)
     .refine(files => !files || files.every(file => ACCEPTED_IMAGE_TYPES.includes(file.type)), "Only .jpg, .jpeg, .png and .webp formats are supported."),
@@ -130,6 +132,8 @@ export default function EditProfilePage() {
   const [managedExistingPhotos, setManagedExistingPhotos] = useState<StoredPhoto[]>([]); 
 
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
+  const additionalPhotosInputRef = useRef<HTMLInputElement>(null);
+
 
   const form = useForm<z.infer<typeof editProfileSchema>>({
     resolver: zodResolver(editProfileSchema),
@@ -354,6 +358,7 @@ export default function EditProfilePage() {
         }
         finalAdditionalPhotos = [...finalAdditionalPhotos, ...newUploadedPhotos];
         setAdditionalPhotosPreview([]); 
+        if (additionalPhotosInputRef.current) additionalPhotosInputRef.current.value = ""; // Clear file input
       }
       dataToSave.additionalPhotoUrls = finalAdditionalPhotos;
       setManagedExistingPhotos(finalAdditionalPhotos); 
@@ -405,21 +410,50 @@ export default function EditProfilePage() {
   }
 
   const handleAdditionalPhotosChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    form.setValue("additionalPhotos", files.length > 0 ? files : undefined, { shouldValidate: true }); 
+    const currentExistingCount = managedExistingPhotos.length;
+    const slotsAvailableForNew = MAX_ADDITIONAL_PHOTOS - currentExistingCount;
 
-    if (files.length > 0) {
+    if (slotsAvailableForNew <= 0) {
+      toast({
+        title: "Gallery Full",
+        description: `You already have ${MAX_ADDITIONAL_PHOTOS} photos. Remove existing ones to add new photos.`,
+        variant: "default",
+      });
+      if (additionalPhotosInputRef.current) additionalPhotosInputRef.current.value = "";
+      form.setValue("additionalPhotos", undefined, { shouldValidate: true });
+      setAdditionalPhotosPreview([]);
+      return;
+    }
+
+    const filesSelectedInDialog = Array.from(event.target.files || []);
+    let filesToProcess = filesSelectedInDialog;
+
+    if (filesSelectedInDialog.length > slotsAvailableForNew) {
+      filesToProcess = filesSelectedInDialog.slice(0, slotsAvailableForNew);
+      toast({
+        title: "Limit Reached",
+        description: `You can add ${slotsAvailableForNew} more photo(s). ${filesToProcess.length} out of ${filesSelectedInDialog.length} files were selected.`,
+        variant: "default",
+      });
+    }
+    
+    form.setValue("additionalPhotos", filesToProcess.length > 0 ? filesToProcess : undefined, { shouldValidate: true }); 
+
+    if (filesToProcess.length > 0) {
       const newPreviews: string[] = [];
-      files.forEach(file => {
+      filesToProcess.forEach(file => {
         const reader = new FileReader();
         reader.onloadend = () => {
           newPreviews.push(reader.result as string);
-          if (newPreviews.length === files.length) { 
-            setAdditionalPhotosPreview(prev => [...prev, ...newPreviews.filter(p => !prev.includes(p))]);
+          if (newPreviews.length === filesToProcess.length) { 
+            setAdditionalPhotosPreview(newPreviews); // Replace previews with only the current selection
           }
         };
         reader.readAsDataURL(file);
       });
+    } else {
+      setAdditionalPhotosPreview([]); // Clear previews if no files are processed
+      if (additionalPhotosInputRef.current) additionalPhotosInputRef.current.value = "";
     }
   };
   
@@ -429,6 +463,9 @@ export default function EditProfilePage() {
     const currentFiles = form.getValues("additionalPhotos") || [];
     const updatedFiles = currentFiles.filter((_, i) => i !== index);
     form.setValue("additionalPhotos", updatedFiles.length > 0 ? updatedFiles : undefined, { shouldValidate: true });
+     if (updatedFiles.length === 0 && additionalPhotosInputRef.current) {
+        additionalPhotosInputRef.current.value = ""; // Clear file input if all previews removed
+    }
     toast({title: "Photo preview removed."});
   };
 
@@ -489,6 +526,8 @@ export default function EditProfilePage() {
   }
   
   const anyEnhancementLoading = isEnhancingBio || isEnhancingHobbies || isEnhancingMovies || isEnhancingMusic;
+  const canUploadMoreAdditionalPhotos = managedExistingPhotos.length < MAX_ADDITIONAL_PHOTOS;
+
 
   return (
     <div className="space-y-8">
@@ -749,7 +788,11 @@ export default function EditProfilePage() {
 
             <div className="space-y-2">
                 <Label className="flex items-center font-semibold"><FileImage className="mr-2 h-4 w-4 text-muted-foreground" />Your Photo Gallery</Label>
-                <FormDescription>Manage your additional photos. Upload new ones or remove existing ones. (Max 5MB each, JPG/PNG/WebP)</FormDescription>
+                <FormDescription>
+                    Manage your additional photos. You can have up to {MAX_ADDITIONAL_PHOTOS} photos in your gallery. 
+                    Currently, you have {managedExistingPhotos.length}. 
+                    You can add {Math.max(0, MAX_ADDITIONAL_PHOTOS - managedExistingPhotos.length)} more.
+                </FormDescription>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                     {managedExistingPhotos.map(photo => (
                         <div key={`existing-${photo.id}`} className="aspect-square bg-muted rounded-md flex items-center justify-center relative group">
@@ -780,17 +823,23 @@ export default function EditProfilePage() {
                     <Input
                       type="file"
                       multiple
+                      ref={additionalPhotosInputRef}
                       accept={ACCEPTED_IMAGE_TYPES.join(',')}
                       onChange={(e) => {
-                         field.onChange(e.target.files ? Array.from(e.target.files) : undefined);
+                         // field.onChange is handled by handleAdditionalPhotosChange to manage file array
                          handleAdditionalPhotosChange(e);
                       }}
-                      disabled={isSaving || anyEnhancementLoading}
+                      disabled={isSaving || anyEnhancementLoading || !canUploadMoreAdditionalPhotos}
                     />
                   </FormControl>
                   {form.getValues("additionalPhotos") && form.getValues("additionalPhotos")!.length > 0 && (
                     <FormDescription className="text-xs">
                       Selected {form.getValues("additionalPhotos")!.length} file(s) for upload.
+                    </FormDescription>
+                  )}
+                  {!canUploadMoreAdditionalPhotos && managedExistingPhotos.length >= MAX_ADDITIONAL_PHOTOS && (
+                    <FormDescription className="text-xs text-destructive">
+                      You have reached the maximum of {MAX_ADDITIONAL_PHOTOS} additional photos.
                     </FormDescription>
                   )}
                   <FormMessage />
