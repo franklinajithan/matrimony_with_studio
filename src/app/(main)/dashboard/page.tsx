@@ -4,11 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-<<<<<<< HEAD
-import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles, Users, UserPlus, CalendarCheck, Briefcase, MapPin, Cake, Loader2, Check, X, Eye, FileText, Heart, Edit3, Zap, Rocket } from "lucide-react";
-=======
-import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles, Users, UserPlus, CalendarCheck, Briefcase, MapPin, Cake, Loader2, Check, X, Eye, FileText, Heart, Edit3, Share2 } from "lucide-react";
->>>>>>> 65303ad888bc9fae24793aada87b1a2be996a47c
+import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles, Users, UserPlus, CalendarCheck, Briefcase, MapPin, Cake, Loader2, Check, X, Eye, FileText, Heart, Edit3, Zap, Rocket, Share2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import React, { useEffect, useState, useCallback } from "react";
@@ -88,19 +84,11 @@ const mockTodaysHoroscope = {
 
 const PROFILE_COMPLETION_FIELDS = ["displayName", "bio", "photoURL", "location", "profession", "height", "dob", "religion", "caste", "language", "hobbies"];
 
-const dashboardQuickLinks = [
-<<<<<<< HEAD
-  { href: '/discover', label: 'Discover', icon: <Search className="mr-3 h-5 w-5" /> },
-  { href: '/messages', label: 'Messages', icon: <MessageCircle className="mr-3 h-5 w-5" /> },
-  { href: '/dashboard/horoscope', label: 'Horoscope', icon: <Sparkles className="mr-3 h-5 w-5" /> },
-  { href: '/dashboard/profile-views', label: 'Profile Views', icon: <Eye className="mr-3 h-5 w-5" /> },
-  { href: '/pricing', label: 'Subscription', icon: <CreditCard className="mr-3 h-5 w-5" /> },
-=======
-  { href: "/discover", label: "Discover", icon: <Search className="mr-3 h-5 w-5" /> },
-  { href: "/messages", label: "Messages", icon: <MessageCircle className="mr-3 h-5 w-5" /> },
+const dashboardNavLinks = [
+  { href: "/dashboard/edit-profile", label: "Edit Profile", icon: <UserCircle className="mr-3 h-5 w-5" /> },
+  { href: "/dashboard/preferences", label: "Preferences", icon: <Settings className="mr-3 h-5 w-5" /> },
   { href: "/dashboard/horoscope", label: "Horoscope", icon: <Sparkles className="mr-3 h-5 w-5" /> },
   { href: "/pricing", label: "Subscription", icon: <CreditCard className="mr-3 h-5 w-5" /> },
->>>>>>> 65303ad888bc9fae24793aada87b1a2be996a47c
 ];
 
 const dummyPosts: Post[] = [
@@ -687,8 +675,10 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#f0f2f5]">
       <div className="space-y-4 p-4">
-        <div className="grid grid-cols-12 gap-4">
+        <div className="grid grid-cols-12 gap-4 max-w-[1400px] mx-auto">
+          {/* Left Sidebar - 3 columns */}
           <div className="col-span-3 space-y-4">
+            {/* Quick Links Card */}
             <Card className="bg-white border-none shadow-sm">
               <CardHeader className="p-3 pb-2">
                 <CardTitle className="flex items-center gap-2 text-base font-semibold">
@@ -696,7 +686,7 @@ export default function DashboardPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-2">
-                {dashboardQuickLinks.map((link) => {
+                {dashboardNavLinks.map((link) => {
                   const isActive = pathname === link.href;
                   return (
                     <Button key={link.label} variant={isActive ? "default" : "ghost"} asChild className={cn("w-full justify-start px-3 py-2 text-sm h-auto", isActive ? "bg-primary text-primary-foreground hover:bg-primary/90" : "text-foreground/70 hover:text-primary hover:bg-accent/50")}>
@@ -712,6 +702,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
+            {/* Profile Completion Card */}
             <Card className="bg-white border-none shadow-sm">
               <CardHeader className="p-4 pb-2">
                 <CardTitle className="flex items-center gap-2 text-lg font-semibold">
@@ -731,198 +722,107 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-<<<<<<< HEAD
-          <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-headline text-2xl text-pink-500">
-                <Heart className="h-6 w-6 fill-pink-500 text-pink-500" />
-                Success Story
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="relative w-full h-56 mb-3 rounded-md overflow-hidden">
-                <Image
-                  src="https://placehold.co/600x400.png"
-                  alt="Riya & Rohan"
-                  fill
-                  className="object-cover"
-                  data-ai-hint="happy couple wedding"
-                />
-              </div>
-              <h3 className="font-semibold text-xl text-foreground">Riya & Rohan Found Love!</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                "We connected on CupidMatch and instantly knew there was something special. Thank you for helping us find our happily ever after!"
-              </p>
-            </CardContent>
-            <CardFooter>
-              <Button variant="link" className="text-primary p-0 h-auto" asChild>
-                <Link href="/success-stories">Read More Stories</Link> 
-              </Button>
-            </CardFooter>
-          </Card>
-
-        </div>
-
-        {/* Right Sidebar */}
-        <div className="lg:col-span-3 space-y-6">
-           <Card className="shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-headline text-xl text-secondary">
-                <Sparkles className="h-5 w-5" /> Today's Horoscope ({mockTodaysHoroscope.sign})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-2">{mockTodaysHoroscope.summary}</p>
-              <div className="text-xs space-y-0.5">
-                <p><span className="font-semibold">Lucky Color:</span> {mockTodaysHoroscope.luckyColor}</p>
-                <p><span className="font-semibold">Lucky Number:</span> {mockTodaysHoroscope.luckyNumber}</p>
-              </div>
-              <Button variant="link" size="sm" className="p-0 h-auto mt-2 text-secondary" asChild>
-                <Link href="/dashboard/horoscope">More Horoscope Tools</Link>
-              </Button>
-            </CardContent>
-          </Card>
-          
-          <Card className="shadow-lg hover:shadow-xl transition-shadow border-accent/50">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2 font-headline text-xl text-accent">
-                    <Rocket className="h-5 w-5"/> Profile Boost
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-                <p className="text-sm text-muted-foreground mb-3">
-                    Get noticed faster! Boost your profile to appear higher in search results and suggestions.
-                </p>
-                <Button variant="default" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                   <Zap className="mr-2 h-4 w-4"/> Boost Now
-                </Button>
-            </CardContent>
-            <CardFooter>
-                <Link href="/pricing#boosts" className="text-xs text-muted-foreground hover:text-accent mx-auto">
-                    Learn more about profile boosts
-                </Link>
-            </CardFooter>
-          </Card>
-
-          <Card className="shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-headline text-xl text-primary">
-                <UserPlus className="h-5 w-5" /> Match Requests
-                {!isLoadingRequests && matchRequests.length > 0 && <Badge variant="destructive" className="ml-auto">{matchRequests.length}</Badge>}
-              </CardTitle>
-              <CardDescription>People who want to connect with you.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {isLoadingRequests && (
-                <div className="flex justify-center items-center py-4"> <Loader2 className="h-6 w-6 animate-spin text-primary" /> </div>
-              )}
-              {!isLoadingRequests && matchRequests.length > 0 && (
-                matchRequests.map(req => (
-                  <div key={req.id} className="flex items-center justify-between p-2.5 bg-muted/20 hover:bg-muted/40 rounded-md transition-colors">
-                    <div className="flex items-center gap-2.5">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={req.senderAvatarUrl} alt={req.senderName} data-ai-hint={req.senderDataAiHint} />
-                        <AvatarFallback>{req.senderName.substring(0, 1).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium text-sm text-foreground">{req.senderName}</p>
-                        <div className="text-xs text-muted-foreground mt-0.5 space-y-px">
-                          {req.senderAge != null && req.senderAge > 0 && (
-                            <p className="flex items-center">
-                              <Cake className="mr-1.5 h-3 w-3 text-muted-foreground/80" /> {req.senderAge} years old
-                            </p>
-                          )}
-                          <p className="flex items-center">
-                            <Briefcase className="mr-1.5 h-3 w-3 text-muted-foreground/80" />
-                            {req.senderProfession || 'Profession not specified'}
-                          </p>
-                          {req.senderLocation && (
-                            <p className="flex items-center">
-                              <MapPin className="mr-1.5 h-3 w-3 text-muted-foreground/80" /> {req.senderLocation}
-                            </p>
-                          )}
-=======
+            {/* AI Suggestions Card */}
             <Card className="bg-white border-none shadow-sm">
-              <CardHeader className="p-3 pb-2">
-                <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  <Sparkles className="h-4 w-4" /> Suggested Matches
+              <CardHeader className="p-4 pb-2">
+                <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                  <Sparkles className="h-4 w-4 text-primary" /> AI Suggestions
                 </CardTitle>
+                <CardDescription className="text-sm">Personalized matches based on your profile</CardDescription>
               </CardHeader>
-              <CardContent className="p-3">
+              <CardContent className="p-4">
                 {isLoadingSuggestions ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {[...Array(3)].map((_, i) => (
-                      <div key={i} className="p-2 bg-[#f0f2f5] rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <Skeleton className="h-12 w-12 rounded-full" />
-                          <div className="space-y-1.5 flex-1">
-                            <Skeleton className="h-4 w-24" />
-                            <Skeleton className="h-3 w-20" />
-                          </div>
-                          <Skeleton className="h-7 w-16" />
->>>>>>> 65303ad888bc9fae24793aada87b1a2be996a47c
+                      <div key={i} className="flex items-center gap-3 p-2">
+                        <Skeleton className="h-12 w-12 rounded-full" />
+                        <div className="space-y-2 flex-1">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-3 w-32" />
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : quickSuggestions.length > 0 ? (
-                  <div className="space-y-2">
-                    {quickSuggestions.map((profile) => (
-                      <div key={profile.id} className="p-2 bg-[#f0f2f5] rounded-lg hover:bg-[#e4e6e9] transition-colors">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-12 w-12 ring-1 ring-primary/10">
-                            <AvatarImage src={profile.avatarUrl} alt={profile.name} />
-                            <AvatarFallback>{profile.name.substring(0, 1).toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <Link href={`/profile/${profile.id}`} className="font-medium text-sm hover:underline block">
-                              {profile.name}
-                              {profile.age && <span className="text-muted-foreground font-normal">, {profile.age}</span>}
-                            </Link>
-                            <div className="text-xs text-muted-foreground space-y-0.5">
-                              {profile.profession && (
-                                <p className="flex items-center gap-1">
-                                  <Briefcase className="h-3 w-3" />
-                                  <span className="truncate">{profile.profession}</span>
-                                </p>
-                              )}
-                              {profile.location && (
-                                <p className="flex items-center gap-1">
-                                  <MapPin className="h-3 w-3" />
-                                  <span className="truncate">{profile.location}</span>
-                                </p>
-                              )}
-                            </div>
+                  <div className="space-y-3">
+                    {quickSuggestions.map((suggestion) => (
+                      <div key={suggestion.id} className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded-lg transition-colors">
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={suggestion.avatarUrl} alt={suggestion.name} data-ai-hint={suggestion.dataAiHint} />
+                          <AvatarFallback>{suggestion.name.substring(0, 1).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <Link href={`/profile/${suggestion.id}`} className="font-medium text-sm hover:underline block">
+                            {suggestion.name}
+                          </Link>
+                          <div className="text-xs text-muted-foreground space-y-0.5">
+                            {suggestion.age && (
+                              <p className="flex items-center">
+                                <Cake className="mr-1.5 h-3 w-3" /> {suggestion.age} years
+                              </p>
+                            )}
+                            {suggestion.profession && (
+                              <p className="flex items-center">
+                                <Briefcase className="mr-1.5 h-3 w-3" /> {suggestion.profession}
+                              </p>
+                            )}
+                            {suggestion.location && (
+                              <p className="flex items-center">
+                                <MapPin className="mr-1.5 h-3 w-3" /> {suggestion.location}
+                              </p>
+                            )}
                           </div>
-                          <Button size="sm" className="h-7" asChild>
-                            <Link href={`/profile/${profile.id}`}>
-                              <Eye className="h-3 w-3 mr-1" /> View
-                            </Link>
-                          </Button>
                         </div>
+                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" asChild>
+                          <Link href={`/profile/${suggestion.id}`}>
+                            <Eye className="h-4 w-4" />
+                          </Link>
+                        </Button>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-4 space-y-2">
-                    <p className="text-sm text-muted-foreground">No suggestions available at the moment.</p>
-                    <Button size="sm" asChild>
+                  <div className="text-center py-4">
+                    <p className="text-sm text-muted-foreground">No suggestions available</p>
+                    <Button variant="link" size="sm" className="mt-2" asChild>
                       <Link href="/discover">Find Matches</Link>
                     </Button>
                   </div>
                 )}
               </CardContent>
-              {!isLoadingSuggestions && quickSuggestions.length > 0 && (
-                <CardFooter className="p-3 pt-0">
-                  <Button variant="link" size="sm" className="w-full h-8" asChild>
-                    <Link href="/suggestions">See More Suggestions</Link>
-                  </Button>
-                </CardFooter>
-              )}
+              <CardFooter className="p-4 pt-0">
+                <Button variant="link" className="w-full text-sm" asChild>
+                  <Link href="/discover">View More Suggestions</Link>
+                </Button>
+              </CardFooter>
+            </Card>
+
+            {/* Success Story Card */}
+            <Card className="shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 font-headline text-2xl text-pink-500">
+                  <Heart className="h-6 w-6 fill-pink-500 text-pink-500" />
+                  Success Story
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="relative w-full h-56 mb-3 rounded-md overflow-hidden">
+                  <Image src="https://placehold.co/600x400.png" alt="Riya & Rohan" fill className="object-cover" data-ai-hint="happy couple wedding" />
+                </div>
+                <h3 className="font-semibold text-xl text-foreground">Riya & Rohan Found Love!</h3>
+                <p className="text-sm text-muted-foreground mt-1">"We connected on CupidMatch and instantly knew there was something special. Thank you for helping us find our happily ever after!"</p>
+              </CardContent>
+              <CardFooter>
+                <Button variant="link" className="text-primary p-0 h-auto" asChild>
+                  <Link href="/success-stories">Read More Stories</Link>
+                </Button>
+              </CardFooter>
             </Card>
           </div>
 
+          {/* Timeline - 6 columns, centered */}
           <div className="col-span-6 space-y-4">
+            {/* Post Creation Card */}
             <Card className="bg-white border-none shadow-sm sticky top-4 z-10">
               <CardContent className="p-4">
                 <form onSubmit={handlePostSubmit} className="space-y-4">
@@ -942,6 +842,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
+            {/* Posts Feed */}
             <div className="space-y-4">
               {posts.map((post) => (
                 <Card key={post.id} className="bg-white border-none shadow-sm">
@@ -979,7 +880,9 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* Right Sidebar - 3 columns */}
           <div className="col-span-3 space-y-4">
+            {/* Connections Card */}
             <Card className="bg-white border-none shadow-sm">
               <CardHeader className="p-4 pb-2">
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -1081,6 +984,7 @@ export default function DashboardPage() {
               )}
             </Card>
 
+            {/* Match Requests Card */}
             <Card className="bg-white border-none shadow-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -1088,7 +992,7 @@ export default function DashboardPage() {
                 </CardTitle>
                 <CardDescription className="text-sm text-muted-foreground">People who want to connect with you</CardDescription>
               </CardHeader>
-              <CardContent className="">
+              <CardContent>
                 {isLoadingRequests ? (
                   <div className="space-y-3">
                     {[...Array(2)].map((_, i) => (
@@ -1148,6 +1052,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
+            {/* Horoscope Card */}
             <Card className="bg-white border-none shadow-sm">
               <CardHeader className="p-4 pb-2">
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -1178,15 +1083,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-<<<<<<< HEAD
-    
-
-      
-
-
-
-
-
-
-=======
->>>>>>> 65303ad888bc9fae24793aada87b1a2be996a47c

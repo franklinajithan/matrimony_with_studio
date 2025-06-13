@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -178,7 +177,7 @@ export function HoroscopeCompatibilityForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Specific Aspects to Compare (Optional, comma-separated)</FormLabel>
-                <FormControl><Textarea placeholder="e.g., Guna Milan, Mangal Dosha, Nadi Kuta" {...field} value={Array.isArray(field.value) ? field.value.join(', ') : field.value || ""}  /></FormControl>
+                <FormControl><Textarea placeholder="e.g., Guna Milan, Mangal Dosha, Nadi Kuta" {...field} defaultValue={Array.isArray(field.value) ? field.value.join(', ') : field.value || ""} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
