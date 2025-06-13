@@ -103,7 +103,7 @@ export default function LandingPage() {
       <Navbar /> 
 
       <main className="flex-grow">
-        <section id="home" className="relative bg-gradient-to-br from-purple-500 to-red-400 text-white overflow-hidden py-12 md:py-16">
+        <section id="home" className="relative bg-gradient-to-br from-purple-500 to-red-400 text-white overflow-hidden">
           <div className="container mx-auto relative px-4">
             <div className="flex flex-col md:flex-row items-center">
               <div className="flex flex-col items-center md:items-start justify-center text-center md:text-left mb-12 md:mb-0 md:w-5/12 animate-fade-in-up">
@@ -128,7 +128,7 @@ export default function LandingPage() {
               <div className="md:w-7/12 flex justify-center md:justify-end">
                 <div className="relative">
                   <Image
-                    src="https://firebasestorage.googleapis.com/v0/b/matrimony-09-06-2025.firebasestorage.app/o/image%2FChatGPT_Image_Jun_12__2025__11_55_51_AM-removebg-preview.png?alt=media&token=90a533a7-8a7c-4c71-bd8a-1215b26f304e"
+                    src="https://firebasestorage.googleapis.com/v0/b/matrimony-09-06-2025.firebasestorage.app/o/image%2Ferasebg-transformed.png?alt=media&token=643c5055-790b-4fbe-baa8-7815fe4498d9"
                     alt="Indian woman in traditional attire with a welcoming gesture"
                     width={550}
                     height={697}

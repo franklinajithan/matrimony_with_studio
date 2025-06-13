@@ -1,4 +1,3 @@
-
 // use server'
 'use server';
 /**
@@ -9,8 +8,8 @@
  * - IntelligentMatchSuggestionsOutput - The return type for the intelligentMatchSuggestions function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const UserProfileSchema = z.object({
   age: z.number().describe('The user\'s age.'),
@@ -31,9 +30,13 @@ const UserProfileSchema = z.object({
   drinkingHabits: z.string().optional().describe('The user\'s drinking habits (e.g., Never, Socially, Regularly).'),
 });
 
+export type UserProfileSchema = z.infer<typeof UserProfileSchema>;
+
 const PotentialMatchProfileSchema = UserProfileSchema.extend({
   userId: z.string().describe('The potential match user ID'),
 });
+
+export type PotentialMatchProfileSchema = z.infer<typeof PotentialMatchProfileSchema>;
 
 const IntelligentMatchSuggestionsInputSchema = z.object({
   userProfile: UserProfileSchema.describe('The user profile data.'),
@@ -60,8 +63,8 @@ export async function intelligentMatchSuggestions(input: IntelligentMatchSuggest
 
 const prompt = ai.definePrompt({
   name: 'intelligentMatchSuggestionsPrompt',
-  input: {schema: IntelligentMatchSuggestionsInputSchema},
-  output: {schema: IntelligentMatchSuggestionsOutputSchema},
+  input: { schema: IntelligentMatchSuggestionsInputSchema },
+  output: { schema: IntelligentMatchSuggestionsOutputSchema },
   prompt: `You are an AI matchmaker, skilled at suggesting compatible matches based on user profiles and activity.
 
 Given the following information about a user and a list of potential matches, analyze their profiles and activity to determine the best matches.
@@ -116,7 +119,7 @@ If astrological details (Sun Sign, Moon Sign, Nakshatra) are provided for both t
 
 The output should be a JSON array.
 
-Output:`, 
+Output:`,
 });
 
 const intelligentMatchSuggestionsFlow = ai.defineFlow(
@@ -126,7 +129,7 @@ const intelligentMatchSuggestionsFlow = ai.defineFlow(
     outputSchema: IntelligentMatchSuggestionsOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const { output } = await prompt(input);
     return output!;
   }
 );
