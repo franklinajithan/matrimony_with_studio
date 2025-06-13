@@ -71,10 +71,23 @@ const extractHoroscopeDetailsFlow = ai.defineFlow(
     outputSchema: ExtractHoroscopeDetailsOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    if (!output) {
-      throw new Error("The AI model did not return an output. Please check the input or try again.");
+    try {
+      const {output} = await prompt(input);
+      if (!output) {
+        throw new Error("The AI model did not return an output. Please check the input or try again.");
+      }
+      return output;
+    } catch (error: any) {
+      // Check if the error message indicates a 503 or service unavailable type of error
+      if (error.message && (error.message.includes('503') || error.message.toLowerCase().includes('service unavailable') || error.message.toLowerCase().includes('model is overloaded'))) {
+        console.error("AI Service Overloaded/Unavailable:", error.message); // Log the original error for server-side debugging
+        // Throw a more user-friendly error for the client
+        throw new Error("The AI astrology service is currently experiencing high demand or is temporarily unavailable. Please try again in a few moments.");
+      }
+      // Re-throw other errors or handle them as needed
+      console.error("Error in extractHoroscopeDetailsFlow:", error);
+      throw new Error(error.message || "An unexpected error occurred during horoscope analysis.");
     }
-    return output;
   }
 );
+
