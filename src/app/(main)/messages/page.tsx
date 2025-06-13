@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, Suspense } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ interface Conversation {
   originalTimestamp: Timestamp | null;
 }
 
-export default function MessagesPage() {
+function MessagesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedChatId = searchParams.get("chat");
@@ -521,5 +521,17 @@ export default function MessagesPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <MessagesPageContent />
+    </Suspense>
   );
 }

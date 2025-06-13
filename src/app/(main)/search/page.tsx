@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { db } from "@/lib/firebase/config";
 import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
@@ -24,7 +24,7 @@ interface SearchResult {
   dataAiHint?: string;
 }
 
-export default function SearchPage() {
+function SearchPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -173,5 +173,17 @@ export default function SearchPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <SearchPageContent />
+    </Suspense>
   );
 }
