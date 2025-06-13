@@ -103,19 +103,19 @@ export default function LandingPage() {
       <Navbar /> 
 
       <main className="flex-grow">
-        <section id="home" className="relative bg-gradient-to-br from-purple-500 to-red-400 text-white overflow-hidden ">
-          <div className="container mx-auto relative px-4 mt-4">
+        <section id="home" className="relative bg-gradient-to-br from-purple-500 to-red-400 text-white overflow-hidden py-12 md:py-16">
+          <div className="container mx-auto relative px-4">
             <div className="flex flex-col md:flex-row items-center">
-              <div className="flex flex-col items-center justify-center text-center mb-16 md:mb-2  animate-fade-in-up">
-                <h1 className="font-headline text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight tracking-tight drop-shadow-lg whitespace-nowrap">
+              <div className="flex flex-col items-center md:items-start justify-center text-center md:text-left mb-12 md:mb-0 md:w-5/12 animate-fade-in-up">
+                <h1 className="font-headline text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight tracking-tight drop-shadow-lg">
                   Welcome to{" "}
                   <span className="inline-flex items-center">
                     <span className="ml-2">CUPID</span>
-                    <Heart className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mx-2 fill-red-500 drop-shadow-lg animate-bounce" />
+                    <Heart className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 mx-2 fill-red-500 drop-shadow-lg" />
                     <span className="mr-2">KNOTS</span>
                   </span>
                 </h1>
-                <p className="mt-8 text-lg sm:text-xl max-w-xl mx-auto opacity-90 leading-relaxed">
+                <p className="mt-8 text-lg sm:text-xl max-w-xl md:max-w-none opacity-90 leading-relaxed">
                   Discover your soulmate with our intelligent matchmaking platform powered by advanced AI and personal preferences.
                 </p>
                 <div className="mt-12">
@@ -125,13 +125,13 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="md:w-1/2 flex justify-center md:justify-end">
+              <div className="md:w-7/12 flex justify-center md:justify-end">
                 <div className="relative">
                   <Image
                     src="https://firebasestorage.googleapis.com/v0/b/matrimony-09-06-2025.firebasestorage.app/o/image%2FChatGPT_Image_Jun_12__2025__11_55_51_AM-removebg-preview.png?alt=media&token=90a533a7-8a7c-4c71-bd8a-1215b26f304e"
                     alt="Indian woman in traditional attire with a welcoming gesture"
-                    width={450}
-                    height={570}
+                    width={550}
+                    height={697}
                     className="rounded-3xl transition-transform transform hover:scale-105 duration-500"
                     data-ai-hint="indian woman traditional"
                     priority
