@@ -4,10 +4,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles, Users, UserPlus, CalendarCheck, Briefcase, MapPin, Cake, Loader2, Check, X, Eye, FileText, Heart, Edit3, Zap, Rocket, Share2 } from "lucide-react";
+import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles, Users, UserPlus, CalendarCheck, Briefcase, MapPin, Cake, Loader2, Check, X, Eye, FileText, Heart, Edit3, Zap, Rocket, Share2, Compass, BellRing, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { auth, db } from "@/lib/firebase/config";
 import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, writeBatch, serverTimestamp, Timestamp, orderBy, limit, getDocs, addDoc, arrayUnion, arrayRemove } from "firebase/firestore";
@@ -21,6 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { formatDistanceToNow } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface MatchRequest {
   id: string;
@@ -58,6 +59,16 @@ interface QuickSuggestionProfile {
   dataAiHint: string;
 }
 
+interface Comment {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  content: string;
+  timestamp: Timestamp;
+  isRead?: boolean;
+}
+
 interface Post {
   id: string;
   userId: string;
@@ -68,7 +79,18 @@ interface Post {
   likes: number;
   likedBy: string[]; // Array of user IDs who liked the post
   comments: number;
+  commentList?: Comment[]; // Array of comments
+  lastCommentedAt?: Timestamp; // Track when the post was last commented on
+  lastLikedAt?: Timestamp; // Track last like activity
   isLiked?: boolean;
+  isCommenting?: boolean; // New field to track if comment form is open
+  commentNotifications?: {
+    [userId: string]: {
+      count: number;
+      lastSeen: Timestamp;
+    }
+  };
+  unreadComments?: number;
 }
 
 const mockUser = {
@@ -88,6 +110,11 @@ const PROFILE_COMPLETION_FIELDS = ["displayName", "bio", "photoURL", "location",
 
 const dashboardNavLinks = [
   { href: "/dashboard/edit-profile", label: "Edit Profile", icon: <UserCircle className="mr-3 h-5 w-5" /> },
+  { href: "/dashboard/matches", label: "My Matches", icon: <Heart className="mr-3 h-5 w-5" /> },
+  { href: "/dashboard/connections", label: "Connections", icon: <Users className="mr-3 h-5 w-5" /> },
+  { href: "/dashboard/search", label: "Search", icon: <Search className="mr-3 h-5 w-5" /> },
+  { href: "/dashboard/discovery", label: "Discovery", icon: <Compass className="mr-3 h-5 w-5" /> },
+  { href: "/dashboard/biodata", label: "My Biodata", icon: <FileText className="mr-3 h-5 w-5" /> },
   { href: "/dashboard/preferences", label: "Preferences", icon: <Settings className="mr-3 h-5 w-5" /> },
   { href: "/dashboard/horoscope", label: "Horoscope", icon: <Sparkles className="mr-3 h-5 w-5" /> },
   { href: "/pricing", label: "Subscription", icon: <CreditCard className="mr-3 h-5 w-5" /> },
@@ -237,6 +264,15 @@ export default function DashboardPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
 
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const [unreadLikeCount, setUnreadLikeCount] = useState(0);
+  const [unreadCommentCount, setUnreadCommentCount] = useState(0);
+  const [lastSeenLikeNotificationsTimestamp, setLastSeenLikeNotificationsTimestamp] = useState<Timestamp | null>(null);
+  const [lastSeenCommentNotificationsTimestamp, setLastSeenCommentNotificationsTimestamp] = useState<Timestamp | null>(null);
+
+  const [commentText, setCommentText] = useState<{ [key: string]: string }>({}); // Track comment text for each post
+  const commentEndRef = useRef<HTMLDivElement>(null);
+
   const { toast } = useToast();
   const pathname = usePathname();
 
@@ -274,20 +310,28 @@ export default function DashboardPage() {
             setUserAvatarUrl(userData.photoURL || user.photoURL || mockUser.avatarUrl);
             setUserAvatarHint(userData.dataAiHint || (userData.photoURL && !userData.photoURL.includes("placehold.co") ? "user avatar" : mockUser.dataAiHint));
             setProfileCompletion(calculateProfileCompletion(userData));
-            console.log(`Dashboard Auth: User document for ${user.uid} found. Avatar: ${userData.photoURL}, Hint: ${userData.dataAiHint}, Completion: ${calculateProfileCompletion(userData)}%`);
+            setLastSeenLikeNotificationsTimestamp(userData.lastSeenLikeNotificationsTimestamp || null);
+            setLastSeenCommentNotificationsTimestamp(userData.lastSeenCommentNotificationsTimestamp || null);
+            console.log(`Dashboard Auth: User document for ${user.uid} found. Avatar: ${userData.photoURL}, Hint: ${userData.dataAiHint}, Completion: ${calculateProfileCompletion(userData)}%, Last Seen Likes: ${userData.lastSeenLikeNotificationsTimestamp ? userData.lastSeenLikeNotificationsTimestamp.toDate() : 'N/A'}, Last Seen Comments: ${userData.lastSeenCommentNotificationsTimestamp ? userData.lastSeenCommentNotificationsTimestamp.toDate() : 'N/A'}`);
           } else {
             setUserAvatarUrl(user.photoURL || mockUser.avatarUrl);
             setUserAvatarHint(user.photoURL && !user.photoURL.includes("placehold.co") ? "user avatar" : mockUser.dataAiHint);
             setProfileCompletion(calculateProfileCompletion({ displayName: user.displayName, photoURL: user.photoURL }));
+            setLastSeenLikeNotificationsTimestamp(null);
+            setLastSeenCommentNotificationsTimestamp(null);
             console.log(`Dashboard Auth: User document for ${user.uid} not found. Using auth data for display. Completion: ${calculateProfileCompletion({ displayName: user.displayName, photoURL: user.photoURL })}%`);
           }
         } catch (e) {
-          console.error("Dashboard Auth: Error fetching user doc for avatar/hint/completion:", e);
+          console.error("Dashboard Auth: Error fetching user doc for avatar/hint/completion/lastSeenLikes:", e);
           setUserAvatarUrl(user.photoURL || mockUser.avatarUrl);
           setUserAvatarHint(user.photoURL && !user.photoURL.includes("placehold.co") ? "user avatar" : mockUser.dataAiHint);
           setProfileCompletion(calculateProfileCompletion({ displayName: user.displayName, photoURL: user.photoURL }));
+          setLastSeenLikeNotificationsTimestamp(null);
+          setLastSeenCommentNotificationsTimestamp(null);
         }
       } else {
+        setLastSeenLikeNotificationsTimestamp(null);
+        setLastSeenCommentNotificationsTimestamp(null);
         setUserDisplayName(mockUser.name);
         setUserAvatarUrl(mockUser.avatarUrl);
         setUserAvatarHint(mockUser.dataAiHint);
@@ -305,7 +349,7 @@ export default function DashboardPage() {
       console.log("Dashboard Auth: Unsubscribing from onAuthStateChanged listener.");
       unsubscribeAuth();
     };
-  }, []);
+  }, [toast]);
 
   const fetchQuickSuggestions = useCallback(
     async (currentUserId: string) => {
@@ -503,14 +547,19 @@ export default function DashboardPage() {
 
       if (snapshot.empty) {
         setConnections([]);
+        setUnreadMessageCount(0);
         setIsLoadingConnections(false);
         return;
       }
 
+      let totalUnread = 0;
       const connectionsPromises = snapshot.docs.map(async (chatDoc) => {
         const data = chatDoc.data();
         const otherUserId = data.participants.find((id: string) => id !== currentUser.uid);
         const otherUserDetails = data.participantDetails[otherUserId];
+
+        const unread = data.unreadBy?.[currentUser.uid] || 0;
+        totalUnread += unread;
 
         try {
           const userDocRef = doc(db, "users", otherUserId);
@@ -525,7 +574,7 @@ export default function DashboardPage() {
             dataAiHint: otherUserDetails?.dataAiHint || "person placeholder",
             lastMessageText: data.lastMessageText,
             lastMessageTimestamp: data.lastMessageTimestamp,
-            unreadCount: data.unreadBy?.[currentUser.uid] || 0,
+            unreadCount: unread,
             age: userData ? calculateAge(userData.dob) : undefined,
             profession: userData?.profession,
             location: userData?.location,
@@ -539,9 +588,11 @@ export default function DashboardPage() {
       try {
         const fetchedConnections = await Promise.all(connectionsPromises);
         setConnections(fetchedConnections.filter((conn) => conn !== null) as Connection[]);
+        setUnreadMessageCount(totalUnread);
       } catch (error) {
         console.error("Dashboard Connections: Error processing connections:", error);
         setConnections([]);
+        setUnreadMessageCount(0);
       } finally {
         setIsLoadingConnections(false);
       }
@@ -564,18 +615,65 @@ export default function DashboardPage() {
     const unsubscribe = onSnapshot(postsQuery, (snapshot) => {
       const postsData = snapshot.docs.map(doc => {
         const data = doc.data();
+        const commentNotifications = data.commentNotifications?.[currentUser.uid] || { count: 0, lastSeen: null };
+        
         return {
           id: doc.id,
           ...data,
           isLiked: data.likedBy?.includes(currentUser.uid) || false,
+          unreadComments: commentNotifications.count || 0
         } as Post;
       });
       setPosts(postsData);
       setIsLoadingPosts(false);
+
+      // Update total unread comment count
+      const totalUnreadComments = postsData.reduce((total, post) => total + (post.unreadComments || 0), 0);
+      setUnreadCommentCount(totalUnreadComments);
     });
 
     return () => unsubscribe();
   }, [currentUser]);
+
+  useEffect(() => {
+    if (!currentUser || !lastSeenLikeNotificationsTimestamp) {
+      setUnreadLikeCount(0);
+      return;
+    }
+
+    const userPostsQuery = query(
+      collection(db, "posts"),
+      where("userId", "==", currentUser.uid),
+      where("lastLikedAt", ">", lastSeenLikeNotificationsTimestamp)
+    );
+
+    const unsubscribeLikes = onSnapshot(userPostsQuery, (snapshot) => {
+      setUnreadLikeCount(snapshot.docs.length);
+      console.log(`Unread likes count: ${snapshot.docs.length}`);
+    });
+
+    return () => unsubscribeLikes();
+  }, [currentUser, lastSeenLikeNotificationsTimestamp]);
+
+  useEffect(() => {
+    if (!currentUser || !lastSeenCommentNotificationsTimestamp) {
+      setUnreadCommentCount(0);
+      return;
+    }
+
+    const userPostsQuery = query(
+      collection(db, "posts"),
+      where("userId", "==", currentUser.uid),
+      where("lastCommentedAt", ">", lastSeenCommentNotificationsTimestamp)
+    );
+
+    const unsubscribeComments = onSnapshot(userPostsQuery, (snapshot) => {
+      setUnreadCommentCount(snapshot.docs.length);
+      console.log(`Unread comments count: ${snapshot.docs.length}`);
+    });
+
+    return () => unsubscribeComments();
+  }, [currentUser, lastSeenCommentNotificationsTimestamp]);
 
   const createChatDocument = async (user1Uid: string, user2Uid: string) => {
     const user1DocRef = doc(db, "users", user1Uid);
@@ -703,7 +801,11 @@ export default function DashboardPage() {
   };
 
   const handleLikePost = async (postId: string) => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      console.error("Error liking post: No current user.");
+      toast({ title: "Error", description: "You must be logged in to like posts.", variant: "destructive" });
+      return;
+    }
 
     try {
       const postRef = doc(db, "posts", postId);
@@ -721,16 +823,18 @@ export default function DashboardPage() {
         likes: isLiked ? postData.likes - 1 : postData.likes + 1,
         likedBy: isLiked 
           ? arrayRemove(currentUser.uid)
-          : arrayUnion(currentUser.uid)
+          : arrayUnion(currentUser.uid),
+        lastLikedAt: serverTimestamp(),
       });
 
       // Update local state
-      setPosts(posts.map(post => {
+      setPosts(posts.map((post: Post) => {
         if (post.id === postId) {
           return {
             ...post,
             likes: isLiked ? post.likes - 1 : post.likes + 1,
             isLiked: !isLiked,
+            lastLikedAt: new Timestamp(Math.floor(Date.now() / 1000), 0),
           };
         }
         return post;
@@ -745,13 +849,232 @@ export default function DashboardPage() {
     }
   };
 
+  const markLikesAsRead = async () => {
+    if (!currentUser) return;
+
+    try {
+      const userRef = doc(db, "users", currentUser.uid);
+      await updateDoc(userRef, {
+        lastSeenLikeNotificationsTimestamp: serverTimestamp(),
+      });
+      setUnreadLikeCount(0); // Optimistically update UI
+      toast({
+        title: "Notifications Cleared",
+        description: "All new likes have been marked as read.",
+      });
+    } catch (error: any) {
+      console.error("Error marking likes as read:", error);
+      toast({
+        title: "Error",
+        description: "Failed to mark likes as read: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const markCommentsAsRead = async () => {
+    if (!currentUser) return;
+
+    try {
+      const userRef = doc(db, "users", currentUser.uid);
+      await updateDoc(userRef, {
+        lastSeenCommentNotificationsTimestamp: serverTimestamp(),
+      });
+      setUnreadCommentCount(0); // Optimistically update UI
+      toast({
+        title: "Notifications Cleared",
+        description: "All new comments have been marked as read.",
+      });
+    } catch (error: any) {
+      console.error("Error marking comments as read:", error);
+      toast({
+        title: "Error",
+        description: "Failed to mark comments as read: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const markAllNotificationsAsRead = async () => {
+    if (!currentUser) return;
+
+    try {
+      const userRef = doc(db, "users", currentUser.uid);
+      const updateData: any = {};
+      
+      if (unreadLikeCount > 0) {
+        updateData.lastSeenLikeNotificationsTimestamp = serverTimestamp();
+      }
+      if (unreadCommentCount > 0) {
+        updateData.lastSeenCommentNotificationsTimestamp = serverTimestamp();
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await updateDoc(userRef, updateData);
+        setUnreadLikeCount(0);
+        setUnreadCommentCount(0);
+        toast({
+          title: "Notifications Cleared",
+          description: "All notifications have been marked as read.",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error marking notifications as read:", error);
+      toast({
+        title: "Error",
+        description: "Failed to mark notifications as read: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCommentSubmit = async (postId: string, e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser || !commentText[postId]?.trim()) return;
+
+    try {
+      const postRef = doc(db, "posts", postId);
+      const postDoc = await getDoc(postRef);
+      
+      if (!postDoc.exists()) {
+        throw new Error("Post not found");
+      }
+
+      const postData = postDoc.data();
+      const postOwnerId = postData.userId;
+
+      // Don't notify if user is commenting on their own post
+      if (postOwnerId !== currentUser.uid) {
+        // Update the post owner's notification count
+        const userRef = doc(db, "users", postOwnerId);
+        const userDoc = await getDoc(userRef);
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const currentNotifications = userData.commentNotifications || {};
+          const postNotifications = currentNotifications[postId] || { count: 0, lastSeen: null };
+          
+          await updateDoc(userRef, {
+            [`commentNotifications.${postId}.count`]: (postNotifications.count || 0) + 1,
+            [`commentNotifications.${postId}.lastSeen`]: postNotifications.lastSeen || null,
+            lastSeenCommentNotificationsTimestamp: userData.lastSeenCommentNotificationsTimestamp || null
+          });
+        }
+      }
+
+      const newComment: Comment = {
+        id: crypto.randomUUID(),
+        userId: currentUser.uid,
+        userName: userDisplayName,
+        userAvatar: userAvatarUrl,
+        content: commentText[postId].trim(),
+        timestamp: Timestamp.now(),
+        isRead: postOwnerId === currentUser.uid // Mark as read if it's the owner's comment
+      };
+
+      // Update the post document with the new comment
+      await updateDoc(postRef, {
+        comments: (postData.comments || 0) + 1,
+        lastCommentedAt: serverTimestamp(),
+        commentList: arrayUnion(newComment),
+        [`commentNotifications.${postOwnerId}.count`]: postOwnerId === currentUser.uid ? 0 : (postData.commentNotifications?.[postOwnerId]?.count || 0) + 1,
+        [`commentNotifications.${postOwnerId}.lastSeen`]: postData.commentNotifications?.[postOwnerId]?.lastSeen || null
+      });
+
+      // Clear the comment input and close the form
+      setCommentText(prev => ({ ...prev, [postId]: "" }));
+      setPosts(posts.map(post => 
+        post.id === postId ? { ...post, isCommenting: false } : post
+      ));
+
+      // Show success toast
+      toast({
+        title: "Comment posted",
+        description: "Your comment has been added successfully.",
+      });
+
+      // If the post owner is the current user, mark the notification as read
+      if (postOwnerId === currentUser.uid) {
+        await updateDoc(postRef, {
+          [`commentNotifications.${currentUser.uid}.count`]: 0,
+          [`commentNotifications.${currentUser.uid}.lastSeen`]: serverTimestamp()
+        });
+      }
+
+    } catch (error: any) {
+      console.error("Error posting comment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to post comment: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const toggleCommentForm = (postId: string) => {
+    setPosts(posts.map(post => 
+      post.id === postId ? { ...post, isCommenting: !post.isCommenting } : post
+    ));
+    // Clear any existing comment text when toggling
+    setCommentText(prev => ({ ...prev, [postId]: "" }));
+  };
+
+  // Scroll to bottom of comments when new comment is added
+  const scrollToBottom = () => {
+    commentEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [posts]);
+
+  // Add a function to mark comments as read for a specific post
+  const markPostCommentsAsRead = async (postId: string) => {
+    if (!currentUser) return;
+
+    try {
+      const postRef = doc(db, "posts", postId);
+      const userRef = doc(db, "users", currentUser.uid);
+
+      // Update both post and user documents
+      await updateDoc(postRef, {
+        [`commentNotifications.${currentUser.uid}.count`]: 0,
+        [`commentNotifications.${currentUser.uid}.lastSeen`]: serverTimestamp()
+      });
+
+      await updateDoc(userRef, {
+        [`commentNotifications.${postId}.count`]: 0,
+        [`commentNotifications.${postId}.lastSeen`]: serverTimestamp()
+      });
+
+      // Update local state
+      setPosts(posts.map(post => 
+        post.id === postId 
+          ? { ...post, unreadComments: 0 }
+          : post
+      ));
+
+      // Update total unread count
+      const newTotalUnread = posts.reduce((total, post) => 
+        total + (post.id === postId ? 0 : (post.unreadComments || 0)), 0
+      );
+      setUnreadCommentCount(newTotalUnread);
+
+    } catch (error: any) {
+      console.error("Error marking comments as read:", error);
+      toast({
+        title: "Error",
+        description: "Failed to mark comments as read: " + error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#f0f2f5]">
-      <div className="space-y-4 p-4">
-        <div className="grid grid-cols-12 gap-4 max-w-[1400px] mx-auto">
-          {/* Left Sidebar - 3 columns */}
-          <div className="col-span-3 space-y-4">
-            {/* Quick Links Card */}
+    <div className="min-h-screen bg-[#f0f2f5] p-4 md:p-6 lg:p-8">
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 max-w-[1400px] mx-auto">
+          <div className="col-span-full md:col-span-4 lg:col-span-3 space-y-4 order-2 md:order-none">
             <Card className="bg-white border-none shadow-sm">
               <CardHeader className="p-3 pb-2">
                 <CardTitle className="flex items-center gap-2 text-base font-semibold">
@@ -775,7 +1098,6 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* Profile Completion Card */}
             <Card className="bg-white border-none shadow-sm">
               <CardHeader className="p-4 pb-2">
                 <CardTitle className="flex items-center gap-2 text-lg font-semibold">
@@ -795,7 +1117,6 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* AI Suggestions Card */}
             <Card className="bg-white border-none shadow-sm">
               <CardHeader className="p-4 pb-2">
                 <CardTitle className="flex items-center gap-2 text-base font-semibold">
@@ -870,7 +1191,6 @@ export default function DashboardPage() {
               </CardFooter>
             </Card>
 
-            {/* Success Story Card */}
             <Card className="shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 font-headline text-2xl text-pink-500">
@@ -893,9 +1213,7 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          {/* Timeline - 6 columns, centered */}
-          <div className="col-span-6 space-y-4">
-            {/* Post Creation Card */}
+          <div className="col-span-full md:col-span-8 lg:col-span-6 space-y-4 order-1 md:order-none">
             <Card className="bg-white border-none shadow-sm">
               <CardContent className="p-4">
                 <form onSubmit={handlePostSubmit} className="space-y-4">
@@ -922,7 +1240,6 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* Posts Feed */}
             {isLoadingPosts ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
@@ -944,58 +1261,209 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 {posts.map((post) => (
                   <Card key={post.id} className="bg-white border-none shadow-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3 mb-4">
+                    <CardHeader className="flex flex-row items-center justify-between p-4 pb-2">
+                      <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={post.userAvatar} alt={post.userName} />
                           <AvatarFallback>{post.userName?.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{post.userName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {post.timestamp?.toDate().toLocaleDateString()}
+                          <p className="font-semibold">{post.userName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {post.timestamp && post.timestamp.toDate ? formatDistanceToNow(post.timestamp.toDate(), { addSuffix: true }) : 'Just now'}
                           </p>
                         </div>
                       </div>
-                      <p className="mb-2">{post.content}</p>
-                      <div className="flex items-center gap-4">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className={cn(
-                            "flex items-center gap-2",
-                            post.isLiked && "text-primary"
-                          )}
-                          onClick={() => handleLikePost(post.id)}
-                        >
-                          <Heart
-                            className={cn(
-                              "h-5 w-5",
-                              post.isLiked && "fill-primary text-primary"
-                            )}
-                          />
-                          <span>{post.likes}</span>
-                        </Button>
-                        <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                          <MessageCircle className="h-5 w-5" />
-                          <span>{post.comments}</span>
-                        </Button>
-                      </div>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Share2 className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                      <p className="text-sm">{post.content}</p>
                     </CardContent>
+                    <CardFooter className="flex flex-col p-4 pt-0 space-y-4">
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-4">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleLikePost(post.id)} 
+                            className={cn(
+                              "flex items-center gap-1 text-sm",
+                              post.isLiked ? "text-red-500 hover:text-red-600" : "text-muted-foreground hover:text-foreground"
+                            )}
+                          >
+                            <Heart className={cn("h-4 w-4", post.isLiked && "fill-red-500")} /> 
+                            {post.likes} Likes
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => {
+                              toggleCommentForm(post.id);
+                              if ((post.unreadComments ?? 0) > 0) {
+                                markPostCommentsAsRead(post.id);
+                              }
+                            }}
+                            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground relative"
+                          >
+                            <MessageCircle className="h-4 w-4" /> 
+                            {post.comments} Comments
+                            {(post.unreadComments ?? 0) > 0 && (
+                              <Badge 
+                                variant="destructive" 
+                                className="absolute -top-1 -right-1 h-5 min-w-5 px-1.5 text-xs"
+                              >
+                                {post.unreadComments}
+                              </Badge>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Comments Section */}
+                      {post.isCommenting && (
+                        <div className="w-full space-y-4">
+                          {/* Comment Form */}
+                          <form onSubmit={(e) => handleCommentSubmit(post.id, e)} className="flex gap-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={userAvatarUrl} alt={userDisplayName} />
+                              <AvatarFallback>{userDisplayName?.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 flex gap-2">
+                              <Input
+                                placeholder="Write a comment..."
+                                value={commentText[post.id] || ""}
+                                onChange={(e) => setCommentText(prev => ({ ...prev, [post.id]: e.target.value }))}
+                                className="flex-1"
+                              />
+                              <Button type="submit" size="icon" disabled={!commentText[post.id]?.trim()}>
+                                <Send className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </form>
+
+                          {/* Comments List */}
+                          {post.commentList && post.commentList.length > 0 ? (
+                            <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                              <div className="space-y-4">
+                                {post.commentList.map((comment) => (
+                                  <div key={comment.id} className="flex gap-3">
+                                    <Avatar className="h-8 w-8">
+                                      <AvatarImage src={comment.userAvatar} alt={comment.userName} />
+                                      <AvatarFallback>{comment.userName?.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 space-y-1">
+                                      <div className="flex items-center gap-2">
+                                        <p className="text-sm font-semibold">{comment.userName}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {comment.timestamp.toDate ? formatDistanceToNow(comment.timestamp.toDate(), { addSuffix: true }) : 'Just now'}
+                                        </p>
+                                      </div>
+                                      <p className="text-sm">{comment.content}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                                <div ref={commentEndRef} />
+                              </div>
+                            </ScrollArea>
+                          ) : (
+                            <div className="text-center py-4">
+                              <p className="text-sm text-muted-foreground">No comments yet. Be the first to comment!</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </CardFooter>
                   </Card>
                 ))}
               </div>
             ) : (
-              <Card className="bg-white border-none shadow-sm">
-                <CardContent className="p-8 text-center">
-                  <p className="text-muted-foreground">No posts yet. Be the first to share something!</p>
-                </CardContent>
-              </Card>
+              <div className="text-center py-8">
+                <Rocket className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-lg font-semibold text-muted-foreground">No posts yet!</p>
+                <p className="text-sm text-muted-foreground mt-2">Share your first update to get started.</p>
+              </div>
             )}
           </div>
 
-          {/* Right Sidebar - 3 columns */}
-          <div className="col-span-3 space-y-4">
+          {/* Right Sidebar - will only appear on large screens */}
+          {/* On mobile/medium: hidden (md:hidden) */}
+          {/* On large: lg:col-span-3 (takes 1/4 of 12 cols), order-none (normal flow) */}
+          <div className="col-span-full lg:col-span-3 space-y-4 order-3 md:hidden lg:block">
+            {/* Notifications Card */}
+            <Card className="bg-white border-none shadow-sm">
+              <CardHeader className="p-4 pb-2">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <BellRing className="h-5 w-5 text-primary/80" /> Notifications
+                  {(unreadMessageCount > 0 || unreadLikeCount > 0 || unreadCommentCount > 0) && (
+                    <Badge variant="destructive" className="ml-2 px-2 py-1 text-xs">
+                      {unreadMessageCount + unreadLikeCount + unreadCommentCount}
+                    </Badge>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  {unreadMessageCount > 0 ? (
+                    <div className="flex items-center justify-between text-sm">
+                      <p>You have <span className="font-bold">{unreadMessageCount} new message{unreadMessageCount > 1 ? "s" : ""}</span>.</p>
+                      <Button variant="link" size="sm" className="h-auto p-0" asChild>
+                        <Link href="/messages">View</Link>
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No new messages.</p>
+                  )}
+
+                  {unreadLikeCount > 0 ? (
+                    <div className="flex items-center justify-between text-sm">
+                      <p>You have <span className="font-bold">{unreadLikeCount} new like{unreadLikeCount > 1 ? "s" : ""}</span> on your posts.</p>
+                      <Button variant="link" size="sm" className="h-auto p-0" onClick={markLikesAsRead}>
+                        View Posts
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No new likes.</p>
+                  )}
+
+                  {unreadCommentCount > 0 ? (
+                    <div className="flex items-center justify-between text-sm">
+                      <p>You have <span className="font-bold">{unreadCommentCount} new comment{unreadCommentCount > 1 ? "s" : ""}</span> on your posts.</p>
+                      <Button variant="link" size="sm" className="h-auto p-0" onClick={markCommentsAsRead}>
+                        View Posts
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No new comments.</p>
+                  )}
+
+                  {(unreadMessageCount === 0 && unreadLikeCount === 0 && unreadCommentCount === 0) && (
+                    <div className="text-center py-2">
+                      <p className="text-sm text-muted-foreground">No new notifications.</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+              {(unreadMessageCount > 0 || unreadLikeCount > 0 || unreadCommentCount > 0) && (
+                <CardFooter className="p-4 pt-0">
+                  <Button 
+                    variant="link" 
+                    className="w-full" 
+                    onClick={() => {
+                      if (unreadMessageCount > 0) {
+                        window.location.href = '/messages';
+                      } else {
+                        markAllNotificationsAsRead();
+                      }
+                    }}
+                  >
+                    {unreadMessageCount > 0 ? 'View Messages' : 'Mark All as Read'}
+                  </Button>
+                </CardFooter>
+              )}
+            </Card>
+
             {/* Connections Card */}
             <Card className="bg-white border-none shadow-sm">
               <CardHeader className="p-4 pb-2">
