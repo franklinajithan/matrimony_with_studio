@@ -284,7 +284,7 @@ export default function LandingPage() {
           <div className="container relative mx-auto px-4 pb-10 lg:px-8">
             <div className="grid divide-y divide-rose-100 overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-sm sm:grid-cols-3 sm:divide-x sm:divide-y-0">
               {[
-                ["10,000+", "members building meaningful futures"],
+                ["Community-first", "built for meaningful, lasting futures"],
                 ["Tamil · Sinhala · English", "preferences that feel familiar"],
                 ["Safe by design", "privacy and trust at every step"],
               ].map(([title, text]) => (
