@@ -39,12 +39,12 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect, useRef } from "react";
-import NextImage from "next/image"; // Renamed to avoid conflict
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { auth, db } from "@/lib/firebase/config";
 import { updateProfile, onAuthStateChanged, type User } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { uploadFile } from "@/lib/firebase/storageService";
+import { createUserProfile, updateUserProfile } from "@/lib/firebase/userService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { enhanceBio } from "@/ai/flows/enhance-bio-flow";
 import { enhanceHobbies } from "@/ai/flows/enhance-hobbies-flow";
@@ -67,34 +67,45 @@ interface StoredPhoto {
   storagePath?: string;
 }
 
+const isFile = (value: unknown): value is File => typeof File !== "undefined" && value instanceof File;
+
 const editProfileSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters."),
-  bio: z.string().min(10, "Bio must be at least 10 characters.").max(500, "Bio cannot exceed 500 characters."),
+  bio: z
+    .string()
+    .max(500, "Bio cannot exceed 500 characters.")
+    .refine((value) => !value.trim() || value.trim().length >= 10, "Bio must be at least 10 characters."),
   profilePhoto: z
-    .instanceof(File, { message: "Please select a file." })
+    .custom<File | undefined>((value) => value == null || isFile(value), { message: "Please select a valid file." })
     .optional()
     .refine((file) => !file || file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
     .refine((file) => !file || ACCEPTED_IMAGE_TYPES.includes(file.type), ".jpg, .jpeg, .png and .webp files are accepted."),
   additionalPhotos: z
-    .array(z.instanceof(File))
+    .array(z.custom<File>((value) => isFile(value)))
     .max(MAX_ADDITIONAL_PHOTOS, `You can select up to ${MAX_ADDITIONAL_PHOTOS} new photos at a time.`)
     .optional()
     .refine((files) => !files || files.every((file) => file.size <= MAX_FILE_SIZE), `Max file size for each additional photo is 5MB.`)
     .refine((files) => !files || files.every((file) => ACCEPTED_IMAGE_TYPES.includes(file.type)), "Only .jpg, .jpeg, .png and .webp formats are supported."),
-  location: z.string().min(2, "Location is required."),
-  profession: z.string().min(2, "Profession is required."),
-  height: z.string().regex(/^\d{2,3}$/, "Enter height in cm (e.g., 165)."),
-  dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Enter DOB in YYYY-MM-DD format."),
-  religion: z.string().min(1, "Religion is required."),
-  caste: z.string().min(1, "Caste is required."),
-  language: z.string().min(1, "Primary language is required."),
+  location: z.string().optional(),
+  profession: z.string().optional(),
+  height: z
+    .string()
+    .optional()
+    .refine((value) => !value || /^\d{2,3}$/.test(value), "Enter height in cm (e.g., 165)."),
+  dob: z
+    .string()
+    .optional()
+    .refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), "Enter DOB in YYYY-MM-DD format."),
+  religion: z.string().optional(),
+  caste: z.string().optional(),
+  language: z.string().optional(),
 
   sunSign: z.string().optional(),
   moonSign: z.string().optional(),
   nakshatra: z.string().optional(),
   horoscopeInfo: z.string().optional(),
   horoscopeFile: z
-    .instanceof(File, { message: "Please select a file." })
+    .custom<File | undefined>((value) => value == null || isFile(value), { message: "Please select a valid file." })
     .optional()
     .refine((file) => !file || ACCEPTED_HOROSCOPE_FILE_TYPES.includes(file.type), "Only PDF, JPG, JPEG, PNG, and WebP files are accepted.")
     .refine((file) => !file || file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`),
@@ -149,9 +160,20 @@ const religionOptions = [
   { value: "Prefer not to say", label: "Prefer not to say" },
 ];
 
+const ABOUT_FIELDS = ["fullName", "bio", "location", "profession", "height", "dob", "religion", "caste", "language", "educationLevel", "smokingHabits", "drinkingHabits"];
+const PHOTO_FIELDS = ["profilePhoto", "additionalPhotos"];
+const INTEREST_FIELDS = ["hobbies", "favoriteMovies", "favoriteMusic"];
+
+const toHeightString = (value: unknown) => {
+  if (value == null || value === "") return "";
+  return String(value).replace(/\D/g, "");
+};
+
 export default function EditProfilePage() {
   const { toast } = useToast();
   const [profileDataLoaded, setProfileDataLoaded] = useState(false);
+  const [userDocExists, setUserDocExists] = useState(false);
+  const [activeTab, setActiveTab] = useState("about");
   const [isSaving, setIsSaving] = useState(false);
   const [isEnhancingBio, setIsEnhancingBio] = useState(false);
   const [isEnhancingHobbies, setIsEnhancingHobbies] = useState(false);
@@ -193,7 +215,7 @@ export default function EditProfilePage() {
             bio: data.bio || defaultFirestoreProfile.bio,
             location: data.location || defaultFirestoreProfile.location,
             profession: data.profession || defaultFirestoreProfile.profession,
-            height: data.height || defaultFirestoreProfile.height,
+            height: toHeightString(data.height) || defaultFirestoreProfile.height,
             dob: data.dob || defaultFirestoreProfile.dob,
             religion: data.religion || defaultFirestoreProfile.religion,
             caste: data.caste || defaultFirestoreProfile.caste,
@@ -218,7 +240,9 @@ export default function EditProfilePage() {
           setCurrentDataAiHint(data.dataAiHint || (photoToUse !== defaultFirestoreProfile.profilePhotoUrl ? "person" : defaultFirestoreProfile.dataAiHint));
           setSelectedHoroscopeFileName(data.horoscopeFileName || null);
           setManagedExistingPhotos(data.additionalPhotoUrls || []);
+          setUserDocExists(true);
         } else {
+          setUserDocExists(false);
           form.reset({
             fullName: currentUser.displayName || defaultFirestoreProfile.fullName,
             bio: defaultFirestoreProfile.bio,
@@ -250,9 +274,12 @@ export default function EditProfilePage() {
           setManagedExistingPhotos([]);
         }
       } catch (error: any) {
+        const permissionDenied = error?.code === "permission-denied";
         toast({
           title: "Profile Load Error",
-          description: `Could not load profile. Error: ${error.message || String(error)}`,
+          description: permissionDenied
+            ? "Could not load profile. Firestore rules may need publishing."
+            : `Could not load profile. Error: ${error.message || String(error)}`,
           variant: "destructive",
         });
         form.reset({ ...defaultFirestoreProfile, profilePhoto: undefined, additionalPhotos: [], horoscopeFile: undefined });
@@ -269,6 +296,7 @@ export default function EditProfilePage() {
       if (user) {
         loadProfile(user);
       } else {
+        setUserDocExists(false);
         form.reset({ ...defaultFirestoreProfile, profilePhoto: undefined, additionalPhotos: [], horoscopeFile: undefined });
         setCurrentProfilePhotoUrl(defaultFirestoreProfile.profilePhotoUrl);
         setCurrentDataAiHint(defaultFirestoreProfile.dataAiHint);
@@ -390,23 +418,60 @@ export default function EditProfilePage() {
       dataToSave.additionalPhotoUrls = finalAdditionalPhotos;
       setManagedExistingPhotos(finalAdditionalPhotos);
 
-      const userDocRef = doc(db, "users", user.uid);
-      await setDoc(userDocRef, dataToSave, { merge: true });
+      if (userDocExists) {
+        await updateUserProfile(user.uid, dataToSave);
+      } else {
+        try {
+          await updateUserProfile(user.uid, dataToSave);
+        } catch (error: any) {
+          if (error?.code === "not-found") {
+            await createUserProfile(user.uid, {
+              uid: user.uid,
+              email: user.email,
+              ...dataToSave,
+            });
+          } else {
+            throw error;
+          }
+        }
+        setUserDocExists(true);
+      }
 
       toast({
         title: "Profile Updated!",
         description: "Your profile information has been saved.",
       });
     } catch (error: any) {
+      const permissionDenied = error?.code === "permission-denied";
       toast({
         title: "Update Failed",
-        description: error.message || "An unexpected error occurred.",
+        description: permissionDenied
+          ? "Could not save profile. Firestore rules may need publishing."
+          : error.message || "An unexpected error occurred.",
         variant: "destructive",
       });
     } finally {
       setIsSaving(false);
     }
   }
+
+  const handleInvalidSubmit = (errors: Record<string, unknown>) => {
+    const errorKeys = Object.keys(errors);
+    toast({
+      title: "Fix the highlighted fields",
+      description: "Some details need attention before saving.",
+      variant: "destructive",
+    });
+    if (errorKeys.some((key) => ABOUT_FIELDS.includes(key))) {
+      setActiveTab("about");
+    } else if (errorKeys.some((key) => PHOTO_FIELDS.includes(key))) {
+      setActiveTab("photos");
+    } else if (errorKeys.some((key) => INTEREST_FIELDS.includes(key))) {
+      setActiveTab("interests");
+    } else {
+      setActiveTab("horoscope");
+    }
+  };
 
   const handleProfilePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -575,7 +640,7 @@ export default function EditProfilePage() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="min-h-screen bg-gray-50">
+      <form onSubmit={form.handleSubmit(onSubmit, handleInvalidSubmit)} className="min-h-screen bg-gray-50">
         {/* Profile Header */}
         <div className="z-50 bg-white border-b border-gray-200 py-8">
           <div className="max-w-4xl mx-auto px-4 flex flex-col items-start gap-4">
@@ -622,6 +687,7 @@ export default function EditProfilePage() {
                         <FormControl>
                           <Input {...field} className="border-none bg-transparent p-0 h-auto w-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-600" placeholder="Add location" disabled={isSaving || anyEnhancementLoading} />
                         </FormControl>
+                        <FormMessage className="text-xs text-red-500" />
                       </FormItem>
                     )}
                   />
@@ -636,6 +702,7 @@ export default function EditProfilePage() {
                         <FormControl>
                           <Input {...field} className="border-none bg-transparent p-0 h-auto w-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-600" placeholder="Add profession" disabled={isSaving || anyEnhancementLoading} />
                         </FormControl>
+                        <FormMessage className="text-xs text-red-500" />
                       </FormItem>
                     )}
                   />
@@ -647,7 +714,7 @@ export default function EditProfilePage() {
 
         {/* Main Content */}
         <div className="max-w-4xl mx-auto px-4 py-6">
-          <Tabs defaultValue="about" className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="about">About</TabsTrigger>
               <TabsTrigger value="photos">Photos</TabsTrigger>
@@ -703,7 +770,13 @@ export default function EditProfilePage() {
                             Height (cm)
                           </FormLabel>
                           <FormControl>
-                            <Input type="number" {...field} disabled={isSaving || anyEnhancementLoading} />
+                            <Input
+                              type="number"
+                              {...field}
+                              value={field.value ?? ""}
+                              onChange={(event) => field.onChange(event.target.value)}
+                              disabled={isSaving || anyEnhancementLoading}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -734,7 +807,7 @@ export default function EditProfilePage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Religion</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving || anyEnhancementLoading} value={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value || undefined} disabled={isSaving || anyEnhancementLoading}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select Religion" />
@@ -795,7 +868,7 @@ export default function EditProfilePage() {
                             <School className="mr-2 h-4 w-4 text-muted-foreground" />
                             Education Level
                           </FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving || anyEnhancementLoading} value={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value || undefined} disabled={isSaving || anyEnhancementLoading}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select Education Level" />
@@ -842,7 +915,7 @@ export default function EditProfilePage() {
                             <Cigarette className="mr-2 h-4 w-4 text-muted-foreground" />
                             Smoking Habits
                           </FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving || anyEnhancementLoading} value={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value || undefined} disabled={isSaving || anyEnhancementLoading}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select Smoking Habits" />
@@ -868,7 +941,7 @@ export default function EditProfilePage() {
                             <Droplet className="mr-2 h-4 w-4 text-muted-foreground" />
                             Drinking Habits
                           </FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving || anyEnhancementLoading} value={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value || undefined} disabled={isSaving || anyEnhancementLoading}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select Drinking Habits" />
@@ -933,7 +1006,7 @@ export default function EditProfilePage() {
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                     {managedExistingPhotos.map((photo) => (
                       <div key={`existing-${photo.id}`} className="aspect-square bg-muted rounded-md flex items-center justify-center relative group">
-                        <NextImage src={photo.url} alt={`Photo ${photo.id}`} width={100} height={100} className="object-cover rounded-md h-full w-full" data-ai-hint={photo.hint} />
+                        <img src={photo.url} alt={`Photo ${photo.id}`} width={100} height={100} className="object-cover rounded-md h-full w-full" />
                         <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeExistingPhoto(photo.id)} disabled={isSaving || anyEnhancementLoading}>
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -941,7 +1014,7 @@ export default function EditProfilePage() {
                     ))}
                     {additionalPhotosPreview.map((previewUrl, index) => (
                       <div key={`new-${index}`} className="aspect-square bg-muted rounded-md flex items-center justify-center relative group">
-                        <NextImage src={previewUrl} alt={`New Photo ${index + 1}`} width={100} height={100} className="object-cover rounded-md h-full w-full" data-ai-hint="new upload preview" />
+                        <img src={previewUrl} alt={`New Photo ${index + 1}`} width={100} height={100} className="object-cover rounded-md h-full w-full" />
                         <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeAdditionalPhotoPreview(index)} disabled={isSaving || anyEnhancementLoading}>
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -962,6 +1035,7 @@ export default function EditProfilePage() {
                           <Input
                             type="file"
                             multiple
+                            ref={additionalPhotosInputRef}
                             accept={ACCEPTED_IMAGE_TYPES.join(",")}
                             onChange={(e) => {
                               field.onChange(e.target.files ? Array.from(e.target.files) : undefined);

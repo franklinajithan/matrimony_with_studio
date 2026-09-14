@@ -13,7 +13,7 @@ const successStoriesData = [
     dataAiHint: "happy couple wedding",
     names: "Priya & Rohan",
     story: "\"CupidKnots connected us across cities! We found instant chemistry and are now happily married. Thank you for making our dream come true!\"",
-    href: "/success-stories/priya-rohan" // Placeholder, individual story pages not created yet
+    href: "/success-stories"
   },
   {
     imageSrc: "https://placehold.co/600x400.png",
@@ -21,7 +21,7 @@ const successStoriesData = [
     dataAiHint: "couple smiling park",
     names: "Aisha & Sameer",
     story: "\"We never thought online matrimony would work for us, but CupidKnots proved us wrong. The AI suggestions were surprisingly accurate!\"",
-    href: "/success-stories/aisha-sameer"
+    href: "/success-stories"
   },
   {
     imageSrc: "https://placehold.co/600x400.png",
@@ -29,7 +29,7 @@ const successStoriesData = [
     dataAiHint: "traditional couple portrait",
     names: "Lakshmi & Arjun",
     story: "\"Finding someone with similar cultural values was important. CupidKnots helped us connect with someone perfect for our family and for us.\"",
-    href: "/success-stories/lakshmi-arjun"
+    href: "/success-stories"
   },
   {
     imageSrc: "https://placehold.co/600x400.png",
@@ -37,7 +37,7 @@ const successStoriesData = [
     dataAiHint: "couple engagement",
     names: "Deepa & Karthik",
     story: "\"The horoscope matching feature was surprisingly insightful! We felt a deeper connection knowing our stars aligned. So grateful for CupidKnots!\"",
-    href: "/success-stories/deepa-karthik"
+    href: "/success-stories"
   }
 ];
 

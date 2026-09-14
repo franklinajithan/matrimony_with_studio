@@ -110,10 +110,10 @@ const PROFILE_COMPLETION_FIELDS = ["displayName", "bio", "photoURL", "location",
 
 const dashboardNavLinks = [
   { href: "/dashboard/edit-profile", label: "Edit Profile", icon: <UserCircle className="mr-3 h-5 w-5" /> },
-  { href: "/dashboard/matches", label: "My Matches", icon: <Heart className="mr-3 h-5 w-5" /> },
-  { href: "/dashboard/connections", label: "Connections", icon: <Users className="mr-3 h-5 w-5" /> },
-  { href: "/dashboard/search", label: "Search", icon: <Search className="mr-3 h-5 w-5" /> },
-  { href: "/dashboard/discovery", label: "Discovery", icon: <Compass className="mr-3 h-5 w-5" /> },
+  { href: "/suggestions", label: "My Matches", icon: <Heart className="mr-3 h-5 w-5" /> },
+  { href: "/messages", label: "Connections", icon: <Users className="mr-3 h-5 w-5" /> },
+  { href: "/search", label: "Search", icon: <Search className="mr-3 h-5 w-5" /> },
+  { href: "/discover", label: "Discovery", icon: <Compass className="mr-3 h-5 w-5" /> },
   { href: "/dashboard/biodata", label: "My Biodata", icon: <FileText className="mr-3 h-5 w-5" /> },
   { href: "/dashboard/preferences", label: "Preferences", icon: <Settings className="mr-3 h-5 w-5" /> },
   { href: "/dashboard/horoscope", label: "Horoscope", icon: <Sparkles className="mr-3 h-5 w-5" /> },
@@ -351,6 +351,59 @@ export default function DashboardPage() {
     };
   }, [toast]);
 
+  const mapUserDocToSuggestion = (userId: string, data: Record<string, any>): QuickSuggestionProfile => ({
+    id: userId,
+    name: data.displayName || "User",
+    age: calculateAge(data.dob),
+    profession: data.profession || "Not specified",
+    location: data.location || "Not specified",
+    avatarUrl: data.photoURL || `https://placehold.co/300x400.png?text=${data.displayName ? data.displayName.substring(0, 1) : "S"}`,
+    dataAiHint: data.dataAiHint || (data.photoURL && !data.photoURL.includes("placehold.co") ? "person professional" : "person placeholder"),
+  });
+
+  const fetchSuggestionsFromPosts = async (currentUserId: string): Promise<QuickSuggestionProfile[]> => {
+    const postsQuery = query(collection(db, "posts"), orderBy("timestamp", "desc"), limit(30));
+    const postsSnapshot = await getDocs(postsQuery);
+    const suggestions: QuickSuggestionProfile[] = [];
+    const seenUserIds = new Set<string>();
+
+    for (const postDoc of postsSnapshot.docs) {
+      const postData = postDoc.data();
+      const authorId = postData.userId as string | undefined;
+      if (!authorId || authorId === currentUserId || seenUserIds.has(authorId)) continue;
+      seenUserIds.add(authorId);
+
+      try {
+        const userSnap = await getDoc(doc(db, "users", authorId));
+        if (userSnap.exists()) {
+          suggestions.push(mapUserDocToSuggestion(authorId, userSnap.data()));
+        } else {
+          suggestions.push({
+            id: authorId,
+            name: postData.userName || "User",
+            profession: "Not specified",
+            location: "Not specified",
+            avatarUrl: postData.userAvatar || `https://placehold.co/300x400.png?text=${postData.userName ? String(postData.userName).substring(0, 1) : "S"}`,
+            dataAiHint: "person placeholder",
+          });
+        }
+      } catch {
+        suggestions.push({
+          id: authorId,
+          name: postData.userName || "User",
+          profession: "Not specified",
+          location: "Not specified",
+          avatarUrl: postData.userAvatar || `https://placehold.co/300x400.png?text=${postData.userName ? String(postData.userName).substring(0, 1) : "S"}`,
+          dataAiHint: "person placeholder",
+        });
+      }
+
+      if (suggestions.length >= 3) break;
+    }
+
+    return suggestions;
+  };
+
   const fetchQuickSuggestions = useCallback(
     async (currentUserId: string) => {
       console.log("Dashboard Suggestions: Attempting to fetch. Current User ID:", currentUserId);
@@ -362,37 +415,32 @@ export default function DashboardPage() {
       }
       setIsLoadingSuggestions(true);
       try {
-        const usersRef = collection(db, "users");
-        const q = query(usersRef, limit(10));
+        let suggestions: QuickSuggestionProfile[] = [];
 
-        const querySnapshot = await getDocs(q);
-        console.log("Dashboard Suggestions: Query snapshot received. Empty:", querySnapshot.empty, "Docs count:", querySnapshot.docs.length);
+        try {
+          // Prefer listing profiles (same pattern as Discover). This fails if Firestore
+          // rules deny collection list on `users` — fall back to post authors below.
+          const usersQuery = query(collection(db, "users"), orderBy("displayName"), limit(10));
+          const querySnapshot = await getDocs(usersQuery);
+          console.log("Dashboard Suggestions: Query snapshot received. Empty:", querySnapshot.empty, "Docs count:", querySnapshot.docs.length);
 
-        const suggestions: QuickSuggestionProfile[] = [];
-        querySnapshot.forEach((docSnap) => {
-          if (docSnap.id === currentUserId) {
-            console.log("Dashboard Suggestions: Skipping current user from suggestions, ID:", docSnap.id);
-            return;
+          for (const docSnap of querySnapshot.docs) {
+            if (docSnap.id === currentUserId) continue;
+            suggestions.push(mapUserDocToSuggestion(docSnap.id, docSnap.data()));
+            if (suggestions.length >= 3) break;
           }
-          if (suggestions.length >= 3) return;
+        } catch (listError) {
+          console.warn("Dashboard Suggestions: users list query failed, falling back to post authors:", listError);
+          suggestions = await fetchSuggestionsFromPosts(currentUserId);
+        }
 
-          const data = docSnap.data();
-          console.log("Dashboard Suggestions: Processing suggestion for user ID:", docSnap.id, "Data snippet:", JSON.stringify(data).substring(0, 100) + "...");
-          suggestions.push({
-            id: docSnap.id,
-            name: data.displayName || "User",
-            age: calculateAge(data.dob),
-            profession: data.profession || "Not specified",
-            location: data.location || "Not specified",
-            avatarUrl: data.photoURL || `https://placehold.co/300x400.png?text=${data.displayName ? data.displayName.substring(0, 1) : "S"}`,
-            dataAiHint: data.dataAiHint || (data.photoURL && !data.photoURL.includes("placehold.co") ? "person professional" : "person placeholder"),
-          });
-        });
         console.log("Dashboard Suggestions: Mapped quick suggestions (before setting state):", JSON.parse(JSON.stringify(suggestions)));
         setQuickSuggestions(suggestions);
       } catch (error) {
         console.error("Dashboard Suggestions: Error fetching quick suggestions:", error);
-        toast({ title: "Error", description: "Could not load quick suggestions.", variant: "destructive" });
+        if ((error as { code?: string })?.code !== "permission-denied") {
+          toast({ title: "Error", description: "Could not load quick suggestions.", variant: "destructive" });
+        }
         setQuickSuggestions([]);
       } finally {
         setIsLoadingSuggestions(false);
@@ -512,7 +560,10 @@ export default function DashboardPage() {
       },
       (error) => {
         console.error("Dashboard Requests: Error in onSnapshot for match requests: ", error);
-        toast({ title: "Error Loading Requests", description: "Could not load match requests. " + error.message, variant: "destructive" });
+        // Permission errors mean Firestore rules need updating in Firebase Console — avoid noisy toasts.
+        if ((error as { code?: string })?.code !== "permission-denied") {
+          toast({ title: "Error Loading Requests", description: "Could not load match requests. " + error.message, variant: "destructive" });
+        }
         setMatchRequests([]);
         setIsLoadingRequests(false);
         console.log("Dashboard Requests: Error in onSnapshot, isLoadingRequests set to false.");
@@ -542,7 +593,9 @@ export default function DashboardPage() {
     console.log(`Dashboard Connections: Setting up connections listener for user UID: ${currentUser.uid}`);
     const connectionsQuery = query(collection(db, "chats"), where("participants", "array-contains", currentUser.uid), orderBy("lastMessageTimestamp", "desc"));
 
-    const unsubscribeConnections = onSnapshot(connectionsQuery, async (snapshot) => {
+    const unsubscribeConnections = onSnapshot(
+      connectionsQuery,
+      async (snapshot) => {
       console.log(`Dashboard Connections: Snapshot received. Empty: ${snapshot.empty}, Docs count: ${snapshot.docs.length}`);
 
       if (snapshot.empty) {
@@ -596,7 +649,14 @@ export default function DashboardPage() {
       } finally {
         setIsLoadingConnections(false);
       }
-    });
+    },
+      (error) => {
+        console.error("Dashboard Connections: Error in onSnapshot:", error);
+        setConnections([]);
+        setUnreadMessageCount(0);
+        setIsLoadingConnections(false);
+      }
+    );
 
     return () => {
       unsubscribeConnections();
@@ -612,25 +672,33 @@ export default function DashboardPage() {
       orderBy("timestamp", "desc")
     );
 
-    const unsubscribe = onSnapshot(postsQuery, (snapshot) => {
-      const postsData = snapshot.docs.map(doc => {
-        const data = doc.data();
-        const commentNotifications = data.commentNotifications?.[currentUser.uid] || { count: 0, lastSeen: null };
-        
-        return {
-          id: doc.id,
-          ...data,
-          isLiked: data.likedBy?.includes(currentUser.uid) || false,
-          unreadComments: commentNotifications.count || 0
-        } as Post;
-      });
-      setPosts(postsData);
-      setIsLoadingPosts(false);
+    const unsubscribe = onSnapshot(
+      postsQuery,
+      (snapshot) => {
+        const postsData = snapshot.docs.map(doc => {
+          const data = doc.data();
+          const commentNotifications = data.commentNotifications?.[currentUser.uid] || { count: 0, lastSeen: null };
+          
+          return {
+            id: doc.id,
+            ...data,
+            isLiked: data.likedBy?.includes(currentUser.uid) || false,
+            unreadComments: commentNotifications.count || 0
+          } as Post;
+        });
+        setPosts(postsData);
+        setIsLoadingPosts(false);
 
-      // Update total unread comment count
-      const totalUnreadComments = postsData.reduce((total, post) => total + (post.unreadComments || 0), 0);
-      setUnreadCommentCount(totalUnreadComments);
-    });
+        // Update total unread comment count
+        const totalUnreadComments = postsData.reduce((total, post) => total + (post.unreadComments || 0), 0);
+        setUnreadCommentCount(totalUnreadComments);
+      },
+      (error) => {
+        console.error("Dashboard Posts: Error in onSnapshot:", error);
+        setPosts([]);
+        setIsLoadingPosts(false);
+      }
+    );
 
     return () => unsubscribe();
   }, [currentUser]);
@@ -647,10 +715,17 @@ export default function DashboardPage() {
       where("lastLikedAt", ">", lastSeenLikeNotificationsTimestamp)
     );
 
-    const unsubscribeLikes = onSnapshot(userPostsQuery, (snapshot) => {
-      setUnreadLikeCount(snapshot.docs.length);
-      console.log(`Unread likes count: ${snapshot.docs.length}`);
-    });
+    const unsubscribeLikes = onSnapshot(
+      userPostsQuery,
+      (snapshot) => {
+        setUnreadLikeCount(snapshot.docs.length);
+        console.log(`Unread likes count: ${snapshot.docs.length}`);
+      },
+      (error) => {
+        console.error("Dashboard Likes: Error in onSnapshot:", error);
+        setUnreadLikeCount(0);
+      }
+    );
 
     return () => unsubscribeLikes();
   }, [currentUser, lastSeenLikeNotificationsTimestamp]);
@@ -667,10 +742,17 @@ export default function DashboardPage() {
       where("lastCommentedAt", ">", lastSeenCommentNotificationsTimestamp)
     );
 
-    const unsubscribeComments = onSnapshot(userPostsQuery, (snapshot) => {
-      setUnreadCommentCount(snapshot.docs.length);
-      console.log(`Unread comments count: ${snapshot.docs.length}`);
-    });
+    const unsubscribeComments = onSnapshot(
+      userPostsQuery,
+      (snapshot) => {
+        setUnreadCommentCount(snapshot.docs.length);
+        console.log(`Unread comments count: ${snapshot.docs.length}`);
+      },
+      (error) => {
+        console.error("Dashboard Comments: Error in onSnapshot:", error);
+        setUnreadCommentCount(0);
+      }
+    );
 
     return () => unsubscribeComments();
   }, [currentUser, lastSeenCommentNotificationsTimestamp]);
@@ -1070,27 +1152,89 @@ export default function DashboardPage() {
     }
   };
 
+  const firstName = userDisplayName?.split(" ")[0] || "there";
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const totalUnread = unreadMessageCount + unreadLikeCount + unreadCommentCount;
+
   return (
-    <div className="min-h-screen bg-[#f0f2f5] p-4 md:p-6 lg:p-8">
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 max-w-[1400px] mx-auto">
-          <div className="col-span-full md:col-span-4 lg:col-span-3 space-y-4 order-2 md:order-none">
-            <Card className="bg-white border-none shadow-sm">
-              <CardHeader className="p-3 pb-2">
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <CalendarCheck className="h-4 w-4" /> Quick Links
+    <div className="min-h-screen bg-background px-3 py-4 md:px-6 md:py-6">
+      <div className="mx-auto max-w-[1280px] space-y-6">
+        <section className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/15 via-background to-secondary/10 p-5 md:p-7">
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-4">
+              <Avatar className="h-16 w-16 border-2 border-background shadow-md md:h-20 md:w-20">
+                <AvatarImage src={userAvatarUrl} alt={userDisplayName} data-ai-hint={userAvatarHint} />
+                <AvatarFallback className="text-xl">{firstName.substring(0, 1).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-sm text-muted-foreground">{greeting}</p>
+                <h1 className="font-headline text-2xl font-semibold tracking-tight md:text-3xl">{firstName}</h1>
+                <p className="mt-1 text-sm text-muted-foreground">Find matches, stay in touch, and share an update.</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild>
+                <Link href="/discover">
+                  <Compass className="mr-2 h-4 w-4" /> Discover
+                </Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href="/dashboard/edit-profile">
+                  <Edit3 className="mr-2 h-4 w-4" /> Edit profile
+                </Link>
+              </Button>
+            </div>
+          </div>
+          {profileCompletion < 100 && (
+            <div className="mt-5 rounded-xl border bg-background/80 p-4 backdrop-blur">
+              <div className="mb-2 flex items-center justify-between text-sm">
+                <span className="font-medium">Profile {profileCompletion}% complete</span>
+                <Link href="/dashboard/edit-profile" className="text-primary hover:underline">
+                  Finish it
+                </Link>
+              </div>
+              <Progress value={profileCompletion} className="h-2" />
+            </div>
+          )}
+        </section>
+
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {[
+            { label: "Match requests", value: matchRequests.length, href: "#match-requests", icon: UserPlus },
+            { label: "Unread", value: totalUnread, href: "#notifications", icon: BellRing },
+            { label: "Connections", value: connections.length, href: "/messages", icon: Users },
+            { label: "Suggestions", value: quickSuggestions.length, href: "/discover", icon: Sparkles },
+          ].map((stat) => (
+            <Link key={stat.label} href={stat.href} className="rounded-xl border bg-card p-4 shadow-sm transition-colors hover:border-primary/40 hover:bg-muted/40">
+              <stat.icon className="mb-2 h-4 w-4 text-primary" />
+              <p className="text-2xl font-semibold">{stat.value}</p>
+              <p className="text-xs text-muted-foreground">{stat.label}</p>
+            </Link>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+          <div className="space-y-5 lg:col-span-3">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <CalendarCheck className="h-4 w-4 text-primary" /> Shortcuts
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-2">
+              <CardContent className="grid grid-cols-3 gap-2 p-3 pt-0">
                 {dashboardNavLinks.map((link) => {
                   const isActive = pathname === link.href;
                   return (
-                    <Button key={link.label} variant={isActive ? "default" : "ghost"} asChild className={cn("w-full justify-start px-3 py-2 text-sm h-auto", isActive ? "bg-primary text-primary-foreground hover:bg-primary/90" : "text-foreground/70 hover:text-primary hover:bg-accent/50")}>
+                    <Button
+                      key={link.label}
+                      variant={isActive ? "default" : "ghost"}
+                      asChild
+                      className={cn("h-auto flex-col gap-1 px-2 py-3 text-[11px] leading-tight", isActive ? "" : "text-muted-foreground hover:text-primary")}
+                    >
                       <Link href={link.href} aria-label={link.label}>
-                        {React.cloneElement(link.icon, {
-                          className: cn("mr-3 h-4 w-4", isActive ? "text-primary-foreground/90" : "text-muted-foreground group-hover:text-primary"),
-                        })}
-                        {link.label}
+                        {React.cloneElement(link.icon, { className: "h-4 w-4 mr-0" })}
+                        <span className="text-center">{link.label}</span>
                       </Link>
                     </Button>
                   );
@@ -1098,33 +1242,15 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-white border-none shadow-sm">
-              <CardHeader className="p-4 pb-2">
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <FileText className="h-5 w-5" /> Profile Completion
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-2">
-                <Progress value={profileCompletion} className="h-2 bg-[#f0f2f5]" />
-                <div className="mt-2 flex items-center justify-between">
-                  <p className="text-sm text-gray-600">{profileCompletion}% Complete</p>
-                  {profileCompletion < 100 && (
-                    <Button variant="link" className="p-0 h-auto" asChild>
-                      <Link href="/dashboard/edit-profile">Complete Now</Link>
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card className="bg-white border-none shadow-sm">
-              <CardHeader className="p-4 pb-2">
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <Sparkles className="h-4 w-4 text-primary" /> AI Suggestions
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Sparkles className="h-4 w-4 text-primary" /> Suggested matches
                 </CardTitle>
-                <CardDescription className="text-sm">Personalized matches based on your profile</CardDescription>
+                <CardDescription>People you may want to meet</CardDescription>
               </CardHeader>
-              <CardContent className="p-4">
+              <CardContent className="space-y-2">
                 {isLoadingSuggestions ? (
                   <div className="space-y-3">
                     {[...Array(3)].map((_, i) => (
@@ -1140,7 +1266,7 @@ export default function DashboardPage() {
                 ) : quickSuggestions.length > 0 ? (
                   <div className="space-y-3">
                     {quickSuggestions.map((suggestion) => (
-                      <div key={suggestion.id} className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded-lg transition-colors">
+                      <div key={suggestion.id} className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted/60">
                         <Avatar className="h-12 w-12">
                           <AvatarImage src={suggestion.avatarUrl} alt={suggestion.name} data-ai-hint={suggestion.dataAiHint} />
                           <AvatarFallback>{suggestion.name.substring(0, 1).toUpperCase()}</AvatarFallback>
@@ -1191,45 +1317,42 @@ export default function DashboardPage() {
               </CardFooter>
             </Card>
 
-            <Card className="shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 font-headline text-2xl text-pink-500">
-                  <Heart className="h-6 w-6 fill-pink-500 text-pink-500" />
-                  Success Story
+            <Card className="overflow-hidden">
+              <div className="relative h-36 w-full">
+                <Image src="https://placehold.co/600x400.png" alt="Riya & Rohan" fill className="object-cover" data-ai-hint="happy couple wedding" />
+              </div>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Heart className="h-4 w-4 fill-secondary text-secondary" /> Success story
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="relative w-full h-56 mb-3 rounded-md overflow-hidden">
-                  <Image src="https://placehold.co/600x400.png" alt="Riya & Rohan" fill className="object-cover" data-ai-hint="happy couple wedding" />
-                </div>
-                <h3 className="font-semibold text-xl text-foreground">Riya & Rohan Found Love!</h3>
-                <p className="text-sm text-muted-foreground mt-1">"We connected on CupidMatch and instantly knew there was something special. Thank you for helping us find our happily ever after!"</p>
+              <CardContent className="pt-0">
+                <h3 className="font-semibold">Riya & Rohan</h3>
+                <p className="mt-1 text-sm text-muted-foreground">"We connected on CupidMatch and instantly knew there was something special."</p>
               </CardContent>
               <CardFooter>
-                <Button variant="link" className="text-primary p-0 h-auto" asChild>
-                  <Link href="/success-stories">Read More Stories</Link>
+                <Button variant="link" className="h-auto p-0" asChild>
+                  <Link href="/success-stories">Read more stories</Link>
                 </Button>
               </CardFooter>
             </Card>
           </div>
 
-          <div className="col-span-full md:col-span-8 lg:col-span-6 space-y-4 order-1 md:order-none">
-            <Card className="bg-white border-none shadow-sm">
+          <div className="space-y-5 lg:col-span-6">
+            <Card>
               <CardContent className="p-4">
-                <form onSubmit={handlePostSubmit} className="space-y-4">
-                  <div className="flex items-center gap-3">
+                <form onSubmit={handlePostSubmit} className="space-y-3">
+                  <div className="flex items-start gap-3">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={userAvatarUrl} alt={userDisplayName} />
                       <AvatarFallback>{userDisplayName?.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <div className="flex-1">
-                      <Textarea
-                        placeholder="What's on your mind?"
-                        value={newPost}
-                        onChange={(e) => setNewPost(e.target.value)}
-                        className="min-h-[50px] resize-none border-none bg-accent/50 focus-visible:ring-1"
-                      />
-                    </div>
+                    <Textarea
+                      placeholder={`Share an update, ${firstName}...`}
+                      value={newPost}
+                      onChange={(e) => setNewPost(e.target.value)}
+                      className="min-h-[72px] resize-none bg-muted/50"
+                    />
                   </div>
                   <div className="flex justify-end">
                     <Button type="submit" disabled={!newPost.trim()}>
@@ -1243,7 +1366,7 @@ export default function DashboardPage() {
             {isLoadingPosts ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
-                  <Card key={i} className="bg-white border-none shadow-sm">
+                  <Card key={i}>
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3 mb-4">
                         <Skeleton className="h-10 w-10 rounded-full" />
@@ -1260,7 +1383,7 @@ export default function DashboardPage() {
             ) : posts.length > 0 ? (
               <div className="space-y-4">
                 {posts.map((post) => (
-                  <Card key={post.id} className="bg-white border-none shadow-sm">
+                  <Card key={post.id}>
                     <CardHeader className="flex flex-row items-center justify-between p-4 pb-2">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
@@ -1279,7 +1402,7 @@ export default function DashboardPage() {
                       </Button>
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
-                      <p className="text-sm">{post.content}</p>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed">{post.content}</p>
                     </CardContent>
                     <CardFooter className="flex flex-col p-4 pt-0 space-y-4">
                       <div className="flex items-center justify-between w-full">
@@ -1379,35 +1502,33 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <Rocket className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-lg font-semibold text-muted-foreground">No posts yet!</p>
-                <p className="text-sm text-muted-foreground mt-2">Share your first update to get started.</p>
+              <div className="rounded-xl border bg-card py-12 text-center">
+                <Rocket className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+                <p className="font-semibold">No posts yet</p>
+                <p className="mt-1 text-sm text-muted-foreground">Share your first update to get started.</p>
               </div>
             )}
           </div>
 
-          {/* Right Sidebar - will only appear on large screens */}
-          {/* On mobile/medium: hidden (md:hidden) */}
-          {/* On large: lg:col-span-3 (takes 1/4 of 12 cols), order-none (normal flow) */}
-          <div className="col-span-full lg:col-span-3 space-y-4 order-3 md:hidden lg:block">
-            {/* Notifications Card */}
-            <Card className="bg-white border-none shadow-sm">
-              <CardHeader className="p-4 pb-2">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <BellRing className="h-5 w-5 text-primary/80" /> Notifications
-                  {(unreadMessageCount > 0 || unreadLikeCount > 0 || unreadCommentCount > 0) && (
-                    <Badge variant="destructive" className="ml-2 px-2 py-1 text-xs">
-                      {unreadMessageCount + unreadLikeCount + unreadCommentCount}
+          <div className="space-y-5 lg:col-span-3">
+            <Card id="notifications">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <BellRing className="h-4 w-4 text-primary" /> Notifications
+                  {totalUnread > 0 && (
+                    <Badge variant="destructive" className="ml-auto">
+                      {totalUnread}
                     </Badge>
                   )}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4">
-                <div className="space-y-3">
+              <CardContent className="space-y-3">
+                <div className="space-y-2">
                   {unreadMessageCount > 0 ? (
-                    <div className="flex items-center justify-between text-sm">
-                      <p>You have <span className="font-bold">{unreadMessageCount} new message{unreadMessageCount > 1 ? "s" : ""}</span>.</p>
+                    <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
+                      <p>
+                        <span className="font-semibold">{unreadMessageCount}</span> new message{unreadMessageCount > 1 ? "s" : ""}
+                      </p>
                       <Button variant="link" size="sm" className="h-auto p-0" asChild>
                         <Link href="/messages">View</Link>
                       </Button>
@@ -1417,10 +1538,12 @@ export default function DashboardPage() {
                   )}
 
                   {unreadLikeCount > 0 ? (
-                    <div className="flex items-center justify-between text-sm">
-                      <p>You have <span className="font-bold">{unreadLikeCount} new like{unreadLikeCount > 1 ? "s" : ""}</span> on your posts.</p>
+                    <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
+                      <p>
+                        <span className="font-semibold">{unreadLikeCount}</span> new like{unreadLikeCount > 1 ? "s" : ""}
+                      </p>
                       <Button variant="link" size="sm" className="h-auto p-0" onClick={markLikesAsRead}>
-                        View Posts
+                        View
                       </Button>
                     </div>
                   ) : (
@@ -1428,20 +1551,16 @@ export default function DashboardPage() {
                   )}
 
                   {unreadCommentCount > 0 ? (
-                    <div className="flex items-center justify-between text-sm">
-                      <p>You have <span className="font-bold">{unreadCommentCount} new comment{unreadCommentCount > 1 ? "s" : ""}</span> on your posts.</p>
+                    <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
+                      <p>
+                        <span className="font-semibold">{unreadCommentCount}</span> new comment{unreadCommentCount > 1 ? "s" : ""}
+                      </p>
                       <Button variant="link" size="sm" className="h-auto p-0" onClick={markCommentsAsRead}>
-                        View Posts
+                        View
                       </Button>
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground">No new comments.</p>
-                  )}
-
-                  {(unreadMessageCount === 0 && unreadLikeCount === 0 && unreadCommentCount === 0) && (
-                    <div className="text-center py-2">
-                      <p className="text-sm text-muted-foreground">No new notifications.</p>
-                    </div>
                   )}
                 </div>
               </CardContent>
@@ -1464,95 +1583,68 @@ export default function DashboardPage() {
               )}
             </Card>
 
-            {/* Connections Card */}
-            <Card className="bg-white border-none shadow-sm">
-              <CardHeader className="p-4 pb-2">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <Users className="h-5 w-5" /> Your Connections
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Users className="h-4 w-4 text-primary" /> Connections
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4">
+              <CardContent>
                 {isLoadingConnections ? (
                   <div className="space-y-3">
                     {[...Array(3)].map((_, i) => (
-                      <div key={i} className="p-3 bg-[#f0f2f5] rounded-lg">
-                        <div className="flex items-center gap-3 mb-3">
-                          <Skeleton className="h-14 w-14 rounded-full" />
-                          <div className="space-y-2 flex-1">
-                            <Skeleton className="h-5 w-32" />
-                            <Skeleton className="h-4 w-24" />
-                            <Skeleton className="h-4 w-28" />
-                          </div>
-                        </div>
-                        <div className="flex gap-2 justify-end">
-                          <Skeleton className="h-8 w-20" />
-                          <Skeleton className="h-8 w-20" />
+                      <div key={i} className="flex items-center gap-3">
+                        <Skeleton className="h-12 w-12 rounded-full" />
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-28" />
+                          <Skeleton className="h-3 w-20" />
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : connections.length > 0 ? (
                   <div className="space-y-3">
-                    {connections.map((connection) => (
-                      <div key={connection.id} className="p-3 bg-[#f0f2f5] rounded-lg hover:bg-[#e4e6e9] transition-colors">
-                        <div className="flex items-center gap-3 mb-3">
+                    {connections.slice(0, 4).map((connection) => (
+                      <div key={connection.id} className="rounded-lg border p-3">
+                        <div className="mb-3 flex items-center gap-3">
                           <div className="relative">
-                            <Avatar className="h-14 w-14">
+                            <Avatar className="h-11 w-11">
                               <AvatarImage src={connection.photoURL} alt={connection.displayName} />
                               <AvatarFallback>{connection.displayName.substring(0, 1).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             {connection.unreadCount > 0 && (
-                              <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 min-w-5 px-1.5 text-xs">
+                              <Badge variant="destructive" className="absolute -right-1 -top-1 h-5 min-w-5 px-1.5 text-xs">
                                 {connection.unreadCount}
                               </Badge>
                             )}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <Link href={`/profile/${connection.userId}`} className="font-semibold text-[15px] hover:underline block mb-1">
+                          <div className="min-w-0 flex-1">
+                            <Link href={`/profile/${connection.userId}`} className="block truncate font-medium hover:underline">
                               {connection.displayName}
                             </Link>
-                            <div className="text-sm text-muted-foreground space-y-1">
-                              {connection.age && (
-                                <p className="flex items-center gap-1.5">
-                                  <Cake className="h-4 w-4" />
-                                  <span>{connection.age} years old</span>
-                                </p>
-                              )}
-                              {connection.profession && (
-                                <p className="flex items-center gap-1.5">
-                                  <Briefcase className="h-4 w-4" />
-                                  <span className="truncate">{connection.profession}</span>
-                                </p>
-                              )}
-                              {connection.location && (
-                                <p className="flex items-center gap-1.5">
-                                  <MapPin className="h-4 w-4" />
-                                  <span className="truncate">{connection.location}</span>
-                                </p>
-                              )}
-                            </div>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {[connection.age ? `${connection.age}` : null, connection.profession].filter(Boolean).join(" · ")}
+                            </p>
                           </div>
                         </div>
-                        <div className="flex gap-2 justify-end border-t pt-3 mt-2">
-                          <Button size="sm" className="h-8" asChild>
+                        <div className="flex gap-2">
+                          <Button size="sm" className="h-8 flex-1" asChild>
                             <Link href={`/messages/${connection.id}`}>
-                              <MessageCircle className="h-4 w-4 mr-1" /> Chat
+                              <MessageCircle className="mr-1 h-4 w-4" /> Chat
                             </Link>
                           </Button>
-                          <Button variant="outline" size="sm" className="h-8" asChild>
-                            <Link href={`/profile/${connection.userId}`}>
-                              <Eye className="h-4 w-4 mr-1" /> View
-                            </Link>
+                          <Button variant="outline" size="sm" className="h-8 flex-1" asChild>
+                            <Link href={`/profile/${connection.userId}`}>View</Link>
                           </Button>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-6 space-y-3">
-                    <p className="text-muted-foreground">You haven't connected with anyone yet.</p>
+                  <div className="space-y-3 py-4 text-center">
+                    <p className="text-sm text-muted-foreground">No connections yet.</p>
                     <Button asChild>
-                      <Link href="/discover">Find Matches</Link>
+                      <Link href="/discover">Find matches</Link>
                     </Button>
                   </div>
                 )}
@@ -1566,13 +1658,12 @@ export default function DashboardPage() {
               )}
             </Card>
 
-            {/* Match Requests Card */}
-            <Card className="bg-white border-none shadow-sm">
+            <Card id="match-requests">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <UserPlus className="h-5 w-5 text-primary/80" /> Match Requests
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <UserPlus className="h-4 w-4 text-primary" /> Match requests
                 </CardTitle>
-                <CardDescription className="text-sm text-muted-foreground">People who want to connect with you</CardDescription>
+                <CardDescription>People who want to connect</CardDescription>
               </CardHeader>
               <CardContent>
                 {isLoadingRequests ? (
@@ -1590,7 +1681,7 @@ export default function DashboardPage() {
                 ) : matchRequests.length > 0 ? (
                   <div className="space-y-2">
                     {matchRequests.map((req) => (
-                      <div key={req.id} className="flex items-center justify-between p-2 hover:bg-[#f0f2f5] rounded-lg transition-colors">
+                      <div key={req.id} className="flex items-center justify-between rounded-lg p-2 transition-colors hover:bg-muted/50">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-10 w-10">
                             <AvatarImage src={req.senderAvatarUrl} alt={req.senderName} />
@@ -1634,14 +1725,13 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* Horoscope Card */}
-            <Card className="bg-white border-none shadow-sm">
-              <CardHeader className="p-4 pb-2">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <Sparkles className="h-5 w-5" /> Today's Horoscope
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Sparkles className="h-4 w-4 text-primary" /> Today&apos;s horoscope
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4">
+              <CardContent>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">{mockTodaysHoroscope.sign}</span>

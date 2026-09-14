@@ -159,17 +159,4 @@ export default function LoginPage() {
   );
 }
 
-// Placeholder page for forgot password - this is not being modified.
-export function ForgotPasswordPage() {
-    return (
-        <Card className="w-full max-w-md shadow-2xl">
-            <CardHeader className="text-center">
-                <CardTitle className="font-headline text-3xl text-primary">Reset Password</CardTitle>
-                <CardDescription>Enter your email to reset your password.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                {/* Form for password reset */}
-            </CardContent>
-        </Card>
-    )
-}
+
