@@ -4,99 +4,100 @@
 
 @layer base {
   :root {
-    /* Cupid Knots Palette - Light Mode */
-    --background: 240 50% 98%; /* Very Light Cool Gray / Almost White */
-    --foreground: 240 10% 20%; /* Dark Cool Gray */
+    /* CupidMatch palette — light */
+    --background: 40 100% 99%;
+    --foreground: 327 28% 12%;
 
-    --muted: 240 30% 94%; /* Light Cool Gray */
-    --muted-foreground: 240 10% 45%; /* Muted Cool Gray */
+    --muted: 24 43% 96%;
+    --muted-foreground: 327 10% 41%;
 
-    --popover: 0 0% 100%; /* White */
-    --popover-foreground: 240 10% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 327 28% 12%;
 
-    --card: 0 0% 100%; /* White for feature cards */
-    --card-foreground: 240 10% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 327 28% 12%;
 
-    --border: 240 10% 85%; /* Light Gray border */
-    --input: 240 10% 90%; 
+    --border: 28 28% 88%;
+    --input: 28 28% 90%;
 
-    --primary: 280 75% 55%; /* Vibrant Purple (Sign In button, Hero elements) */
-    --primary-foreground: 0 0% 100%; /* White */
+    /* Deep plum #4B164C */
+    --primary: 299 55% 19%;
+    --primary-foreground: 40 100% 99%;
 
-    --secondary: 320 80% 60%; /* Bright Pink (Hero gradient accent) */
-    --secondary-foreground: 0 0% 100%; /* White */
-    
-    --accent: 260 80% 65%; /* Medium Blue (Why Choose Us title) */
-    --accent-foreground: 0 0% 100%; /* White */
+    /* Secondary plum #742158 */
+    --secondary: 328 55% 29%;
+    --secondary-foreground: 0 0% 100%;
 
-    --destructive: 0 70% 50%; 
-    --destructive-foreground: 0 0% 100%; 
+    /* Soft rose surface accent */
+    --accent: 328 45% 95%;
+    --accent-foreground: 299 55% 19%;
 
-    --ring: 280 75% 65%; /* Lighter Purple for focus rings */
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --ring: 299 55% 28%;
     --radius: 0.5rem;
 
-    /* Chart colors can remain or be adjusted if charts are used with new theme */
-    --chart-1: 270 70% 60%;
-    --chart-2: 330 75% 70%;
-    --chart-3: 290 60% 65%;
-    --chart-4: 250 65% 70%;
-    --chart-5: 310 70% 60%;
+    --chart-1: 299 55% 30%;
+    --chart-2: 328 55% 40%;
+    --chart-3: 43 55% 63%;
+    --chart-4: 327 10% 45%;
+    --chart-5: 24 43% 80%;
 
-    --sidebar-background: 240 20% 96%; 
-    --sidebar-foreground: 240 10% 25%;
-    --sidebar-primary: 280 75% 55%; 
+    --sidebar-background: 40 100% 99%;
+    --sidebar-foreground: 327 28% 12%;
+    --sidebar-primary: 299 55% 19%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 320 80% 65%; 
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 240 10% 88%;
-    --sidebar-ring: 280 75% 65%;
+    --sidebar-accent: 328 45% 95%;
+    --sidebar-accent-foreground: 299 55% 19%;
+    --sidebar-border: 28 28% 88%;
+    --sidebar-ring: 299 55% 28%;
   }
 
   .dark {
-    /* Cupid Knots Palette - Dark Mode (Example, can be refined) */
-    --background: 240 10% 10%; /* Very Dark Blue/Gray */
-    --foreground: 240 20% 90%; /* Light Gray/Off-white */
+    --background: 327 28% 8%;
+    --foreground: 40 40% 96%;
 
-    --muted: 240 10% 20%; 
-    --muted-foreground: 240 10% 65%;
+    --muted: 327 20% 16%;
+    --muted-foreground: 28 20% 70%;
 
-    --popover: 240 10% 12%;
-    --popover-foreground: 240 20% 90%;
+    --popover: 327 24% 10%;
+    --popover-foreground: 40 40% 96%;
 
-    --card: 240 10% 15%; /* Darker card for features */
-    --card-foreground: 240 20% 90%;
+    --card: 327 22% 12%;
+    --card-foreground: 40 40% 96%;
 
-    --border: 240 10% 30%;
-    --input: 240 10% 25%;
+    --border: 327 16% 22%;
+    --input: 327 16% 20%;
 
-    --primary: 280 70% 65%; /* Lighter Purple for Dark Mode */
-    --primary-foreground: 280 10% 10%; /* Darker text on primary */
+    --primary: 43 55% 63%;
+    --primary-foreground: 327 28% 12%;
 
-    --secondary: 320 75% 70%; /* Lighter Pink for Dark Mode */
-    --secondary-foreground: 320 10% 10%;
+    --secondary: 328 40% 40%;
+    --secondary-foreground: 0 0% 100%;
 
-    --accent: 260 70% 75%; /* Lighter Blue for Dark Mode */
-    --accent-foreground: 260 10% 10%;
-    
-    --destructive: 0 60% 50%; 
+    --accent: 327 20% 18%;
+    --accent-foreground: 40 40% 96%;
+
+    --destructive: 0 60% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --ring: 280 70% 70%; 
-    
-    --chart-1: 270 70% 70%;
-    --chart-2: 330 75% 75%;
-    --chart-3: 290 60% 70%;
-    --chart-4: 250 65% 75%;
-    --chart-5: 310 70% 65%;
+    --ring: 43 55% 63%;
 
-    --sidebar-background: 240 10% 12%;
-    --sidebar-foreground: 240 20% 90%;
-    --sidebar-primary: 280 70% 65%;
-    --sidebar-primary-foreground: 280 10% 10%;
-    --sidebar-accent: 320 75% 70%;
-    --sidebar-accent-foreground: 320 10% 10%;
-    --sidebar-border: 240 10% 30%;
-    --sidebar-ring: 280 70% 70%;
+    --chart-1: 43 55% 63%;
+    --chart-2: 328 40% 50%;
+    --chart-3: 299 40% 55%;
+    --chart-4: 28 20% 70%;
+    --chart-5: 327 20% 35%;
+
+    --sidebar-background: 327 24% 10%;
+    --sidebar-foreground: 40 40% 96%;
+    --sidebar-primary: 43 55% 63%;
+    --sidebar-primary-foreground: 327 28% 12%;
+    --sidebar-accent: 327 20% 18%;
+    --sidebar-accent-foreground: 40 40% 96%;
+    --sidebar-border: 327 16% 22%;
+    --sidebar-ring: 43 55% 63%;
   }
 }
 
@@ -107,8 +108,50 @@
   body {
     @apply bg-background text-foreground;
   }
-  /* Define a specific hero gradient */
-  .hero-gradient {
-    background-image: linear-gradient(to right, theme('colors.pink.400'), theme('colors.purple.500'), theme('colors.indigo.600'));
+}
+
+/* Homepage hero motion — subtle; respect reduced motion */
+@layer utilities {
+  @keyframes cupid-route-travel {
+    to {
+      stroke-dashoffset: -280;
+    }
+  }
+
+  @keyframes cupid-scroll-hint {
+    0%,
+    100% {
+      transform: translateY(0);
+      opacity: 0.55;
+    }
+    50% {
+      transform: translateY(6px);
+      opacity: 1;
+    }
+  }
+
+  .cupid-route-travel {
+    stroke-dasharray: 10 270;
+    stroke-dashoffset: 0;
+    animation: cupid-route-travel 18s linear infinite;
+  }
+
+  .cupid-route-travel-delayed {
+    stroke-dasharray: 10 270;
+    stroke-dashoffset: 0;
+    animation: cupid-route-travel 22s linear infinite;
+    animation-delay: -7s;
+  }
+
+  .cupid-scroll-hint {
+    animation: cupid-scroll-hint 2.8s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cupid-route-travel,
+    .cupid-route-travel-delayed,
+    .cupid-scroll-hint {
+      animation: none !important;
+    }
   }
 }

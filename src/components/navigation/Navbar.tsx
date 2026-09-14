@@ -2,20 +2,37 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { MessageCircle, LogOut, LayoutDashboard, Settings, UserCircle as UserCircleIcon, Loader2, Info, Zap, HelpCircle, Menu, CreditCard, Search, Heart, Phone, Star, Users } from "lucide-react";
+import {
+  MessageCircle,
+  LogOut,
+  LayoutDashboard,
+  Settings,
+  UserCircle as UserCircleIcon,
+  Loader2,
+  Info,
+  Menu,
+  CreditCard,
+  Heart,
+  Phone,
+} from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 import { onAuthStateChanged, signOut, User as FirebaseUser } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SearchAutocomplete } from "@/components/search/SearchAutocomplete";
 
 const mainAppNavLinks = [
@@ -32,15 +49,7 @@ const landingPageNavLinks = [
   { href: "/success-stories", label: "Success Stories", icon: <Heart className="h-5 w-5" /> },
 ];
 
-// Add marketing pages array to check if current path is a marketing page
-const marketingPages = ['/', '/about', '/pricing', '/contact', '/success-stories'];
-
-const messagesLinkData = {
-  href: "/messages",
-  label: "Messages",
-  icon: <MessageCircle className="h-5 w-5" />,
-  notificationCount: 0,
-};
+const marketingPages = ["/", "/about", "/pricing", "/contact", "/success-stories", "/success-stories/submit"];
 
 export function Navbar() {
   const pathname = usePathname();
@@ -51,7 +60,6 @@ export function Navbar() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Check if current page is a marketing page
   const isMarketingPage = marketingPages.includes(pathname);
 
   useEffect(() => {
@@ -80,25 +88,30 @@ export function Navbar() {
     }
   };
 
+  const marketingLinkClass = (href: string) =>
+    cn(
+      "h-10 px-3 text-[#725E6D] hover:bg-[#F8EAF1] hover:text-[#4B164C] focus-visible:ring-2 focus-visible:ring-[#4B164C]",
+      pathname === href && "bg-[#F8EAF1] text-[#4B164C]"
+    );
+
+  const signUpButtonClass =
+    "rounded-full bg-[#4B164C] px-5 text-white hover:bg-[#742158] focus-visible:ring-2 focus-visible:ring-[#4B164C] focus-visible:ring-offset-2";
+
   return (
     <TooltipProvider delayDuration={0}>
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-16 items-center px-4">
-          <div className="flex items-center">
+      <header className="sticky top-0 z-50 w-full border-b border-[#EADFD6]/80 bg-[#FFFDF9]/90 backdrop-blur supports-[backdrop-filter]:bg-[#FFFDF9]/80">
+        <div className="container mx-auto flex h-16 items-center gap-3 px-4">
+          <div className="flex shrink-0 items-center">
             <Logo />
           </div>
 
           {isMarketingPage ? (
-            // Marketing pages navigation
-            <div className="hidden md:flex items-center space-x-1 flex-1 justify-center">
+            <nav className="hidden flex-1 items-center justify-center gap-0.5 md:flex" aria-label="Primary">
               {landingPageNavLinks.map((link) => (
                 <Tooltip key={link.label}>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" asChild className={cn("h-10 px-4", pathname === link.href ? "text-primary bg-accent" : "text-foreground/70 hover:text-primary hover:bg-accent/50")}>
-                      <Link href={link.href} className="flex items-center gap-2">
-                        {link.icon}
-                        {link.label}
-                      </Link>
+                    <Button variant="ghost" asChild className={marketingLinkClass(link.href)}>
+                      <Link href={link.href}>{link.label}</Link>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
@@ -106,15 +119,24 @@ export function Navbar() {
                   </TooltipContent>
                 </Tooltip>
               ))}
-            </div>
+            </nav>
           ) : (
-            // Main app navigation
             <>
-              <div className="hidden md:flex items-center space-x-1 flex-1 justify-center">
+              <div className="hidden flex-1 items-center justify-center space-x-1 md:flex">
                 {mainAppNavLinks.map((link) => (
                   <Tooltip key={link.label}>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" asChild className={cn("h-12 w-12 rounded-full", pathname === link.href ? "text-primary bg-accent" : "text-foreground/70 hover:text-primary hover:bg-accent/50")}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        asChild
+                        className={cn(
+                          "h-12 w-12 rounded-full",
+                          pathname === link.href
+                            ? "bg-[#F8EAF1] text-[#4B164C]"
+                            : "text-[#725E6D] hover:bg-[#F8EAF1] hover:text-[#4B164C]"
+                        )}
+                      >
                         <Link href={link.href} aria-label={link.label}>
                           {link.icon}
                         </Link>
@@ -126,55 +148,63 @@ export function Navbar() {
                   </Tooltip>
                 ))}
               </div>
-
-              <SearchAutocomplete 
-                className="w-full max-w-sm"
-                onSearch={() => setIsMobileMenuOpen(false)}
-              />
+              <SearchAutocomplete className="w-full max-w-sm" onSearch={() => setIsMobileMenuOpen(false)} />
             </>
           )}
 
           {isLoadingAuth ? (
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <Loader2 className="ml-auto h-6 w-6 animate-spin text-[#4B164C]" aria-label="Loading account" />
           ) : currentUser ? (
             !isMarketingPage && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
-                    <Avatar className="h-9 w-9 border-2 border-primary">
-                      <AvatarImage src={currentUser.photoURL || undefined} alt={currentUser.displayName || "User"} />
-                      <AvatarFallback>{currentUser.displayName ? currentUser.displayName.substring(0, 1).toUpperCase() : "U"}</AvatarFallback>
+                  <Button
+                    variant="ghost"
+                    className="relative ml-auto h-10 w-10 rounded-full p-0 focus-visible:ring-2 focus-visible:ring-[#4B164C]"
+                  >
+                    <Avatar className="h-9 w-9 border-2 border-[#4B164C]">
+                      <AvatarImage
+                        src={currentUser.photoURL || undefined}
+                        alt={currentUser.displayName || "User"}
+                      />
+                      <AvatarFallback>
+                        {currentUser.displayName
+                          ? currentUser.displayName.substring(0, 1).toUpperCase()
+                          : "U"}
+                      </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{currentUser.displayName || "User"}</p>
+                      <p className="text-sm font-medium leading-none">
+                        {currentUser.displayName || "User"}
+                      </p>
                       <p className="text-xs leading-none text-muted-foreground">{currentUser.email}</p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard" className="flex items-center cursor-pointer">
+                    <Link href="/dashboard" className="flex cursor-pointer items-center">
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       Dashboard
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard/edit-profile" className="flex items-center cursor-pointer">
+                    <Link href="/dashboard/edit-profile" className="flex cursor-pointer items-center">
                       <UserCircleIcon className="mr-2 h-4 w-4" />
                       Profile
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard/preferences" className="flex items-center cursor-pointer">
+                    <Link href="/dashboard/preferences" className="flex cursor-pointer items-center">
                       <Settings className="mr-2 h-4 w-4" />
                       Preferences
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="flex items-center cursor-pointer">
+                  <DropdownMenuItem onClick={handleLogout} className="flex cursor-pointer items-center">
                     <LogOut className="mr-2 h-4 w-4" />
                     Log out
                   </DropdownMenuItem>
@@ -182,45 +212,76 @@ export function Navbar() {
               </DropdownMenu>
             )
           ) : (
-            <div className="hidden md:flex items-center space-x-2">
-              <Button variant="ghost" asChild>
+            <div className="ml-auto hidden items-center gap-2 md:flex">
+              <Button
+                variant="ghost"
+                asChild
+                className="text-[#725E6D] hover:bg-[#F8EAF1] hover:text-[#4B164C] focus-visible:ring-2 focus-visible:ring-[#4B164C]"
+              >
                 <Link href="/login">Log In</Link>
               </Button>
-              <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button asChild className={signUpButtonClass}>
                 <Link href="/signup">Sign Up</Link>
               </Button>
             </div>
           )}
 
           {isMarketingPage ? (
-            // Mobile menu for marketing pages
-            <div className="md:hidden">
+            <div className="ml-auto flex items-center gap-2 md:hidden">
+              {!currentUser && !isLoadingAuth && (
+                <Button asChild size="sm" className={cn("h-9", signUpButtonClass)}>
+                  <Link href="/signup">Sign Up</Link>
+                </Button>
+              )}
               <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" aria-label="Open menu">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Open menu"
+                    className="text-[#4B164C] hover:bg-[#F8EAF1] focus-visible:ring-2 focus-visible:ring-[#4B164C]"
+                  >
                     <Menu className="h-6 w-6" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-[280px] p-4">
+                <SheetContent side="right" className="w-[280px] bg-[#FFFDF9] p-4">
                   <div className="mb-6">
                     <Logo />
                   </div>
-                  <nav className="space-y-1">
+                  <nav className="space-y-1" aria-label="Mobile">
                     {landingPageNavLinks.map((link) => (
-                      <Button key={link.label} variant="ghost" asChild className={cn("w-full justify-start px-4 py-3 text-base", pathname === link.href ? "text-primary bg-accent" : "text-foreground/70 hover:text-primary hover:bg-accent/50")} onClick={() => setIsSheetOpen(false)}>
+                      <Button
+                        key={link.label}
+                        variant="ghost"
+                        asChild
+                        className={cn(
+                          "w-full justify-start px-4 py-3 text-base text-[#725E6D] hover:bg-[#F8EAF1] hover:text-[#4B164C]",
+                          pathname === link.href && "bg-[#F8EAF1] text-[#4B164C]"
+                        )}
+                        onClick={() => setIsSheetOpen(false)}
+                      >
                         <Link href={link.href}>
                           {React.cloneElement(link.icon, { className: "mr-3 h-5 w-5" })}
                           {link.label}
                         </Link>
                       </Button>
                     ))}
-                    <hr className="my-3" />
+                    <hr className="my-3 border-[#EADFD6]" />
                     {!currentUser && !isLoadingAuth && (
                       <>
-                        <Button variant="outline" asChild className="w-full justify-start text-base py-3" onClick={() => setIsSheetOpen(false)}>
+                        <Button
+                          variant="outline"
+                          asChild
+                          className="w-full justify-start border-[#EADFD6] py-3 text-base text-[#4B164C] focus-visible:ring-2 focus-visible:ring-[#4B164C]"
+                          onClick={() => setIsSheetOpen(false)}
+                        >
                           <Link href="/login">Log In</Link>
                         </Button>
-                        <Button asChild className="w-full justify-start text-base py-3 bg-primary text-primary-foreground" onClick={() => setIsSheetOpen(false)}>
+                        <Button
+                          asChild
+                          className={cn("w-full justify-start py-3 text-base", signUpButtonClass)}
+                          onClick={() => setIsSheetOpen(false)}
+                        >
                           <Link href="/signup">Sign Up</Link>
                         </Button>
                       </>
@@ -230,7 +291,6 @@ export function Navbar() {
               </Sheet>
             </div>
           ) : (
-            // Mobile menu for main app
             <div className="md:hidden">
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
@@ -243,37 +303,42 @@ export function Navbar() {
                     <Logo />
                   </div>
                   <nav className="flex flex-col space-y-4">
-                    {isMarketingPage ? (
-                      landingPageNavLinks.map((link) => (
-                        <Button key={link.label} variant="ghost" asChild className={cn("w-full justify-start px-4 py-3 text-base", pathname === link.href ? "text-primary bg-accent" : "text-foreground/70 hover:text-primary hover:bg-accent/50")} onClick={() => setIsMobileMenuOpen(false)}>
-                          <Link href={link.href}>
-                            {React.cloneElement(link.icon, { className: "mr-3 h-5 w-5" })}
-                            {link.label}
-                          </Link>
-                        </Button>
-                      ))
-                    ) : (
-                      <>
-                        <SearchAutocomplete 
-                          onSearch={() => setIsMobileMenuOpen(false)}
-                        />
-                        {mainAppNavLinks.map((link) => (
-                          <Button key={link.label} variant="ghost" asChild className={cn("w-full justify-start px-4 py-3 text-base", pathname === link.href ? "text-primary bg-accent" : "text-foreground/70 hover:text-primary hover:bg-accent/50")} onClick={() => setIsMobileMenuOpen(false)}>
-                            <Link href={link.href}>
-                              {React.cloneElement(link.icon, { className: "mr-3 h-5 w-5" })}
-                              {link.label}
-                            </Link>
-                          </Button>
-                        ))}
-                      </>
-                    )}
+                    <SearchAutocomplete onSearch={() => setIsMobileMenuOpen(false)} />
+                    {mainAppNavLinks.map((link) => (
+                      <Button
+                        key={link.label}
+                        variant="ghost"
+                        asChild
+                        className={cn(
+                          "w-full justify-start px-4 py-3 text-base",
+                          pathname === link.href
+                            ? "bg-[#F8EAF1] text-[#4B164C]"
+                            : "text-[#725E6D] hover:bg-[#F8EAF1] hover:text-[#4B164C]"
+                        )}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Link href={link.href}>
+                          {React.cloneElement(link.icon, { className: "mr-3 h-5 w-5" })}
+                          {link.label}
+                        </Link>
+                      </Button>
+                    ))}
                     <hr className="my-3" />
                     {!currentUser && !isLoadingAuth && (
                       <>
-                        <Button variant="outline" asChild className="w-full justify-start text-base py-3" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button
+                          variant="outline"
+                          asChild
+                          className="w-full justify-start py-3 text-base"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
                           <Link href="/login">Log In</Link>
                         </Button>
-                        <Button asChild className="w-full justify-start text-base py-3 bg-primary text-primary-foreground" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button
+                          asChild
+                          className={cn("w-full justify-start py-3 text-base", signUpButtonClass)}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
                           <Link href="/signup">Sign Up</Link>
                         </Button>
                       </>

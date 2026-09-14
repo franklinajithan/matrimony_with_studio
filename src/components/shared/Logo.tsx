@@ -1,25 +1,36 @@
-
-import Link from 'next/link';
-import { Heart } from 'lucide-react'; // Using Lucide Heart, can be replaced with custom SVG
+import Link from "next/link";
+import { Heart } from "lucide-react";
 
 interface LogoProps {
   className?: string;
   iconSize?: number;
   textSize?: string;
-  textColor?: string; // Added for flexibility
+  textColor?: string;
 }
 
-export function Logo({ 
-  className, 
-  iconSize = 28, 
-  textSize = "text-3xl",
-  textColor = "text-primary" // Default to primary, can be overridden
+export function Logo({
+  className,
+  iconSize = 26,
+  textSize = "text-xl sm:text-2xl",
+  textColor = "text-[#4B164C]",
 }: LogoProps) {
   return (
-    <Link href="/" className={`flex items-center gap-1.5 ${className}`}>
-      <span className={`font-headline font-bold ${textSize} ${textColor} tracking-tight`}>CUPID</span>
-      <Heart className="text-red-500 fill-current" size={iconSize * 0.8} /> {/* Heart is now red, removed animate-bounce */}
-      <span className={`font-headline font-bold ${textSize} ${textColor} tracking-tight`}>KNOTS</span>
+    <Link
+      href="/"
+      className={`flex items-center gap-1.5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4B164C] focus-visible:ring-offset-2 ${className ?? ""}`}
+      aria-label="CupidMatch home"
+    >
+      <span className={`font-headline font-bold tracking-[0.06em] ${textSize} ${textColor}`}>
+        CUPID
+      </span>
+      <Heart
+        className="text-[#D6B56D] fill-[#D6B56D]"
+        size={iconSize * 0.72}
+        aria-hidden="true"
+      />
+      <span className={`font-headline font-bold tracking-[0.06em] ${textSize} ${textColor}`}>
+        MATCH
+      </span>
     </Link>
   );
 }
