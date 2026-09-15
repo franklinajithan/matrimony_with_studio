@@ -390,30 +390,31 @@ export function PrivacySection() {
   const points = [
     "Choose who can view your personal details",
     "Control photo and contact-information visibility",
-    "Use clear verification signals",
-    "Block or report inappropriate users",
-    "Chat securely before sharing external contact information",
+    "Understand verification signals clearly",
+    "Block or report inappropriate behavior",
+    "Chat securely before sharing contact information",
+    "Pause or delete your account anytime",
   ];
 
   return (
-    <section className="px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="privacy-heading">
+    <section className="bg-background px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="privacy-heading">
       <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-2 lg:items-center">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A52A68]">
-            Built around trust
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+            Safety Centre
           </p>
-          <h2 id="privacy-heading" className="mt-3 font-serif text-3xl font-semibold text-[#271624] sm:text-4xl">
+          <h2 id="privacy-heading" className="mt-3 text-3xl font-bold text-foreground sm:text-4xl">
             Take your time. Stay in control.
           </h2>
-          <p className="mt-4 text-base leading-7 text-[#725E6D]">
+          <p className="mt-4 text-base leading-7 text-muted-foreground">
             A matrimony profile contains personal information. CupidMatch is designed to help you
-            share thoughtfully, connect securely and move forward at your own pace.
+            share thoughtfully, connect securely, and move forward at your own pace.
           </p>
         </div>
-        <ul className="space-y-3 rounded-2xl border border-[#EADFD6] bg-white p-6 sm:p-7">
+        <ul className="space-y-3 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-7">
           {points.map((point) => (
-            <li key={point} className="flex gap-3 text-sm leading-6 text-[#271624]">
-              <Shield className="mt-0.5 h-4 w-4 shrink-0 text-[#D6B56D]" aria-hidden="true" />
+            <li key={point} className="flex gap-3 text-sm leading-6 text-foreground">
+              <Shield className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
               <span>{point}</span>
             </li>
           ))}
