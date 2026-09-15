@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { countPendingRequests } from "@/lib/supabase/matches";
+import { countConnections } from "@/lib/supabase/connections";
+import { countShortlist } from "@/lib/supabase/shortlist";
 import { Loader2, Heart, Users, Bookmark, MessageCircle, Search, Globe, Languages, MapPin, Calendar, Mail, Shield, BadgeCheck, Crown, ArrowRight, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,12 +33,13 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Stats (placeholder values - will be loaded from Supabase in production)
-  const [receivedInterests, setReceivedInterests] = useState(3);
-  const [activeConnections, setActiveConnections] = useState(2);
-  const [shortlisted, setShortlisted] = useState(6);
-  const [unreadMessages, setUnreadMessages] = useState(2);
-  const [profileCompletion, setProfileCompletion] = useState(80);
+  // Stats - loaded from Supabase
+  const [receivedInterests, setReceivedInterests] = useState(0);
+  const [activeConnections, setActiveConnections] = useState(0);
+  const [shortlisted, setShortlisted] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [profileCompletion, setProfileCompletion] = useState(0);
+  const [loadingStats, setLoadingStats] = useState(true);
 
   // Authentication check
   useEffect(() => {
@@ -49,6 +53,28 @@ export default function DashboardPage() {
         }
 
         setCurrentUser(user);
+        
+        // Fetch dashboard stats
+        if (user) {
+          try {
+            const [interests, connections, shortlistCount] = await Promise.all([
+              countPendingRequests(user.uid),
+              countConnections(user.uid),
+              countShortlist(user.uid),
+            ]);
+            
+            setReceivedInterests(interests);
+            setActiveConnections(connections);
+            setShortlisted(shortlistCount);
+            
+            // Set profile completion to 80% for now (can be calculated from profile data)
+            setProfileCompletion(80);
+          } catch (error) {
+            console.error("Error fetching dashboard stats:", error);
+          } finally {
+            setLoadingStats(false);
+          }
+        }
       } catch (error) {
         console.error("Error fetching user:", error);
         router.push("/login");
