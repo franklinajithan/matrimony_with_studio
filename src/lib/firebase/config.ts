@@ -9,12 +9,12 @@ import { FirebaseStorage, getStorage } from "firebase/storage";
 const stripQuotes = (value?: string) => value?.replace(/^["']|["']$/g, "");
 
 const firebaseConfig = {
-  apiKey: stripQuotes(process.env.NEXT_PUBLIC_FIREBASE_API_KEY),
-  authDomain: stripQuotes(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN),
-  projectId: stripQuotes(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID),
-  storageBucket: stripQuotes(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET),
-  messagingSenderId: stripQuotes(process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID),
-  appId: stripQuotes(process.env.NEXT_PUBLIC_FIREBASE_APP_ID),
+  apiKey: stripQuotes(process.env.NEXT_PUBLIC_FIREBASE_API_KEY) || "placeholder-api-key",
+  authDomain: stripQuotes(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) || "placeholder.firebaseapp.com",
+  projectId: stripQuotes(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) || "placeholder-project",
+  storageBucket: stripQuotes(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET) || "placeholder.appspot.com",
+  messagingSenderId: stripQuotes(process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID) || "123456789",
+  appId: stripQuotes(process.env.NEXT_PUBLIC_FIREBASE_APP_ID) || "1:123456789:web:placeholder",
   // measurementId: stripQuotes(process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID), // Uncomment if you need Analytics
 };
 
