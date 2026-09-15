@@ -5,6 +5,7 @@ export {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
+  signOutToLanding,
   sendPasswordResetEmail,
   updatePassword,
   resendSignupConfirmation,
@@ -19,6 +20,7 @@ export {
   searchProfiles,
   createUserProfile,
   updateUserProfile,
+  setProfilePublished,
   updateAllUsersSearchTerms,
   subscribeToProfiles,
   mapProfile,
@@ -45,6 +47,7 @@ export {
   countPendingRequests,
   listAcceptedConnections,
   countAcceptedConnections,
+  countRecentAcceptedConnections,
 } from "./matches";
 export {
   getChat,
@@ -72,3 +75,16 @@ export {
   subscribeToPosts,
 } from "./posts";
 export { createSuccessStory, subscribeToSuccessStories } from "./stories";
+export {
+  listDocuments,
+  getDocument,
+  createDocument,
+  updateDocument,
+  duplicateDocument,
+  deleteDocument,
+  listFavouriteTemplates,
+  setFavouriteTemplate,
+  createShareLink,
+  revokeShareLink,
+  getShareByToken,
+} from "./biodata";

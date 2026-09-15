@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { listProfiles, type Profile } from "@/lib/supabase/profiles";
@@ -267,27 +266,24 @@ function DiscoverPageContent() {
       
       toast({
         title: "Interest sent",
-        description: "Your interest has been sent successfully.",
+        description: "They’ll see your request under Interests. Once they accept, you can chat.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error sending interest:", error);
-      
-      const message = error.message?.toLowerCase();
-      if (message?.includes("duplicate") || message?.includes("unique")) {
-        toast({
-          title: "Already sent",
-          description: "You've already sent an interest to this person.",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to send interest. Please try again.",
-          variant: "destructive",
-        });
-      }
+      const message = error instanceof Error ? error.message : "Failed to send interest. Please try again.";
+      const lower = message.toLowerCase();
+      toast({
+        title: lower.includes("already") ? "Already sent" : "Error",
+        description: message,
+        variant: lower.includes("already") ? "default" : "destructive",
+      });
     } finally {
       setProcessingAction(prev => ({ ...prev, [`interest-${profileId}`]: false }));
     }
+  };
+
+  const handleViewProfile = (profileId: string) => {
+    router.push(`/profile/${profileId}`);
   };
   
   const clearFilters = () => {
@@ -639,21 +635,26 @@ function DiscoverPageContent() {
               </CardContent>
               
               <CardFooter className="flex gap-2 border-t p-3">
-                <Button variant="outline" size="sm" className="flex-1 text-xs sm:text-sm" asChild>
-                  <Link href={`/profile/${profile.id}`}>
-                    View
-                  </Link>
-                </Button>
                 <Button
+                  type="button"
+                  variant="outline"
                   size="sm"
                   className="flex-1 text-xs sm:text-sm"
-                  onClick={() => handleSendInterest(profile.id)}
+                  onClick={() => handleViewProfile(profile.id)}
+                >
+                  View
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="flex-1 text-xs sm:text-sm"
+                  onClick={() => void handleSendInterest(profile.id)}
                   disabled={processingAction[`interest-${profile.id}`]}
                 >
                   {processingAction[`interest-${profile.id}`] ? (
-                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <Heart className="mr-1 h-3.5 w-3.5" />
+                    <Heart className="mr-1.5 h-3.5 w-3.5" />
                   )}
                   Interest
                 </Button>

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 
 const AUTHENTICATED_ROUTES = [
   "/dashboard",
+  "/biodata",
   "/discover",
   "/interests",
   "/connections",

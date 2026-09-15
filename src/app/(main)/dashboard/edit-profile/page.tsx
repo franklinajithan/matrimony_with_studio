@@ -35,14 +35,18 @@ import {
   Gamepad2,
   Palette,
   Video,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { auth, updateProfile, onAuthStateChanged, type User } from "@/lib/supabase/auth";
 import { extractStoragePath, mediaPathForUser, resolveMediaUrl, uploadFile } from "@/lib/supabase/storage";
-import { createUserProfile, updateUserProfile, getProfile } from "@/lib/supabase/profiles";
+import { createUserProfile, updateUserProfile, getProfile, setProfilePublished } from "@/lib/supabase/profiles";
 import { Skeleton } from "@/components/ui/skeleton";
 import { enhanceBio } from "@/ai/flows/enhance-bio-flow";
 import { enhanceHobbies } from "@/ai/flows/enhance-hobbies-flow";
@@ -52,6 +56,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ProfilePhotoEditor } from "@/components/profile/ProfilePhotoEditor";
+import {
+  PhotoGalleryEditor,
+  type GalleryPhotoItem,
+} from "@/components/profile/PhotoGalleryEditor";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -63,6 +72,7 @@ interface StoredPhoto {
   url: string;
   hint: string;
   storagePath?: string;
+  grayscale?: boolean;
 }
 
 const isFile = (value: unknown): value is File => typeof File !== "undefined" && value instanceof File;
@@ -180,17 +190,17 @@ export default function EditProfilePage() {
 
   const [currentProfilePhotoUrl, setCurrentProfilePhotoUrl] = useState<string | null>(defaultFirestoreProfile.profilePhotoUrl);
   const [currentDataAiHint, setCurrentDataAiHint] = useState<string>(defaultFirestoreProfile.dataAiHint);
+  const [isProfileVisible, setIsProfileVisible] = useState(false);
+  const [visibilitySaving, setVisibilitySaving] = useState(false);
 
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
-  const [additionalPhotosPreview, setAdditionalPhotosPreview] = useState<string[]>([]);
-  const [selectedProfilePhotoName, setSelectedProfilePhotoName] = useState<string | null>(null);
+    const [selectedProfilePhotoName, setSelectedProfilePhotoName] = useState<string | null>(null);
   const [selectedHoroscopeFileName, setSelectedHoroscopeFileName] = useState<string | null>(null);
 
-  const [managedExistingPhotos, setManagedExistingPhotos] = useState<StoredPhoto[]>([]);
+  const [galleryPhotos, setGalleryPhotos] = useState<GalleryPhotoItem[]>([]);
 
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
-  const additionalPhotosInputRef = useRef<HTMLInputElement>(null);
-
+  
   const form = useForm<z.infer<typeof editProfileSchema>>({
     resolver: zodResolver(editProfileSchema),
     defaultValues: {
@@ -234,8 +244,17 @@ export default function EditProfilePage() {
           const photoToUse = data.photoURL || currentUser.photoURL || defaultFirestoreProfile.profilePhotoUrl;
           setCurrentProfilePhotoUrl(photoToUse);
           setCurrentDataAiHint(data.dataAiHint || (photoToUse !== defaultFirestoreProfile.profilePhotoUrl ? "person" : defaultFirestoreProfile.dataAiHint));
+          setIsProfileVisible(Boolean(data.isPublished));
           setSelectedHoroscopeFileName(data.horoscopeFileName || null);
-          setManagedExistingPhotos(data.additionalPhotoUrls || []);
+          setGalleryPhotos(
+            (data.additionalPhotoUrls || []).map((photo) => ({
+              id: photo.id,
+              url: photo.url,
+              hint: photo.hint || "gallery photo",
+              storagePath: photo.storagePath,
+              grayscale: Boolean(photo.grayscale),
+            }))
+          );
           setUserDocExists(true);
         } else {
           setUserDocExists(false);
@@ -266,8 +285,9 @@ export default function EditProfilePage() {
           const authPhoto = currentUser.photoURL || defaultFirestoreProfile.profilePhotoUrl;
           setCurrentProfilePhotoUrl(authPhoto);
           setCurrentDataAiHint(authPhoto !== defaultFirestoreProfile.profilePhotoUrl ? "person" : defaultFirestoreProfile.dataAiHint);
+          setIsProfileVisible(false);
           setSelectedHoroscopeFileName(null);
-          setManagedExistingPhotos([]);
+          setGalleryPhotos([]);
         }
       } catch (error: any) {
         const permissionDenied = error?.code === "permission-denied";
@@ -281,7 +301,7 @@ export default function EditProfilePage() {
         form.reset({ ...defaultFirestoreProfile, profilePhoto: undefined, additionalPhotos: [], horoscopeFile: undefined });
         setCurrentProfilePhotoUrl(defaultFirestoreProfile.profilePhotoUrl);
         setCurrentDataAiHint(defaultFirestoreProfile.dataAiHint);
-        setManagedExistingPhotos(defaultFirestoreProfile.additionalPhotoUrls);
+        setGalleryPhotos([]);
         setSelectedHoroscopeFileName(defaultFirestoreProfile.horoscopeFileName);
       } finally {
         setProfileDataLoaded(true);
@@ -296,7 +316,7 @@ export default function EditProfilePage() {
         form.reset({ ...defaultFirestoreProfile, profilePhoto: undefined, additionalPhotos: [], horoscopeFile: undefined });
         setCurrentProfilePhotoUrl(defaultFirestoreProfile.profilePhotoUrl);
         setCurrentDataAiHint(defaultFirestoreProfile.dataAiHint);
-        setManagedExistingPhotos(defaultFirestoreProfile.additionalPhotoUrls);
+        setGalleryPhotos([]);
         setSelectedHoroscopeFileName(defaultFirestoreProfile.horoscopeFileName);
         setProfileDataLoaded(true);
       }
@@ -399,26 +419,38 @@ export default function EditProfilePage() {
         dataToSave.horoscopeFileName = "";
       }
 
-      let finalAdditionalPhotos = [...managedExistingPhotos];
-      if (values.additionalPhotos && values.additionalPhotos.length > 0) {
-        const newUploadedPhotos: StoredPhoto[] = [];
-        for (const file of values.additionalPhotos) {
-          const timestamp = Date.now();
-          const filePath = mediaPathForUser(user.uid, file.name, "additional_photos");
-          const path = await uploadFile(file, filePath);
-          newUploadedPhotos.push({
-            id: `${timestamp}`,
-            url: path,
-            hint: "new additional upload",
-            storagePath: path,
-          });
+      const finalAdditionalPhotos: StoredPhoto[] = [];
+      for (const photo of galleryPhotos) {
+        let path = photo.storagePath || extractStoragePath(photo.url) || photo.url;
+        if (photo.pendingFile) {
+          const filePath = mediaPathForUser(
+            user.uid,
+            photo.pendingFile.name || `gallery-${Date.now()}.jpg`,
+            "additional_photos"
+          );
+          path = await uploadFile(photo.pendingFile, filePath);
         }
-        finalAdditionalPhotos = [...finalAdditionalPhotos, ...newUploadedPhotos];
-        setAdditionalPhotosPreview([]);
-        if (additionalPhotosInputRef.current) additionalPhotosInputRef.current.value = ""; // Clear file input
+        finalAdditionalPhotos.push({
+          id: photo.id.startsWith("new-")
+            ? `${Date.now()}-${Math.random().toString(16).slice(2, 6)}`
+            : photo.id,
+          url: path,
+          hint: photo.hint || "gallery photo",
+          storagePath: path,
+          grayscale: Boolean(photo.grayscale),
+        });
       }
       dataToSave.additionalPhotoUrls = finalAdditionalPhotos;
-      setManagedExistingPhotos(finalAdditionalPhotos);
+      setGalleryPhotos(
+        finalAdditionalPhotos.map((photo) => ({
+          id: photo.id,
+          url: resolveMediaUrl(photo.url),
+          hint: photo.hint,
+          storagePath: photo.storagePath,
+          grayscale: Boolean(photo.grayscale),
+        }))
+      );
+      form.setValue("additionalPhotos", undefined);
 
       if (userDocExists) {
         await updateUserProfile(user.uid, dataToSave);
@@ -475,24 +507,36 @@ export default function EditProfilePage() {
     }
   };
 
-  const handleProfilePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      form.setValue("profilePhoto", file, { shouldValidate: true });
-      setSelectedProfilePhotoName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfilePhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      form.setValue("profilePhoto", undefined, { shouldValidate: true });
-      setSelectedProfilePhotoName(null);
-      setProfilePhotoPreview(null);
+  const handleVisibilityChange = async (checked: boolean) => {
+    const user = auth.currentUser;
+    if (!user) return;
+    const previous = isProfileVisible;
+    setIsProfileVisible(checked);
+    setVisibilitySaving(true);
+    try {
+      await setProfilePublished(user.uid, checked);
+      toast({
+        title: checked ? "Profile visible" : "Profile hidden",
+        description: checked
+          ? "Members can find you in Discover."
+          : "You are hidden from Discover until you make the profile visible again.",
+      });
+    } catch (error) {
+      setIsProfileVisible(previous);
+      toast({
+        title: "Could not update visibility",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setVisibilitySaving(false);
     }
   };
 
   const clearProfilePhotoSelection = () => {
+    if (profilePhotoPreview?.startsWith("blob:")) {
+      URL.revokeObjectURL(profilePhotoPreview);
+    }
     setProfilePhotoPreview(null);
     setSelectedProfilePhotoName(null);
     form.setValue("profilePhoto", undefined, { shouldValidate: true });
@@ -502,71 +546,13 @@ export default function EditProfilePage() {
     toast({ title: "Profile photo selection cleared." });
   };
 
-  const handleAdditionalPhotosChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const currentExistingCount = managedExistingPhotos.length;
-    const slotsAvailableForNew = MAX_ADDITIONAL_PHOTOS - currentExistingCount;
-
-    if (slotsAvailableForNew <= 0) {
-      toast({
-        title: "Gallery Full",
-        description: `You already have ${MAX_ADDITIONAL_PHOTOS} photos. Remove existing ones to add new photos.`,
-        variant: "default",
-      });
-      if (additionalPhotosInputRef.current) additionalPhotosInputRef.current.value = "";
-      form.setValue("additionalPhotos", undefined, { shouldValidate: true });
-      setAdditionalPhotosPreview([]);
-      return;
+  const handleCroppedProfilePhoto = (file: File, previewUrl: string) => {
+    if (profilePhotoPreview?.startsWith("blob:")) {
+      URL.revokeObjectURL(profilePhotoPreview);
     }
-
-    const filesSelectedInDialog = Array.from(event.target.files || []);
-    let filesToProcess = filesSelectedInDialog;
-
-    if (filesSelectedInDialog.length > slotsAvailableForNew) {
-      filesToProcess = filesSelectedInDialog.slice(0, slotsAvailableForNew);
-      toast({
-        title: "Limit Reached",
-        description: `You can add ${slotsAvailableForNew} more photo(s). ${filesToProcess.length} out of ${filesSelectedInDialog.length} files were selected.`,
-        variant: "default",
-      });
-    }
-
-    form.setValue("additionalPhotos", filesToProcess.length > 0 ? filesToProcess : undefined, { shouldValidate: true });
-
-    if (filesToProcess.length > 0) {
-      const newPreviews: string[] = [];
-      filesToProcess.forEach((file) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          newPreviews.push(reader.result as string);
-          if (newPreviews.length === filesToProcess.length) {
-            setAdditionalPhotosPreview(newPreviews); // Replace previews with only the current selection
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-    } else {
-      setAdditionalPhotosPreview([]); // Clear previews if no files are processed
-      if (additionalPhotosInputRef.current) additionalPhotosInputRef.current.value = "";
-    }
-  };
-
-  const removeAdditionalPhotoPreview = (index: number) => {
-    setAdditionalPhotosPreview((prev) => prev.filter((_, i) => i !== index));
-    const currentFiles = form.getValues("additionalPhotos") || [];
-    const updatedFiles = currentFiles.filter((_, i) => i !== index);
-    form.setValue("additionalPhotos", updatedFiles.length > 0 ? updatedFiles : undefined, { shouldValidate: true });
-    if (updatedFiles.length === 0 && additionalPhotosInputRef.current) {
-      additionalPhotosInputRef.current.value = ""; // Clear file input if all previews removed
-    }
-    toast({ title: "Photo preview removed." });
-  };
-
-  const removeExistingPhoto = (photoId: string) => {
-    setManagedExistingPhotos((prev) => prev.filter((p) => p.id !== photoId));
-    toast({
-      title: "Photo Marked for Removal",
-      description: "This photo will be removed when you save changes.",
-    });
+    form.setValue("profilePhoto", file, { shouldValidate: true });
+    setSelectedProfilePhotoName(file.name);
+    setProfilePhotoPreview(previewUrl);
   };
 
   const handleDeactivateAccount = () => {
@@ -637,8 +623,7 @@ export default function EditProfilePage() {
   }
 
   const anyEnhancementLoading = isEnhancingBio || isEnhancingHobbies || isEnhancingMovies || isEnhancingMusic;
-  const canUploadMoreAdditionalPhotos = managedExistingPhotos.length < MAX_ADDITIONAL_PHOTOS;
-
+  
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit, handleInvalidSubmit)} className="min-h-screen bg-gray-50">
@@ -708,6 +693,26 @@ export default function EditProfilePage() {
                     )}
                   />
                 </div>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2.5">
+                <Checkbox
+                  id="profile-visible"
+                  checked={isProfileVisible}
+                  disabled={isSaving || visibilitySaving || anyEnhancementLoading}
+                  onCheckedChange={(value) => void handleVisibilityChange(value === true)}
+                />
+                <Label htmlFor="profile-visible" className="flex cursor-pointer items-center gap-2 text-sm font-medium text-foreground">
+                  {isProfileVisible ? (
+                    <Eye className="h-4 w-4 text-primary" aria-hidden />
+                  ) : (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden />
+                  )}
+                  {isProfileVisible ? "Visible in Discover" : "Invisible — hidden from Discover"}
+                </Label>
+                {visibilitySaving ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
+                <Button asChild variant="outline" size="sm" className="ml-auto">
+                  <Link href="/biodata">Biodata Studio</Link>
+                </Button>
               </div>
             </div>
           </div>
@@ -974,24 +979,24 @@ export default function EditProfilePage() {
                   <FormField
                     control={form.control}
                     name="profilePhoto"
-                    render={({ field }) => (
+                    render={() => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold">Change Profile Photo</FormLabel>
                         <FormControl>
-                          <Input
-                            type="file"
-                            ref={profilePhotoInputRef}
-                            accept={ACCEPTED_IMAGE_TYPES.join(",")}
-                            onChange={(e) => {
-                              field.onChange(e.target.files?.[0] || null);
-                              handleProfilePhotoChange(e);
-                            }}
-                            className="text-sm"
+                          <ProfilePhotoEditor
+                            currentUrl={currentProfilePhotoUrl}
+                            previewUrl={profilePhotoPreview}
+                            displayName={form.getValues("fullName")}
                             disabled={isSaving || anyEnhancementLoading}
+                            onCropped={handleCroppedProfilePhoto}
+                            onClear={clearProfilePhotoSelection}
                           />
                         </FormControl>
-                        {selectedProfilePhotoName && <FormDescription className="text-xs text-center mt-1">Selected: {selectedProfilePhotoName}</FormDescription>}
-                        <FormMessage />
+                        {selectedProfilePhotoName ? (
+                          <FormDescription className="text-center text-xs">
+                            Selected: {selectedProfilePhotoName}
+                          </FormDescription>
+                        ) : null}
+                        <FormMessage className="text-center" />
                       </FormItem>
                     )}
                   />
@@ -1004,48 +1009,25 @@ export default function EditProfilePage() {
                   <CardDescription>Manage your additional photos to showcase more of yourself.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                    {managedExistingPhotos.map((photo) => (
-                      <div key={`existing-${photo.id}`} className="aspect-square bg-muted rounded-md flex items-center justify-center relative group">
-                        <img src={photo.url} alt={`Photo ${photo.id}`} width={100} height={100} className="object-cover rounded-md h-full w-full" />
-                        <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeExistingPhoto(photo.id)} disabled={isSaving || anyEnhancementLoading}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
-                    {additionalPhotosPreview.map((previewUrl, index) => (
-                      <div key={`new-${index}`} className="aspect-square bg-muted rounded-md flex items-center justify-center relative group">
-                        <img src={previewUrl} alt={`New Photo ${index + 1}`} width={100} height={100} className="object-cover rounded-md h-full w-full" />
-                        <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeAdditionalPhotoPreview(index)} disabled={isSaving || anyEnhancementLoading}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-
+                  <PhotoGalleryEditor
+                    photos={galleryPhotos}
+                    maxPhotos={MAX_ADDITIONAL_PHOTOS}
+                    disabled={isSaving || anyEnhancementLoading}
+                    onChange={(next) => {
+                      setGalleryPhotos(next);
+                      const pending = next
+                        .map((photo) => photo.pendingFile)
+                        .filter((file): file is File => Boolean(file));
+                      form.setValue("additionalPhotos", pending.length ? pending : undefined, {
+                        shouldValidate: true,
+                      });
+                    }}
+                  />
                   <FormField
                     control={form.control}
                     name="additionalPhotos"
-                    render={({ field }) => (
+                    render={() => (
                       <FormItem>
-                        <FormLabel className="flex items-center">
-                          <PlusCircle className="mr-2 h-4 w-4 text-muted-foreground" />
-                          Upload Additional Photos
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="file"
-                            multiple
-                            ref={additionalPhotosInputRef}
-                            accept={ACCEPTED_IMAGE_TYPES.join(",")}
-                            onChange={(e) => {
-                              field.onChange(e.target.files ? Array.from(e.target.files) : undefined);
-                              handleAdditionalPhotosChange(e);
-                            }}
-                            disabled={isSaving || anyEnhancementLoading}
-                          />
-                        </FormControl>
-                        {form.getValues("additionalPhotos") && form.getValues("additionalPhotos")!.length > 0 && <FormDescription className="text-xs">Selected {form.getValues("additionalPhotos")!.length} file(s) for upload.</FormDescription>}
                         <FormMessage />
                       </FormItem>
                     )}

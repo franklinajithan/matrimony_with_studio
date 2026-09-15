@@ -24,8 +24,9 @@ import {
   validateOnboardingStep,
   type OnboardingDraft,
 } from "@/lib/onboarding/schema";
-import { auth, onAuthStateChanged, signOut } from "@/lib/supabase/auth";
+import { auth, onAuthStateChanged } from "@/lib/supabase/auth";
 import { mediaPathForUser, resolveMediaUrl, uploadMediaFile } from "@/lib/supabase/storage";
+import { ProfilePhotoEditor } from "@/components/profile/ProfilePhotoEditor";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -358,7 +359,7 @@ export function OnboardingWizard() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
-          <Logo />
+          <Logo size="md" />
           <div className="flex items-center gap-2 text-sm">
             <span
               className={cn(
@@ -372,7 +373,7 @@ export function OnboardingWizard() {
               {saveState === "error" && <AlertCircle className="h-3.5 w-3.5" />}
               {saveLabel}
             </span>
-            <Button variant="ghost" className="min-h-11" onClick={() => void signOut().then(() => router.push("/"))}>
+            <Button variant="ghost" className="min-h-11" onClick={() => window.location.assign("/logout")}>
               Log out
             </Button>
           </div>
@@ -597,18 +598,12 @@ export function OnboardingWizard() {
           {step === 6 && (
             <div className="space-y-5">
               <Field label="Profile photo (optional until you are ready)" htmlFor="photo">
-                <Input id="photo" type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} onChange={(e) => void handlePhoto(e.target.files?.[0], "primary")} className="min-h-11" />
-                {draft.photoURL ? (
-                  <div className="mt-3 flex items-center gap-3">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={resolveMediaUrl(draft.photoURL)}
-                      alt="Uploaded profile preview"
-                      className="h-20 w-20 rounded-xl object-cover border border-border"
-                    />
-                    <p className="text-sm text-muted-foreground">Photo attached to this draft.</p>
-                  </div>
-                ) : null}
+                <ProfilePhotoEditor
+                  currentUrl={draft.photoURL ? resolveMediaUrl(draft.photoURL) : null}
+                  displayName={draft.displayName}
+                  disabled={uploading}
+                  onCropped={(file) => void handlePhoto(file, "primary")}
+                />
               </Field>
               <Field label="Additional photos (optional)" htmlFor="gallery">
                 <Input id="gallery" type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} onChange={(e) => void handlePhoto(e.target.files?.[0], "additional")} className="min-h-11" />

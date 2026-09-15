@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { auth, onAuthStateChanged } from "@/lib/supabase/auth";
-import { getProfile, updateUserProfile } from "@/lib/supabase/profiles";
+import { getProfile, setProfilePublished, updateUserProfile } from "@/lib/supabase/profiles";
 import { draftFromProfile } from "@/lib/onboarding/persist";
 import { formatPhotoPrivacy } from "@/lib/onboarding/readiness";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +27,7 @@ export default function PrivacyPage() {
   const [photoPrivacy, setPhotoPrivacy] = useState<"members" | "connections" | "hidden">("members");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [visibilitySaving, setVisibilitySaving] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => setUserId(user?.uid ?? null));
@@ -49,6 +51,31 @@ export default function PrivacyPage() {
       active = false;
     };
   }, [userId]);
+
+  const toggleVisibility = async (checked: boolean) => {
+    if (!userId) return;
+    const previous = isPublished;
+    setIsPublished(checked);
+    setVisibilitySaving(true);
+    try {
+      await setProfilePublished(userId, checked);
+      toast({
+        title: checked ? "Profile visible" : "Profile hidden",
+        description: checked
+          ? "Members can find you in Discover."
+          : "You are hidden from Discover.",
+      });
+    } catch (error) {
+      setIsPublished(previous);
+      toast({
+        title: "Could not update visibility",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setVisibilitySaving(false);
+    }
+  };
 
   const save = async () => {
     if (!userId) return;
@@ -90,15 +117,32 @@ export default function PrivacyPage() {
             This reflects whether your profile is in the member discovery list. There is no paused state yet.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <p>
+        <CardContent className="space-y-4 text-sm">
+          <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/40 px-3 py-3">
+            <Checkbox
+              id="privacy-profile-visible"
+              checked={isPublished}
+              disabled={visibilitySaving}
+              onCheckedChange={(value) => void toggleVisibility(value === true)}
+            />
+            <Label htmlFor="privacy-profile-visible" className="flex cursor-pointer items-center gap-2 font-medium">
+              {isPublished ? (
+                <Eye className="h-4 w-4 text-primary" aria-hidden />
+              ) : (
+                <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden />
+              )}
+              {isPublished ? "Visible in Discover" : "Invisible — hidden from Discover"}
+            </Label>
+            {visibilitySaving ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
+          </div>
+          <p className="text-muted-foreground">
             {isPublished
-              ? "Published — eligible members can find you in discovery, subject to block and privacy rules."
-              : "Draft — only you can see this profile until you publish it."}
+              ? "Eligible members can find you in discovery, subject to block and privacy rules."
+              : "Only you can see this profile until you make it visible."}
           </p>
           {!isPublished ? (
-            <Button asChild className="min-h-11">
-              <Link href="/onboarding?step=7">Review and publish</Link>
+            <Button asChild variant="outline" className="min-h-11">
+              <Link href="/onboarding?step=7">Review profile details</Link>
             </Button>
           ) : null}
         </CardContent>

@@ -47,6 +47,7 @@
     "next": "^15.3.9",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-easy-crop": "^6.2.3",
     "react-hook-form": "^7.88.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",

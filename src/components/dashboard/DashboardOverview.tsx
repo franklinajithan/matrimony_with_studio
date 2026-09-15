@@ -21,11 +21,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PairedOrbit } from "@/components/decorative/PairedOrbit";
 import { CulturalLinePattern } from "@/components/decorative/CulturalLinePattern";
 import { MemberAvatar } from "@/components/dashboard/MemberAvatar";
-import { useDashboardChrome } from "@/components/dashboard/chrome-context";
 import { auth, onAuthStateChanged } from "@/lib/supabase/auth";
 import {
   loadDashboardOverview,
-  unreadNotificationCount,
   type CountResult,
   type DashboardOverviewData,
   type DiscoveryPerson,
@@ -127,7 +125,6 @@ function DiscoveryCard({
 
 export function DashboardOverview() {
   const { toast } = useToast();
-  const { setUnread } = useDashboardChrome();
   const [data, setData] = useState<DashboardOverviewData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -150,16 +147,14 @@ export function DashboardOverview() {
     try {
       const overview = await loadDashboardOverview(userId);
       setData(overview);
-      setUnread(unreadNotificationCount(overview));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Could not load your overview.";
       setError(message);
       setData(null);
-      setUnread(null);
     } finally {
       setLoading(false);
     }
-  }, [setUnread, userId]);
+  }, [userId]);
 
   useEffect(() => {
     if (!authReady || !userId) {

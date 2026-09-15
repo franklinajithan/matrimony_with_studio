@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { listPendingRequests, listSentRequests, acceptInterest, declineInterest, withdrawInterest } from "@/lib/supabase/matches";
 import { createConnection } from "@/lib/supabase/connections";
+import { createChatDocument } from "@/lib/supabase/chats";
 import { getProfile } from "@/lib/supabase/profiles";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,8 +15,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useDashboardChrome } from "@/components/dashboard/chrome-context";
 import { Loader2, Check, X, Heart, Send } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { getCompositeId } from "@/lib/utils";
 
 interface InterestWithProfile {
   id: string;
@@ -35,6 +38,7 @@ interface InterestWithProfile {
 export default function InterestsPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { setInterestsCount, refreshBadges } = useDashboardChrome();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [receivedInterests, setReceivedInterests] = useState<InterestWithProfile[]>([]);
@@ -162,6 +166,7 @@ export default function InterestsPage() {
         );
 
         setReceivedInterests(receivedWithProfiles);
+        setInterestsCount(receivedWithProfiles.length);
         setSentInterests(sentWithProfiles);
       } catch (error) {
         console.error("Error fetching interests:", error);
@@ -176,7 +181,7 @@ export default function InterestsPage() {
     };
 
     fetchInterests();
-  }, [currentUser, toast]);
+  }, [currentUser, toast, setInterestsCount]);
 
   const handleAccept = async (interestId: string, senderId: string) => {
     if (!currentUser) return;
@@ -190,13 +195,24 @@ export default function InterestsPage() {
       } catch (connectionError) {
         console.warn("Interest accepted, but connection row was not created:", connectionError);
       }
+      try {
+        await createChatDocument(currentUser.id, senderId);
+      } catch (chatError) {
+        console.warn("Interest accepted, but chat was not created:", chatError);
+      }
 
-      setReceivedInterests(prev => prev.filter(i => i.id !== interestId));
+      setReceivedInterests((prev) => {
+        const next = prev.filter((i) => i.id !== interestId);
+        setInterestsCount(next.length);
+        return next;
+      });
+      refreshBadges();
 
       toast({
         title: "Interest accepted",
-        description: "You are now connected!",
+        description: "You’re connected — you can message each other now.",
       });
+      router.push(`/messages/${getCompositeId(currentUser.id, senderId)}`);
     } catch (error) {
       console.error("Error accepting interest:", error);
       toast({
@@ -214,7 +230,12 @@ export default function InterestsPage() {
 
     try {
       await declineInterest(interestId);
-      setReceivedInterests(prev => prev.filter(i => i.id !== interestId));
+      setReceivedInterests((prev) => {
+        const next = prev.filter((i) => i.id !== interestId);
+        setInterestsCount(next.length);
+        return next;
+      });
+      refreshBadges();
 
       toast({
         title: "Interest declined",

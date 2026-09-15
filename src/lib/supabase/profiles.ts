@@ -21,6 +21,7 @@ function mapStoredPhotos(raw: unknown): StoredPhoto[] {
       url: resolveMediaUrl(rawUrl),
       hint: typeof photo.hint === "string" ? photo.hint : "profile photo",
       storagePath,
+      grayscale: Boolean(photo.grayscale),
     };
   });
 }
@@ -294,6 +295,17 @@ export async function updateUserProfile(userId: string, userData: Record<string,
   const row = profileInputToRow(userData);
   if (Object.keys(row).length === 0) return true;
   const { error } = await supabase.from("profiles").update(row).eq("id", userId);
+  if (error) throw error;
+  return true;
+}
+
+/** Toggle discovery visibility. Checked = visible in Discover; unchecked = hidden draft. */
+export async function setProfilePublished(userId: string, isPublished: boolean) {
+  const patch: Record<string, unknown> = { is_published: isPublished };
+  if (isPublished) {
+    patch.onboarding_step = 8;
+  }
+  const { error } = await supabase.from("profiles").update(patch).eq("id", userId);
   if (error) throw error;
   return true;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   Home,
@@ -53,7 +53,6 @@ export function DashboardSidebar({
   messagesCount = 0,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const { toast } = useToast();
 
   const counts: Record<string, number> = {
@@ -65,12 +64,11 @@ export function DashboardSidebar({
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await supabase.auth.signOut({ scope: "global" });
       toast({
         title: "Signed out",
         description: "You've been successfully signed out.",
       });
-      router.push("/");
     } catch (error) {
       console.error("Sign out error:", error);
       toast({
@@ -78,6 +76,8 @@ export function DashboardSidebar({
         description: "Failed to sign out. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      window.location.assign("/logout");
     }
   };
 

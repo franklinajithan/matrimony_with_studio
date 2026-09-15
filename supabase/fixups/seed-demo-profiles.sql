@@ -2,14 +2,14 @@
 -- Run AFTER bootstrap-onboarding.sql in the Supabase SQL Editor.
 -- Creates auth users + published profiles. Safe to re-run.
 
-create extension if not exists pgcrypto;
+create extension if not exists pgcrypto with schema extensions;
 
 -- Helper: upsert a confirmed email user with a known UUID
 create or replace function public._seed_auth_user(p_id uuid, p_email text, p_name text)
 returns void
 language plpgsql
 security definer
-set search_path = public, auth
+set search_path = public, auth, extensions
 as $$
 begin
   insert into auth.users (
@@ -35,7 +35,7 @@ begin
     'authenticated',
     'authenticated',
     p_email,
-    crypt('DemoPass123!', gen_salt('bf')),
+    extensions.crypt('DemoPass123!', extensions.gen_salt('bf')),
     now(),
     '{"provider":"email","providers":["email"]}'::jsonb,
     jsonb_build_object('display_name', p_name),

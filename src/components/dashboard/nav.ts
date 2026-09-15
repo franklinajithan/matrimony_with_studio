@@ -1,6 +1,7 @@
 import {
   Compass,
   CreditCard,
+  FileText,
   Heart,
   LayoutDashboard,
   MessageCircle,
@@ -29,6 +30,7 @@ export const dashboardPrimaryNav: DashboardNavItem[] = [
 
 export const dashboardAccountNav: DashboardNavItem[] = [
   { href: "/dashboard/edit-profile", label: "My profile", icon: UserCircle, match: "prefix" },
+  { href: "/biodata", label: "Biodata Studio", icon: FileText, match: "prefix" },
   { href: "/dashboard/horoscope", label: "Horoscope", icon: Sparkles, match: "prefix" },
   { href: "/onboarding?step=2", label: "Partner preferences", icon: SlidersHorizontal, match: "prefix" },
   { href: "/dashboard/privacy", label: "Privacy and safety", icon: Shield, match: "prefix" },
@@ -61,6 +63,10 @@ export function titleForDashboardPath(pathname: string): string {
   if (pathname.startsWith("/dashboard/edit-profile")) return "My profile";
   if (pathname.startsWith("/dashboard/horoscope")) return "Horoscope";
   if (pathname.startsWith("/dashboard/preferences")) return "Partner preferences";
+  if (pathname.startsWith("/biodata/templates")) return "Biodata templates";
+  if (pathname.startsWith("/biodata") && pathname.includes("/edit")) return "Edit biodata";
+  if (pathname.startsWith("/biodata") && pathname.includes("/preview")) return "Preview biodata";
+  if (pathname.startsWith("/biodata")) return "Biodata Studio";
   if (pathname.startsWith("/dashboard/biodata")) return "Biodata";
   if (pathname.startsWith("/dashboard/profile-views")) return "Profile views";
   return "Dashboard";

@@ -79,8 +79,7 @@ export function Navbar() {
         title: "Logged Out",
         description: "You have been successfully logged out.",
       });
-      router.push("/");
-      router.refresh();
+      window.location.assign("/logout");
     } catch (error) {
       console.error("Logout error:", error);
       toast({
@@ -88,6 +87,7 @@ export function Navbar() {
         description: "Could not log you out. Please try again.",
         variant: "destructive",
       });
+      window.location.assign("/logout");
     }
   };
 
@@ -107,7 +107,7 @@ export function Navbar() {
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="container mx-auto flex h-16 items-center gap-3 px-4 lg:px-6">
           <div className="flex shrink-0 items-center">
-            <Logo />
+            <Logo size="md" />
           </div>
 
           {isMarketingPage ? (
@@ -287,7 +287,7 @@ export function Navbar() {
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[280px] bg-background p-4">
                   <div className="mb-6">
-                    <Logo />
+                    <Logo size="md" />
                   </div>
                   <nav className="space-y-1" aria-label="Mobile">
                     {landingPageNavLinks.map((link) => (
@@ -378,7 +378,7 @@ export function Navbar() {
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[300px] sm:w-[400px] bg-background">
                   <div className="mb-6">
-                    <Logo />
+                    <Logo size="md" />
                   </div>
                   <nav className="flex flex-col space-y-3">
                     <SearchAutocomplete onSearch={() => setIsMobileMenuOpen(false)} />

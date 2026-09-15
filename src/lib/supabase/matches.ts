@@ -48,14 +48,53 @@ export async function sendInterest(params: {
   senderUid: string;
   receiverUid: string;
   message?: string;
-}): Promise<void> {
+}): Promise<{ id: string }> {
+  if (!params.senderUid || !params.receiverUid) {
+    throw new Error("Both members are required to send an interest.");
+  }
+  if (params.senderUid === params.receiverUid) {
+    throw new Error("You cannot send an interest to yourself.");
+  }
+
+  const id = `${params.senderUid}_${params.receiverUid}`;
+
+  const { data: existing, error: existingError } = await supabase
+    .from("match_requests")
+    .select("id, status")
+    .eq("id", id)
+    .maybeSingle();
+  if (existingError) throw existingError;
+
+  if (existing) {
+    if (existing.status === "pending") {
+      throw new Error("You've already sent an interest to this person.");
+    }
+    if (existing.status === "accepted") {
+      throw new Error("You are already connected with this person.");
+    }
+    // Allow re-send after decline/withdraw by resetting to pending.
+    const { error: updateError } = await supabase
+      .from("match_requests")
+      .update({
+        status: "pending",
+        message: params.message || null,
+        withdrawn_at: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+    if (updateError) throw updateError;
+    return { id };
+  }
+
   const { error } = await supabase.from("match_requests").insert({
+    id,
     sender_id: params.senderUid,
     receiver_id: params.receiverUid,
     status: "pending",
     message: params.message || null,
   });
   if (error) throw error;
+  return { id };
 }
 
 export async function withdrawInterest(requestId: string): Promise<void> {
@@ -70,11 +109,15 @@ export async function withdrawInterest(requestId: string): Promise<void> {
 }
 
 export async function acceptInterest(requestId: string): Promise<void> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("match_requests")
-    .update({ status: "accepted" })
-    .eq("id", requestId);
+    .update({ status: "accepted", updated_at: new Date().toISOString() })
+    .eq("id", requestId)
+    .eq("status", "pending")
+    .select("id, sender_id, receiver_id")
+    .maybeSingle();
   if (error) throw error;
+  if (!data) throw new Error("That interest request is no longer pending.");
 }
 
 export async function declineInterest(requestId: string): Promise<void> {
@@ -168,6 +211,26 @@ export async function countAcceptedConnections(userId: string): Promise<number> 
     .select("id", { count: "exact", head: true })
     .eq("status", "accepted")
     .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
+  if (error) throw error;
+  return count ?? 0;
+}
+
+/** Accepted connections updated after `sinceIso` (or within `withinDays`) — used for "new connection" badges. */
+export async function countRecentAcceptedConnections(
+  userId: string,
+  withinDays = 14,
+  sinceIso?: string | null
+): Promise<number> {
+  const since = sinceIso ? new Date(sinceIso) : new Date();
+  if (!sinceIso) {
+    since.setDate(since.getDate() - withinDays);
+  }
+  const { count, error } = await supabase
+    .from("match_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "accepted")
+    .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+    .gte("updated_at", since.toISOString());
   if (error) throw error;
   return count ?? 0;
 }

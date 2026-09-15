@@ -260,7 +260,7 @@ create table if not exists public.connections (
   member_a_id uuid not null references auth.users(id) on delete cascade,
   member_b_id uuid not null references auth.users(id) on delete cascade,
   connected_at timestamptz not null default now(),
-  created_from_request_id uuid references public.match_requests(id) on delete set null,
+  created_from_request_id text references public.match_requests(id) on delete set null,
   check (member_a_id < member_b_id),
   unique(member_a_id, member_b_id)
 );

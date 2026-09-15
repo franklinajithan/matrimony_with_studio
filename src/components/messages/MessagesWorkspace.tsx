@@ -31,12 +31,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
+import { useDashboardChrome } from "@/components/dashboard/chrome-context";
 import { cn } from "@/lib/utils";
 import { auth, onAuthStateChanged, type AuthUser } from "@/lib/supabase/auth";
 import { Timestamp } from "@/lib/supabase/timestamp";
 import { getProfile } from "@/lib/supabase/profiles";
 import {
-  clearUnread,
+  getChat,
   markMessagesRead,
   sendMessage,
   subscribeToChats,
@@ -100,6 +101,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { setUnread } = useDashboardChrome();
 
   const selectedChatId = initialChatId || searchParams.get("chat") || null;
 
@@ -112,9 +114,22 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
+  const [fallbackConversation, setFallbackConversation] = useState<Conversation | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const setUnreadRef = useRef(setUnread);
+  const toastRef = useRef(toast);
+
+  useEffect(() => {
+    setUnreadRef.current = setUnread;
+  }, [setUnread]);
+
+  useEffect(() => {
+    toastRef.current = toast;
+  }, [toast]);
+
+  const userId = currentUser?.uid ?? null;
 
   useEffect(() => {
     return onAuthStateChanged(auth, (user) => {
@@ -124,29 +139,30 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
   }, [router]);
 
   useEffect(() => {
-    if (!currentUser) return;
+    if (!userId) return;
     setIsLoadingChats(true);
 
     const unsubscribe = subscribeToChats(
-      currentUser.uid,
+      userId,
       async (chats) => {
         try {
           const mapped = await Promise.all(
             chats.map(async (chat) => {
-              const otherUserId = chat.participants.find((id) => id !== currentUser.uid);
+              const otherUserId = chat.participants.find((id) => id !== userId);
               if (!otherUserId) return null;
 
               const cached = chat.participantDetails?.[otherUserId];
               let otherUserName = cached?.displayName || "Member";
-                  let otherUserAvatar = resolveMediaUrl(cached?.photoURL) || "https://placehold.co/100x100.png";
+              let otherUserAvatar =
+                resolveMediaUrl(cached?.photoURL) || "https://placehold.co/100x100.png";
 
-                  if (!cached?.displayName) {
-                    try {
-                      const profile = await getProfile(otherUserId);
-                      if (profile) {
-                        otherUserName = profile.displayName || otherUserName;
-                        otherUserAvatar = resolveMediaUrl(profile.photoURL) || otherUserAvatar;
-                      }
+              if (!cached?.displayName) {
+                try {
+                  const profile = await getProfile(otherUserId);
+                  if (profile) {
+                    otherUserName = profile.displayName || otherUserName;
+                    otherUserAvatar = resolveMediaUrl(profile.photoURL) || otherUserAvatar;
+                  }
                 } catch {
                   // keep fallbacks
                 }
@@ -159,7 +175,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                 otherUserAvatar,
                 lastMessage: chat.lastMessageText || "Say hello",
                 lastMessageSenderId: chat.lastMessageSenderId,
-                unreadCount: Number(chat.unreadBy?.[currentUser.uid] || 0),
+                unreadCount: Number(chat.unreadBy?.[userId] || 0),
                 timestampLabel: formatListTime(chat.lastMessageTimestamp),
                 originalTimestamp: chat.lastMessageTimestamp,
               } satisfies Conversation;
@@ -174,12 +190,13 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
             ) as Conversation[];
 
           setConversations(next);
+          setUnreadRef.current(next.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0));
         } finally {
           setIsLoadingChats(false);
         }
       },
       (error) => {
-        toast({
+        toastRef.current({
           title: "Could not load chats",
           description: error.message,
           variant: "destructive",
@@ -189,18 +206,22 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
     );
 
     return unsubscribe;
-  }, [currentUser, toast]);
+  }, [userId]);
 
   useEffect(() => {
-    if (!selectedChatId || !currentUser) {
+    if (!selectedChatId || !userId) {
       setMessages([]);
+      setFallbackConversation(null);
       return;
     }
 
+    let cancelled = false;
     setIsLoadingMessages(true);
+
     const unsubscribe = subscribeToMessages(
       selectedChatId,
       (rows) => {
+        if (cancelled) return;
         setMessages(
           rows.map((row) => ({
             id: row.id,
@@ -213,7 +234,8 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
         setIsLoadingMessages(false);
       },
       (error) => {
-        toast({
+        if (cancelled) return;
+        toastRef.current({
           title: "Could not load messages",
           description: error.message,
           variant: "destructive",
@@ -222,11 +244,61 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
       }
     );
 
-    void markMessagesRead(selectedChatId, currentUser.uid).catch(() => undefined);
-    void clearUnread(selectedChatId, currentUser.uid).catch(() => undefined);
+    setConversations((prev) => {
+      const hadUnread = prev.some((chat) => chat.id === selectedChatId && chat.unreadCount > 0);
+      if (!hadUnread) return prev;
+      const next = prev.map((chat) =>
+        chat.id === selectedChatId ? { ...chat, unreadCount: 0 } : chat
+      );
+      setUnreadRef.current(next.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0));
+      return next;
+    });
 
-    return unsubscribe;
-  }, [selectedChatId, currentUser, toast]);
+    void markMessagesRead(selectedChatId, userId).catch(() => undefined);
+
+    void (async () => {
+      try {
+        const chat = await getChat(selectedChatId);
+        if (cancelled || !chat) return;
+        const otherUserId = chat.participants.find((id) => id !== userId);
+        if (!otherUserId) return;
+        const cached = chat.participantDetails?.[otherUserId];
+        let otherUserName = cached?.displayName || "Member";
+        let otherUserAvatar =
+          resolveMediaUrl(cached?.photoURL) || "https://placehold.co/100x100.png";
+        if (!cached?.displayName) {
+          try {
+            const profile = await getProfile(otherUserId);
+            if (profile) {
+              otherUserName = profile.displayName || otherUserName;
+              otherUserAvatar = resolveMediaUrl(profile.photoURL) || otherUserAvatar;
+            }
+          } catch {
+            // keep fallbacks
+          }
+        }
+        if (cancelled) return;
+        setFallbackConversation({
+          id: chat.id,
+          otherUserId,
+          otherUserName,
+          otherUserAvatar,
+          lastMessage: chat.lastMessageText || "Say hello",
+          lastMessageSenderId: chat.lastMessageSenderId,
+          unreadCount: 0,
+          timestampLabel: formatListTime(chat.lastMessageTimestamp),
+          originalTimestamp: chat.lastMessageTimestamp,
+        });
+      } catch {
+        // list subscription may still fill this in
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [selectedChatId, userId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -239,10 +311,13 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
     el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
   }, [draft]);
 
-  const selectedConversation = useMemo(
-    () => conversations.find((c) => c.id === selectedChatId) || null,
-    [conversations, selectedChatId]
-  );
+  const selectedConversation = useMemo(() => {
+    if (!selectedChatId) return null;
+    return (
+      conversations.find((c) => c.id === selectedChatId) ||
+      (fallbackConversation?.id === selectedChatId ? fallbackConversation : null)
+    );
+  }, [conversations, fallbackConversation, selectedChatId]);
 
   const filteredConversations = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -438,14 +513,37 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
           )}
         >
           {!selectedConversation ? (
-            <div className="flex flex-1 flex-col items-center justify-center bg-[#f0f2f5] px-6 text-center dark:bg-muted/30">
-              <div className="max-w-md rounded-2xl border border-border/70 bg-background px-8 py-10 shadow-sm">
-                <MessageCircle className="mx-auto h-14 w-14 text-primary/80" />
-                <h2 className="mt-4 text-2xl font-semibold tracking-tight">CupidMatch Messages</h2>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Pick a conversation to chat in real time — just like WhatsApp or Messenger.
-                </p>
-              </div>
+            <div className="flex flex-1 flex-col bg-[#f0f2f5] dark:bg-muted/30">
+              {selectedChatId ? (
+                <>
+                  <header className="flex items-center gap-2 border-b border-border bg-[#f0f2f5] px-3 py-2.5 dark:bg-muted/40">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="md:hidden"
+                      onClick={closeChat}
+                      aria-label="Back to chats"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                    <p className="text-sm text-muted-foreground">Opening chat…</p>
+                  </header>
+                  <div className="flex flex-1 items-center justify-center">
+                    <Loader2 className="h-7 w-7 animate-spin text-primary" />
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+                  <div className="max-w-md rounded-2xl border border-border/70 bg-background px-8 py-10 shadow-sm">
+                    <MessageCircle className="mx-auto h-14 w-14 text-primary/80" />
+                    <h2 className="mt-4 text-2xl font-semibold tracking-tight">CupidMatch Messages</h2>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      Pick a conversation to chat in real time — just like WhatsApp or Messenger.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <>

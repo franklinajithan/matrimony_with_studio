@@ -146,7 +146,7 @@ export default function AdminLayout({
       <header className="bg-slate-800 text-white shadow-md">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <Logo textSize="text-2xl" textColor="text-white" iconSize={24}/>
+            <Logo size="md" textColor="text-white" />
             <span className="text-xl font-semibold">Admin Panel</span>
           </div>
           <nav>

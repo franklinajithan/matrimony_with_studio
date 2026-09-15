@@ -5,6 +5,8 @@ export type StoredPhoto = {
   url: string;
   hint: string;
   storagePath?: string;
+  /** Non-destructive B&W display toggle — colour original stays in storage. */
+  grayscale?: boolean;
 };
 
 export type Profile = {

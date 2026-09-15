@@ -152,8 +152,12 @@ export async function createUserWithEmailAndPassword(
 }
 
 export async function signOut(_auth?: unknown) {
-  const { error } = await supabase.auth.signOut({ scope: "local" });
-  if (error) mapAuthError(error, "Logout failed");
+  // Full sign-out so @supabase/ssr auth cookies are cleared (not just localStorage).
+  const { error } = await supabase.auth.signOut({ scope: "global" });
+  if (error) {
+    const local = await supabase.auth.signOut({ scope: "local" });
+    if (local.error) mapAuthError(error, "Logout failed");
+  }
   cachedUser = null;
   if (typeof window !== "undefined") {
     try {
@@ -164,6 +168,12 @@ export async function signOut(_auth?: unknown) {
       // ignore storage access errors
     }
   }
+}
+
+/** Clears the session via the server route, then hard-navigates to the landing page. */
+export function signOutToLanding() {
+  if (typeof window === "undefined") return;
+  window.location.assign("/logout");
 }
 
 export async function sendPasswordResetEmail(_auth: unknown, email: string) {

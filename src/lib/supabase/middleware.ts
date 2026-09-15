@@ -5,6 +5,7 @@ import { getSupabaseAnonKey, getSupabaseUrl } from "./env";
 
 const PROTECTED_PREFIXES = [
   "/dashboard",
+  "/biodata",
   "/messages",
   "/onboarding",
   "/profile-setup",

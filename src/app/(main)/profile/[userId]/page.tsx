@@ -52,6 +52,7 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useDashboardChrome } from "@/components/dashboard/chrome-context";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTrigger, DialogClose, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -64,6 +65,7 @@ interface StoredPhoto {
   url: string;
   hint: string;
   storagePath?: string;
+  grayscale?: boolean;
 }
 
 interface ViewedUserProfileData extends AIPotentialMatchProfileSchema {
@@ -107,6 +109,7 @@ export default function ProfilePage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { refreshBadges } = useDashboardChrome();
   const viewedUserId = params.userId as string;
 
   const [viewedUserProfile, setViewedUserProfile] = useState<ViewedUserProfileData | null>(null);
@@ -465,6 +468,7 @@ export default function ProfilePage() {
       await updateMatchRequestStatus(matchRequestId, "accepted");
       await createChatDocument(currentFirebaseUser.uid, viewedUserProfile.userId);
       setRequestStatus("accepted");
+      refreshBadges();
       toast({ title: "Request Accepted!", description: `You are now matched with ${viewedUserProfile.name}.` });
     } catch (e: any) {
       toast({ title: "Error", description: "Failed to accept request: " + e.message, variant: "destructive" });
@@ -485,6 +489,7 @@ export default function ProfilePage() {
 
       await updateMatchRequestStatus(matchRequestId, declineStatus);
       setRequestStatus("none");
+      refreshBadges();
       toast({ title: "Request Declined" });
     } catch (e: any) {
       toast({ title: "Error", description: "Failed to decline request: " + e.message, variant: "destructive" });
@@ -707,7 +712,13 @@ export default function ProfilePage() {
                         <Dialog key={photo.id}>
                           <DialogTrigger asChild>
                             <button className="relative aspect-square rounded-lg overflow-hidden group" onClick={() => handleThumbnailClick(photo, index)}>
-                              <Image src={photo.url} alt={photo.hint || "Gallery photo"} fill className="object-cover transition-transform group-hover:scale-105" data-ai-hint={photo.hint} />
+                              <Image
+                                src={photo.url}
+                                alt={photo.hint || "Gallery photo"}
+                                fill
+                                className={`object-cover transition-transform group-hover:scale-105${photo.grayscale ? " grayscale" : ""}`}
+                                data-ai-hint={photo.hint}
+                              />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                             </button>
                           </DialogTrigger>
@@ -716,7 +727,14 @@ export default function ProfilePage() {
                               <DialogOverlay className="bg-black/80 backdrop-blur-sm" />
                               <DialogContent className="max-w-3xl w-auto p-2 bg-transparent border-none shadow-none !rounded-none sm:!rounded-none !gap-0">
                                 <div className="relative">
-                                  <Image src={currentModalPhoto.url} alt={currentModalPhoto.hint || `Photo of ${viewedUserProfile.name}`} width={800} height={1000} className="object-contain max-h-[85vh] w-auto rounded-md" data-ai-hint={currentModalPhoto.hint} />
+                                  <Image
+                                    src={currentModalPhoto.url}
+                                    alt={currentModalPhoto.hint || `Photo of ${viewedUserProfile.name}`}
+                                    width={800}
+                                    height={1000}
+                                    className={`object-contain max-h-[85vh] w-auto rounded-md${currentModalPhoto.grayscale ? " grayscale" : ""}`}
+                                    data-ai-hint={currentModalPhoto.hint}
+                                  />
                                   <DialogClose className="absolute -top-3 -right-3 sm:top-2 sm:right-2 bg-background/50 hover:bg-background/80 text-foreground rounded-full p-1.5 z-10">
                                     <XCircle className="h-6 w-6" />
                                     <span className="sr-only">Close</span>

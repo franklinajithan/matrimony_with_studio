@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Bell,
+  Heart,
   LogOut,
   Menu,
+  MessageCircle,
+  Users,
 } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { Button } from "@/components/ui/button";
@@ -23,6 +26,12 @@ import { SearchAutocomplete } from "@/components/search/SearchAutocomplete";
 import { cn } from "@/lib/utils";
 import { auth, onAuthStateChanged, signOut, type AuthUser } from "@/lib/supabase/auth";
 import { getProfile } from "@/lib/supabase/profiles";
+import {
+  countPendingRequests,
+  countRecentAcceptedConnections,
+  subscribeToPendingRequests,
+} from "@/lib/supabase/matches";
+import { countUnreadMessages } from "@/lib/supabase/chats";
 import { useToast } from "@/hooks/use-toast";
 import { useLoginWelcomeToast } from "@/hooks/use-login-welcome-toast";
 import { MemberAvatar } from "@/components/dashboard/MemberAvatar";
@@ -36,28 +45,60 @@ import {
   type DashboardNavItem,
 } from "@/components/dashboard/nav";
 
+type NavBadges = {
+  interests: number;
+  connections: number;
+  messages: number;
+};
+
+function badgeForHref(href: string, badges: NavBadges): number {
+  const path = href.split("?")[0];
+  if (path === "/interests") return badges.interests;
+  if (path === "/connections") return badges.connections;
+  if (path === "/messages") return badges.messages;
+  return 0;
+}
+
+function CountPill({ count, dark = false }: { count: number; dark?: boolean }) {
+  if (count <= 0) return null;
+  return (
+    <span
+      className={cn(
+        "ml-auto inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none",
+        dark ? "bg-white text-violet-700" : "bg-primary text-primary-foreground"
+      )}
+    >
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
 function NavList({
   items,
   pathname,
   onNavigate,
   compact = false,
+  badges,
 }: {
   items: DashboardNavItem[];
   pathname: string;
   onNavigate?: () => void;
   compact?: boolean;
+  badges: NavBadges;
 }) {
   return (
     <ul className="space-y-1">
       {items.map((item) => {
         const Icon = item.icon;
         const active = isNavActive(pathname, item);
+        const count = badgeForHref(item.href, badges);
         return (
           <li key={`${item.label}-${item.href}`}>
             <Link
               href={item.href}
               onClick={onNavigate}
               aria-current={active ? "page" : undefined}
+              aria-label={count > 0 ? `${item.label}, ${count} new` : item.label}
               className={cn(
                 "flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                 item.label === "Horoscope" && "ml-3 text-[13px]",
@@ -66,8 +107,14 @@ function NavList({
                   : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
               )}
             >
-              <Icon className={cn("h-4 w-4 shrink-0", compact && "h-5 w-5")} aria-hidden="true" />
-              {item.label}
+              <span className="relative shrink-0">
+                <Icon className={cn("h-4 w-4", compact && "h-5 w-5")} aria-hidden="true" />
+                {count > 0 ? (
+                  <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-primary" aria-hidden />
+                ) : null}
+              </span>
+              <span className="truncate">{item.label}</span>
+              <CountPill count={count} />
             </Link>
           </li>
         );
@@ -80,22 +127,24 @@ function SidebarBody({
   pathname,
   onLogout,
   onNavigate,
+  badges,
 }: {
   pathname: string;
   onLogout: () => void;
   onNavigate?: () => void;
+  badges: NavBadges;
 }) {
   return (
     <div className="flex h-full flex-col">
       <div className="border-b border-border px-4 py-5">
-        <Logo href="/dashboard" textSize="text-lg" iconSize={22} />
+        <Logo href="/dashboard" size="md" />
       </div>
       <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Dashboard">
-        <NavList items={dashboardPrimaryNav} pathname={pathname} onNavigate={onNavigate} />
+        <NavList items={dashboardPrimaryNav} pathname={pathname} onNavigate={onNavigate} badges={badges} />
         <p className="mb-2 mt-6 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Account
         </p>
-        <NavList items={dashboardAccountNav} pathname={pathname} onNavigate={onNavigate} />
+        <NavList items={dashboardAccountNav} pathname={pathname} onNavigate={onNavigate} badges={badges} />
       </nav>
       <div className="border-t border-border p-3">
         <Button
@@ -118,10 +167,72 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [displayName, setDisplayName] = useState<string>("");
   const [photoURL, setPhotoURL] = useState<string>("");
-  const [unread, setUnread] = useState<number | null>(null);
+  const [badges, setBadges] = useState<NavBadges>({ interests: 0, connections: 0, messages: 0 });
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useLoginWelcomeToast();
+
+  const headerUnread = badges.interests + badges.connections + badges.messages;
+
+  const connectionsSeenKey = useCallback(
+    (userId: string) => `cupidmatch:connections-seen:${userId}`,
+    []
+  );
+
+  const refreshBadges = useCallback(
+    async (userId: string) => {
+      try {
+        const seenAt =
+          typeof window !== "undefined"
+            ? window.localStorage.getItem(connectionsSeenKey(userId))
+            : null;
+        const [interests, connections, messages] = await Promise.all([
+          countPendingRequests(userId),
+          countRecentAcceptedConnections(userId, 14, seenAt),
+          countUnreadMessages(userId),
+        ]);
+        setBadges({ interests, connections, messages });
+      } catch (error) {
+        console.warn("Could not refresh notification badges:", error);
+      }
+    },
+    [connectionsSeenKey]
+  );
+
+  const clearConnectionsBadge = useCallback(() => {
+    if (!currentUser) return;
+    try {
+      window.localStorage.setItem(connectionsSeenKey(currentUser.uid), new Date().toISOString());
+    } catch {
+      // ignore storage failures
+    }
+    setBadges((prev) => (prev.connections === 0 ? prev : { ...prev, connections: 0 }));
+  }, [connectionsSeenKey, currentUser]);
+
+  const setUnread = useCallback((count: number | null) => {
+    if (typeof count !== "number") return;
+    const next = Math.max(0, count);
+    setBadges((prev) => (prev.messages === next ? prev : { ...prev, messages: next }));
+  }, []);
+
+  const setInterestsCount = useCallback((count: number) => {
+    const next = Math.max(0, count);
+    setBadges((prev) => (prev.interests === next ? prev : { ...prev, interests: next }));
+  }, []);
+
+  const refreshBadgesForChrome = useCallback(() => {
+    if (currentUser) void refreshBadges(currentUser.uid);
+  }, [currentUser, refreshBadges]);
+
+  const chromeValue = useMemo(
+    () => ({
+      setUnread,
+      setInterestsCount,
+      clearConnectionsBadge,
+      refreshBadges: refreshBadgesForChrome,
+    }),
+    [setUnread, setInterestsCount, clearConnectionsBadge, refreshBadgesForChrome]
+  );
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -152,20 +263,42 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     };
   }, [currentUser]);
 
+  useEffect(() => {
+    if (!currentUser) return;
+    if (pathname === "/connections" || pathname.startsWith("/connections/")) {
+      clearConnectionsBadge();
+    }
+  }, [clearConnectionsBadge, currentUser, pathname]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    void refreshBadges(currentUser.uid);
+    const unsubscribe = subscribeToPendingRequests(currentUser.uid, (requests) => {
+      setBadges((prev) => ({ ...prev, interests: requests.length }));
+    });
+    const interval = window.setInterval(() => {
+      void refreshBadges(currentUser.uid);
+    }, 30000);
+    return () => {
+      unsubscribe();
+      window.clearInterval(interval);
+    };
+  }, [currentUser, refreshBadges, pathname]);
+
   const title = useMemo(() => titleForDashboardPath(pathname), [pathname]);
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
       toast({ title: "Logged out", description: "You have been signed out." });
-      router.push("/");
-      router.refresh();
     } catch {
       toast({
         title: "Could not log out",
         description: "Please try again.",
         variant: "destructive",
       });
+    } finally {
+      window.location.assign("/logout");
     }
   };
 
@@ -179,7 +312,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </a>
       <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
         <aside className="sticky top-0 hidden h-screen border-r border-border bg-card lg:block">
-          <SidebarBody pathname={pathname} onLogout={handleLogout} />
+          <SidebarBody pathname={pathname} onLogout={handleLogout} badges={badges} />
         </aside>
 
         <div className="flex min-h-screen flex-col">
@@ -199,6 +332,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     pathname={pathname}
                     onLogout={handleLogout}
                     onNavigate={() => setDrawerOpen(false)}
+                    badges={badges}
                   />
                 </SheetContent>
               </Sheet>
@@ -211,35 +345,70 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 <div className="hidden md:block">
                   <SearchAutocomplete className="w-[220px] lg:w-[280px]" placeholder="Search people" />
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative h-11 w-11"
-                  aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}
-                  onClick={() => {
-                    if (pathname === "/dashboard") {
-                      document.getElementById("recent-activity")?.scrollIntoView({ behavior: "smooth" });
-                    } else {
-                      router.push("/dashboard#recent-activity");
-                    }
-                  }}
-                >
-                  <Bell className="h-5 w-5" aria-hidden="true" />
-                  {unread !== null && unread > 0 ? (
-                    <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-primary" aria-hidden="true" />
-                  ) : null}
-                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-11 rounded-full px-1" aria-label="Account menu">
-                      <MemberAvatar name={displayName || "Member"} photoURL={photoURL} />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="relative h-11 w-11"
+                      aria-label={
+                        headerUnread > 0
+                          ? `Notifications, ${headerUnread} unread`
+                          : "Notifications"
+                      }
+                    >
+                      <Bell className="h-5 w-5" aria-hidden="true" />
+                      {headerUnread > 0 ? (
+                        <span className="absolute right-1.5 top-1.5 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-4 text-primary-foreground">
+                          {headerUnread > 99 ? "99+" : headerUnread}
+                        </span>
+                      ) : null}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-64">
+                    <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/interests" className="flex w-full items-center gap-2">
+                        <Heart className="h-4 w-4 text-primary" aria-hidden />
+                        <span className="flex-1">Interests</span>
+                        <CountPill count={badges.interests} />
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/connections" className="flex w-full items-center gap-2">
+                        <Users className="h-4 w-4 text-primary" aria-hidden />
+                        <span className="flex-1">Connections</span>
+                        <CountPill count={badges.connections} />
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/messages" className="flex w-full items-center gap-2">
+                        <MessageCircle className="h-4 w-4 text-primary" aria-hidden />
+                        <span className="flex-1">Messages</span>
+                        <CountPill count={badges.messages} />
+                      </Link>
+                    </DropdownMenuItem>
+                    {headerUnread === 0 ? (
+                      <p className="px-2 py-3 text-xs text-muted-foreground">You&apos;re all caught up.</p>
+                    ) : null}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-11 gap-2 px-2">
+                      <MemberAvatar
+                        displayName={displayName || "Member"}
+                        photoURL={photoURL}
+                        className="h-8 w-8"
+                      />
+                      <span className="hidden max-w-[120px] truncate text-sm font-medium sm:inline">
+                        {displayName || "Account"}
+                      </span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel className="font-normal">
-                      <p className="text-sm font-medium">{displayName || "Member"}</p>
-                      <p className="text-xs text-muted-foreground">{currentUser?.email}</p>
-                    </DropdownMenuLabel>
+                    <DropdownMenuLabel>My account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link href="/dashboard/edit-profile">My profile</Link>
@@ -265,7 +434,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             id="dashboard-main"
             className="flex-1 px-4 py-6 sm:px-6 lg:px-8 pb-24 lg:pb-8"
           >
-            <DashboardChromeProvider value={{ setUnread }}>
+            <DashboardChromeProvider value={chromeValue}>
               {children}
             </DashboardChromeProvider>
           </main>
@@ -283,19 +452,33 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           {dashboardMobileNav.map((item) => {
             const Icon = item.icon;
             const active = isNavActive(pathname, item);
+            const count = badgeForHref(item.href, badges);
             return (
               <li key={item.label}>
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
+                  aria-label={count > 0 ? `${item.label}, ${count} new` : item.label}
                   className={cn(
-                    "flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-white",
+                    "relative flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-white",
                     active
                       ? "bg-white text-violet-700 shadow-sm"
                       : "text-white hover:bg-violet-500"
                   )}
                 >
-                  <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                  <span className="relative">
+                    <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                    {count > 0 ? (
+                      <span
+                        className={cn(
+                          "absolute -right-2 -top-1 inline-flex min-w-[1rem] items-center justify-center rounded-full px-1 text-[9px] font-bold leading-4",
+                          active ? "bg-violet-600 text-white" : "bg-white text-violet-700"
+                        )}
+                      >
+                        {count > 9 ? "9+" : count}
+                      </span>
+                    ) : null}
+                  </span>
                   <span className="truncate">{item.label}</span>
                 </Link>
               </li>
