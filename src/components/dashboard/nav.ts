@@ -22,8 +22,8 @@ export type DashboardNavItem = {
 export const dashboardPrimaryNav: DashboardNavItem[] = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, match: "exact" },
   { href: "/discover", label: "Discover", icon: Compass, match: "prefix" },
-  { href: "/dashboard/interests", label: "Interests", icon: Heart, match: "prefix" },
-  { href: "/messages", label: "Connections", icon: Users, match: "prefix" },
+  { href: "/interests", label: "Interests", icon: Heart, match: "prefix" },
+  { href: "/connections", label: "Connections", icon: Users, match: "prefix" },
   { href: "/messages", label: "Messages", icon: MessageCircle, match: "prefix" },
 ];
 
@@ -38,7 +38,7 @@ export const dashboardAccountNav: DashboardNavItem[] = [
 export const dashboardMobileNav: DashboardNavItem[] = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, match: "exact" },
   { href: "/discover", label: "Discover", icon: Compass, match: "prefix" },
-  { href: "/dashboard/interests", label: "Interests", icon: Heart, match: "prefix" },
+  { href: "/interests", label: "Interests", icon: Heart, match: "prefix" },
   { href: "/messages", label: "Messages", icon: MessageCircle, match: "prefix" },
   { href: "/dashboard/edit-profile", label: "Profile", icon: UserCircle, match: "prefix" },
 ];
@@ -53,7 +53,10 @@ export function isNavActive(pathname: string, item: DashboardNavItem): boolean {
 
 export function titleForDashboardPath(pathname: string): string {
   if (pathname === "/dashboard") return "Your overview";
-  if (pathname.startsWith("/dashboard/interests")) return "Interests";
+  if (pathname.startsWith("/discover")) return "Discover";
+  if (pathname.startsWith("/interests")) return "Interests";
+  if (pathname.startsWith("/connections")) return "Connections";
+  if (pathname.startsWith("/messages")) return "Messages";
   if (pathname.startsWith("/dashboard/privacy")) return "Privacy and safety";
   if (pathname.startsWith("/dashboard/edit-profile")) return "My profile";
   if (pathname.startsWith("/dashboard/horoscope")) return "Horoscope";

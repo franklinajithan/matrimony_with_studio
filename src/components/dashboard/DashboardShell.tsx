@@ -263,7 +263,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
           <main
             id="dashboard-main"
-            className="flex-1 px-4 py-6 sm:px-6 lg:px-8 pb-28 lg:pb-8"
+            className="flex-1 px-4 py-6 sm:px-6 lg:px-8 pb-24 lg:pb-8"
           >
             <DashboardChromeProvider value={{ setUnread }}>
               {children}
@@ -274,12 +274,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
       <nav
         className={cn(
-          "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden",
+          "fixed inset-x-0 bottom-0 z-40 border-t border-violet-700/20 bg-violet-600 pb-[env(safe-area-inset-bottom)] shadow-lg lg:hidden",
           drawerOpen && "hidden"
         )}
         aria-label="Primary"
       >
-        <ul className="grid grid-cols-5">
+        <ul className="grid grid-cols-5 px-2 py-2">
           {dashboardMobileNav.map((item) => {
             const Icon = item.icon;
             const active = isNavActive(pathname, item);
@@ -289,12 +289,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    active ? "text-primary" : "text-muted-foreground"
+                    "flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-white",
+                    active
+                      ? "bg-white text-violet-700 shadow-sm"
+                      : "text-white hover:bg-violet-500"
                   )}
                 >
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                  {item.label}
+                  <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                  <span className="truncate">{item.label}</span>
                 </Link>
               </li>
             );
