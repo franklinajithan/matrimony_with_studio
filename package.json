@@ -44,7 +44,7 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
     "lucide-react": "^0.475.0",
-    "next": "15.3.3",
+    "next": "^15.5.24",
     "patch-package": "^8.0.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
@@ -65,7 +65,7 @@
     "typescript": "^5"
   },
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=20 <23",
     "npm": ">=10.0.0"
   }
 }
