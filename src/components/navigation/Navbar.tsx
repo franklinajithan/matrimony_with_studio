@@ -266,9 +266,14 @@ export function Navbar() {
           {isMarketingPage ? (
             <div className="ml-auto flex items-center gap-2 md:hidden">
               {!currentUser && !isLoadingAuth && (
-                <Button asChild size="sm" className={cn("h-9", signUpButtonClass)}>
-                  <Link href="/signup">Create profile</Link>
-                </Button>
+                <>
+                  <Button asChild size="sm" variant="ghost" className="h-9">
+                    <Link href="/login">Log in</Link>
+                  </Button>
+                  <Button asChild size="sm" className={cn("h-9", signUpButtonClass)}>
+                    <Link href="/signup">Join</Link>
+                  </Button>
+                </>
               )}
               <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                 <SheetTrigger asChild>

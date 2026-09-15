@@ -1,47 +1,64 @@
 "use client";
 
-import { Footer } from "@/components/navigation/Footer";
-import { Navbar } from "@/components/navigation/Navbar";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { LandingHero } from "@/components/landing/LandingHero";
 import {
-  DiscoveryPreview,
-  FamilyCirclePreview,
-  FaqSection,
-  FeatureGrid,
-  FinalCta,
-  HowItWorks,
-  InternationalRelationships,
-  PricingTeaser,
-  PrivacySection,
-  SuccessStoriesPreview,
   TrustStrip,
   WhyCupidMatch,
+  InternationalRelationships,
+  FeatureGrid,
+  DiscoveryPreview,
+  HowItWorks,
+  PrivacySection,
+  FamilyCirclePreview,
+  SuccessStoriesPreview,
+  PricingTeaser,
+  FaqSection,
+  FinalCta,
 } from "@/components/landing/LandingSections";
+import { onAuthStateChanged, auth } from "@/lib/supabase/auth";
+import { Loader2 } from "lucide-react";
 
-export default function LandingPage() {
-  // Note: Removed Firebase auth check from landing page to improve performance
-  // Auth state is now checked only in Navbar component
-  // This avoids loading 580KB Firebase SDK on public homepage
+export default function HomePage() {
+  const router = useRouter();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Redirect authenticated users to dashboard
+        router.replace("/dashboard");
+      } else {
+        setIsCheckingAuth(false);
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
+
+  if (isCheckingAuth) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-violet-600" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-white text-gray-900">
-      <Navbar />
-      <main>
-        <LandingHero />
-        <TrustStrip />
-        <WhyCupidMatch />
-        <InternationalRelationships />
-        <FeatureGrid />
-        <DiscoveryPreview />
-        <HowItWorks />
-        <PrivacySection />
-        <FamilyCirclePreview />
-        <SuccessStoriesPreview />
-        <PricingTeaser />
-        <FaqSection />
-        <FinalCta />
-      </main>
-      <Footer />
-    </div>
+    <>
+      <LandingHero />
+      <TrustStrip />
+      <WhyCupidMatch />
+      <InternationalRelationships />
+      <FeatureGrid />
+      <DiscoveryPreview />
+      <HowItWorks />
+      <PrivacySection />
+      <FamilyCirclePreview />
+      <SuccessStoriesPreview />
+      <PricingTeaser />
+      <FaqSection />
+      <FinalCta />
+    </>
   );
 }

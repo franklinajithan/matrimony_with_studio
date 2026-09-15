@@ -4,11 +4,25 @@ import { Footer } from "@/components/navigation/Footer";
 import { Navbar } from "@/components/navigation/Navbar";
 import { usePathname } from "next/navigation";
 
+const AUTHENTICATED_ROUTES = [
+  "/dashboard",
+  "/discover",
+  "/interests",
+  "/connections",
+  "/messages",
+  "/profile",
+  "/settings",
+];
+
 export function MainChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isDashboard = pathname.startsWith("/dashboard");
+  
+  // Check if current route is an authenticated member route
+  const isAuthenticatedRoute = AUTHENTICATED_ROUTES.some(route => 
+    pathname === route || pathname.startsWith(`${route}/`)
+  );
 
-  if (isDashboard) {
+  if (isAuthenticatedRoute) {
     return <>{children}</>;
   }
 
