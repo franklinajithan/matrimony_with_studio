@@ -1,37 +1,41 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  BadgeCheck,
-  Heart,
-  Languages,
   Shield,
+  Languages,
+  Eye,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConnectionPaths } from "@/components/decorative";
 
 export function LandingHero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-pink-50 to-white text-gray-900">
-      {/* Decorative elements */}
-      <div className="pointer-events-none absolute inset-0 opacity-30">
-        <div className="absolute left-10 top-20 h-32 w-32 rounded-full bg-purple-200 blur-3xl" />
-        <div className="absolute right-20 top-40 h-40 w-40 rounded-full bg-pink-200 blur-3xl" />
-        <div className="absolute bottom-20 left-1/3 h-36 w-36 rounded-full bg-purple-100 blur-3xl" />
+    <section className="relative overflow-hidden bg-gradient-to-br from-accent/30 via-background to-background">
+      {/* Decorative connection paths */}
+      <ConnectionPaths className="absolute inset-0" variant="subtle" animate={true} />
+      
+      {/* Subtle gradient orbs */}
+      <div className="pointer-events-none absolute inset-0 opacity-20">
+        <div className="absolute left-10 top-20 h-32 w-32 rounded-full bg-primary/30 blur-3xl" />
+        <div className="absolute right-20 top-40 h-40 w-40 rounded-full bg-secondary/30 blur-3xl" />
+        <div className="absolute bottom-20 left-1/3 h-36 w-36 rounded-full bg-primary/20 blur-3xl" />
       </div>
 
-      <div className="relative mx-auto grid max-w-7xl gap-12 px-4 pb-24 pt-16 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-16 lg:pb-32 lg:pt-20">
+      <div className="relative mx-auto grid max-w-7xl gap-12 px-4 pb-20 pt-16 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-16 lg:pb-28 lg:pt-24">
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 rounded-full bg-purple-100 px-4 py-2 text-sm font-medium text-purple-700">
+          <div className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-foreground">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-purple-500" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/50 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
             </span>
-            Cross-cultural relationships for Sri Lankan professionals
+            For Sri Lankan lives around the world
           </div>
 
-          <h1 className="mt-8 text-5xl font-bold leading-tight tracking-tight text-gray-900 sm:text-6xl lg:text-7xl">
+          <h1 className="mt-8 text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl">
             Meet someone who understands{" "}
             <span className="relative inline-block">
-              <span className="relative z-10 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="relative z-10 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 where you come from
               </span>
               <svg
@@ -39,10 +43,12 @@ export function LandingHero() {
                 height="8"
                 viewBox="0 0 200 8"
                 fill="none"
+                aria-hidden="true"
               >
                 <path
                   d="M1 5.5C40 2.5 80 1 120 2.5C160 4 180 5 199 6"
-                  stroke="#e879f9"
+                  stroke="currentColor"
+                  className="text-secondary/40"
                   strokeWidth="3"
                   strokeLinecap="round"
                 />
@@ -51,16 +57,16 @@ export function LandingHero() {
             — and where you're going.
           </h1>
 
-          <p className="mt-6 text-lg leading-8 text-gray-600 sm:text-xl">
-            Find your life partner through a platform designed for Sri Lankan professionals
-            worldwide, shaped for cross-cultural connection.
+          <p className="mt-6 text-lg leading-8 text-muted-foreground sm:text-xl">
+            Modern relationship intelligence, shaped for Sri Lankan communities worldwide.
+            Connect through shared values, cultural understanding, and practical future plans.
           </p>
 
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+          <div className="mt-10 flex flex-col gap-4 sm:flex-row">
             <Button
               asChild
               size="lg"
-              className="h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-8 text-lg font-semibold text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+              className="h-14 rounded-full bg-gradient-to-r from-primary to-primary/90 px-8 text-base font-semibold shadow-lg transition-all hover:shadow-xl"
             >
               <Link href="/signup">
                 Build my profile
@@ -71,7 +77,7 @@ export function LandingHero() {
               asChild
               size="lg"
               variant="outline"
-              className="h-14 rounded-full border-2 border-purple-200 bg-white px-8 text-lg font-semibold text-gray-900 transition-all hover:bg-purple-50"
+              className="h-14 rounded-full border-2 px-8 text-base font-semibold transition-all"
             >
               <Link href="/about">See how matching works</Link>
             </Button>
@@ -79,85 +85,81 @@ export function LandingHero() {
         </div>
 
         <div className="relative">
+          {/* Demo Label */}
+          <div className="mb-3 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Eye className="h-4 w-4" />
+            <span className="font-medium">Sample profile preview</span>
+          </div>
+
           {/* Profile Cards Stack */}
           <div className="space-y-4">
             {/* Main Profile Card */}
-            <div className="relative rounded-3xl border-2 border-purple-100 bg-white p-6 shadow-2xl">
-              <div className="mb-6 flex items-start justify-between">
+            <div className="relative rounded-3xl border-2 border-border bg-card p-6 shadow-xl">
+              <div className="mb-5 flex items-start justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-purple-400 to-pink-400" />
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 text-2xl">
+                    👩🏽
+                  </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-bold text-gray-900">Ayesha, 24</h3>
-                      <BadgeCheck className="h-5 w-5 fill-purple-500 text-white" />
+                    <h3 className="text-lg font-bold text-foreground">Sample Profile</h3>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin className="h-3.5 w-3.5" />
+                      <span>London · Tamil-speaking</span>
                     </div>
-                    <p className="text-sm text-gray-600">London · Tamil</p>
                   </div>
                 </div>
-                <Heart className="h-6 w-6 text-gray-300 transition-colors hover:fill-pink-500 hover:text-pink-500" />
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700">
-                    Tamil-speaking
+                  <span className="rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground">
+                    Open to relocation
                   </span>
-                  <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700">
-                    Cross-cultural
+                  <span className="rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground">
+                    Family-oriented
                   </span>
                 </div>
 
-                <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 p-4">
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-2xl font-bold text-purple-600">92%</span>
-                    <span className="text-xs font-semibold uppercase tracking-wider text-purple-600">
-                      compatibility
+                {/* Explainable Alignment Preview - No Fake Percentages */}
+                <div className="rounded-2xl border border-border bg-accent/30 p-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-primary" />
+                    <span className="text-sm font-semibold text-foreground">
+                      Understanding compatibility
                     </span>
                   </div>
-                  <div className="space-y-1.5 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Cultural values</span>
-                      <div className="flex items-center gap-1">
-                        <div className="h-2 w-20 overflow-hidden rounded-full bg-purple-200">
-                          <div className="h-full w-[95%] bg-purple-600" />
-                        </div>
-                        <span className="text-xs font-medium text-gray-700">95%</span>
-                      </div>
+                  <div className="space-y-2.5 text-sm text-muted-foreground">
+                    <div className="flex items-start gap-2">
+                      <span className="text-foreground">•</span>
+                      <span>You both prefer to settle in the UK</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Lifestyle</span>
-                      <div className="flex items-center gap-1">
-                        <div className="h-2 w-20 overflow-hidden rounded-full bg-purple-200">
-                          <div className="h-full w-[92%] bg-purple-600" />
-                        </div>
-                        <span className="text-xs font-medium text-gray-700">92%</span>
-                      </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-foreground">•</span>
+                      <span>You both value family involvement with clear boundaries</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Family values</span>
-                      <div className="flex items-center gap-1">
-                        <div className="h-2 w-20 overflow-hidden rounded-full bg-purple-200">
-                          <div className="h-full w-[88%] bg-purple-600" />
-                        </div>
-                        <span className="text-xs font-medium text-gray-700">88%</span>
-                      </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-foreground">•</span>
+                      <span>Your relocation plans differ; this may be worth discussing</span>
                     </div>
                   </div>
+                  <p className="mt-3 text-xs italic text-muted-foreground">
+                    Actual matches show clear evidence-based explanations
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Secondary small cards */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-2xl border border-purple-100 bg-white p-4 shadow-lg">
-                <Shield className="mb-2 h-8 w-8 text-purple-600" />
-                <p className="text-sm font-semibold text-gray-900">Verified members</p>
-                <p className="mt-1 text-xs text-gray-600">Private by default</p>
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-md">
+                <Shield className="mb-2 h-7 w-7 text-primary" />
+                <p className="text-sm font-semibold text-foreground">Privacy first</p>
+                <p className="mt-1 text-xs text-muted-foreground">Member-controlled visibility</p>
               </div>
-              <div className="rounded-2xl border border-purple-100 bg-white p-4 shadow-lg">
-                <Languages className="mb-2 h-8 w-8 text-purple-600" />
-                <p className="text-sm font-semibold text-gray-900">Sinhala · Tamil · English</p>
-                <p className="mt-1 text-xs text-gray-600">3 community hubs, 5 languages, infinite connections</p>
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-md">
+                <Languages className="mb-2 h-7 w-7 text-primary" />
+                <p className="text-sm font-semibold text-foreground">Three languages</p>
+                <p className="mt-1 text-xs text-muted-foreground">Sinhala · Tamil · English</p>
               </div>
             </div>
           </div>
