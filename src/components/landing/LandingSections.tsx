@@ -26,31 +26,28 @@ import { focusRing, focusRingOnDark } from "@/components/landing/brand";
 
 export function TrustStrip() {
   const items = [
-    { icon: Heart, label: "Profiles built for serious intentions" },
-    { icon: Lock, label: "Privacy controls" },
-    { icon: Languages, label: "Cultural and language preferences" },
-    { icon: MessageCircle, label: "Secure conversations" },
+    { icon: Lock, label: "Privacy controls", description: "You choose what to share" },
+    { icon: Shield, label: "Verification available", description: "Optional identity checks" },
+    { icon: Languages, label: "Sinhala · Tamil · English", description: "Three languages supported" },
   ];
 
   return (
-    <section className="bg-white px-4 py-16 sm:px-6" aria-label="Trust highlights">
+    <section className="border-y border-border bg-accent/10 px-4 py-12 sm:px-6" aria-label="Trust highlights">
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-8 text-center text-3xl font-bold text-gray-900 sm:text-4xl">
+        <h2 className="mb-10 text-center text-2xl font-bold text-foreground sm:text-3xl">
           More than a match score
         </h2>
-        <p className="mx-auto mb-12 max-w-3xl text-center text-lg text-gray-600">
-          Our Relationship Intelligence backs beyond looks to reveal the values and lifestyle factors that make long-term partnerships succeed
-        </p>
-        <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="grid gap-6 sm:grid-cols-3">
           {items.map((item) => (
             <li
               key={item.label}
-              className="flex flex-col items-center rounded-2xl border-2 border-purple-100 bg-gradient-to-br from-white to-purple-50 p-6 text-center transition-all hover:scale-105 hover:shadow-xl"
+              className="flex flex-col items-center rounded-2xl border border-border bg-card p-6 text-center shadow-sm transition-all hover:shadow-md"
             >
-              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg">
-                <item.icon className="h-6 w-6" aria-hidden="true" />
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <item.icon className="h-5 w-5" aria-hidden="true" />
               </span>
-              <span className="mt-4 text-sm font-semibold leading-5 text-gray-900">{item.label}</span>
+              <span className="mt-3 text-sm font-semibold leading-5 text-foreground">{item.label}</span>
+              <span className="mt-1 text-xs text-muted-foreground">{item.description}</span>
             </li>
           ))}
         </ul>
@@ -62,52 +59,52 @@ export function TrustStrip() {
 export function WhyCupidMatch() {
   const features = [
     {
-      icon: "💑",
-      title: "A Profile Studio",
-      subtitle: "for the whole you",
-      description: "Add bio, family profile, photos and more",
+      icon: "🤝",
+      title: "Shared Values",
+      subtitle: "More than surface compatibility",
+      description: "Match based on life goals, communication style, and what truly matters to you both.",
+    },
+    {
+      icon: "🌍",
+      title: "Life Goals",
+      subtitle: "Plan your future together",
+      description: "Understand relocation openness, career flexibility, and where you both want to settle.",
     },
     {
       icon: "💬",
-      title: "Video Chat",
-      subtitle: "to build chemistry",
-      description: "Know where chatting can lead quickly without sharing number",
-    },
-    {
-      icon: "🌙",
-      title: "AI-led Astrology",
-      subtitle: "for deeper insight",
-      description: "Go beyond sun signs, with Vedic kundli matching",
+      title: "Communication Preferences",
+      subtitle: "How you connect matters",
+      description: "Discover how you both handle disagreements and build understanding.",
     },
     {
       icon: "👨‍👩‍👧",
-      title: "Family expectations",
-      subtitle: "discussed upfront",
-      description: "Set preferences for caste, family structure, lifestyle and more",
+      title: "Family Expectations",
+      subtitle: "Respect and boundaries",
+      description: "Define involvement levels, living arrangements, and responsibilities that work for you.",
     },
     {
-      icon: "🔄",
-      title: "Conversation prompts",
-      subtitle: "to break the ice",
-      description: "Meaningful conversation starters based on common ground",
+      icon: "🏡",
+      title: "Lifestyle",
+      subtitle: "Day-to-day compatibility",
+      description: "Explore daily routines, social preferences, and practical lifestyle alignment.",
     },
     {
-      icon: "💬",
-      title: "Communication toolkit",
-      subtitle: "with guidance",
-      description: "Tips on starting and sustaining important conversations",
+      icon: "🎭",
+      title: "Cultural Preferences",
+      subtitle: "Optional and self-described",
+      description: "Language, traditions, festivals — share what's meaningful while staying flexible.",
     },
   ];
 
   return (
-    <section className="bg-white px-4 py-20 sm:px-6" aria-labelledby="why-heading">
+    <section className="bg-background px-4 py-20 sm:px-6" aria-labelledby="why-heading">
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
-          <h2 id="why-heading" className="text-4xl font-bold text-gray-900 sm:text-5xl">
+          <h2 id="why-heading" className="text-3xl font-bold text-foreground sm:text-4xl">
             Designed around the whole relationship
           </h2>
-          <p className="mx-auto mt-4 max-w-3xl text-lg text-gray-600">
-            From first message to building your future together
+          <p className="mx-auto mt-4 max-w-3xl text-lg text-muted-foreground">
+            Understand compatibility through shared values and practical future plans
           </p>
         </div>
 
@@ -115,14 +112,14 @@ export function WhyCupidMatch() {
           {features.map((feature) => (
             <div
               key={feature.title}
-              className="rounded-3xl border-2 border-purple-100 bg-gradient-to-br from-white to-purple-50 p-8 transition-all hover:scale-105 hover:shadow-xl"
+              className="group rounded-3xl border border-border bg-card p-8 shadow-sm transition-all hover:shadow-md"
             >
-              <div className="mb-4 text-5xl">{feature.icon}</div>
-              <div className="mb-2">
-                <h3 className="text-xl font-bold text-gray-900">{feature.title}</h3>
-                <p className="text-sm font-medium text-purple-600">{feature.subtitle}</p>
+              <div className="mb-4 text-4xl">{feature.icon}</div>
+              <div className="mb-3">
+                <h3 className="text-lg font-bold text-foreground">{feature.title}</h3>
+                <p className="text-sm font-medium text-primary">{feature.subtitle}</p>
               </div>
-              <p className="text-sm text-gray-600">{feature.description}</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">{feature.description}</p>
             </div>
           ))}
         </div>
@@ -136,57 +133,51 @@ export function HowItWorks() {
     {
       number: "1",
       icon: "📝",
-      title: "Build your profile",
-      description: "Start your video and photos, and share about yourself and your horoscope",
+      title: "Tell us what matters",
+      description: "Build your profile with your values, lifestyle, future plans, and what you're looking for in a partner.",
     },
     {
       number: "2",
-      icon: "🔍",
-      title: "Personalized Introductions",
-      description: "Once you go live with your profile, we'll send suggestions straight to your inbox",
+      icon: "💡",
+      title: "Understand each introduction",
+      description: "See clear explanations for every match — why this person was suggested and what you have in common.",
     },
     {
       number: "3",
       icon: "💬",
-      title: "Chat, get to know each other",
-      description: "And later connect with your family and friends",
-    },
-    {
-      number: "4",
-      icon: "🎥",
-      title: "Video call",
-      description: "Take connections further with built-in video chat, no phone number required",
+      title: "Connect at your own pace",
+      description: "Send interest, start conversations, and take things forward when it feels right for both of you.",
     },
   ];
 
   return (
-    <section className="bg-gradient-to-br from-purple-50 to-pink-50 px-4 py-20 sm:px-6" aria-labelledby="how-heading">
+    <section className="bg-gradient-to-br from-accent/20 to-background px-4 py-20 sm:px-6" aria-labelledby="how-heading">
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
-          <p className="text-sm font-bold uppercase tracking-wider text-purple-600">
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
             Getting Started
           </p>
-          <h2 id="how-heading" className="mt-2 text-4xl font-bold text-gray-900 sm:text-5xl">
+          <h2 id="how-heading" className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
             How it works
           </h2>
         </div>
 
-        <ol className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+        <ol className="grid gap-8 md:grid-cols-3">
           {steps.map((step, index) => (
             <li key={step.number} className="relative">
-              <div className="rounded-3xl border-2 border-white bg-white p-8 shadow-xl transition-all hover:scale-105">
-                <div className="mb-4 flex items-center justify-between">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xl font-bold text-white shadow-lg">
+              <div className="rounded-3xl border border-border bg-card p-8 shadow-sm transition-all hover:shadow-md">
+                <div className="mb-5 flex items-center justify-between">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground">
                     {step.number}
                   </span>
-                  <span className="text-5xl">{step.icon}</span>
+                  <span className="text-4xl">{step.icon}</span>
                 </div>
-                <h3 className="mb-2 text-xl font-bold text-gray-900">{step.title}</h3>
-                <p className="text-sm leading-6 text-gray-600">{step.description}</p>
+                <h3 className="mb-3 text-xl font-bold text-foreground">{step.title}</h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">{step.description}</p>
               </div>
               {index < steps.length - 1 && (
                 <div className="absolute -right-4 top-1/2 hidden -translate-y-1/2 lg:block">
-                  <ArrowRight className="h-8 w-8 text-purple-300" />
+                  <ArrowRight className="h-8 w-8 text-border" aria-hidden="true" />
                 </div>
               )}
             </li>
