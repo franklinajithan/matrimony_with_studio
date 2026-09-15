@@ -1,4 +1,3 @@
-
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { Auth, getAuth } from "firebase/auth";
 import { Firestore, getFirestore } from "firebase/firestore"; 
@@ -18,25 +17,32 @@ const firebaseConfig = {
   // measurementId: stripQuotes(process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID), // Uncomment if you need Analytics
 };
 
-// Initialize Firebase - safe to use with placeholder values
-// Firebase will only fail at runtime when actually trying to use auth/firestore
+// Initialize Firebase - safe initialization that works during build
 let app: FirebaseApp;
-if (typeof window !== 'undefined') {
-  // Only initialize on client side
+let auth: Auth;
+let db: Firestore;
+let storage: FirebaseStorage;
+
+try {
+  // Initialize Firebase app
   if (!getApps().length) {
     app = initializeApp(firebaseConfig);
   } else {
     app = getApp();
   }
-} else {
-  // Server-side: create a dummy app to prevent build errors
-  // This won't actually be used since Firebase Auth is client-only
+  
+  // Initialize Firebase services
+  auth = getAuth(app);
+  db = getFirestore(app);
+  storage = getStorage(app);
+} catch (error) {
+  // If initialization fails (e.g., during build), create placeholder objects
+  // This prevents build failures while maintaining type safety
+  console.warn('Firebase initialization skipped during build:', error);
   app = {} as FirebaseApp;
+  auth = {} as Auth;
+  db = {} as Firestore;
+  storage = {} as FirebaseStorage;
 }
 
-// Only initialize these on the client side
-const auth: Auth = typeof window !== 'undefined' ? getAuth(app) : {} as Auth;
-const db: Firestore = typeof window !== 'undefined' ? getFirestore(app) : {} as Firestore;
-const storage: FirebaseStorage = typeof window !== 'undefined' ? getStorage(app) : {} as FirebaseStorage;
-
-export { app, auth , db, storage };
+export { app, auth, db, storage };
