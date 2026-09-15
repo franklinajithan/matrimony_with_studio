@@ -18,16 +18,25 @@ const firebaseConfig = {
   // measurementId: stripQuotes(process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID), // Uncomment if you need Analytics
 };
 
-// Initialize Firebase
+// Initialize Firebase - safe to use with placeholder values
+// Firebase will only fail at runtime when actually trying to use auth/firestore
 let app: FirebaseApp;
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
+if (typeof window !== 'undefined') {
+  // Only initialize on client side
+  if (!getApps().length) {
+    app = initializeApp(firebaseConfig);
+  } else {
+    app = getApp();
+  }
 } else {
-  app = getApp();
+  // Server-side: create a dummy app to prevent build errors
+  // This won't actually be used since Firebase Auth is client-only
+  app = {} as FirebaseApp;
 }
 
-const auth: Auth = getAuth(app);
-const db: Firestore = getFirestore(app); 
-const storage: FirebaseStorage = getStorage(app);
+// Only initialize these on the client side
+const auth: Auth = typeof window !== 'undefined' ? getAuth(app) : {} as Auth;
+const db: Firestore = typeof window !== 'undefined' ? getFirestore(app) : {} as Firestore;
+const storage: FirebaseStorage = typeof window !== 'undefined' ? getStorage(app) : {} as FirebaseStorage;
 
 export { app, auth , db, storage };
