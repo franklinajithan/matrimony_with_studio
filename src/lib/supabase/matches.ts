@@ -44,6 +44,57 @@ export async function updateMatchRequestStatus(
   if (error) throw error;
 }
 
+export async function sendInterest(params: {
+  senderUid: string;
+  receiverUid: string;
+  message?: string;
+}): Promise<void> {
+  const { error } = await supabase.from("match_requests").insert({
+    sender_id: params.senderUid,
+    receiver_id: params.receiverUid,
+    status: "pending",
+    message: params.message || null,
+  });
+  if (error) throw error;
+}
+
+export async function withdrawInterest(requestId: string): Promise<void> {
+  const { error } = await supabase
+    .from("match_requests")
+    .update({
+      status: "withdrawn",
+      withdrawn_at: new Date().toISOString(),
+    })
+    .eq("id", requestId);
+  if (error) throw error;
+}
+
+export async function acceptInterest(requestId: string): Promise<void> {
+  const { error } = await supabase
+    .from("match_requests")
+    .update({ status: "accepted" })
+    .eq("id", requestId);
+  if (error) throw error;
+}
+
+export async function declineInterest(requestId: string): Promise<void> {
+  const { error } = await supabase
+    .from("match_requests")
+    .update({ status: "declined" })
+    .eq("id", requestId);
+  if (error) throw error;
+}
+
+export async function listSentRequests(senderId: string): Promise<MatchRequestRow[]> {
+  const { data, error } = await supabase
+    .from("match_requests")
+    .select("*")
+    .eq("sender_id", senderId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map((row) => mapRequest(row)!);
+}
+
 export async function deleteMatchRequest(id: string) {
   const { error } = await supabase.from("match_requests").delete().eq("id", id);
   if (error) throw error;
