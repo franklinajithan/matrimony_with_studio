@@ -1,4 +1,5 @@
 import {
+  ArrowRight,
   BadgeCheck,
   Eye,
   Filter,
@@ -32,101 +33,98 @@ export function TrustStrip() {
   ];
 
   return (
-    <section className="px-4 py-10 sm:px-6" aria-label="Trust highlights">
-      <ul className="mx-auto grid max-w-6xl gap-4 rounded-2xl border border-[#EADFD6] bg-white px-4 py-5 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
-        {items.map((item) => (
-          <li key={item.label} className="flex items-center gap-3 text-sm text-[#271624]">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F8EAF1] text-[#4B164C]">
-              <item.icon className="h-4 w-4" aria-hidden="true" />
-            </span>
-            <span className="leading-5 text-[#725E6D]">{item.label}</span>
-          </li>
-        ))}
-      </ul>
+    <section className="bg-white px-4 py-16 sm:px-6" aria-label="Trust highlights">
+      <div className="mx-auto max-w-7xl">
+        <h2 className="mb-8 text-center text-3xl font-bold text-gray-900 sm:text-4xl">
+          More than a match score
+        </h2>
+        <p className="mx-auto mb-12 max-w-3xl text-center text-lg text-gray-600">
+          Our Relationship Intelligence backs beyond looks to reveal the values and lifestyle factors that make long-term partnerships succeed
+        </p>
+        <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {items.map((item) => (
+            <li
+              key={item.label}
+              className="flex flex-col items-center rounded-2xl border-2 border-purple-100 bg-gradient-to-br from-white to-purple-50 p-6 text-center transition-all hover:scale-105 hover:shadow-xl"
+            >
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg">
+                <item.icon className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <span className="mt-4 text-sm font-semibold leading-5 text-gray-900">{item.label}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }
 
 export function WhyCupidMatch() {
-  const cards = [
+  const features = [
     {
-      icon: UserRound,
-      title: "Profiles with purpose",
-      description: "Detailed profiles help you understand the person beyond a photograph.",
-      highlighted: true,
+      icon: "💑",
+      title: "A Profile Studio",
+      subtitle: "for the whole you",
+      description: "Add bio, family profile, photos and more",
     },
     {
-      icon: Sparkles,
-      title: "Smarter compatibility",
-      description: "Suggestions shaped by your values, lifestyle and long-term preferences.",
-      highlighted: false,
+      icon: "💬",
+      title: "Video Chat",
+      subtitle: "to build chemistry",
+      description: "Know where chatting can lead quickly without sharing number",
     },
     {
-      icon: MoonStar,
-      title: "Tradition, respected",
-      description: "Horoscope compatibility is available when it matters to you and your family.",
-      highlighted: false,
+      icon: "🌙",
+      title: "AI-led Astrology",
+      subtitle: "for deeper insight",
+      description: "Go beyond sun signs, with Vedic kundli matching",
     },
     {
-      icon: Lock,
-      title: "Privacy in your hands",
-      description: "Choose what you share, who can see it and when you are ready to connect.",
-      highlighted: false,
+      icon: "👨‍👩‍👧",
+      title: "Family expectations",
+      subtitle: "discussed upfront",
+      description: "Set preferences for caste, family structure, lifestyle and more",
+    },
+    {
+      icon: "🔄",
+      title: "Conversation prompts",
+      subtitle: "to break the ice",
+      description: "Meaningful conversation starters based on common ground",
+    },
+    {
+      icon: "💬",
+      title: "Communication toolkit",
+      subtitle: "with guidance",
+      description: "Tips on starting and sustaining important conversations",
     },
   ];
 
   return (
-    <section className="bg-[#FBF5F1] px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="why-heading">
-      <div className="mx-auto max-w-6xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A52A68]">
-          The CupidMatch difference
-        </p>
-        <h2 id="why-heading" className="mt-3 max-w-2xl font-serif text-3xl font-semibold text-[#271624] sm:text-4xl">
-          Modern matching. Cultural understanding.
-        </h2>
-        <p className="mt-4 max-w-2xl text-base leading-7 text-[#725E6D]">
-          Technology can introduce you. Trust, shared values and honest conversation help you
-          decide what comes next.
-        </p>
+    <section className="bg-white px-4 py-20 sm:px-6" aria-labelledby="why-heading">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-16 text-center">
+          <h2 id="why-heading" className="text-4xl font-bold text-gray-900 sm:text-5xl">
+            Designed around the whole relationship
+          </h2>
+          <p className="mx-auto mt-4 max-w-3xl text-lg text-gray-600">
+            From first message to building your future together
+          </p>
+        </div>
 
-        <div className="mt-10 grid gap-5 md:grid-cols-2">
-          {cards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <article
-                key={card.title}
-                className={
-                  card.highlighted
-                    ? "rounded-2xl border border-[#4B164C]/25 bg-[#4B164C] p-7 text-[#FFFDF9] shadow-[0_16px_40px_rgba(48,18,42,0.16)]"
-                    : "rounded-2xl border border-[#EADFD6] bg-white p-7 transition duration-200 hover:-translate-y-0.5 hover:border-[#D6B56D]/70 hover:shadow-[0_12px_30px_rgba(48,18,42,0.08)]"
-                }
-              >
-                <div
-                  className={
-                    card.highlighted
-                      ? "flex h-11 w-11 items-center justify-center rounded-xl bg-[#D6B56D]/20 text-[#F2C96D]"
-                      : "flex h-11 w-11 items-center justify-center rounded-xl bg-[#F8EAF1] text-[#4B164C]"
-                  }
-                >
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                </div>
-                <h3
-                  className={`mt-5 font-serif text-xl font-semibold ${
-                    card.highlighted ? "text-[#FFFDF9]" : "text-[#271624]"
-                  }`}
-                >
-                  {card.title}
-                </h3>
-                <p
-                  className={`mt-2 text-sm leading-6 ${
-                    card.highlighted ? "text-[#F0E0E8]" : "text-[#725E6D]"
-                  }`}
-                >
-                  {card.description}
-                </p>
-              </article>
-            );
-          })}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {features.map((feature) => (
+            <div
+              key={feature.title}
+              className="rounded-3xl border-2 border-purple-100 bg-gradient-to-br from-white to-purple-50 p-8 transition-all hover:scale-105 hover:shadow-xl"
+            >
+              <div className="mb-4 text-5xl">{feature.icon}</div>
+              <div className="mb-2">
+                <h3 className="text-xl font-bold text-gray-900">{feature.title}</h3>
+                <p className="text-sm font-medium text-purple-600">{feature.subtitle}</p>
+              </div>
+              <p className="text-sm text-gray-600">{feature.description}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -136,48 +134,61 @@ export function WhyCupidMatch() {
 export function HowItWorks() {
   const steps = [
     {
-      number: "01",
-      title: "Tell us who you are",
-      description: "Create a thoughtful profile and share the values that matter to you.",
+      number: "1",
+      icon: "📝",
+      title: "Build your profile",
+      description: "Start your video and photos, and share about yourself and your horoscope",
     },
     {
-      number: "02",
-      title: "Meet compatible people",
-      description: "Explore considered suggestions instead of endless random profiles.",
+      number: "2",
+      icon: "🔍",
+      title: "Personalized Introductions",
+      description: "Once you go live with your profile, we'll send suggestions straight to your inbox",
     },
     {
-      number: "03",
-      title: "Build a real connection",
-      description: "Start a secure conversation and take the next step with confidence.",
+      number: "3",
+      icon: "💬",
+      title: "Chat, get to know each other",
+      description: "And later connect with your family and friends",
+    },
+    {
+      number: "4",
+      icon: "🎥",
+      title: "Video call",
+      description: "Take connections further with built-in video chat, no phone number required",
     },
   ];
 
   return (
-    <section className="px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="how-heading">
-      <div className="mx-auto max-w-6xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A52A68]">How it works</p>
-        <h2 id="how-heading" className="mt-3 font-serif text-3xl font-semibold text-[#271624] sm:text-4xl">
-          From profile to possibility
-        </h2>
+    <section className="bg-gradient-to-br from-purple-50 to-pink-50 px-4 py-20 sm:px-6" aria-labelledby="how-heading">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-16 text-center">
+          <p className="text-sm font-bold uppercase tracking-wider text-purple-600">
+            Getting Started
+          </p>
+          <h2 id="how-heading" className="mt-2 text-4xl font-bold text-gray-900 sm:text-5xl">
+            How it works
+          </h2>
+        </div>
 
-        <ol className="relative mt-10 grid gap-6 lg:grid-cols-3">
+        <ol className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           {steps.map((step, index) => (
-            <li key={step.number} className="relative rounded-2xl border border-[#EADFD6] bg-white p-7">
+            <li key={step.number} className="relative">
+              <div className="rounded-3xl border-2 border-white bg-white p-8 shadow-xl transition-all hover:scale-105">
+                <div className="mb-4 flex items-center justify-between">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xl font-bold text-white shadow-lg">
+                    {step.number}
+                  </span>
+                  <span className="text-5xl">{step.icon}</span>
+                </div>
+                <h3 className="mb-2 text-xl font-bold text-gray-900">{step.title}</h3>
+                <p className="text-sm leading-6 text-gray-600">{step.description}</p>
+              </div>
               {index < steps.length - 1 && (
-                <span
-                  aria-hidden="true"
-                  className="absolute right-[-13px] top-1/2 z-10 hidden h-px w-6 -translate-y-1/2 border-t border-dashed border-[#D6B56D] lg:block"
-                />
+                <div className="absolute -right-4 top-1/2 hidden -translate-y-1/2 lg:block">
+                  <ArrowRight className="h-8 w-8 text-purple-300" />
+                </div>
               )}
-              {index < steps.length - 1 && (
-                <span
-                  aria-hidden="true"
-                  className="absolute bottom-[-18px] left-8 h-5 w-px border-l border-dashed border-[#D6B56D] lg:hidden"
-                />
-              )}
-              <span className="font-serif text-3xl font-semibold text-[#D6B56D]">{step.number}</span>
-              <h3 className="mt-4 text-lg font-semibold text-[#271624]">{step.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-[#725E6D]">{step.description}</p>
             </li>
           ))}
         </ol>
@@ -332,6 +343,89 @@ export function PrivacySection() {
   );
 }
 
+export function GlobalLocationsSection() {
+  const locations = [
+    {
+      name: "London",
+      country: "United Kingdom",
+      image: "🏛️",
+      members: "2.5k+ active",
+    },
+    {
+      name: "Toronto",
+      country: "Canada",
+      image: "🍁",
+      members: "1.8k+ active",
+    },
+    {
+      name: "Colombo",
+      country: "Sri Lanka",
+      image: "🌴",
+      members: "3.2k+ active",
+    },
+    {
+      name: "Melbourne",
+      country: "Australia",
+      image: "🦘",
+      members: "1.5k+ active",
+    },
+  ];
+
+  return (
+    <section className="bg-gradient-to-br from-purple-50 to-pink-50 px-4 py-20 sm:px-6" aria-labelledby="locations-heading">
+      <div className="mx-auto max-w-7xl text-center">
+        <h2 id="locations-heading" className="text-4xl font-bold text-gray-900 sm:text-5xl">
+          Built for life between countries
+        </h2>
+        <p className="mx-auto mt-4 max-w-3xl text-lg text-gray-600">
+          Whether you're in London, Toronto, Melbourne or Colombo, find someone who gets the beauty and complexity of living across cultures
+        </p>
+
+        <div className="relative mt-16">
+          {/* Connecting lines */}
+          <svg className="absolute left-0 top-0 h-full w-full" style={{ zIndex: 0 }}>
+            <defs>
+              <linearGradient id="line-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style={{ stopColor: "#9333ea", stopOpacity: 0.3 }} />
+                <stop offset="100%" style={{ stopColor: "#ec4899", stopOpacity: 0.3 }} />
+              </linearGradient>
+            </defs>
+            <path
+              d="M150,80 Q400,150 650,80"
+              stroke="url(#line-gradient)"
+              strokeWidth="2"
+              fill="none"
+              strokeDasharray="5,5"
+            />
+            <path
+              d="M150,80 Q400,20 650,80"
+              stroke="url(#line-gradient)"
+              strokeWidth="2"
+              fill="none"
+              strokeDasharray="5,5"
+            />
+          </svg>
+
+          <div className="relative z-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {locations.map((location) => (
+              <div
+                key={location.name}
+                className="group relative overflow-hidden rounded-3xl border-2 border-purple-200 bg-white p-6 shadow-lg transition-all hover:scale-105 hover:shadow-2xl"
+              >
+                <div className="mb-4 text-6xl">{location.image}</div>
+                <h3 className="text-xl font-bold text-gray-900">{location.name}</h3>
+                <p className="text-sm text-gray-600">{location.country}</p>
+                <p className="mt-2 text-xs font-semibold text-purple-600">{location.members}</p>
+                <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 opacity-10 transition-all group-hover:scale-150" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function CommunitySection() {
   const chips = [
     "Indian communities",
@@ -377,6 +471,106 @@ export function CommunitySection() {
           Location labels reflect communities we design for, not claims about current member
           activity in each city.
         </p>
+      </div>
+    </section>
+  );
+}
+
+export function MemberShowcase() {
+  const members = [
+    {
+      name: "Nishmi, 26",
+      location: "London",
+      verified: true,
+      image: "👩",
+      interests: ["Travel", "Reading", "Yoga"],
+    },
+    {
+      name: "Dilshan, 29",
+      location: "Toronto",
+      verified: true,
+      image: "👨",
+      interests: ["Photography", "Hiking", "Cooking"],
+    },
+    {
+      name: "Tara, 27",
+      location: "Colombo",
+      verified: true,
+      image: "👩",
+      interests: ["Art", "Music", "Dance"],
+    },
+    {
+      name: "Kasthuri, 31",
+      location: "Melbourne",
+      verified: true,
+      image: "👩",
+      interests: ["Fitness", "Tech", "Food"],
+    },
+    {
+      name: "Praveen, 28",
+      location: "London",
+      verified: true,
+      image: "👨",
+      interests: ["Sports", "Movies", "Travel"],
+    },
+    {
+      name: "Saman, 30",
+      location: "Sydney",
+      verified: true,
+      image: "👨",
+      interests: ["Business", "Investing", "Golf"],
+    },
+  ];
+
+  return (
+    <section className="bg-white px-4 py-20 sm:px-6" aria-labelledby="members-heading">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-12 text-center">
+          <h2 id="members-heading" className="text-4xl font-bold text-gray-900 sm:text-5xl">
+            Meet some of our members
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
+            Real people looking for meaningful connections
+          </p>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {members.map((member) => (
+            <div
+              key={member.name}
+              className="group overflow-hidden rounded-3xl border-2 border-purple-100 bg-white shadow-lg transition-all hover:scale-105 hover:shadow-2xl"
+            >
+              <div className="relative h-64 bg-gradient-to-br from-purple-200 to-pink-200">
+                <div className="flex h-full items-center justify-center text-8xl">{member.image}</div>
+                {member.verified && (
+                  <div className="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-semibold text-purple-600 shadow-lg">
+                    <BadgeCheck className="h-4 w-4 fill-purple-500 text-white" />
+                    Verified
+                  </div>
+                )}
+              </div>
+              <div className="p-6">
+                <div className="mb-3 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">{member.name}</h3>
+                    <p className="text-sm text-gray-600">{member.location}</p>
+                  </div>
+                  <Heart className="h-6 w-6 text-gray-300 transition-colors hover:fill-pink-500 hover:text-pink-500" />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {member.interests.map((interest) => (
+                    <span
+                      key={interest}
+                      className="rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700"
+                    >
+                      {interest}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -460,24 +654,142 @@ export function FeaturesOverview() {
 }
 
 export function PricingTeaser() {
+  const plans = [
+    {
+      name: "Free",
+      price: "LKR 0",
+      period: "per month",
+      description: "Join and start looking for your match",
+      features: [
+        "Create your profile",
+        "Unlimited messaging",
+        "100,000+ profiles",
+        "Organize",
+      ],
+      cta: "Get started",
+      highlighted: false,
+    },
+    {
+      name: "Plus",
+      price: "LKR 1,200",
+      period: "per month",
+      description: "Get noticed faster",
+      features: [
+        "Unlimited messaging",
+        "1-on-1 video call",
+        "See who's visited you",
+        "Organize",
+      ],
+      cta: "Choose Plus",
+      highlighted: true,
+    },
+    {
+      name: "Elite",
+      price: "LKR 2,400",
+      period: "per month",
+      description: "Make the most of your search",
+      features: [
+        "Unlimited messaging",
+        "Get top positioning",
+        "1-on-1 video call",
+        "See who's viewed you",
+        "Organize",
+      ],
+      cta: "Choose Elite",
+      highlighted: false,
+    },
+  ];
+
   return (
-    <section className="px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="pricing-heading">
-      <div className="mx-auto max-w-6xl rounded-3xl border border-[#EADFD6] bg-white p-8 sm:p-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
-        <div className="max-w-2xl">
-          <h2 id="pricing-heading" className="font-serif text-3xl font-semibold text-[#271624] sm:text-4xl">
+    <section className="bg-white px-4 py-20 sm:px-6" aria-labelledby="pricing-heading">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-16 text-center">
+          <p className="text-sm font-bold uppercase tracking-wider text-purple-600">
+            Choose your plan
+          </p>
+          <h2 id="pricing-heading" className="mt-2 text-4xl font-bold text-gray-900 sm:text-5xl">
             Start free. Upgrade when you need more.
           </h2>
-          <p className="mt-4 text-base leading-7 text-[#725E6D]">
-            Creating a profile is free, and you can explore core matching features at your own pace.
-            Premium and Elite plans are available when you want additional capabilities.
-          </p>
-          <p className="mt-3 text-sm text-[#725E6D]">
-            Current plans include Free (£0), Premium (£9.99/month) and Elite (£19.99/month).
+          <p className="mx-auto mt-4 max-w-3xl text-lg text-gray-600">
+            Create your profile free. Then upgrade to unlock more features.
           </p>
         </div>
-        <Button asChild className={`mt-6 h-12 shrink-0 rounded-full bg-[#4B164C] px-7 text-white hover:bg-[#742158] lg:mt-0 ${focusRing}`}>
-          <Link href="/pricing">View pricing</Link>
-        </Button>
+
+        <div className="grid gap-8 lg:grid-cols-3">
+          {plans.map((plan) => (
+            <div
+              key={plan.name}
+              className={`rounded-3xl border-2 p-8 transition-all ${
+                plan.highlighted
+                  ? "scale-105 border-purple-500 bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-2xl"
+                  : "border-purple-100 bg-white hover:scale-105 hover:shadow-xl"
+              }`}
+            >
+              {plan.highlighted && (
+                <div className="mb-4 inline-block rounded-full bg-white px-4 py-1 text-xs font-bold text-purple-600">
+                  MOST POPULAR
+                </div>
+              )}
+              <h3
+                className={`text-2xl font-bold ${
+                  plan.highlighted ? "text-white" : "text-gray-900"
+                }`}
+              >
+                {plan.name}
+              </h3>
+              <div className="mt-4">
+                <span
+                  className={`text-5xl font-bold ${
+                    plan.highlighted ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {plan.price}
+                </span>
+                <span
+                  className={`ml-2 text-sm ${
+                    plan.highlighted ? "text-purple-100" : "text-gray-600"
+                  }`}
+                >
+                  {plan.period}
+                </span>
+              </div>
+              <p
+                className={`mt-2 text-sm ${
+                  plan.highlighted ? "text-purple-100" : "text-gray-600"
+                }`}
+              >
+                {plan.description}
+              </p>
+              <ul className="mt-8 space-y-3">
+                {plan.features.map((feature) => (
+                  <li
+                    key={feature}
+                    className={`flex items-center gap-2 ${
+                      plan.highlighted ? "text-white" : "text-gray-700"
+                    }`}
+                  >
+                    <BadgeCheck
+                      className={`h-5 w-5 ${
+                        plan.highlighted ? "text-white" : "text-purple-500"
+                      }`}
+                    />
+                    <span className="text-sm">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button
+                asChild
+                className={`mt-8 w-full rounded-full py-6 text-base font-semibold ${
+                  plan.highlighted
+                    ? "bg-white text-purple-600 hover:bg-gray-100"
+                    : "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90"
+                }`}
+              >
+                <Link href="/pricing">{plan.cta}</Link>
+              </Button>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

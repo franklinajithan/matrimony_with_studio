@@ -14,7 +14,9 @@ import {
   FaqSection,
   FeaturesOverview,
   FinalCta,
+  GlobalLocationsSection,
   HowItWorks,
+  MemberShowcase,
   PricingTeaser,
   PrivacySection,
   ProductPreview,
@@ -50,19 +52,16 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#FFFDF9] text-[#271624]">
+    <div className="min-h-screen overflow-x-hidden bg-white text-gray-900">
       <Navbar />
       <main>
         <LandingHero />
-        <MatchSearchPanel />
         <TrustStrip />
+        <GlobalLocationsSection />
         <WhyCupidMatch />
+        <MemberShowcase />
         <HowItWorks />
-        <ProductPreview />
         <PrivacySection />
-        <CommunitySection />
-        <SuccessStoriesPreview />
-        <FeaturesOverview />
         <PricingTeaser />
         <FaqSection />
         <FinalCta />
