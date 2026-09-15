@@ -23,7 +23,7 @@ export {
   subscribeToProfiles,
   mapProfile,
 } from "./profiles";
-export { uploadFile } from "./storage";
+export { uploadFile, uploadMediaFile, resolveMediaUrl, mediaPathForUser } from "./storage";
 export {
   hasLiked,
   getLikedIds,

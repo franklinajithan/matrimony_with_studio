@@ -76,20 +76,24 @@ export default function ConnectionsPage() {
       try {
         setLoading(true);
 
-        const connectionsList = await listConnections(currentUser.uid);
+        const connectionsList = await listConnections(currentUser.id);
 
         const connectionsWithProfiles = await Promise.all(
           connectionsList.map(async (connection) => {
-            const otherUserId = connection.memberAId === currentUser.uid
+            const otherUserId = connection.memberAId === currentUser.id
               ? connection.memberBId
               : connection.memberAId;
 
             try {
               const profile = await getProfile(otherUserId);
+              const connectedAt =
+                connection.connectedAt && typeof connection.connectedAt.toDate === "function"
+                  ? connection.connectedAt.toDate()
+                  : new Date();
               return {
                 id: connection.id,
                 otherUserId,
-                connectedAt: connection.connectedAt.toDate(),
+                connectedAt,
                 profile: profile ? {
                   displayName: profile.displayName || "User",
                   photoURL: profile.photoURL,
@@ -100,10 +104,14 @@ export default function ConnectionsPage() {
               };
             } catch (error) {
               console.error("Error fetching profile:", error);
+              const connectedAt =
+                connection.connectedAt && typeof connection.connectedAt.toDate === "function"
+                  ? connection.connectedAt.toDate()
+                  : new Date();
               return {
                 id: connection.id,
                 otherUserId,
-                connectedAt: connection.connectedAt.toDate(),
+                connectedAt,
               };
             }
           })
@@ -114,7 +122,8 @@ export default function ConnectionsPage() {
         console.error("Error fetching connections:", error);
         toast({
           title: "Error",
-          description: "Failed to load connections.",
+          description:
+            error instanceof Error ? error.message : "Failed to load connections.",
           variant: "destructive",
         });
       } finally {
@@ -131,7 +140,7 @@ export default function ConnectionsPage() {
     setRemovingConnection(connectionId);
 
     try {
-      await removeConnection(currentUser.uid, otherUserId);
+      await removeConnection(currentUser.id, otherUserId);
       setConnections(prev => prev.filter(c => c.id !== connectionId));
 
       toast({

@@ -17,6 +17,8 @@ import {
   FaqSection,
   FinalCta,
 } from "@/components/landing/LandingSections";
+import { Navbar } from "@/components/navigation/Navbar";
+import { Footer } from "@/components/navigation/Footer";
 import { onAuthStateChanged, auth } from "@/lib/supabase/auth";
 import { Loader2 } from "lucide-react";
 
@@ -45,20 +47,24 @@ export default function HomePage() {
   }
 
   return (
-    <>
-      <LandingHero />
-      <TrustStrip />
-      <WhyCupidMatch />
-      <InternationalRelationships />
-      <FeatureGrid />
-      <DiscoveryPreview />
-      <HowItWorks />
-      <PrivacySection />
-      <FamilyCirclePreview />
-      <SuccessStoriesPreview />
-      <PricingTeaser />
-      <FaqSection />
-      <FinalCta />
-    </>
+    <div className="flex min-h-screen flex-col">
+      <Navbar />
+      <main className="flex-grow">
+        <LandingHero />
+        <TrustStrip />
+        <WhyCupidMatch />
+        <InternationalRelationships />
+        <FeatureGrid />
+        <DiscoveryPreview />
+        <HowItWorks />
+        <PrivacySection />
+        <FamilyCirclePreview />
+        <SuccessStoriesPreview />
+        <PricingTeaser />
+        <FaqSection />
+        <FinalCta />
+      </main>
+      <Footer />
+    </div>
   );
 }

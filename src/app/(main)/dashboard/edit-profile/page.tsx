@@ -41,7 +41,7 @@ import { Label } from "@/components/ui/label";
 import React, { useState, useEffect, useRef } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { auth, updateProfile, onAuthStateChanged, type User } from "@/lib/supabase/auth";
-import { uploadFile } from "@/lib/supabase/storage";
+import { extractStoragePath, mediaPathForUser, resolveMediaUrl, uploadFile } from "@/lib/supabase/storage";
 import { createUserProfile, updateUserProfile, getProfile } from "@/lib/supabase/profiles";
 import { Skeleton } from "@/components/ui/skeleton";
 import { enhanceBio } from "@/ai/flows/enhance-bio-flow";
@@ -370,17 +370,18 @@ export default function EditProfilePage() {
       };
 
       if (values.profilePhoto) {
-        const filePath = `users/${user.uid}/profile_photo/${values.profilePhoto.name}`;
+        const filePath = mediaPathForUser(user.uid, values.profilePhoto.name, "profile_photo");
         const newPhotoURL = await uploadFile(values.profilePhoto, filePath);
         await updateProfile(user, { photoURL: newPhotoURL });
         dataToSave.photoURL = newPhotoURL;
         dataToSave.dataAiHint = "new profile upload";
-        setCurrentProfilePhotoUrl(newPhotoURL);
+        setCurrentProfilePhotoUrl(resolveMediaUrl(newPhotoURL));
         setCurrentDataAiHint("new profile upload");
         setProfilePhotoPreview(null);
         setSelectedProfilePhotoName(null);
       } else {
-        dataToSave.photoURL = currentProfilePhotoUrl;
+        dataToSave.photoURL =
+          extractStoragePath(currentProfilePhotoUrl) || currentProfilePhotoUrl;
         dataToSave.dataAiHint = currentDataAiHint;
       }
 
@@ -389,7 +390,7 @@ export default function EditProfilePage() {
       }
 
       if (values.horoscopeFile) {
-        const filePath = `users/${user.uid}/horoscope_file/${values.horoscopeFile.name}`;
+        const filePath = mediaPathForUser(user.uid, values.horoscopeFile.name, "horoscope_file");
         dataToSave.horoscopeFileUrl = await uploadFile(values.horoscopeFile, filePath);
         dataToSave.horoscopeFileName = values.horoscopeFile.name;
         setSelectedHoroscopeFileName(values.horoscopeFile.name);
@@ -403,9 +404,14 @@ export default function EditProfilePage() {
         const newUploadedPhotos: StoredPhoto[] = [];
         for (const file of values.additionalPhotos) {
           const timestamp = Date.now();
-          const filePath = `users/${user.uid}/additional_photos/${timestamp}-${file.name}`;
-          const url = await uploadFile(file, filePath);
-          newUploadedPhotos.push({ id: timestamp.toString(), url, hint: "new additional upload", storagePath: filePath });
+          const filePath = mediaPathForUser(user.uid, file.name, "additional_photos");
+          const path = await uploadFile(file, filePath);
+          newUploadedPhotos.push({
+            id: `${timestamp}`,
+            url: path,
+            hint: "new additional upload",
+            storagePath: path,
+          });
         }
         finalAdditionalPhotos = [...finalAdditionalPhotos, ...newUploadedPhotos];
         setAdditionalPhotosPreview([]);

@@ -14,7 +14,7 @@ import { Users, BookOpen, Image as ImageIcon, Mail, CheckSquare, Loader2, Send }
 import { Checkbox } from "@/components/ui/checkbox";
 import React, { useState } from "react";
 import { auth } from '@/lib/supabase/auth';
-import { uploadFile } from '@/lib/supabase/storage';
+import { mediaPathForUser, resolveMediaUrl, uploadFile } from '@/lib/supabase/storage';
 import { createSuccessStory } from '@/lib/supabase/stories';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -60,11 +60,13 @@ export default function SubmitSuccessStoryPage() {
       let photoStoragePath: string | null = null;
 
       if (values.photo) {
-        const timestamp = Date.now();
-        const fileName = `${timestamp}-${values.photo.name.replace(/\s+/g, '_')}`;
-        const filePath = `success_stories_photos/${fileName}`;
-        photoUrl = await uploadFile(values.photo, filePath);
-        photoStoragePath = filePath;
+        if (!currentUser?.uid) {
+          throw new Error("Please sign in before uploading a photo with your story.");
+        }
+        const filePath = mediaPathForUser(currentUser.uid, values.photo.name, "success_stories");
+        const storedPath = await uploadFile(values.photo, filePath);
+        photoStoragePath = storedPath;
+        photoUrl = resolveMediaUrl(storedPath);
       }
 
       await createSuccessStory({

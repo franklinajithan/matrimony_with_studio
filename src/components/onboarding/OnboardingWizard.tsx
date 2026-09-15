@@ -25,7 +25,7 @@ import {
   type OnboardingDraft,
 } from "@/lib/onboarding/schema";
 import { auth, onAuthStateChanged, signOut } from "@/lib/supabase/auth";
-import { mediaPathForUser, uploadFile } from "@/lib/supabase/storage";
+import { mediaPathForUser, resolveMediaUrl, uploadMediaFile } from "@/lib/supabase/storage";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -95,12 +95,12 @@ export function OnboardingWizard() {
         throw new Error(payload.error || "Could not save.");
       }
       setSaveState("saved");
-      return true;
+      return { ok: true as const };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not save.";
       setSaveState("error");
       setSaveError(message);
-      return false;
+      return { ok: false as const, error: message };
     }
   }, []);
 
@@ -195,14 +195,19 @@ export function OnboardingWizard() {
     setUploading(true);
     try {
       const path = mediaPathForUser(userId, file.name, kind === "primary" ? "profile" : "gallery");
-      const url = await uploadFile(file, path);
+      const uploaded = await uploadMediaFile(file, path);
       if (kind === "primary") {
-        updateDraft({ photoURL: url, photoStoragePath: path });
+        updateDraft({ photoURL: uploaded.path, photoStoragePath: uploaded.path });
       } else {
         updateDraft({
           additionalPhotoUrls: [
             ...(draft.additionalPhotoUrls || []),
-            { id: path, url, hint: "profile photo", storagePath: path },
+            {
+              id: uploaded.path,
+              url: uploaded.path,
+              hint: "profile photo",
+              storagePath: uploaded.path,
+            },
           ],
         });
       }
@@ -223,8 +228,13 @@ export function OnboardingWizard() {
     if (errors.length > 0) return;
     setPublishing(true);
     const saved = await persist(draft, 7);
-    if (!saved) {
+    if (!saved.ok) {
       setPublishing(false);
+      toast({
+        title: "Publish failed",
+        description: saved.error,
+        variant: "destructive",
+      });
       return;
     }
     try {
@@ -514,7 +524,17 @@ export function OnboardingWizard() {
             <div className="space-y-5">
               <Field label="Profile photo (optional until you are ready)" htmlFor="photo">
                 <Input id="photo" type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} onChange={(e) => void handlePhoto(e.target.files?.[0], "primary")} className="min-h-11" />
-                {draft.photoURL && <p className="text-sm text-muted-foreground">A photo is attached to this draft.</p>}
+                {draft.photoURL ? (
+                  <div className="mt-3 flex items-center gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={resolveMediaUrl(draft.photoURL)}
+                      alt="Uploaded profile preview"
+                      className="h-20 w-20 rounded-xl object-cover border border-border"
+                    />
+                    <p className="text-sm text-muted-foreground">Photo attached to this draft.</p>
+                  </div>
+                ) : null}
               </Field>
               <Field label="Additional photos (optional)" htmlFor="gallery">
                 <Input id="gallery" type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} onChange={(e) => void handlePhoto(e.target.files?.[0], "additional")} className="min-h-11" />

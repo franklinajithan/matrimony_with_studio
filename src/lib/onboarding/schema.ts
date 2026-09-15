@@ -24,6 +24,9 @@ export const COUNTRY_OPTIONS = [
 
 const optionalText = z.string().max(500).optional().or(z.literal(""));
 const optionalLongText = z.string().max(2000).optional().or(z.literal(""));
+/** Signed storage URLs and OAuth avatars regularly exceed 500 chars. */
+const optionalUrl = z.string().max(4000).optional().or(z.literal(""));
+const optionalPath = z.string().max(1000).optional().or(z.literal(""));
 
 export const onboardingDraftSchema = z.object({
   displayName: z.string().max(80).optional().or(z.literal("")),
@@ -60,15 +63,15 @@ export const onboardingDraftSchema = z.object({
   longDistanceOk: optionalText,
   familyResponsibilities: optionalLongText,
 
-  photoURL: optionalText,
-  photoStoragePath: optionalText,
+  photoURL: optionalUrl,
+  photoStoragePath: optionalPath,
   additionalPhotoUrls: z
     .array(
       z.object({
-        id: z.string(),
-        url: z.string(),
-        hint: z.string().optional().default("profile photo"),
-        storagePath: z.string().optional(),
+        id: z.string().max(500),
+        url: z.string().max(4000),
+        hint: z.string().max(120).optional().default("profile photo"),
+        storagePath: z.string().max(1000).optional(),
       })
     )
     .max(8)
@@ -129,11 +132,68 @@ export function isAdult(dob: string, now = new Date()): boolean {
 }
 
 export function parseOnboardingDraft(input: unknown): OnboardingDraft {
-  const parsed = onboardingDraftSchema.safeParse(input ?? {});
+  const parsed = onboardingDraftSchema.safeParse(sanitizeDraftInput(input));
   if (!parsed.success) {
-    throw new Error(parsed.error.issues[0]?.message || "Invalid onboarding data.");
+    const issue = parsed.error.issues[0];
+    const path = issue?.path?.length ? issue.path.join(".") : "draft";
+    throw new Error(`${path}: ${issue?.message || "Invalid onboarding data."}`);
   }
   return { ...EMPTY_ONBOARDING_DRAFT, ...parsed.data };
+}
+
+/** Keep draft saves working when profile/photo URLs are longer than older limits. */
+function sanitizeDraftInput(input: unknown): unknown {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return input ?? {};
+  const row = { ...(input as Record<string, unknown>) };
+
+  const clamp = (value: unknown, max: number) =>
+    typeof value === "string" && value.length > max ? value.slice(0, max) : value;
+
+  row.displayName = clamp(row.displayName, 80);
+  row.dob = clamp(row.dob, 32);
+  row.bio = clamp(row.bio, 2000);
+  row.familyResponsibilities = clamp(row.familyResponsibilities, 2000);
+  row.photoURL = clamp(row.photoURL, 4000);
+  row.photoStoragePath = clamp(row.photoStoragePath, 1000);
+
+  for (const key of Object.keys(row)) {
+    if (
+      [
+        "displayName",
+        "dob",
+        "bio",
+        "familyResponsibilities",
+        "photoURL",
+        "photoStoragePath",
+        "languages",
+        "preferredSettlement",
+        "additionalPhotoUrls",
+        "confirmedAdult",
+        "skippedCultural",
+        "photoPrivacy",
+        "reviewConfirmed",
+      ].includes(key)
+    ) {
+      continue;
+    }
+    if (typeof row[key] === "string") {
+      row[key] = clamp(row[key], 500);
+    }
+  }
+
+  if (Array.isArray(row.additionalPhotoUrls)) {
+    row.additionalPhotoUrls = row.additionalPhotoUrls.map((item) => {
+      if (!item || typeof item !== "object") return item;
+      const photo = { ...(item as Record<string, unknown>) };
+      photo.id = clamp(photo.id, 500);
+      photo.url = clamp(photo.url, 4000);
+      photo.hint = clamp(photo.hint, 120);
+      photo.storagePath = clamp(photo.storagePath, 1000);
+      return photo;
+    });
+  }
+
+  return row;
 }
 
 const stepSchemas: Record<number, z.ZodTypeAny> = {

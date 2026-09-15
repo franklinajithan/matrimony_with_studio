@@ -52,9 +52,9 @@ export default function DashboardPage() {
         if (user) {
           try {
             const [interests, connections, shortlistCount] = await Promise.all([
-              countPendingRequests(user.uid),
-              countConnections(user.uid),
-              countShortlist(user.uid),
+              countPendingRequests(user.id),
+              countConnections(user.id),
+              countShortlist(user.id),
             ]);
             
             setReceivedInterests(interests);

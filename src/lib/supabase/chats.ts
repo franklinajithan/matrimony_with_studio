@@ -3,6 +3,7 @@ import { supabase } from "./client";
 import { getProfile } from "./profiles";
 import { Timestamp } from "./timestamp";
 import type { ChatRow, MessageRow } from "./types";
+import { resolveMediaUrl } from "./storage";
 
 type Row = Record<string, any>;
 
@@ -75,14 +76,14 @@ export async function createChatDocument(user1Uid: string, user2Uid: string): Pr
   const participantDetails = {
     [user1Uid]: {
       displayName: user1.displayName || "User",
-      photoURL: user1.photoURL || "https://placehold.co/100x100.png",
+      photoURL: resolveMediaUrl(user1.photoURL) || "https://placehold.co/100x100.png",
       dataAiHint:
         user1.dataAiHint ||
         (user1.photoURL && !user1.photoURL.includes("placehold.co") ? "person avatar" : "person placeholder"),
     },
     [user2Uid]: {
       displayName: user2.displayName || "User",
-      photoURL: user2.photoURL || "https://placehold.co/100x100.png",
+      photoURL: resolveMediaUrl(user2.photoURL) || "https://placehold.co/100x100.png",
       dataAiHint:
         user2.dataAiHint ||
         (user2.photoURL && !user2.photoURL.includes("placehold.co") ? "person avatar" : "person placeholder"),

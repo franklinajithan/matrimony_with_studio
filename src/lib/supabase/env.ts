@@ -6,8 +6,8 @@ export function getSupabaseUrl(): string {
 
 export function getSupabaseAnonKey(): string {
   return (
-    stripQuotes(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) ||
     stripQuotes(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) ||
+    stripQuotes(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) ||
     ""
   );
 }

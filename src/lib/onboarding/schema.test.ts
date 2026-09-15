@@ -46,4 +46,10 @@ describe("onboarding validation", () => {
     expect(patch.is_admin).toBeUndefined();
     expect(patch.email).toBeUndefined();
   });
+
+  it("accepts long signed photo URLs in drafts", () => {
+    const longUrl = `https://ztuquqsmmfkoqhobfgyt.supabase.co/storage/v1/object/sign/media/users/abc/profile/photo.jpg?token=${"x".repeat(600)}`;
+    expect(longUrl.length).toBeGreaterThan(500);
+    expect(() => parseOnboardingDraft({ ...adultDraft, photoURL: longUrl })).not.toThrow();
+  });
 });

@@ -2,6 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { hasRealPhoto, memberInitials } from "@/lib/onboarding/readiness";
+import { resolveMediaUrl } from "@/lib/supabase/storage";
 import { cn } from "@/lib/utils";
 
 export function MemberAvatar({
@@ -16,7 +17,8 @@ export function MemberAvatar({
   alt?: string;
 }) {
   const label = name?.trim() || "Member";
-  const src = hasRealPhoto(photoURL) ? photoURL || undefined : undefined;
+  const resolved = resolveMediaUrl(photoURL);
+  const src = hasRealPhoto(resolved) ? resolved : undefined;
 
   return (
     <Avatar className={cn("h-10 w-10 border border-border", className)}>

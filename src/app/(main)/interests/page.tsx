@@ -71,9 +71,10 @@ export default function InterestsPage() {
       try {
         setLoading(true);
 
+        const userId = currentUser.id;
         const [received, sent] = await Promise.all([
-          listPendingRequests(currentUser.uid),
-          listSentRequests(currentUser.uid),
+          listPendingRequests(userId),
+          listSentRequests(userId),
         ]);
 
         // Fetch sender profiles for received interests
@@ -166,7 +167,7 @@ export default function InterestsPage() {
         console.error("Error fetching interests:", error);
         toast({
           title: "Error",
-          description: "Failed to load interests.",
+          description: error instanceof Error ? error.message : "Failed to load interests.",
           variant: "destructive",
         });
       } finally {
@@ -184,7 +185,11 @@ export default function InterestsPage() {
 
     try {
       await acceptInterest(interestId);
-      await createConnection(currentUser.uid, senderId, interestId);
+      try {
+        await createConnection(currentUser.id, senderId, interestId);
+      } catch (connectionError) {
+        console.warn("Interest accepted, but connection row was not created:", connectionError);
+      }
 
       setReceivedInterests(prev => prev.filter(i => i.id !== interestId));
 

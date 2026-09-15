@@ -143,11 +143,11 @@ function DiscoverPageContent() {
       setError(null);
       
       // Fetch discovery profiles
-      const fetchedProfiles = await listProfiles({ limit: 100, excludeId: currentUser.uid });
+      const fetchedProfiles = await listProfiles({ limit: 100, excludeId: currentUser.id });
       
       // Get shortlisted IDs
       const shortlistedIds = await getShortlistedIds(
-        currentUser.uid,
+        currentUser.id,
         fetchedProfiles.map(p => p.id)
       );
       
@@ -232,12 +232,12 @@ function DiscoverPageContent() {
     
     try {
       if (isCurrentlyShortlisted) {
-        await removeFromShortlist(currentUser.uid, profileId);
+        await removeFromShortlist(currentUser.id, profileId);
         setProfiles(prev => prev.map(p =>
           p.id === profileId ? { ...p, isShortlisted: false } : p
         ));
       } else {
-        await addToShortlist(currentUser.uid, profileId);
+        await addToShortlist(currentUser.id, profileId);
         setProfiles(prev => prev.map(p =>
           p.id === profileId ? { ...p, isShortlisted: true } : p
         ));
@@ -261,7 +261,7 @@ function DiscoverPageContent() {
     
     try {
       await sendInterest({
-        senderUid: currentUser.uid,
+        senderUid: currentUser.id,
         receiverUid: profileId,
       });
       

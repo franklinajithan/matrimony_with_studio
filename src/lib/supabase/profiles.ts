@@ -2,11 +2,27 @@ import { supabase } from "./client";
 import { Timestamp } from "./timestamp";
 import type { Profile, StoredPhoto } from "./types";
 import { omitEmptyDefaults, stripPrivilegedFields } from "./privileged";
+import { resolveMediaUrl } from "./storage";
 
 type ProfileRow = Record<string, unknown>;
 
 function asString(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
+}
+
+function mapStoredPhotos(raw: unknown): StoredPhoto[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item, index) => {
+    const photo = (item && typeof item === "object" ? item : {}) as Record<string, unknown>;
+    const storagePath = typeof photo.storagePath === "string" ? photo.storagePath : undefined;
+    const rawUrl = typeof photo.url === "string" ? photo.url : storagePath || "";
+    return {
+      id: String(photo.id || storagePath || `photo-${index}`),
+      url: resolveMediaUrl(rawUrl),
+      hint: typeof photo.hint === "string" ? photo.hint : "profile photo",
+      storagePath,
+    };
+  });
 }
 
 function mapCommentNotifications(
@@ -39,7 +55,7 @@ export function mapProfile(row: ProfileRow | null): Profile | null {
     email: (row.email as string | null) ?? null,
     displayName: asString(row.display_name),
     bio: asString(row.bio),
-    photoURL: asString(row.photo_url),
+    photoURL: resolveMediaUrl(asString(row.photo_url)),
     dataAiHint: asString(row.data_ai_hint),
     location: asString(row.location),
     profession: asString(row.profession),
@@ -60,10 +76,8 @@ export function mapProfile(row: ProfileRow | null): Profile | null {
     nakshatra: asString(row.nakshatra),
     horoscopeInfo: asString(row.horoscope_info),
     horoscopeFileName: asString(row.horoscope_file_name),
-    horoscopeFileUrl: asString(row.horoscope_file_url),
-    additionalPhotoUrls: Array.isArray(row.additional_photo_urls)
-      ? (row.additional_photo_urls as StoredPhoto[])
-      : [],
+    horoscopeFileUrl: resolveMediaUrl(asString(row.horoscope_file_url)),
+    additionalPhotoUrls: mapStoredPhotos(row.additional_photo_urls),
     isAdmin: Boolean(row.is_admin),
     isVerified: Boolean(row.is_verified),
     isPublished: Boolean(row.is_published),

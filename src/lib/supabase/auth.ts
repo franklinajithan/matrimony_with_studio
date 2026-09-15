@@ -1,6 +1,6 @@
 import type { User as SupabaseAuthUser, Session } from "@supabase/supabase-js";
 import { supabase } from "./client";
-import { getSiteUrl } from "./env";
+import { getSiteUrl, isSupabaseConfigured } from "./env";
 
 export type AuthUser = {
   uid: string;
@@ -115,6 +115,13 @@ export async function signInWithEmailAndPassword(
   email: string,
   password: string
 ) {
+  if (!isSupabaseConfigured()) {
+    const err = new Error(
+      "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) to .env, then restart the dev server."
+    ) as Error & { code: string };
+    err.code = "auth/invalid-api-key";
+    throw err;
+  }
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) mapAuthError(error, "Login failed");
   cachedUser = mapUser(data.user);

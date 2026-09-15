@@ -205,7 +205,7 @@ export async function saveOnboardingDraft(
   };
   if (!existing.profile && input.email) {
     patch.email = input.email;
-  };
+  }
 
   const { data, error } = await client
     .from("profiles")
@@ -213,7 +213,20 @@ export async function saveOnboardingDraft(
     .select("id, onboarding_step, updated_at, is_published")
     .single();
 
-  if (error) throw error;
+  if (error) {
+    const message = error.message || "Could not save onboarding.";
+    if (/onboarding_draft|onboarding_step|is_published|relationship_intentions|column .* does not exist/i.test(message)) {
+      throw new Error(
+        "Your Supabase database is missing onboarding columns. Run supabase/fixups/bootstrap-onboarding.sql in the SQL Editor, then retry."
+      );
+    }
+    if (/permission denied|42501|row-level security/i.test(message)) {
+      throw new Error(
+        "Profile save was blocked by database permissions. Run supabase/fixups/bootstrap-onboarding.sql in the SQL Editor, then sign out and back in."
+      );
+    }
+    throw error;
+  }
   return { ...data, draft: mergedDraft };
 }
 

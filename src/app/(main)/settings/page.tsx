@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { User, Image as ImageIcon, Info, Loader2, MapPin, Briefcase, Cake } from 'lucide-react';
 import { useState, useEffect } from "react";
 import { auth, updateProfile } from "@/lib/supabase/auth";
-import { uploadFile } from "@/lib/supabase/storage";
+import { extractStoragePath, mediaPathForUser, resolveMediaUrl, uploadFile } from "@/lib/supabase/storage";
 import { getProfile, updateUserProfile } from "@/lib/supabase/profiles";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -65,7 +65,7 @@ export default function SettingsPage() {
             profession: data.profession || "",
             dob: data.dob || "",
           });
-          setCurrentPhotoURL(data.photoURL || "");
+          setCurrentPhotoURL(resolveMediaUrl(data.photoURL || ""));
         }
       } catch (error) {
         console.error("Error loading profile:", error);
@@ -97,14 +97,16 @@ export default function SettingsPage() {
     }
 
     try {
-      let finalPhotoURL = currentPhotoURL;
+      let finalPhotoURL = extractStoragePath(currentPhotoURL) || currentPhotoURL;
       let finalDataAiHint = currentPhotoURL ? "social profile" : "person placeholder";
 
       if (values.profilePhoto) {
-        const filePath = `users/${user.uid}/profile_photo/${values.profilePhoto.name}`;
+        const filePath = mediaPathForUser(user.uid, values.profilePhoto.name, "profile_photo");
         finalPhotoURL = await uploadFile(values.profilePhoto, filePath);
         finalDataAiHint = "profile photo";
       }
+
+      const displayPhotoURL = resolveMediaUrl(finalPhotoURL);
 
       await updateProfile(user, {
         displayName: values.displayName,
@@ -122,6 +124,7 @@ export default function SettingsPage() {
       };
 
       await updateUserProfile(user.uid, profileData);
+      setCurrentPhotoURL(displayPhotoURL);
 
       toast({
         title: "Profile Updated",

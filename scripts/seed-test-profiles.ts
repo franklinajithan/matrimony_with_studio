@@ -268,14 +268,33 @@ async function seedProfiles() {
   console.log('🌱 Starting profile seeding...');
   console.log(`📝 Seeding ${testProfiles.length} profiles\n`);
 
+  const usingServiceRole = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
+  if (!usingServiceRole) {
+    console.warn(
+      '⚠️  SUPABASE_SERVICE_ROLE_KEY is not set. Prefer running supabase/fixups/seed-demo-profiles.sql in the SQL Editor.\n'
+    );
+  }
+
   for (const profile of testProfiles) {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .upsert(profile, {
-          onConflict: 'id',
-          ignoreDuplicates: false
+      if (usingServiceRole) {
+        const { error: userError } = await supabase.auth.admin.createUser({
+          id: profile.id,
+          email: profile.email,
+          password: 'DemoPass123!',
+          email_confirm: true,
+          user_metadata: { display_name: profile.display_name },
         });
+        if (userError && !/already|registered|exists/i.test(userError.message)) {
+          console.error(`❌ Auth user for ${profile.display_name}:`, userError.message);
+          continue;
+        }
+      }
+
+      const { error } = await supabase.from('profiles').upsert(profile, {
+        onConflict: 'id',
+        ignoreDuplicates: false,
+      });
 
       if (error) {
         console.error(`❌ Error seeding ${profile.display_name}:`, error.message);

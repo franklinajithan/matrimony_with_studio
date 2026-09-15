@@ -58,7 +58,14 @@ export function hasRealPhoto(url?: string | null): boolean {
   if (!url) return false;
   const trimmed = url.trim();
   if (!trimmed) return false;
-  return !trimmed.includes("placehold.co") && !trimmed.includes("placeholder");
+  if (trimmed.includes("placehold.co") || trimmed.includes("placeholder")) return false;
+  return (
+    trimmed.startsWith("http") ||
+    trimmed.startsWith("/") ||
+    trimmed.startsWith("users/") ||
+    trimmed.startsWith("blob:") ||
+    trimmed.startsWith("data:")
+  );
 }
 
 export function isProfileComplete(draft: OnboardingDraft): boolean {
