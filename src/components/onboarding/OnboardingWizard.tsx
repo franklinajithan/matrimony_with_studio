@@ -66,13 +66,16 @@ export function OnboardingWizard() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [stepErrors, setStepErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [draftReady, setDraftReady] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const draftRef = useRef(draft);
   const stepRef = useRef(step);
+  const draftReadyRef = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialStepParam = useRef(searchParams.get("step"));
 
   useEffect(() => {
     draftRef.current = draft;
@@ -80,32 +83,49 @@ export function OnboardingWizard() {
   useEffect(() => {
     stepRef.current = step;
   }, [step]);
+  useEffect(() => {
+    draftReadyRef.current = draftReady;
+  }, [draftReady]);
 
-  const persist = useCallback(async (nextDraft: OnboardingDraft, nextStep: number) => {
-    setSaveState("saving");
-    setSaveError(null);
+  const persist = useCallback(async (nextDraft: OnboardingDraft, nextStep: number, options?: { silent?: boolean }) => {
+    if (!draftReadyRef.current) {
+      return { ok: false as const, error: "Still loading your saved profile." };
+    }
+    if (!options?.silent) {
+      setSaveState("saving");
+      setSaveError(null);
+    }
     try {
       const response = await fetch("/api/onboarding/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({ draft: nextDraft, step: nextStep }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
         throw new Error(payload.error || "Could not save.");
       }
-      setSaveState("saved");
+      if (!options?.silent && payload.draft && typeof payload.draft === "object") {
+        const synced = { ...EMPTY_ONBOARDING_DRAFT, ...payload.draft };
+        setDraft(synced);
+        draftRef.current = synced;
+      }
+      if (!options?.silent) setSaveState("saved");
       return { ok: true as const };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not save.";
-      setSaveState("error");
-      setSaveError(message);
+      if (!options?.silent) {
+        setSaveState("error");
+        setSaveError(message);
+      }
       return { ok: false as const, error: message };
     }
   }, []);
 
   const scheduleSave = useCallback(
     (nextDraft: OnboardingDraft, nextStep: number) => {
+      if (!draftReadyRef.current) return;
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => {
         void persist(nextDraft, nextStep);
@@ -136,27 +156,40 @@ export function OnboardingWizard() {
     let active = true;
     async function load() {
       try {
-        const response = await fetch("/api/onboarding/draft");
+        const response = await fetch("/api/onboarding/draft", { credentials: "same-origin" });
         if (response.status === 401) {
           router.replace("/login?next=/onboarding");
           return;
         }
-        const payload = await response.json();
-        if (!active) return;
-        if (payload.draft) {
-          setDraft({ ...EMPTY_ONBOARDING_DRAFT, ...payload.draft });
-        } else if (payload.displayName) {
-          setDraft((current) => ({ ...current, displayName: payload.displayName }));
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(payload.error || "Could not load your saved onboarding data.");
         }
-        const requested = Number(searchParams.get("step"));
+        if (!active) return;
+        if (payload.draft && typeof payload.draft === "object") {
+          const loaded = { ...EMPTY_ONBOARDING_DRAFT, ...payload.draft };
+          if (!loaded.displayName && payload.displayName) {
+            loaded.displayName = String(payload.displayName);
+          }
+          setDraft(loaded);
+          draftRef.current = loaded;
+        }
+        const requested = Number(initialStepParam.current);
         if (Number.isInteger(requested) && requested >= 0 && requested <= 7) {
           setStep(requested);
+          stepRef.current = requested;
         } else if (typeof payload.step === "number") {
-          setStep(Math.min(7, Math.max(0, payload.step === 8 ? 7 : payload.step)));
+          const nextStep = Math.min(7, Math.max(0, payload.step === 8 ? 7 : payload.step));
+          setStep(nextStep);
+          stepRef.current = nextStep;
         }
         setIsPublished(Boolean(payload.isPublished));
+        setDraftReady(true);
+        draftReadyRef.current = true;
       } catch (error) {
         if (active) {
+          setDraftReady(false);
+          draftReadyRef.current = false;
           setSaveState("error");
           setSaveError(error instanceof Error ? error.message : "Could not load your draft.");
         }
@@ -167,9 +200,15 @@ export function OnboardingWizard() {
     void load();
     return () => {
       active = false;
-      if (saveTimer.current) clearTimeout(saveTimer.current);
+      if (saveTimer.current) {
+        clearTimeout(saveTimer.current);
+        saveTimer.current = null;
+        if (draftReadyRef.current) {
+          void persist(draftRef.current, stepRef.current, { silent: true });
+        }
+      }
     };
-  }, [router, searchParams]);
+  }, [router, persist]);
 
   const progressValue = ((step + 1) / ONBOARDING_STEPS.length) * 100;
   const current = ONBOARDING_STEPS[step];
@@ -191,7 +230,23 @@ export function OnboardingWizard() {
   }
 
   async function handlePhoto(file: File | undefined, kind: "primary" | "additional") {
-    if (!file || !userId) return;
+    if (!file) return;
+    if (!userId) {
+      toast({
+        title: "Still signing in",
+        description: "Wait a moment for your session to load, then try the photo again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!draftReady) {
+      toast({
+        title: "Profile still loading",
+        description: "Your saved draft has not loaded yet. Refresh and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
     setUploading(true);
     try {
       const path = mediaPathForUser(userId, file.name, kind === "primary" ? "profile" : "gallery");
@@ -276,6 +331,25 @@ export function OnboardingWizard() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!draftReady) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4">
+        <Alert variant="destructive" className="max-w-lg">
+          <AlertTitle>Could not load your saved profile</AlertTitle>
+          <AlertDescription className="space-y-3">
+            <p>{saveError || "Your onboarding draft could not be loaded from the database."}</p>
+            <p className="text-sm">
+              If this keeps happening, run <code className="rounded bg-muted px-1">supabase/fixups/bootstrap-onboarding.sql</code> in the Supabase SQL Editor, then sign out and back in.
+            </p>
+            <Button className="mt-2" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }

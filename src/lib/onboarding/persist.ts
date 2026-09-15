@@ -177,6 +177,57 @@ export async function loadOnboardingState(client: SupabaseClient, userId: string
   };
 }
 
+function isBlankDraftValue(value: unknown): boolean {
+  if (value == null) return true;
+  if (typeof value === "string") return value.trim().length === 0;
+  if (Array.isArray(value)) return value.length === 0;
+  return false;
+}
+
+/** True when a client payload has no meaningful progress (failed load / empty form). */
+export function isEffectivelyEmptyDraft(draft: OnboardingDraft): boolean {
+  return (
+    isBlankDraftValue(draft.displayName) &&
+    isBlankDraftValue(draft.dob) &&
+    isBlankDraftValue(draft.country) &&
+    isBlankDraftValue(draft.region) &&
+    isBlankDraftValue(draft.languages) &&
+    isBlankDraftValue(draft.lookingFor) &&
+    isBlankDraftValue(draft.bio) &&
+    isBlankDraftValue(draft.photoURL) &&
+    isBlankDraftValue(draft.educationLevel) &&
+    isBlankDraftValue(draft.relocationOpenness)
+  );
+}
+
+/**
+ * Merge client draft onto stored draft without letting an empty client wipe
+ * already-saved fields (common after a failed load or cancelled autosave).
+ * Non-empty client values always win so intentional edits still save.
+ */
+export function mergeOnboardingDrafts(
+  existing: OnboardingDraft,
+  incoming: OnboardingDraft
+): OnboardingDraft {
+  if (isEffectivelyEmptyDraft(incoming) && !isEffectivelyEmptyDraft(existing)) {
+    return existing;
+  }
+
+  const merged: OnboardingDraft = { ...existing };
+  (Object.keys(EMPTY_ONBOARDING_DRAFT) as Array<keyof OnboardingDraft>).forEach((key) => {
+    const nextValue = incoming[key];
+    if (nextValue === undefined) return;
+    if (typeof nextValue === "boolean") {
+      merged[key] = nextValue as never;
+      return;
+    }
+    if (!isBlankDraftValue(nextValue) || isBlankDraftValue(existing[key])) {
+      merged[key] = nextValue as never;
+    }
+  });
+  return merged;
+}
+
 export async function saveOnboardingDraft(
   client: SupabaseClient,
   userId: string,
@@ -188,10 +239,7 @@ export async function saveOnboardingDraft(
 ) {
   const draft = parseOnboardingDraft(input.draft);
   const existing = await loadOnboardingState(client, userId);
-  const mergedDraft: OnboardingDraft = {
-    ...existing.draft,
-    ...draft,
-  };
+  const mergedDraft = mergeOnboardingDrafts(existing.draft, draft);
   const nextStep =
     typeof input.step === "number"
       ? Math.min(8, Math.max(0, input.step))

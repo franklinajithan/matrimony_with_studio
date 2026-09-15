@@ -15,6 +15,8 @@ import { Mail, Lock, Loader2 } from "lucide-react";
 import React, { Suspense, useMemo, useState } from "react";
 import { auth, signInWithEmailAndPassword } from "@/lib/supabase/auth";
 import { getProfile } from "@/lib/supabase/profiles";
+import { draftFromProfile } from "@/lib/onboarding/persist";
+import { firstIncompleteOnboardingStep } from "@/lib/onboarding/readiness";
 import { safeInternalPath } from "@/lib/auth/safe-redirect";
 import { markLoginWelcomePending } from "@/lib/auth/welcome-toast";
 
@@ -54,8 +56,20 @@ function LoginForm() {
       const result = await signInWithEmailAndPassword(auth, values.email, values.password);
       let destination = nextPath;
       if (!destination && result.user) {
-        const profile = await getProfile(result.user.uid);
-        destination = profile?.isPublished ? "/dashboard" : "/onboarding";
+        try {
+          const profile = await getProfile(result.user.uid);
+          if (profile?.isPublished) {
+            destination = "/dashboard";
+          } else if (profile) {
+            const draft = draftFromProfile(profile);
+            const resumeStep = firstIncompleteOnboardingStep(draft);
+            destination = `/onboarding?step=${resumeStep}`;
+          } else {
+            destination = "/onboarding";
+          }
+        } catch {
+          destination = "/onboarding";
+        }
       }
       markLoginWelcomePending();
       router.push(destination || "/onboarding");

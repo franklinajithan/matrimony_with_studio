@@ -290,3 +290,46 @@ create policy "connections_delete_involved"
   using (member_a_id = auth.uid() or member_b_id = auth.uid());
 
 grant select, insert, delete on table public.connections to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Ensure every new auth user gets a profiles row (onboarding starts empty)
+-- ---------------------------------------------------------------------------
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (id, email, display_name, photo_url, is_published, onboarding_step, onboarding_draft)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'display_name', new.raw_user_meta_data->>'full_name', ''),
+    coalesce(new.raw_user_meta_data->>'photo_url', new.raw_user_meta_data->>'avatar_url', ''),
+    false,
+    0,
+    '{}'::jsonb
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- Backfill profiles for existing auth users missing a row
+insert into public.profiles (id, email, display_name, is_published, onboarding_step, onboarding_draft)
+select
+  u.id,
+  u.email,
+  coalesce(u.raw_user_meta_data->>'display_name', u.raw_user_meta_data->>'full_name', ''),
+  false,
+  0,
+  '{}'::jsonb
+from auth.users u
+where not exists (select 1 from public.profiles p where p.id = u.id)
+on conflict (id) do nothing;

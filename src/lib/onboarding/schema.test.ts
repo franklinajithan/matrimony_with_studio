@@ -5,7 +5,8 @@ import {
   validateForPublish,
   validateOnboardingStep,
 } from "@/lib/onboarding/schema";
-import { profilePatchFromDraft } from "@/lib/onboarding/persist";
+import { profilePatchFromDraft, mergeOnboardingDrafts, isEffectivelyEmptyDraft } from "@/lib/onboarding/persist";
+import { EMPTY_ONBOARDING_DRAFT } from "@/lib/onboarding/schema";
 
 const adultDraft = {
   displayName: "Amina Perera",
@@ -51,5 +52,21 @@ describe("onboarding validation", () => {
     const longUrl = `https://ztuquqsmmfkoqhobfgyt.supabase.co/storage/v1/object/sign/media/users/abc/profile/photo.jpg?token=${"x".repeat(600)}`;
     expect(longUrl.length).toBeGreaterThan(500);
     expect(() => parseOnboardingDraft({ ...adultDraft, photoURL: longUrl })).not.toThrow();
+  });
+
+  it("does not let an empty client draft wipe saved fields", () => {
+    const saved = parseOnboardingDraft(adultDraft);
+    const empty = parseOnboardingDraft(EMPTY_ONBOARDING_DRAFT);
+    expect(isEffectivelyEmptyDraft(empty)).toBe(true);
+    const merged = mergeOnboardingDrafts(saved, empty);
+    expect(merged.displayName).toBe("Amina Perera");
+    expect(merged.bio).toContain("kindness");
+  });
+
+  it("lets non-empty client edits overwrite saved fields", () => {
+    const saved = parseOnboardingDraft(adultDraft);
+    const edited = parseOnboardingDraft({ ...adultDraft, displayName: "Amina Silva" });
+    const merged = mergeOnboardingDrafts(saved, edited);
+    expect(merged.displayName).toBe("Amina Silva");
   });
 });
