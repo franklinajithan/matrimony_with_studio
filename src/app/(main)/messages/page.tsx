@@ -310,8 +310,7 @@ function MessagesPageContent() {
         {/* Header */}
         <div className="p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="font-headline text-xl font-semibold text-gray-800">Messages</h1>
-            <Button size="icon" variant="ghost" className="rounded-full">
+            <Button size="icon" variant="ghost" className="rounded-full ml-auto">
               <MessageSquarePlus className="h-5 w-5" />
             </Button>
           </div>

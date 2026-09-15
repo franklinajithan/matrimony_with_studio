@@ -454,13 +454,10 @@ function DiscoverPageContent() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Discover</h1>
-        <p className="mt-1 text-sm text-gray-600 sm:text-base">
-          Find someone who shares your values and future plans.
-        </p>
-      </div>
+      {/* Supporting text */}
+      <p className="text-sm text-gray-600 sm:text-base">
+        Find someone who shares your values and future plans.
+      </p>
       
       {/* Search and Filters */}
       <Card>

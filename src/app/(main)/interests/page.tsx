@@ -87,7 +87,11 @@ export default function InterestsPage() {
                 senderUid: interest.senderUid,
                 receiverUid: interest.receiverUid,
                 status: interest.status,
-                createdAt: interest.createdAt?.toDate() || new Date(),
+                createdAt: interest.createdAt && typeof interest.createdAt.toDate === 'function' 
+                  ? interest.createdAt.toDate() 
+                  : interest.createdAt instanceof Date 
+                  ? interest.createdAt 
+                  : new Date(),
                 profile: profile ? {
                   displayName: profile.displayName || "User",
                   photoURL: profile.photoURL,
@@ -104,7 +108,11 @@ export default function InterestsPage() {
                 senderUid: interest.senderUid,
                 receiverUid: interest.receiverUid,
                 status: interest.status,
-                createdAt: interest.createdAt?.toDate() || new Date(),
+                createdAt: interest.createdAt && typeof interest.createdAt.toDate === 'function' 
+                  ? interest.createdAt.toDate() 
+                  : interest.createdAt instanceof Date 
+                  ? interest.createdAt 
+                  : new Date(),
               };
             }
           })
@@ -121,7 +129,11 @@ export default function InterestsPage() {
                 senderUid: interest.senderUid,
                 receiverUid: interest.receiverUid,
                 status: interest.status,
-                createdAt: interest.createdAt?.toDate() || new Date(),
+                createdAt: interest.createdAt && typeof interest.createdAt.toDate === 'function' 
+                  ? interest.createdAt.toDate() 
+                  : interest.createdAt instanceof Date 
+                  ? interest.createdAt 
+                  : new Date(),
                 profile: profile ? {
                   displayName: profile.displayName || "User",
                   photoURL: profile.photoURL,
@@ -138,7 +150,11 @@ export default function InterestsPage() {
                 senderUid: interest.senderUid,
                 receiverUid: interest.receiverUid,
                 status: interest.status,
-                createdAt: interest.createdAt?.toDate() || new Date(),
+                createdAt: interest.createdAt && typeof interest.createdAt.toDate === 'function' 
+                  ? interest.createdAt.toDate() 
+                  : interest.createdAt instanceof Date 
+                  ? interest.createdAt 
+                  : new Date(),
               };
             }
           })
@@ -245,13 +261,8 @@ export default function InterestsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto max-w-4xl px-4">
-        <h1 className="mb-8 text-3xl font-bold text-gray-900">
-          Interests
-        </h1>
-
-        <Tabs defaultValue="received" className="space-y-6">
+    <div className="space-y-6">
+      <Tabs defaultValue="received" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="received">
               Received {receivedInterests.length > 0 && `(${receivedInterests.length})`}
@@ -416,7 +427,6 @@ export default function InterestsPage() {
             )}
           </TabsContent>
         </Tabs>
-      </div>
     </div>
   );
 }
