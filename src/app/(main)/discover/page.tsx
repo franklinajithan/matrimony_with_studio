@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useCallback, useMemo, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
-import { listProfiles } from "@/lib/supabase/profiles";
+import { listProfiles, type Profile } from "@/lib/supabase/profiles";
 import { getShortlistedIds, addToShortlist, removeFromShortlist } from "@/lib/supabase/shortlist";
 import { sendInterest } from "@/lib/supabase/matches";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -15,24 +15,60 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, Bookmark, MapPin, Briefcase, Languages, Loader2, Search, SlidersHorizontal, X, AlertCircle, RefreshCw } from "lucide-react";
+import { Heart, Bookmark, MapPin, Briefcase, Languages as LanguagesIcon, Loader2, Search, SlidersHorizontal, X, AlertCircle, RefreshCw, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface DiscoveryProfile {
-  id: string;
-  displayName: string;
-  bio?: string;
-  photoURL?: string;
-  location?: string;
-  profession?: string;
-  country?: string;
-  ageYears?: number;
-  languages?: string[];
-  isShortlisted?: boolean;
+type LoadingState = "loading" | "success" | "error" | "session_expired" | "idle";
+
+interface SharedPriority {
+  text: string;
+  icon: typeof LanguagesIcon;
 }
 
-type LoadingState = "loading" | "success" | "error" | "idle";
+interface DiscoveryProfile extends Profile {
+  isShortlisted?: boolean;
+  sharedPriorities?: SharedPriority[];
+}
+
+function getSharedPriorities(profile: Profile, currentUser: User): SharedPriority[] {
+  const priorities: SharedPriority[] = [];
+  
+  // Shared languages
+  const userLanguages = currentUser.user_metadata?.languages || [];
+  const profileLanguages = profile.languages || [];
+  const sharedLanguages = userLanguages.filter((lang: string) => profileLanguages.includes(lang));
+  
+  if (sharedLanguages.length > 0) {
+    priorities.push({
+      text: `You both speak ${sharedLanguages[0]}${sharedLanguages.length > 1 ? ` +${sharedLanguages.length - 1}` : ''}`,
+      icon: LanguagesIcon,
+    });
+  }
+  
+  // Shared settlement preferences
+  const userSettlement = currentUser.user_metadata?.settlement?.preferred_countries || [];
+  const profileSettlement = (profile.settlement as any)?.preferred_countries || [];
+  const sharedCountries = userSettlement.filter((c: string) => profileSettlement.includes(c));
+  
+  if (sharedCountries.length > 0) {
+    priorities.push({
+      text: `Both open to ${sharedCountries[0]}${sharedCountries.length > 1 ? ` +${sharedCountries.length - 1}` : ''}`,
+      icon: Globe,
+    });
+  }
+  
+  // Shared current location
+  if (profile.country && currentUser.user_metadata?.country === profile.country) {
+    priorities.push({
+      text: `Both in ${profile.country}`,
+      icon: MapPin,
+    });
+  }
+  
+  return priorities.slice(0, 2);
+}
 
 function ProfileCardSkeleton() {
   return (
@@ -53,22 +89,22 @@ function ProfileCardSkeleton() {
   );
 }
 
-export default function DiscoverPage() {
+function DiscoverPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loadingState, setLoadingState] = useState<LoadingState>("loading");
   const [error, setError] = useState<string | null>(null);
   const [profiles, setProfiles] = useState<DiscoveryProfile[]>([]);
-  const [filteredProfiles, setFilteredProfiles] = useState<DiscoveryProfile[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   
-  // Filter states
-  const [searchQuery, setSearchQuery] = useState("");
-  const [ageMin, setAgeMin] = useState("");
-  const [ageMax, setAgeMax] = useState("");
-  const [selectedCountry, setSelectedCountry] = useState("all");
-  const [selectedLanguage, setSelectedLanguage] = useState("all");
+  // Filter states from URL
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const [ageMin, setAgeMin] = useState(searchParams.get("ageMin") || "");
+  const [ageMax, setAgeMax] = useState(searchParams.get("ageMax") || "");
+  const [selectedCountry, setSelectedCountry] = useState(searchParams.get("country") || "all");
+  const [selectedLanguage, setSelectedLanguage] = useState(searchParams.get("language") || "all");
   
   // Action states
   const [processingAction, setProcessingAction] = useState<Record<string, boolean>>({});
@@ -76,9 +112,10 @@ export default function DiscoverPage() {
   // Check authentication
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/login");
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        setLoadingState("session_expired");
+        router.push("/login?next=/discover");
         return;
       }
       setCurrentUser(user);
@@ -98,45 +135,46 @@ export default function DiscoverPage() {
   }, [router]);
   
   // Fetch profiles
-  const fetchProfiles = async () => {
+  const fetchProfiles = useCallback(async () => {
     if (!currentUser) return;
     
     try {
       setLoadingState("loading");
       setError(null);
       
-      // Fetch discovery profiles (already excludes blocked users and self)
-      const result = await listProfiles({ limit: 50 });
+      // Fetch discovery profiles
+      const fetchedProfiles = await listProfiles({ limit: 100, excludeId: currentUser.uid });
       
       // Get shortlisted IDs
       const shortlistedIds = await getShortlistedIds(
         currentUser.uid,
-        result.profiles.map(p => p.id)
+        fetchedProfiles.map(p => p.id)
       );
       
-      const profilesWithShortlist = result.profiles.map(p => ({
+      // Add shared priorities and shortlist status
+      const profilesWithData = fetchedProfiles.map(p => ({
         ...p,
         isShortlisted: shortlistedIds.has(p.id),
+        sharedPriorities: getSharedPriorities(p, currentUser),
       }));
       
-      setProfiles(profilesWithShortlist);
-      setFilteredProfiles(profilesWithShortlist);
+      setProfiles(profilesWithData);
       setLoadingState("success");
     } catch (error: any) {
       console.error("Error fetching profiles:", error);
       setError(error.message || "Failed to load profiles");
       setLoadingState("error");
     }
-  };
+  }, [currentUser]);
 
   useEffect(() => {
     if (currentUser) {
       fetchProfiles();
     }
-  }, [currentUser]);
+  }, [currentUser, fetchProfiles]);
   
   // Apply filters
-  useEffect(() => {
+  const filteredProfiles = useMemo(() => {
     let filtered = [...profiles];
     
     // Search query
@@ -151,10 +189,12 @@ export default function DiscoverPage() {
     
     // Age filter
     if (ageMin) {
-      filtered = filtered.filter(p => !p.ageYears || p.ageYears >= parseInt(ageMin));
+      const min = parseInt(ageMin);
+      filtered = filtered.filter(p => !p.ageYears || p.ageYears >= min);
     }
     if (ageMax) {
-      filtered = filtered.filter(p => !p.ageYears || p.ageYears <= parseInt(ageMax));
+      const max = parseInt(ageMax);
+      filtered = filtered.filter(p => !p.ageYears || p.ageYears <= max);
     }
     
     // Country filter
@@ -169,8 +209,21 @@ export default function DiscoverPage() {
       );
     }
     
-    setFilteredProfiles(filtered);
+    return filtered;
   }, [profiles, searchQuery, ageMin, ageMax, selectedCountry, selectedLanguage]);
+  
+  // Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set("q", searchQuery);
+    if (ageMin) params.set("ageMin", ageMin);
+    if (ageMax) params.set("ageMax", ageMax);
+    if (selectedCountry !== "all") params.set("country", selectedCountry);
+    if (selectedLanguage !== "all") params.set("language", selectedLanguage);
+    
+    const newUrl = params.toString() ? `/discover?${params.toString()}` : "/discover";
+    window.history.replaceState({}, "", newUrl);
+  }, [searchQuery, ageMin, ageMax, selectedCountry, selectedLanguage]);
   
   const handleToggleShortlist = async (profileId: string, isCurrentlyShortlisted: boolean) => {
     if (!currentUser) return;
@@ -247,21 +300,43 @@ export default function DiscoverPage() {
   
   const hasActiveFilters = searchQuery || ageMin || ageMax || selectedCountry !== "all" || selectedLanguage !== "all";
   
-  // Loading state with skeletons
+  const activeFilterChips = useMemo(() => {
+    const chips: Array<{ label: string; onRemove: () => void }> = [];
+    
+    if (searchQuery) {
+      chips.push({ label: `Search: "${searchQuery}"`, onRemove: () => setSearchQuery("") });
+    }
+    if (ageMin) {
+      chips.push({ label: `Min age: ${ageMin}`, onRemove: () => setAgeMin("") });
+    }
+    if (ageMax) {
+      chips.push({ label: `Max age: ${ageMax}`, onRemove: () => setAgeMax("") });
+    }
+    if (selectedCountry !== "all") {
+      chips.push({ label: `Country: ${selectedCountry}`, onRemove: () => setSelectedCountry("all") });
+    }
+    if (selectedLanguage !== "all") {
+      chips.push({ label: `Language: ${selectedLanguage}`, onRemove: () => setSelectedLanguage("all") });
+    }
+    
+    return chips;
+  }, [searchQuery, ageMin, ageMax, selectedCountry, selectedLanguage]);
+  
+  // Loading state
   if (loadingState === "loading") {
     return (
       <div className="space-y-6">
         <div>
-          <Skeleton className="h-9 w-64" />
-          <Skeleton className="mt-2 h-5 w-32" />
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="mt-2 h-5 w-96" />
         </div>
         <Card>
-          <CardContent className="p-6 space-y-4">
+          <CardContent className="p-4 sm:p-6 space-y-4">
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-32" />
           </CardContent>
         </Card>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <ProfileCardSkeleton key={i} />
           ))}
@@ -270,12 +345,18 @@ export default function DiscoverPage() {
     );
   }
 
+  // Session expired
+  if (loadingState === "session_expired") {
+    return null;
+  }
+
   // Error state
   if (loadingState === "error") {
     return (
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Discover</h1>
+          <p className="mt-1 text-sm text-gray-600">Find someone who shares your values and future plans.</p>
         </div>
         <Card>
           <CardContent className="py-12 text-center">
@@ -295,15 +376,89 @@ export default function DiscoverPage() {
     );
   }
 
+  // Filter sidebar content
+  const FilterContent = () => (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Age range</Label>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <Input
+              type="number"
+              placeholder="Min"
+              value={ageMin}
+              onChange={(e) => setAgeMin(e.target.value)}
+              min="18"
+              max="100"
+            />
+          </div>
+          <div>
+            <Input
+              type="number"
+              placeholder="Max"
+              value={ageMax}
+              onChange={(e) => setAgeMax(e.target.value)}
+              min="18"
+              max="100"
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Country</Label>
+        <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Countries</SelectItem>
+            <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+            <SelectItem value="Canada">Canada</SelectItem>
+            <SelectItem value="Australia">Australia</SelectItem>
+            <SelectItem value="Sri Lanka">Sri Lanka</SelectItem>
+            <SelectItem value="United States">United States</SelectItem>
+            <SelectItem value="New Zealand">New Zealand</SelectItem>
+            <SelectItem value="Singapore">Singapore</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Language</Label>
+        <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Languages</SelectItem>
+            <SelectItem value="English">English</SelectItem>
+            <SelectItem value="Tamil">Tamil</SelectItem>
+            <SelectItem value="Sinhala">Sinhala</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      {hasActiveFilters && (
+        <Button
+          variant="outline"
+          onClick={clearFilters}
+          className="w-full"
+        >
+          <X className="mr-2 h-4 w-4" />
+          Clear all filters
+        </Button>
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-          Find someone who fits your future
-        </h1>
-        <p className="mt-2 text-sm text-gray-600">
-          {filteredProfiles.length} {filteredProfiles.length === 1 ? "profile" : "profiles"} found
+        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Discover</h1>
+        <p className="mt-1 text-sm text-gray-600 sm:text-base">
+          Find someone who shares your values and future plans.
         </p>
       </div>
       
@@ -322,108 +477,70 @@ export default function DiscoverPage() {
               />
             </div>
             
-            {/* Filter Toggle */}
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className="w-full sm:w-auto"
-            >
-              <SlidersHorizontal className="mr-2 h-4 w-4" />
-              {showFilters ? "Hide" : "Show"} Filters
-              {hasActiveFilters && (
-                <Badge className="ml-2" variant="secondary">
-                  Active
+            {/* Filter Toggle and Active Chips */}
+            <div className="flex flex-wrap items-center gap-2">
+              <Sheet open={showFilters} onOpenChange={setShowFilters}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="shrink-0">
+                    <SlidersHorizontal className="mr-2 h-4 w-4" />
+                    Filters
+                    {hasActiveFilters && (
+                      <Badge className="ml-2" variant="secondary">
+                        {activeFilterChips.length}
+                      </Badge>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[320px] sm:w-[400px]">
+                  <SheetHeader>
+                    <SheetTitle>Filter profiles</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6">
+                    <FilterContent />
+                  </div>
+                </SheetContent>
+              </Sheet>
+              
+              {/* Active filter chips */}
+              {activeFilterChips.map((chip, index) => (
+                <Badge
+                  key={index}
+                  variant="secondary"
+                  className="gap-1 py-1.5"
+                >
+                  {chip.label}
+                  <button
+                    onClick={chip.onRemove}
+                    className="ml-1 rounded-full hover:bg-gray-300"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
                 </Badge>
-              )}
-            </Button>
-            
-            {/* Filters */}
-            {showFilters && (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="space-y-2">
-                  <Label className="text-xs sm:text-sm">Min Age</Label>
-                  <Input
-                    type="number"
-                    placeholder="21"
-                    value={ageMin}
-                    onChange={(e) => setAgeMin(e.target.value)}
-                    min="18"
-                    max="100"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="text-xs sm:text-sm">Max Age</Label>
-                  <Input
-                    type="number"
-                    placeholder="35"
-                    value={ageMax}
-                    onChange={(e) => setAgeMax(e.target.value)}
-                    min="18"
-                    max="100"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="text-xs sm:text-sm">Country</Label>
-                  <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Countries</SelectItem>
-                      <SelectItem value="UK">United Kingdom</SelectItem>
-                      <SelectItem value="Canada">Canada</SelectItem>
-                      <SelectItem value="Australia">Australia</SelectItem>
-                      <SelectItem value="Sri Lanka">Sri Lanka</SelectItem>
-                      <SelectItem value="USA">United States</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="text-xs sm:text-sm">Language</Label>
-                  <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Languages</SelectItem>
-                      <SelectItem value="English">English</SelectItem>
-                      <SelectItem value="Tamil">Tamil</SelectItem>
-                      <SelectItem value="Sinhala">Sinhala</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
-            
-            {/* Clear Filters */}
-            {hasActiveFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearFilters}
-                className="w-full sm:w-auto"
-              >
-                <X className="mr-2 h-4 w-4" />
-                Clear Filters
-              </Button>
-            )}
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
+      
+      {/* Results count */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-600">
+          {filteredProfiles.length} {filteredProfiles.length === 1 ? "profile" : "profiles"} found
+        </p>
+      </div>
       
       {/* Profiles Grid */}
       {filteredProfiles.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <Heart className="mx-auto h-12 w-12 text-gray-300" />
-            <h3 className="mt-4 text-lg font-semibold text-gray-900">No profiles found</h3>
+            <h3 className="mt-4 text-lg font-semibold text-gray-900">
+              {hasActiveFilters ? "No profiles match your filters" : "No profiles found"}
+            </h3>
             <p className="mt-2 text-sm text-gray-600">
               {hasActiveFilters
                 ? "Try adjusting your filters to see more results."
-                : "Check back soon for new profiles."}
+                : "Check back soon as more members join."}
             </p>
             {hasActiveFilters && (
               <Button
@@ -460,6 +577,7 @@ export default function DiscoverPage() {
                   className="absolute right-3 top-3 h-9 w-9 rounded-full bg-white/90 hover:bg-white"
                   onClick={() => handleToggleShortlist(profile.id, profile.isShortlisted || false)}
                   disabled={processingAction[`shortlist-${profile.id}`]}
+                  aria-label={profile.isShortlisted ? "Remove from shortlist" : "Add to shortlist"}
                 >
                   {processingAction[`shortlist-${profile.id}`] ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -495,7 +613,7 @@ export default function DiscoverPage() {
                   )}
                   {profile.languages && profile.languages.length > 0 && (
                     <p className="flex items-center gap-1">
-                      <Languages className="h-3.5 w-3.5 flex-shrink-0" />
+                      <LanguagesIcon className="h-3.5 w-3.5 flex-shrink-0" />
                       <span className="truncate">{profile.languages.slice(0, 2).join(", ")}</span>
                     </p>
                   )}
@@ -505,6 +623,21 @@ export default function DiscoverPage() {
                   <p className="mt-3 line-clamp-2 text-xs text-gray-600 sm:text-sm">
                     {profile.bio}
                   </p>
+                )}
+                
+                {/* Shared Priorities */}
+                {profile.sharedPriorities && profile.sharedPriorities.length > 0 && (
+                  <div className="mt-3 space-y-1">
+                    {profile.sharedPriorities.map((priority, idx) => {
+                      const Icon = priority.icon;
+                      return (
+                        <div key={idx} className="flex items-center gap-1.5 text-xs text-violet-700">
+                          <Icon className="h-3.5 w-3.5 flex-shrink-0" />
+                          <span>{priority.text}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </CardContent>
               
@@ -533,5 +666,26 @@ export default function DiscoverPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function DiscoverPage() {
+  return (
+    <Suspense fallback={
+      <div className="space-y-6">
+        <div>
+          <div className="h-8 w-64 bg-gray-200 animate-pulse rounded" />
+          <div className="mt-2 h-5 w-96 bg-gray-200 animate-pulse rounded" />
+        </div>
+        <Card>
+          <CardContent className="p-4 sm:p-6 space-y-4">
+            <div className="h-10 w-full bg-gray-200 animate-pulse rounded" />
+            <div className="h-10 w-32 bg-gray-200 animate-pulse rounded" />
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <DiscoverPageContent />
+    </Suspense>
   );
 }
