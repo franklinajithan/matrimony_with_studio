@@ -10,7 +10,7 @@
     --foreground: 267 20% 10%; /* Near-black #17151D */
 
     --muted: 270 16% 97%;
-    --muted-foreground: 285 7% 54%; /* Muted gray #6F6979 */
+    --muted-foreground: 285 10% 40%; /* Darker muted gray for WCAG AA contrast */
 
     --popover: 0 0% 100%;
     --popover-foreground: 267 20% 10%;

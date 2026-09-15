@@ -101,7 +101,7 @@ export function LandingHero() {
                     👩🏽
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground">Sample Profile</h3>
+                    <p className="text-lg font-bold text-foreground">Sample Profile</p>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <MapPin className="h-3.5 w-3.5" />
                       <span>London · Tamil-speaking</span>

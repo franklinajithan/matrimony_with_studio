@@ -10,17 +10,15 @@ import { Navbar } from "@/components/navigation/Navbar";
 import { LandingHero } from "@/components/landing/LandingHero";
 import { MatchSearchPanel } from "@/components/landing/MatchSearchPanel";
 import {
-  CommunitySection,
+  DiscoveryPreview,
+  FamilyCirclePreview,
   FaqSection,
   FeatureGrid,
-  FeaturesOverview,
   FinalCta,
-  GlobalLocationsSection,
   HowItWorks,
-  MemberShowcase,
+  InternationalRelationships,
   PricingTeaser,
   PrivacySection,
-  ProductPreview,
   SuccessStoriesPreview,
   TrustStrip,
   WhyCupidMatch,
@@ -59,9 +57,13 @@ export default function LandingPage() {
         <LandingHero />
         <TrustStrip />
         <WhyCupidMatch />
-        <HowItWorks />
+        <InternationalRelationships />
         <FeatureGrid />
+        <DiscoveryPreview />
+        <HowItWorks />
         <PrivacySection />
+        <FamilyCirclePreview />
+        <SuccessStoriesPreview />
         <PricingTeaser />
         <FaqSection />
         <FinalCta />

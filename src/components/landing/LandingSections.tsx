@@ -424,51 +424,47 @@ export function PrivacySection() {
   );
 }
 
-export function GlobalLocationsSection() {
+export function InternationalRelationships() {
   const locations = [
     {
       name: "London",
       country: "United Kingdom",
       image: "🏛️",
-      members: "2.5k+ active",
     },
     {
       name: "Toronto",
       country: "Canada",
       image: "🍁",
-      members: "1.8k+ active",
     },
     {
       name: "Colombo",
       country: "Sri Lanka",
       image: "🌴",
-      members: "3.2k+ active",
     },
     {
       name: "Melbourne",
       country: "Australia",
       image: "🦘",
-      members: "1.5k+ active",
     },
   ];
 
   return (
-    <section className="bg-gradient-to-br from-purple-50 to-pink-50 px-4 py-20 sm:px-6" aria-labelledby="locations-heading">
+    <section className="bg-gradient-to-br from-accent/20 to-background px-4 py-20 sm:px-6" aria-labelledby="international-heading">
       <div className="mx-auto max-w-7xl text-center">
-        <h2 id="locations-heading" className="text-4xl font-bold text-gray-900 sm:text-5xl">
+        <h2 id="international-heading" className="text-3xl font-bold text-foreground sm:text-4xl">
           Built for life between countries
         </h2>
-        <p className="mx-auto mt-4 max-w-3xl text-lg text-gray-600">
-          Whether you're in London, Toronto, Melbourne or Colombo, find someone who gets the beauty and complexity of living across cultures
+        <p className="mx-auto mt-4 max-w-3xl text-lg text-muted-foreground">
+          Whether you're in London, Toronto, Melbourne or Colombo, find someone who understands the beauty and complexity of living across cultures.
         </p>
 
         <div className="relative mt-16">
           {/* Connecting lines */}
-          <svg className="absolute left-0 top-0 h-full w-full" style={{ zIndex: 0 }}>
+          <svg className="absolute left-0 top-0 h-full w-full" style={{ zIndex: 0 }} aria-hidden="true">
             <defs>
               <linearGradient id="line-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" style={{ stopColor: "#9333ea", stopOpacity: 0.3 }} />
-                <stop offset="100%" style={{ stopColor: "#ec4899", stopOpacity: 0.3 }} />
+                <stop offset="0%" style={{ stopColor: "hsl(var(--primary))", stopOpacity: 0.3 }} />
+                <stop offset="100%" style={{ stopColor: "hsl(var(--secondary))", stopOpacity: 0.3 }} />
               </linearGradient>
             </defs>
             <path
@@ -491,21 +487,27 @@ export function GlobalLocationsSection() {
             {locations.map((location) => (
               <div
                 key={location.name}
-                className="group relative overflow-hidden rounded-3xl border-2 border-purple-200 bg-white p-6 shadow-lg transition-all hover:scale-105 hover:shadow-2xl"
+                className="group relative overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-md transition-all hover:shadow-lg"
               >
                 <div className="mb-4 text-6xl">{location.image}</div>
-                <h3 className="text-xl font-bold text-gray-900">{location.name}</h3>
-                <p className="text-sm text-gray-600">{location.country}</p>
-                <p className="mt-2 text-xs font-semibold text-purple-600">{location.members}</p>
-                <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 opacity-10 transition-all group-hover:scale-150" />
+                <h3 className="text-xl font-bold text-foreground">{location.name}</h3>
+                <p className="text-sm text-muted-foreground">{location.country}</p>
+                <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 opacity-50 transition-all group-hover:scale-150" aria-hidden="true" />
               </div>
             ))}
           </div>
         </div>
+
+        <p className="mx-auto mt-12 max-w-2xl text-sm text-muted-foreground">
+          Future Map feature (coming soon) will help you compare current location, future settlement plans, and relocation openness.
+        </p>
       </div>
     </section>
   );
 }
+
+// Legacy export for compatibility
+export const GlobalLocationsSection = InternationalRelationships;
 
 export function CommunitySection() {
   const chips = [
@@ -557,92 +559,71 @@ export function CommunitySection() {
   );
 }
 
-export function MemberShowcase() {
-  const members = [
+export function DiscoveryPreview() {
+  const demoProfiles = [
     {
-      name: "Nishmi, 26",
+      name: "Sample Profile A",
       location: "London",
-      verified: true,
-      image: "👩",
+      image: "👩🏽",
       interests: ["Travel", "Reading", "Yoga"],
     },
     {
-      name: "Dilshan, 29",
+      name: "Sample Profile B",
       location: "Toronto",
-      verified: true,
-      image: "👨",
+      image: "👨🏾",
       interests: ["Photography", "Hiking", "Cooking"],
     },
     {
-      name: "Tara, 27",
-      location: "Colombo",
-      verified: true,
-      image: "👩",
-      interests: ["Art", "Music", "Dance"],
-    },
-    {
-      name: "Kasthuri, 31",
+      name: "Sample Profile C",
       location: "Melbourne",
-      verified: true,
-      image: "👩",
+      image: "👩🏻",
       interests: ["Fitness", "Tech", "Food"],
-    },
-    {
-      name: "Praveen, 28",
-      location: "London",
-      verified: true,
-      image: "👨",
-      interests: ["Sports", "Movies", "Travel"],
-    },
-    {
-      name: "Saman, 30",
-      location: "Sydney",
-      verified: true,
-      image: "👨",
-      interests: ["Business", "Investing", "Golf"],
     },
   ];
 
   return (
-    <section className="bg-white px-4 py-20 sm:px-6" aria-labelledby="members-heading">
+    <section className="bg-background px-4 py-20 sm:px-6" aria-labelledby="discovery-heading">
       <div className="mx-auto max-w-7xl">
         <div className="mb-12 text-center">
-          <h2 id="members-heading" className="text-4xl font-bold text-gray-900 sm:text-5xl">
-            Meet some of our members
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+            Discovery
+          </p>
+          <h2 id="discovery-heading" className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
+            Find compatible matches
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
-            Real people looking for meaningful connections
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
+            See clearly labelled sample profiles below
           </p>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {members.map((member) => (
+          {demoProfiles.map((profile, index) => (
             <div
-              key={member.name}
-              className="group overflow-hidden rounded-3xl border-2 border-purple-100 bg-white shadow-lg transition-all hover:scale-105 hover:shadow-2xl"
+              key={index}
+              className="group overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all hover:shadow-md"
             >
-              <div className="relative h-64 bg-gradient-to-br from-purple-200 to-pink-200">
-                <div className="flex h-full items-center justify-center text-8xl">{member.image}</div>
-                {member.verified && (
-                  <div className="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-semibold text-purple-600 shadow-lg">
-                    <BadgeCheck className="h-4 w-4 fill-purple-500 text-white" />
-                    Verified
-                  </div>
-                )}
+              {/* Demo Label */}
+              <div className="border-b border-border bg-accent/50 px-4 py-2">
+                <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                  <Eye className="h-3 w-3" aria-hidden="true" />
+                  Sample Profile Preview
+                </p>
               </div>
+
+              <div className="relative h-48 bg-gradient-to-br from-accent/30 to-accent/10">
+                <div className="flex h-full items-center justify-center text-7xl">{profile.image}</div>
+              </div>
+              
               <div className="p-6">
-                <div className="mb-3 flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">{member.name}</h3>
-                    <p className="text-sm text-gray-600">{member.location}</p>
-                  </div>
-                  <Heart className="h-6 w-6 text-gray-300 transition-colors hover:fill-pink-500 hover:text-pink-500" />
+                <div className="mb-3">
+                  <h3 className="text-lg font-bold text-foreground">{profile.name}</h3>
+                  <p className="text-sm text-muted-foreground">{profile.location}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {member.interests.map((interest) => (
+                  {profile.interests.map((interest) => (
                     <span
                       key={interest}
-                      className="rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700"
+                      className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground"
                     >
                       {interest}
                     </span>
@@ -652,6 +633,61 @@ export function MemberShowcase() {
             </div>
           ))}
         </div>
+
+        <p className="mt-10 text-center text-sm text-muted-foreground">
+          These are illustrative sample profiles. Real member profiles are only visible to signed-in members with mutual consent.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+// Legacy export for compatibility
+export const MemberShowcase = DiscoveryPreview;
+
+export function FamilyCirclePreview() {
+  return (
+    <section className="bg-gradient-to-br from-accent/20 to-background px-4 py-20 sm:px-6" aria-labelledby="family-circle-heading">
+      <div className="mx-auto max-w-7xl">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+            Coming Soon
+          </p>
+          <h2 id="family-circle-heading" className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
+            Family Circle
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Invite family members to join your journey — on your terms, with granular permissions you control.
+          </p>
+        </div>
+
+        <div className="mx-auto mt-12 max-w-4xl">
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <Users className="h-6 w-6 text-primary" aria-hidden="true" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground">Member-owned invitations</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                You decide who to invite, when, and what they can see. Revoke access anytime.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <Shield className="h-6 w-6 text-primary" aria-hidden="true" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground">Granular permissions</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Control exactly what family members can view, comment on, or help decide. Full audit trail included.
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            This feature is in development. It supports cultural respect for family involvement while keeping you in full control.
+          </p>
+        </div>
       </div>
     </section>
   );
@@ -659,38 +695,43 @@ export function MemberShowcase() {
 
 export function SuccessStoriesPreview() {
   return (
-    <section className="px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="stories-heading">
+    <section className="bg-background px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="stories-heading">
       <div className="mx-auto max-w-6xl">
         <div className="max-w-2xl">
-          <h2 id="stories-heading" className="font-serif text-3xl font-semibold text-[#271624] sm:text-4xl">
+          <h2 id="stories-heading" className="text-3xl font-bold text-foreground sm:text-4xl">
             Stories that began with an introduction
           </h2>
-          <p className="mt-4 text-base leading-7 text-[#725E6D]">
+          <p className="mt-4 text-base leading-7 text-muted-foreground">
             We are carefully gathering real journeys from couples who met through CupidMatch. Until
             verified stories are ready to share, you can browse the success stories space or submit
             your own.
           </p>
         </div>
 
-        <div className="mt-8 rounded-3xl border border-[#EADFD6] bg-[#FBF5F1] p-8 sm:p-10">
-          <p className="font-serif text-2xl font-semibold text-[#4B164C]">
-            Real stories. Shared with care.
-          </p>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-[#725E6D]">
-            Success stories will appear here once couples choose to share them. We do not publish
-            invented testimonials.
-          </p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Button asChild className={`rounded-full bg-[#4B164C] px-6 text-white hover:bg-[#742158] ${focusRing}`}>
-              <Link href="/success-stories">View success stories</Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              className={`rounded-full border-[#EADFD6] px-6 text-[#4B164C] hover:bg-white ${focusRing}`}
-            >
-              <Link href="/success-stories/submit">Share your story</Link>
-            </Button>
+        <div className="mt-8 rounded-3xl border border-border bg-accent/30 p-8 sm:p-10">
+          <div className="flex items-start gap-3">
+            <Heart className="mt-1 h-6 w-6 text-primary" aria-hidden="true" />
+            <div className="flex-1">
+              <p className="text-2xl font-bold text-foreground">
+                Real stories. Shared with care.
+              </p>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+                Success stories will appear here once couples choose to share them. We do not publish
+                invented testimonials or fabricated couples.
+              </p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <Button asChild className="rounded-full bg-primary px-6 text-primary-foreground hover:bg-primary/90">
+                  <Link href="/success-stories">View success stories</Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="rounded-full border-2 px-6"
+                >
+                  <Link href="/success-stories/submit">Share your story</Link>
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
