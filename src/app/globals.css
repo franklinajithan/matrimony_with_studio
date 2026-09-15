@@ -4,54 +4,55 @@
 
 @layer base {
   :root {
-    /* CupidMatch palette — light */
-    --background: 40 100% 99%;
-    --foreground: 327 28% 12%;
+    /* CupidMatch Design Tokens — Light Mode */
+    /* Background & Surfaces: Warm ivory (#FBF8F4) */
+    --background: 40 33% 98%;
+    --foreground: 267 20% 10%; /* Near-black #17151D */
 
-    --muted: 24 43% 96%;
-    --muted-foreground: 327 10% 41%;
+    --muted: 270 16% 97%;
+    --muted-foreground: 285 7% 54%; /* Muted gray #6F6979 */
 
     --popover: 0 0% 100%;
-    --popover-foreground: 327 28% 12%;
+    --popover-foreground: 267 20% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 327 28% 12%;
+    --card-foreground: 267 20% 10%;
 
-    --border: 28 28% 88%;
-    --input: 28 28% 90%;
+    --border: 270 24% 92%; /* Soft lavender #EAE4EF */
+    --input: 270 24% 92%;
 
-    /* Deep plum #4B164C */
-    --primary: 299 55% 19%;
-    --primary-foreground: 40 100% 99%;
+    /* Primary: Violet (#7027E8) */
+    --primary: 265 81% 53%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary plum #742158 */
-    --secondary: 328 55% 29%;
+    /* Secondary: Coral (#FF6F72) */
+    --secondary: 359 100% 72%;
     --secondary-foreground: 0 0% 100%;
 
-    /* Soft rose surface accent */
-    --accent: 328 45% 95%;
-    --accent-foreground: 299 55% 19%;
+    /* Accent: Soft violet (#EEE7FF) */
+    --accent: 260 100% 96%;
+    --accent-foreground: 265 81% 53%;
 
-    --destructive: 0 70% 50%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --ring: 299 55% 28%;
+    --ring: 265 81% 53%;
     --radius: 0.5rem;
 
-    --chart-1: 299 55% 30%;
-    --chart-2: 328 55% 40%;
-    --chart-3: 43 55% 63%;
-    --chart-4: 327 10% 45%;
-    --chart-5: 24 43% 80%;
+    --chart-1: 265 81% 53%;
+    --chart-2: 359 100% 72%;
+    --chart-3: 40 33% 98%;
+    --chart-4: 285 7% 54%;
+    --chart-5: 270 24% 92%;
 
-    --sidebar-background: 40 100% 99%;
-    --sidebar-foreground: 327 28% 12%;
-    --sidebar-primary: 299 55% 19%;
+    --sidebar-background: 40 33% 98%;
+    --sidebar-foreground: 267 20% 10%;
+    --sidebar-primary: 265 81% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 328 45% 95%;
-    --sidebar-accent-foreground: 299 55% 19%;
-    --sidebar-border: 28 28% 88%;
-    --sidebar-ring: 299 55% 28%;
+    --sidebar-accent: 260 100% 96%;
+    --sidebar-accent-foreground: 265 81% 53%;
+    --sidebar-border: 270 24% 92%;
+    --sidebar-ring: 265 81% 53%;
   }
 
   .dark {
@@ -110,8 +111,9 @@
   }
 }
 
-/* Homepage hero motion — subtle; respect reduced motion */
+/* Subtle animations — respect reduced motion */
 @layer utilities {
+  /* Legacy animations */
   @keyframes cupid-route-travel {
     to {
       stroke-dashoffset: -280;
@@ -130,6 +132,61 @@
     }
   }
 
+  /* New decorative animations */
+  @keyframes cupid-path-float {
+    0%,
+    100% {
+      transform: translateY(0);
+      opacity: 0.15;
+    }
+    50% {
+      transform: translateY(-10px);
+      opacity: 0.25;
+    }
+  }
+
+  @keyframes cupid-orbit-rotate-slow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes cupid-orbit-rotate-reverse {
+    from {
+      transform: rotate(360deg);
+    }
+    to {
+      transform: rotate(0deg);
+    }
+  }
+
+  @keyframes cupid-orbit-pulse {
+    0%,
+    100% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.2);
+    }
+  }
+
+  @keyframes cupid-fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Animation classes */
   .cupid-route-travel {
     stroke-dasharray: 10 270;
     stroke-dashoffset: 0;
@@ -147,10 +204,38 @@
     animation: cupid-scroll-hint 2.8s ease-in-out infinite;
   }
 
+  .cupid-path-float {
+    animation: cupid-path-float 8s ease-in-out infinite;
+  }
+
+  .cupid-orbit-rotate-slow {
+    transform-origin: center;
+    animation: cupid-orbit-rotate-slow 40s linear infinite;
+  }
+
+  .cupid-orbit-rotate-reverse {
+    transform-origin: center;
+    animation: cupid-orbit-rotate-reverse 30s linear infinite;
+  }
+
+  .cupid-orbit-pulse {
+    animation: cupid-orbit-pulse 3s ease-in-out infinite;
+  }
+
+  .cupid-fade-in-up {
+    animation: cupid-fade-in-up 0.6s ease-out forwards;
+  }
+
+  /* Respect user motion preferences */
   @media (prefers-reduced-motion: reduce) {
     .cupid-route-travel,
     .cupid-route-travel-delayed,
-    .cupid-scroll-hint {
+    .cupid-scroll-hint,
+    .cupid-path-float,
+    .cupid-orbit-rotate-slow,
+    .cupid-orbit-rotate-reverse,
+    .cupid-orbit-pulse,
+    .cupid-fade-in-up {
       animation: none !important;
     }
   }
