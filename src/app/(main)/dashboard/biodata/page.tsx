@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { doc, getDoc } from "firebase/firestore";
-import { db, auth } from "@/lib/firebase/config"; // Import auth here
-import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth"; // Import onAuthStateChanged and User type
+import { auth, onAuthStateChanged, type AuthUser as FirebaseUser } from "@/lib/supabase/auth";
+import { getProfile } from "@/lib/supabase/profiles";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -47,13 +46,11 @@ export default function BiodataPage() {
       setCurrentUser(user);
       if (user) {
         try {
-          const userRef = doc(db, "users", user.uid); // Use user.uid here
-          const userDoc = await getDoc(userRef);
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
+          const userData = await getProfile(user.uid);
+          if (userData) {
             setProfile({
-              ...(userData as UserProfile),
-              profilePictureUrl: userData.photoURL || user.photoURL || "/path/to/default-avatar.png", // Map photoURL to profilePictureUrl with fallback
+              ...(userData as unknown as UserProfile),
+              profilePictureUrl: userData.photoURL || user.photoURL || "/path/to/default-avatar.png",
             });
           } else {
             toast({

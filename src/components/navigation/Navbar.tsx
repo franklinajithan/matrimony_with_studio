@@ -30,8 +30,7 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
-import { onAuthStateChanged, signOut, User as FirebaseUser } from "firebase/auth";
-import { auth } from "@/lib/firebase/config";
+import { onAuthStateChanged, signOut, auth, type AuthUser as FirebaseUser } from "@/lib/supabase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";

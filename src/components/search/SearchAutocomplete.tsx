@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { db } from "@/lib/firebase/config";
-import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
+import { searchProfiles } from "@/lib/supabase/profiles";
 import { Input } from "@/components/ui/input";
 import { Search, Loader2, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -56,73 +55,27 @@ export function SearchAutocomplete({ className, onSearch, placeholder = "Search 
 
       setIsLoading(true);
       try {
-        const usersRef = collection(db, "users");
-        const searchTerm = searchQuery.toLowerCase();
-        console.log("Processing search term:", searchTerm);
+        const matches = await searchProfiles(searchQuery, 10);
+        const uniqueResults: SearchSuggestion[] = matches.map((data) => ({
+          id: data.id,
+          displayName: data.displayName || "User",
+          photoURL: data.photoURL || "https://placehold.co/400x400.png",
+          age: undefined,
+          profession: data.profession || "",
+          location: data.location || "",
+        }));
 
-        let results: SearchSuggestion[] = [];
-
-        // 1. First, try to find direct matches in displayName (for profiles starting with the term)
-        const displayNameQuery = query(
-          usersRef,
-          where("displayName", ">=", searchTerm),
-          where("displayName", "<=", searchTerm + "\uf8ff"),
-          orderBy("displayName"),
-          limit(10)
-        );
-        const displayNameSnapshot = await getDocs(displayNameQuery);
-        console.log("DisplayName query snapshot size:", displayNameSnapshot.size);
-
-        displayNameSnapshot.forEach((doc) => {
-          const data = doc.data();
-          results.push({
-            id: doc.id,
-            displayName: data.displayName || "User",
-            photoURL: data.photoURL || "https://placehold.co/400x400.png",
-            age: data.age,
-            profession: data.profession || "",
-            location: data.location || "",
-          });
-        });
-
-        // 2. Then, try to find matches in the searchTerms array for broader results (containing the term)
-        // This query will now always run to leverage the comprehensive searchTerms.
-        const searchTermsQuery = query(
-          usersRef,
-          where("searchTerms", "array-contains", searchTerm),
-          orderBy("displayName"),
-          limit(10)
-        );
-        const searchTermsSnapshot = await getDocs(searchTermsQuery);
-        console.log("SearchTerms query snapshot size:", searchTermsSnapshot.size);
-
-        searchTermsSnapshot.forEach((doc) => {
-          const data = doc.data();
-          // Add if not already in results from displayNameQuery
-          if (!results.some(r => r.id === doc.id)) {
-            results.push({
-              id: doc.id,
-              displayName: data.displayName || "User",
-              photoURL: data.photoURL || "https://placehold.co/400x400.png",
-              age: data.age,
-              profession: data.profession || "",
-              location: data.location || "",
-            });
-          }
-        });
-
-        // Sort results to prioritize exact matches and starting matches
-        results.sort((a, b) => {
+        uniqueResults.sort((a, b) => {
           const aName = a.displayName.toLowerCase();
           const bName = b.displayName.toLowerCase();
-          
+          const searchTerm = searchQuery.toLowerCase();
+
           const aStartsWith = aName.startsWith(searchTerm);
           const bStartsWith = bName.startsWith(searchTerm);
-          
+
           if (aStartsWith && !bStartsWith) return -1;
           if (!aStartsWith && bStartsWith) return 1;
 
-          // If both or neither start with the term, prioritize exact inclusions
           const aIncludes = aName.includes(searchTerm);
           const bIncludes = bName.includes(searchTerm);
 
@@ -132,8 +85,6 @@ export function SearchAutocomplete({ className, onSearch, placeholder = "Search 
           return aName.localeCompare(bName);
         });
 
-        // Deduplicate results (if any duplicates were introduced by combining queries)
-        const uniqueResults = Array.from(new Map(results.map(item => [item['id'], item])).values());
         console.log("Final unique search results:", uniqueResults);
 
         setSuggestions(uniqueResults);

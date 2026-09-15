@@ -13,8 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Lock, ChromeIcon, Loader2 } from 'lucide-react';
 import React, { useState } from 'react';
-import { auth } from '@/lib/firebase/config';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth, signInWithEmailAndPassword } from '@/lib/supabase/auth';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -45,7 +44,7 @@ export default function LoginPage() {
       });
       router.push('/dashboard');
     } catch (error: any) {
-      console.error("Firebase login error:", error);
+      console.error("Login error:", error);
       let errorMessage = "An unexpected error occurred. Please try again.";
 
       if (error && typeof error === 'object' && 'code' in error) {
@@ -84,7 +83,7 @@ export default function LoginPage() {
   const handleGoogleSignIn = () => {
     toast({
       title: "Google Sign-In",
-      description: "Google Sign-In to be implemented with Firebase.",
+      description: "Google Sign-In to be implemented with Supabase.",
     });
     // Placeholder for signInWithPopup(auth, googleProvider)
   };

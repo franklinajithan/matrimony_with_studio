@@ -6,8 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { db } from '@/lib/firebase/config';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getProfile, updateUserProfile } from '@/lib/supabase/profiles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -69,13 +68,11 @@ export default function AdminEditUserPage() {
     setIsLoading(true);
     const fetchUserData = async () => {
       try {
-        const userDocRef = doc(db, "users", userId);
-        const docSnap = await getDoc(userDocRef);
+        const data = await getProfile(userId);
 
-        if (docSnap.exists()) {
-          const data = docSnap.data();
+        if (data) {
           const userData: UserDataForEditForm = {
-            id: docSnap.id,
+            id: data.id,
             displayName: data.displayName || "",
             email: data.email || "", // Assuming email is stored in Firestore user doc
             bio: data.bio || "",
@@ -104,9 +101,8 @@ export default function AdminEditUserPage() {
 
   const onSubmit = async (data: AdminEditUserFormData) => {
     setIsSaving(true);
-    const userDocRef = doc(db, "users", userId);
     try {
-      const dataToUpdate: Partial<AdminEditUserFormData & { updatedAt: string }> = {};
+      const dataToUpdate: Record<string, unknown> = {};
       
       // Only include fields that are part of the form schema and intended for update
       if (data.displayName !== undefined) dataToUpdate.displayName = data.displayName;
@@ -121,8 +117,8 @@ export default function AdminEditUserPage() {
       
       dataToUpdate.updatedAt = new Date().toISOString(); // Add/update the timestamp
 
-      console.log("Admin Edit User: Data to update Firestore:", dataToUpdate);
-      await updateDoc(userDocRef, dataToUpdate);
+      console.log("Admin Edit User: Data to update:", dataToUpdate);
+      await updateUserProfile(userId, dataToUpdate);
       
       toast({
         title: "User Updated",

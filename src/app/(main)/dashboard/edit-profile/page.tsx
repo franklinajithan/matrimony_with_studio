@@ -40,11 +40,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect, useRef } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { auth, db } from "@/lib/firebase/config";
-import { updateProfile, onAuthStateChanged, type User } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { uploadFile } from "@/lib/firebase/storageService";
-import { createUserProfile, updateUserProfile } from "@/lib/firebase/userService";
+import { auth, updateProfile, onAuthStateChanged, type User } from "@/lib/supabase/auth";
+import { uploadFile } from "@/lib/supabase/storage";
+import { createUserProfile, updateUserProfile, getProfile } from "@/lib/supabase/profiles";
 import { Skeleton } from "@/components/ui/skeleton";
 import { enhanceBio } from "@/ai/flows/enhance-bio-flow";
 import { enhanceHobbies } from "@/ai/flows/enhance-hobbies-flow";
@@ -205,11 +203,9 @@ export default function EditProfilePage() {
 
   useEffect(() => {
     const loadProfile = async (currentUser: User) => {
-      const userDocRef = doc(db, "users", currentUser.uid);
       try {
-        const docSnap = await getDoc(userDocRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
+        const data = await getProfile(currentUser.uid);
+        if (data) {
           form.reset({
             fullName: data.displayName || currentUser.displayName || defaultFirestoreProfile.fullName,
             bio: data.bio || defaultFirestoreProfile.bio,
@@ -278,7 +274,7 @@ export default function EditProfilePage() {
         toast({
           title: "Profile Load Error",
           description: permissionDenied
-            ? "Could not load profile. Firestore rules may need publishing."
+            ? "Could not load profile. Check your Supabase configuration and RLS policies."
             : `Could not load profile. Error: ${error.message || String(error)}`,
           variant: "destructive",
         });
@@ -584,8 +580,7 @@ export default function EditProfilePage() {
       form.setValue("horoscopeFile", undefined, { shouldValidate: true });
       if (form.getValues("horoscopeInfo")) {
         try {
-          const userDoc = await getDoc(doc(db, "users", auth.currentUser!.uid));
-          const data = userDoc.data();
+          const data = await getProfile(auth.currentUser!.uid);
           if (data?.horoscopeFileName) {
             setSelectedHoroscopeFileName(data.horoscopeFileName);
           } else {

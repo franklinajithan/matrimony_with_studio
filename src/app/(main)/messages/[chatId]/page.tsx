@@ -11,22 +11,16 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { ArrowLeft, Send, Paperclip, Smile, Loader2, CheckCheck } from 'lucide-react'; // Changed Check to CheckCheck
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { auth, db } from '@/lib/firebase/config';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { auth, onAuthStateChanged, type AuthUser as FirebaseUser } from '@/lib/supabase/auth';
+import { Timestamp } from '@/lib/supabase/timestamp';
+import { getProfile } from '@/lib/supabase/profiles';
 import {
-  collection,
-  addDoc,
-  serverTimestamp,
-  query,
-  orderBy,
-  onSnapshot,
-  doc,
-  getDoc,
-  updateDoc,
-  increment,
-  Timestamp,
-  writeBatch,
-} from 'firebase/firestore';
+  getChat,
+  updateChatParticipantDetails,
+  clearUnread,
+  sendMessage,
+  subscribeToMessages,
+} from '@/lib/supabase/chats';
 import { format, isToday, isYesterday, parseISO } from 'date-fns';
 
 
@@ -96,14 +90,11 @@ export default function ChatPage() {
   useEffect(() => {
     if (!currentUser || !chatId) return;
 
-    const chatDocRef = doc(db, "chats", chatId);
-
     const fetchParticipantDetails = async () => {
       setIsLoading(true);
       try {
-        const chatSnap = await getDoc(chatDocRef);
-        if (chatSnap.exists()) {
-          const chatData = chatSnap.data();
+        const chatData = await getChat(chatId);
+        if (chatData) {
           const otherParticipantUid = chatData.participants.find((p: string) => p !== currentUser.uid);
 
           if (otherParticipantUid) {
@@ -116,29 +107,23 @@ export default function ChatPage() {
                 avatarUrl = chatData.participantDetails[otherParticipantUid].photoURL || "https://placehold.co/100x100.png";
                 avatarHint = chatData.participantDetails[otherParticipantUid].dataAiHint || (avatarUrl.includes('placehold.co') ? "person placeholder" : "person avatar");
             } else {
-                const userDocRef = doc(db, "users", otherParticipantUid);
-                const userSnap = await getDoc(userDocRef);
-                if (userSnap.exists()) {
-                    const userData = userSnap.data();
+                const userData = await getProfile(otherParticipantUid);
+                if (userData) {
                     name = userData.displayName || "User";
                     avatarUrl = userData.photoURL || "https://placehold.co/100x100.png";
                     avatarHint = userData.dataAiHint || (avatarUrl.includes('placehold.co') ? "person placeholder" : "person avatar");
                     
-                    await updateDoc(chatDocRef, {
-                        [`participantDetails.${otherParticipantUid}`]: {
+                    await updateChatParticipantDetails(chatId, otherParticipantUid, {
                             displayName: name,
                             photoURL: avatarUrl,
                             dataAiHint: avatarHint
-                        }
                     });
                 }
             }
             setOtherUser({ id: otherParticipantUid, name, avatarUrl, avatarHint });
 
             if (chatData.unreadBy && chatData.unreadBy[currentUser.uid] > 0) {
-              await updateDoc(chatDocRef, {
-                [`unreadBy.${currentUser.uid}`]: 0
-              });
+              await clearUnread(chatId, currentUser.uid);
             }
           } else {
             console.error("Other participant not found in chat.");
@@ -162,15 +147,9 @@ export default function ChatPage() {
   useEffect(() => {
     if (!chatId) return;
 
-    const messagesColRef = collection(db, "chats", chatId, "messages");
-    const q = query(messagesColRef, orderBy("timestamp", "asc"));
-
-    const unsubscribeMessages = onSnapshot(q, (querySnapshot) => {
+    const unsubscribeMessages = subscribeToMessages(chatId, (rows) => {
       let lastMessageDateString: string | null = null;
-      const processedMsgs = querySnapshot.docs.map(docSnap => {
-        const data = docSnap.data() as Omit<RawMessageData, 'id'>;
-        const rawMessage: RawMessageData = { id: docSnap.id, ...data };
-        
+      const processedMsgs = rows.map((rawMessage) => {
         let showDateSeparator = false;
         let dateSeparatorLabel = '';
         
@@ -221,24 +200,13 @@ export default function ChatPage() {
     const textToSend = newMessage;
     setNewMessage("");
 
-    const chatDocRef = doc(db, "chats", chatId);
-
     try {
-      const batch = writeBatch(db);
-      const newMessageDocRef = doc(collection(db, "chats", chatId, "messages"));
-      batch.set(newMessageDocRef, {
+      await sendMessage({
+        chatId,
         senderId: currentUser.uid,
+        otherUserId: otherUser.id,
         text: textToSend,
-        timestamp: serverTimestamp(),
       });
-
-      batch.update(chatDocRef, {
-        lastMessageText: textToSend,
-        lastMessageTimestamp: serverTimestamp(),
-        lastMessageSenderId: currentUser.uid,
-        [`unreadBy.${otherUser.id}`]: increment(1),
-      });
-      await batch.commit();
     } catch (error) {
       console.error("Error sending message:", error);
       setNewMessage(textToSend); 

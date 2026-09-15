@@ -14,11 +14,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { Logo } from "@/components/shared/Logo";
-import { auth, db } from "@/lib/firebase/config";
-import { updateProfile } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import { uploadFile } from "@/lib/firebase/storageService";
-import { createUserProfile } from "@/lib/firebase/userService";
+import { auth, updateProfile } from "@/lib/supabase/auth";
+import { uploadFile } from "@/lib/supabase/storage";
+import { createUserProfile } from "@/lib/supabase/profiles";
 
 const profileSetupSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters."),

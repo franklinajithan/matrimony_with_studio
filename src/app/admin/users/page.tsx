@@ -2,8 +2,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { db } from '@/lib/firebase/config';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { subscribeToProfiles, updateUserProfile } from '@/lib/supabase/profiles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -42,15 +41,16 @@ export default function UserManagementPage() {
 
   useEffect(() => {
     setIsLoading(true);
-    const usersColRef = collection(db, 'users');
-    const q = query(usersColRef, orderBy('displayName', 'asc'));
-
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const fetchedUsers: UserData[] = [];
-      querySnapshot.forEach((doc) => {
-        fetchedUsers.push({ id: doc.id, ...doc.data() } as UserData);
-      });
-      setUsers(fetchedUsers);
+    const unsubscribe = subscribeToProfiles((fetched) => {
+      setUsers(fetched.map((profile) => ({
+        id: profile.id,
+        displayName: profile.displayName,
+        email: profile.email || undefined,
+        isAdmin: profile.isAdmin,
+        isVerified: profile.isVerified,
+        createdAt: profile.createdAt,
+        photoURL: profile.photoURL,
+      })));
       setIsLoading(false);
     }, (error) => {
       console.error("Error fetching users:", error);
@@ -76,9 +76,8 @@ export default function UserManagementPage() {
 
   const toggleAdminStatus = async (userId: string, currentIsAdmin: boolean | undefined) => {
     setProcessingUserId(userId);
-    const userDocRef = doc(db, "users", userId);
     try {
-      await updateDoc(userDocRef, {
+      await updateUserProfile(userId, {
         isAdmin: !currentIsAdmin,
       });
       toast({

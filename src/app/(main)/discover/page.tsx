@@ -7,13 +7,13 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Heart, Briefcase, MapPin, CheckCircle, Loader2, AlertTriangle, BookOpen, Eye } from 'lucide-react';
-import React, { useEffect, useState, useCallback } from 'react';
-import { db, auth } from '@/lib/firebase/config';
-import { collection, getDocs, query, limit, startAfter, DocumentData, QueryDocumentSnapshot, orderBy, doc, getDoc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { auth, onAuthStateChanged, type AuthUser as FirebaseUser } from '@/lib/supabase/auth';
+import { listProfiles } from '@/lib/supabase/profiles';
+import { getLikedIds, likeProfile, unlikeProfile } from '@/lib/supabase/likes';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from '@/components/ui/skeleton';
-import { calculateAge, getCompositeId } from '@/lib/utils';
+import { calculateAge } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
 import { cn } from '@/lib/utils';
 
@@ -67,7 +67,8 @@ export default function DiscoverPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const [lastOffset, setLastOffset] = useState(0);
+  const lastOffsetRef = useRef(0);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [isLiking, setIsLiking] = useState<Record<string, boolean>>({}); // Tracks liking state per profile ID
@@ -81,27 +82,11 @@ export default function DiscoverPage() {
   }, []);
 
   const fetchLikeStatusForProfiles = async (fetchedProfiles: Profile[], user: FirebaseUser): Promise<ProfileWithLikeStatus[]> => {
-    const profilesWithLikeStatus: ProfileWithLikeStatus[] = [];
-    for (const profile of fetchedProfiles) {
-      if (user.uid === profile.id) { // User cannot like their own profile
-        profilesWithLikeStatus.push({ ...profile, hasLiked: false });
-        continue;
-      }
-      const likeDocId = getCompositeId(user.uid, profile.id);
-      if (likeDocId === "invalid_composite_id") { // Safety check from getCompositeId
-         profilesWithLikeStatus.push({ ...profile, hasLiked: false });
-         continue;
-      }
-      const likeDocRef = doc(db, "likes", likeDocId);
-      try {
-        const docSnap = await getDoc(likeDocRef);
-        profilesWithLikeStatus.push({ ...profile, hasLiked: docSnap.exists() });
-      } catch (e) {
-        console.error(`Failed to fetch like status for profile ${profile.id}:`, e);
-        profilesWithLikeStatus.push({ ...profile, hasLiked: false }); // Default to not liked on error
-      }
-    }
-    return profilesWithLikeStatus;
+    const likedIds = await getLikedIds(user.uid, fetchedProfiles.map((profile) => profile.id));
+    return fetchedProfiles.map((profile) => ({
+      ...profile,
+      hasLiked: likedIds.has(profile.id),
+    }));
   };
 
   const fetchProfiles = useCallback(async (initialLoad = true) => {
@@ -110,50 +95,37 @@ export default function DiscoverPage() {
     if (initialLoad) {
       setIsLoading(true);
       setProfiles([]);
-      setLastVisible(null);
+      setLastOffset(0);
+      lastOffsetRef.current = 0;
       setHasMore(true);
     } else {
-      if (isFetchingMore || !hasMore || !lastVisible) {
-         if (!lastVisible && hasMore) {
-          console.warn("Load more triggered without lastVisible, but hasMore is true. This may indicate an issue.");
-          setHasMore(false); // Prevent further load more attempts if lastVisible is missing
-        }
+      if (isFetchingMore || !hasMore) {
         return;
       }
       setIsFetchingMore(true);
     }
 
     try {
-      let profilesQuery;
-      const usersCollectionRef = collection(db, "users");
-      
-      if (initialLoad) {
-        profilesQuery = query(usersCollectionRef, orderBy("displayName"), limit(PROFILES_PER_PAGE));
-      } else {
-        profilesQuery = query(usersCollectionRef, orderBy("displayName"), startAfter(lastVisible!), limit(PROFILES_PER_PAGE));
-      }
-      
-      const querySnapshot = await getDocs(profilesQuery);
-      let fetchedProfilesBatch: Profile[] = [];
-
-      querySnapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        if (currentUser && docSnap.id === currentUser.uid) return; 
-        
-        fetchedProfilesBatch.push({
-          id: docSnap.id,
-          name: data.displayName || "N/A",
-          age: calculateAge(data.dob),
-          profession: data.profession || "N/A",
-          location: data.location || "N/A",
-          imageUrl: data.photoURL || `https://placehold.co/600x800.png?text=${data.displayName ? data.displayName.substring(0,1) : 'P'}`,
-          dataAiHint: data.dataAiHint || (data.photoURL && !data.photoURL.includes('placehold.co') ? "person profile" : "placeholder person"),
-          isVerified: data.isVerified || false,
-          interests: data.hobbies ? String(data.hobbies).split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-          bio: data.bio || undefined,
-          dob: data.dob,
-        });
+      const offset = initialLoad ? 0 : lastOffsetRef.current;
+      const rows = await listProfiles({
+        limit: PROFILES_PER_PAGE,
+        offset,
+        excludeId: currentUser?.uid,
       });
+
+      const fetchedProfilesBatch: Profile[] = rows.map((data) => ({
+        id: data.id,
+        name: data.displayName || "N/A",
+        age: calculateAge(data.dob),
+        profession: data.profession || "N/A",
+        location: data.location || "N/A",
+        imageUrl: data.photoURL || `https://placehold.co/600x800.png?text=${data.displayName ? data.displayName.substring(0,1) : 'P'}`,
+        dataAiHint: data.dataAiHint || (data.photoURL && !data.photoURL.includes('placehold.co') ? "person profile" : "placeholder person"),
+        isVerified: data.isVerified || false,
+        interests: data.hobbies ? String(data.hobbies).split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+        bio: data.bio || undefined,
+        dob: data.dob,
+      }));
       
       let profilesToSet: ProfileWithLikeStatus[] = [];
       if (currentUser) {
@@ -164,9 +136,9 @@ export default function DiscoverPage() {
       
       setProfiles(prevProfiles => initialLoad ? profilesToSet : [...prevProfiles, ...profilesToSet]);
       
-      const newLastVisibleDoc = querySnapshot.docs.length > 0 ? querySnapshot.docs[querySnapshot.docs.length - 1] : null;
-      setLastVisible(newLastVisibleDoc);
-      setHasMore(querySnapshot.docs.length === PROFILES_PER_PAGE);
+      lastOffsetRef.current = offset + rows.length;
+      setLastOffset(offset + rows.length);
+      setHasMore(rows.length === PROFILES_PER_PAGE);
 
     } catch (e: any) {
       console.error("Error fetching profiles: ", e);
@@ -189,25 +161,14 @@ export default function DiscoverPage() {
     }
     
     setIsLiking(prev => ({ ...prev, [profileId]: true }));
-    const likeDocId = getCompositeId(currentUser.uid, profileId);
-     if (likeDocId === "invalid_composite_id") {
-      toast({ title: "Error", description: "Invalid user data for liking.", variant: "destructive" });
-      setIsLiking(prev => ({ ...prev, [profileId]: false }));
-      return;
-    }
-    const likeDocRef = doc(db, "likes", likeDocId);
 
     try {
-      if (currentLikeStatus) { // Currently liked, so unlike
-        await deleteDoc(likeDocRef);
+      if (currentLikeStatus) {
+        await unlikeProfile(currentUser.uid, profileId);
         setProfiles(prev => prev.map(p => p.id === profileId ? { ...p, hasLiked: false } : p));
         toast({ title: "Unliked" });
-      } else { // Currently not liked, so like
-        await setDoc(likeDocRef, {
-          likerUid: currentUser.uid,
-          likedUid: profileId,
-          timestamp: serverTimestamp(),
-        });
+      } else {
+        await likeProfile(currentUser.uid, profileId);
         setProfiles(prev => prev.map(p => p.id === profileId ? { ...p, hasLiked: true } : p));
         toast({ title: "Liked!" });
       }

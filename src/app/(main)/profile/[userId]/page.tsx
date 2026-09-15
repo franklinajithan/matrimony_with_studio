@@ -35,9 +35,17 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { auth, db } from "@/lib/firebase/config";
-import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth";
-import { doc, getDoc, setDoc, deleteDoc, updateDoc, serverTimestamp, query, where, collection, onSnapshot, writeBatch, Timestamp } from "firebase/firestore";
+import { auth, onAuthStateChanged, type AuthUser as FirebaseUser } from "@/lib/supabase/auth";
+import { getProfile } from "@/lib/supabase/profiles";
+import { likeProfile, unlikeProfile, subscribeToLike } from "@/lib/supabase/likes";
+import {
+  createMatchRequest,
+  deleteMatchRequest,
+  getMatchRequest,
+  subscribeToMatchRequest,
+  updateMatchRequestStatus,
+} from "@/lib/supabase/matches";
+import { createChatDocument } from "@/lib/supabase/chats";
 import { intelligentMatchSuggestions, type IntelligentMatchSuggestionsInput, type IntelligentMatchSuggestionsOutput } from "@/ai/flows/intelligent-match-suggestions";
 import type { UserProfileSchema as AIUserProfileSchema, PotentialMatchProfileSchema as AIPotentialMatchProfileSchema } from "@/ai/flows/intelligent-match-suggestions";
 import { Progress } from "@/components/ui/progress";
@@ -127,10 +135,8 @@ export default function ProfilePage() {
       if (user) {
         setIsLoadingLoggedInUser(true);
         try {
-          const userDocRef = doc(db, "users", user.uid);
-          const docSnap = await getDoc(userDocRef);
-          if (docSnap.exists()) {
-            const data = docSnap.data();
+          const data = await getProfile(user.uid);
+          if (data) {
             const transformedData: AIUserProfileSchema = {
               age: calculateAge(data.dob) || 0,
               religion: data.religion || "",
@@ -197,12 +203,10 @@ export default function ProfilePage() {
     setError(null);
     const fetchViewedProfile = async () => {
       try {
-        const userDocRef = doc(db, "users", viewedUserId);
-        const docSnap = await getDoc(userDocRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
+        const data = await getProfile(viewedUserId);
+        if (data) {
           const profileData: ViewedUserProfileData = {
-            userId: docSnap.id,
+            userId: data.id,
             name: data.displayName || "N/A",
             age: calculateAge(data.dob) || 0,
             profession: data.profession || "N/A",
@@ -275,10 +279,8 @@ export default function ProfilePage() {
   // Fetch Like Status
   useEffect(() => {
     if (!currentFirebaseUser || !viewedUserId || currentFirebaseUser.uid === viewedUserId) return;
-    const likeId = getCompositeId(currentFirebaseUser.uid, viewedUserId);
-    const likeDocRef = doc(db, "likes", likeId);
-    const unsubscribe = onSnapshot(likeDocRef, (docSnap) => {
-      setHasLiked(docSnap.exists());
+    const unsubscribe = subscribeToLike(currentFirebaseUser.uid, viewedUserId, (liked) => {
+      setHasLiked(liked);
     });
     return () => unsubscribe();
   }, [currentFirebaseUser, viewedUserId]);
@@ -292,11 +294,8 @@ export default function ProfilePage() {
 
     const reqId = getCompositeId(currentFirebaseUser.uid, viewedUserId);
     setMatchRequestId(reqId);
-    const requestDocRef = doc(db, "matchRequests", reqId);
-
-    const unsubscribe = onSnapshot(requestDocRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
+    const unsubscribe = subscribeToMatchRequest(reqId, (data) => {
+      if (data) {
         if (data.status === "accepted") {
           setRequestStatus("accepted");
         } else if (data.status === "pending") {
@@ -410,20 +409,13 @@ export default function ProfilePage() {
   const handleLikeToggle = async () => {
     if (!currentFirebaseUser || !viewedUserId || isLiking || currentFirebaseUser.uid === viewedUserId) return;
     setIsLiking(true);
-    const likeId = getCompositeId(currentFirebaseUser.uid, viewedUserId);
-    const likeDocRef = doc(db, "likes", likeId);
-
     try {
       if (hasLiked) {
-        await deleteDoc(likeDocRef);
+        await unlikeProfile(currentFirebaseUser.uid, viewedUserId);
         setHasLiked(false);
         toast({ title: "Unliked", description: `You unliked ${viewedUserProfile?.name}.` });
       } else {
-        await setDoc(likeDocRef, {
-          likerUid: currentFirebaseUser.uid,
-          likedUid: viewedUserId,
-          timestamp: serverTimestamp(),
-        });
+        await likeProfile(currentFirebaseUser.uid, viewedUserId);
         setHasLiked(true);
         toast({ title: "Liked!", description: `You liked ${viewedUserProfile?.name}.` });
       }
@@ -437,15 +429,11 @@ export default function ProfilePage() {
   const handleSendRequest = async () => {
     if (!currentFirebaseUser || !viewedUserProfile || isProcessingRequest || !matchRequestId) return;
     setIsProcessingRequest(true);
-    const requestDocRef = doc(db, "matchRequests", matchRequestId);
     try {
-      await setDoc(requestDocRef, {
+      await createMatchRequest({
+        id: matchRequestId,
         senderUid: currentFirebaseUser.uid,
         receiverUid: viewedUserProfile.userId,
-        status: "pending",
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        participants: [currentFirebaseUser.uid, viewedUserProfile.userId].sort(),
       });
       setRequestStatus("pending_sent");
       toast({ title: "Request Sent", description: `Match request sent to ${viewedUserProfile.name}.` });
@@ -459,9 +447,8 @@ export default function ProfilePage() {
   const handleCancelRequest = async () => {
     if (!matchRequestId || isProcessingRequest) return;
     setIsProcessingRequest(true);
-    const requestDocRef = doc(db, "matchRequests", matchRequestId);
     try {
-      await deleteDoc(requestDocRef);
+      await deleteMatchRequest(matchRequestId);
       setRequestStatus("none");
       toast({ title: "Request Cancelled", description: "Your match request has been cancelled." });
     } catch (e: any) {
@@ -471,54 +458,11 @@ export default function ProfilePage() {
     }
   };
 
-  const createChatDocument = async (user1Uid: string, user2Uid: string) => {
-    const user1DocRef = doc(db, "users", user1Uid);
-    const user2DocRef = doc(db, "users", user2Uid);
-
-    const [user1Snap, user2Snap] = await Promise.all([getDoc(user1DocRef), getDoc(user2DocRef)]);
-
-    if (!user1Snap.exists() || !user2Snap.exists()) {
-      throw new Error("One or both user profiles not found for chat creation.");
-    }
-    const user1Data = user1Snap.data();
-    const user2Data = user2Snap.data();
-
-    const chatId = getCompositeId(user1Uid, user2Uid);
-    const chatDocRef = doc(db, "chats", chatId);
-
-    const batch = writeBatch(db);
-    batch.set(
-      chatDocRef,
-      {
-        participants: [user1Uid, user2Uid].sort(),
-        participantDetails: {
-          [user1Uid]: {
-            displayName: user1Data.displayName || "User",
-            photoURL: user1Data.photoURL || "https://placehold.co/100x100.png",
-          },
-          [user2Uid]: {
-            displayName: user2Data.displayName || "User",
-            photoURL: user2Data.photoURL || "https://placehold.co/100x100.png",
-          },
-        },
-        lastMessageText: "You are now connected!",
-        lastMessageSenderId: null,
-        lastMessageTimestamp: serverTimestamp(),
-        createdAt: serverTimestamp(),
-        unreadBy: { [user1Uid]: 0, [user2Uid]: 0 },
-      },
-      { merge: true }
-    );
-    await batch.commit();
-    return chatId;
-  };
-
   const handleAcceptRequest = async () => {
     if (!currentFirebaseUser || !viewedUserProfile || !matchRequestId || isProcessingRequest) return;
     setIsProcessingRequest(true);
-    const requestDocRef = doc(db, "matchRequests", matchRequestId);
     try {
-      await updateDoc(requestDocRef, { status: "accepted", updatedAt: serverTimestamp() });
+      await updateMatchRequestStatus(matchRequestId, "accepted");
       await createChatDocument(currentFirebaseUser.uid, viewedUserProfile.userId);
       setRequestStatus("accepted");
       toast({ title: "Request Accepted!", description: `You are now matched with ${viewedUserProfile.name}.` });
@@ -532,16 +476,14 @@ export default function ProfilePage() {
   const handleDeclineRequest = async () => {
     if (!currentFirebaseUser || !matchRequestId || isProcessingRequest) return;
     setIsProcessingRequest(true);
-    const requestDocRef = doc(db, "matchRequests", matchRequestId);
     try {
-      const requestSnap = await getDoc(requestDocRef);
-      if (!requestSnap.exists()) {
+      const requestData = await getMatchRequest(matchRequestId);
+      if (!requestData) {
         throw new Error("Request document not found.");
       }
-      const requestData = requestSnap.data();
       const declineStatus = currentFirebaseUser.uid === requestData.senderUid ? "declined_by_sender" : "declined_by_receiver";
 
-      await updateDoc(requestDocRef, { status: declineStatus, updatedAt: serverTimestamp() });
+      await updateMatchRequestStatus(matchRequestId, declineStatus);
       setRequestStatus("none");
       toast({ title: "Request Declined" });
     } catch (e: any) {

@@ -8,9 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquarePlus, Search as SearchIcon, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { auth, db } from "@/lib/firebase/config";
-import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
-import { collection, query, where, onSnapshot, orderBy, Timestamp, doc, getDoc, getDocs, limit, startAfter, addDoc, updateDoc, increment, writeBatch } from "firebase/firestore";
+import { auth, onAuthStateChanged, type AuthUser as FirebaseUser } from "@/lib/supabase/auth";
+import { Timestamp } from "@/lib/supabase/timestamp";
+import { getProfile } from "@/lib/supabase/profiles";
+import {
+  subscribeToChats,
+  subscribeToMessages,
+  sendMessage,
+  markMessagesRead,
+  listMessages,
+} from "@/lib/supabase/chats";
 import { formatDistanceToNowStrict } from "date-fns";
 import { useToast } from "@/hooks/use-toast"; // Ensure useToast is imported if you plan to use it
 import { useRouter, useSearchParams } from "next/navigation";
@@ -84,34 +91,18 @@ function MessagesPageContent() {
 
     console.log(`MessagesPage: Current user UID: ${currentUser.uid}. Setting up chats listener. Setting isLoading to true.`);
     setIsLoading(true);
-    const chatsRef = collection(db, "chats");
-    const q = query(chatsRef, where("participants", "array-contains", currentUser.uid), orderBy("lastMessageTimestamp", "desc"));
-
-    console.log("MessagesPage: Subscribing to onSnapshot for chats query...");
-    const unsubscribeChats = onSnapshot(
-      q,
-      async (querySnapshot) => {
-        console.log(`MessagesPage: ON_SNAPSHOT_SUCCESS_CALLBACK_ENTERED. Empty: ${querySnapshot.empty}, Size: ${querySnapshot.size}, Docs count: ${querySnapshot.docs.length}`);
-
-        if (querySnapshot.empty) {
-          console.log("MessagesPage: No chat documents found for this user. Clearing conversations.");
+    const unsubscribeChats = subscribeToChats(
+      currentUser.uid,
+      async (chats) => {
+        if (chats.length === 0) {
           setConversations([]);
-          setIsLoading(false); // Explicitly set isLoading to false
-          console.log("MessagesPage: Set isLoading to false (querySnapshot was empty).");
+          setIsLoading(false);
           return;
         }
 
-        const convsPromises = querySnapshot.docs.map(async (chatDoc) => {
-          const chatData = chatDoc.data();
-          console.log(`MessagesPage: Processing chatDoc ID: ${chatDoc.id}, Raw Data:`, JSON.parse(JSON.stringify(chatData)));
-
+        const convsPromises = chats.map(async (chatData) => {
           const otherParticipantUid = chatData.participants.find((p: string) => p !== currentUser.uid);
-
-          if (!otherParticipantUid) {
-            console.warn(`MessagesPage: Could not find other participant for chatDoc ID: ${chatDoc.id}. Skipping.`);
-            return null;
-          }
-          // console.log(`MessagesPage: Chat ${chatDoc.id} - Other participant UID: ${otherParticipantUid}`);
+          if (!otherParticipantUid) return null;
 
           let otherUserName = "User";
           let otherUserAvatar = "https://placehold.co/100x100.png";
@@ -121,76 +112,58 @@ function MessagesPageContent() {
             otherUserName = chatData.participantDetails[otherParticipantUid].displayName || "User (from details)";
             otherUserAvatar = chatData.participantDetails[otherParticipantUid].photoURL || "https://placehold.co/100x100.png";
             otherUserAvatarHint = chatData.participantDetails[otherParticipantUid].dataAiHint || (otherUserAvatar.includes("placehold.co") ? "person placeholder" : "person avatar");
-            // console.log(`MessagesPage: Chat ${chatDoc.id} - Loaded other user from participantDetails: ${otherUserName}`);
           } else {
-            // console.log(`MessagesPage: Chat ${chatDoc.id} - participantDetails not found for ${otherParticipantUid}, fetching from users collection.`);
             try {
-              const userDocRef = doc(db, "users", otherParticipantUid);
-              const userSnap = await getDoc(userDocRef);
-              if (userSnap.exists()) {
-                const userData = userSnap.data();
-                otherUserName = userData.displayName || "User (from users collection)";
+              const userData = await getProfile(otherParticipantUid);
+              if (userData) {
+                otherUserName = userData.displayName || "User";
                 otherUserAvatar = userData.photoURL || "https://placehold.co/100x100.png";
                 otherUserAvatarHint = userData.dataAiHint || (userData.photoURL && !userData.photoURL.includes("placehold.co") ? "person avatar" : "person placeholder");
-                // console.log(`MessagesPage: Chat ${chatDoc.id} - Fetched other user from users collection: ${otherUserName}`);
-              } else {
-                console.warn(`MessagesPage: Chat ${chatDoc.id} - User document for ${otherParticipantUid} not found in users collection.`);
               }
             } catch (userFetchError) {
-              console.error(`MessagesPage: Chat ${chatDoc.id} - Error fetching user ${otherParticipantUid} from users collection:`, userFetchError);
+              console.error(`MessagesPage: Error fetching user ${otherParticipantUid}:`, userFetchError);
             }
           }
 
-          const lastMessageTimestamp = chatData.lastMessageTimestamp as Timestamp | null;
+          const lastMessageTimestamp = chatData.lastMessageTimestamp;
           let formattedTimestamp = "N/A";
           if (lastMessageTimestamp && typeof lastMessageTimestamp.toDate === "function") {
             try {
               formattedTimestamp = formatDistanceToNowStrict(lastMessageTimestamp.toDate(), { addSuffix: true });
-            } catch (e) {
-              console.warn(`MessagesPage: Chat ${chatDoc.id} - Could not format timestamp:`, lastMessageTimestamp, e);
+            } catch {
               formattedTimestamp = "Invalid date";
             }
-          } else if (lastMessageTimestamp) {
-            console.warn(`MessagesPage: Chat ${chatDoc.id} - lastMessageTimestamp is not a Firestore Timestamp object:`, lastMessageTimestamp);
-            formattedTimestamp = "Date unavailable";
           }
-          // console.log(`MessagesPage: Chat ${chatDoc.id} - Last message: "${chatData.lastMessageText}", Formatted Timestamp: ${formattedTimestamp}`);
-
-          const unreadCount = chatData.unreadBy && chatData.unreadBy[currentUser.uid] ? Number(chatData.unreadBy[currentUser.uid]) : 0;
-          // console.log(`MessagesPage: Chat ${chatDoc.id} - Unread count for current user: ${unreadCount}`);
 
           return {
-            id: chatDoc.id,
+            id: chatData.id,
             otherUserId: otherParticipantUid,
-            otherUserName: otherUserName,
-            otherUserAvatar: otherUserAvatar,
-            otherUserAvatarHint: otherUserAvatarHint,
+            otherUserName,
+            otherUserAvatar,
+            otherUserAvatarHint,
             lastMessage: chatData.lastMessageText || "No messages yet",
-            unreadCount: unreadCount,
+            unreadCount: chatData.unreadBy?.[currentUser.uid] ? Number(chatData.unreadBy[currentUser.uid]) : 0,
             timestamp: formattedTimestamp,
             originalTimestamp: lastMessageTimestamp,
           } as Conversation;
         });
 
         try {
-          let resolvedConvs = (await Promise.all(convsPromises)).filter((c) => c !== null) as Conversation[];
+          const resolvedConvs = (await Promise.all(convsPromises)).filter((c) => c !== null) as Conversation[];
           resolvedConvs.sort((a, b) => (b.originalTimestamp?.toMillis() || 0) - (a.originalTimestamp?.toMillis() || 0));
-          console.log("MessagesPage: Final resolved conversations (before setting state):", JSON.parse(JSON.stringify(resolvedConvs)));
           setConversations(resolvedConvs);
         } catch (processingError) {
           console.error("MessagesPage: Error processing conversation promises:", processingError);
           setConversations([]);
         } finally {
           setIsLoading(false);
-          console.log("MessagesPage: Set isLoading to false (finished processing snapshot).");
         }
       },
       (error) => {
-        console.error("MessagesPage: ON_SNAPSHOT_ERROR_CALLBACK_ENTERED. Error:", error);
+        console.error("MessagesPage: Error loading chats:", error);
         toast({ title: "Error Loading Chats", description: "Could not load your conversations. " + error.message, variant: "destructive" });
         setConversations([]);
         setIsLoading(false);
-        console.log("MessagesPage: Set isLoading to false (onSnapshot error).");
       }
     );
 
@@ -219,30 +192,18 @@ function MessagesPageContent() {
 
     setIsLoadingMessages(true);
 
-    const messagesRef = collection(db, "chats", selectedChatId, "messages");
-    const q = query(messagesRef, orderBy("timestamp", "desc"), limit(20));
-
-    // Set up the real-time listener
-    const unsubscribe = onSnapshot(
-      q,
-      (querySnapshot) => {
-        const newMessages: Message[] = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          newMessages.push({
-            id: doc.id,
-            text: data.text,
-            senderId: data.senderId,
-            timestamp: data.timestamp,
-            isRead: data.isRead || false,
-          });
-        });
-
-        // Sort messages by timestamp (oldest first)
-        newMessages.sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis());
+    const unsubscribe = subscribeToMessages(
+      selectedChatId,
+      (rows) => {
+        const newMessages: Message[] = rows.map((data) => ({
+          id: data.id,
+          text: data.text,
+          senderId: data.senderId,
+          timestamp: data.timestamp as Timestamp,
+          isRead: data.isRead || false,
+        }));
         setMessages(newMessages);
-        setLastMessageDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
-        setHasMoreMessages(querySnapshot.docs.length === 20);
+        setHasMoreMessages(false);
         setIsLoadingMessages(false);
       },
       (error) => {
@@ -268,29 +229,23 @@ function MessagesPageContent() {
   }, [messages]);
 
   const loadMoreMessages = async () => {
-    if (!selectedChatId || !currentUser || !lastMessageDoc || !hasMoreMessages) return;
+    if (!selectedChatId || !currentUser || !hasMoreMessages) return;
 
     try {
-      const messagesRef = collection(db, "chats", selectedChatId, "messages");
-      const q = query(messagesRef, orderBy("timestamp", "desc"), startAfter(lastMessageDoc), limit(20));
-
-      const querySnapshot = await getDocs(q);
-      const newMessages: Message[] = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        newMessages.push({
-          id: doc.id,
-          text: data.text,
-          senderId: data.senderId,
-          timestamp: data.timestamp,
-          isRead: data.isRead || false,
-        });
-      });
-
-      if (newMessages.length > 0) {
-        setMessages((prev) => [...prev, ...newMessages.sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis())]);
-        setLastMessageDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
-        setHasMoreMessages(querySnapshot.docs.length === 20);
+      const oldest = messages[0]?.timestamp?.toDate().toISOString();
+      const older = await listMessages(selectedChatId, { limit: 20, before: oldest });
+      if (older.length > 0) {
+        setMessages((prev) => [
+          ...older.map((row) => ({
+            id: row.id,
+            text: row.text,
+            senderId: row.senderId,
+            timestamp: row.timestamp || Timestamp.now(),
+            isRead: row.isRead,
+          })),
+          ...prev,
+        ]);
+        setHasMoreMessages(older.length === 20);
       } else {
         setHasMoreMessages(false);
       }
@@ -309,24 +264,7 @@ function MessagesPageContent() {
     if (!currentUser || !chatId) return;
 
     try {
-      const batch = writeBatch(db);
-
-      // Update the chat document to clear unread count
-      const chatRef = doc(db, "chats", chatId);
-      batch.update(chatRef, {
-        [`unreadBy.${currentUser.uid}`]: 0,
-      });
-
-      // Update all unread messages in the messages subcollection
-      const messagesRef = collection(db, "chats", chatId, "messages");
-      const unreadQuery = query(messagesRef, where("isRead", "==", false), where("senderId", "!=", currentUser.uid));
-
-      const unreadSnapshot = await getDocs(unreadQuery);
-      unreadSnapshot.forEach((doc) => {
-        batch.update(doc.ref, { isRead: true });
-      });
-
-      await batch.commit();
+      await markMessagesRead(chatId, currentUser.uid);
 
       // Update the conversations state to remove the notification badge
       setConversations((prevConversations) => prevConversations.map((conv) => (conv.id === chatId ? { ...conv, unreadCount: 0 } : conv)));
@@ -348,28 +286,13 @@ function MessagesPageContent() {
     if (!newMessage.trim() || !currentUser || !selectedChatId) return;
 
     try {
-      const batch = writeBatch(db);
-      const messagesRef = collection(db, "chats", selectedChatId, "messages");
-      const newMessageRef = doc(messagesRef);
-
-      // Add the new message
-      batch.set(newMessageRef, {
-        text: newMessage.trim(),
+      await sendMessage({
+        chatId: selectedChatId,
         senderId: currentUser.uid,
-        timestamp: Timestamp.now(),
-        isRead: false,
+        otherUserId: selectedConversation?.otherUserId || "",
+        text: newMessage.trim(),
       });
-
-      // Update the chat document
-      const chatRef = doc(db, "chats", selectedChatId);
-      batch.update(chatRef, {
-        lastMessageText: newMessage.trim(),
-        lastMessageTimestamp: Timestamp.now(),
-        [`unreadBy.${selectedConversation?.otherUserId}`]: increment(1),
-      });
-
-      await batch.commit();
-      setNewMessage(""); // Clear the input after sending
+      setNewMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
       toast({

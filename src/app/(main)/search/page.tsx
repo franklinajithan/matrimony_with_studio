@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { db } from "@/lib/firebase/config";
-import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
+import { useSearchParams, useRouter } from "next/navigation";
+import { searchProfiles } from "@/lib/supabase/profiles";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Loader2, UserPlus, MapPin, Briefcase, Cake } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
+import { calculateAge } from "@/lib/utils";
 
 interface SearchResult {
   id: string;
@@ -40,36 +39,20 @@ function SearchPageContent() {
     await performSearch(searchQuery.trim());
   };
 
-  const performSearch = async (query: string) => {
+  const performSearch = async (term: string) => {
     setIsLoading(true);
     try {
-      const usersRef = collection(db, "users");
-      const searchTerms = query.toLowerCase().split(" ").filter(term => term.length > 0);
-
-      // Create a query that searches across multiple fields
-      const q = query(
-        usersRef,
-        where("searchTerms", "array-contains-any", searchTerms),
-        orderBy("displayName"),
-        limit(20)
-      );
-
-      const querySnapshot = await getDocs(q);
-      const searchResults: SearchResult[] = [];
-
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        searchResults.push({
-          id: doc.id,
-          displayName: data.displayName || "User",
-          photoURL: data.photoURL || "https://placehold.co/400x400.png",
-          age: data.age,
-          profession: data.profession,
-          location: data.location,
-          bio: data.bio,
-          dataAiHint: data.dataAiHint,
-        });
-      });
+      const matches = await searchProfiles(term, 20);
+      const searchResults: SearchResult[] = matches.map((data) => ({
+        id: data.id,
+        displayName: data.displayName || "User",
+        photoURL: data.photoURL || "https://placehold.co/400x400.png",
+        age: calculateAge(data.dob),
+        profession: data.profession,
+        location: data.location,
+        bio: data.bio,
+        dataAiHint: data.dataAiHint,
+      }));
 
       setResults(searchResults);
     } catch (error) {

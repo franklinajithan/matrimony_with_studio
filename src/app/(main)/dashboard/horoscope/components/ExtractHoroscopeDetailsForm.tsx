@@ -13,9 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Sparkles, Telescope, FileText, Info } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { HoroscopeChartDisplay } from './HoroscopeChartDisplay';
-import { auth, db } from '@/lib/firebase/config';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { auth, onAuthStateChanged, type AuthUser as FirebaseUser } from '@/lib/supabase/auth';
+import { getProfile } from '@/lib/supabase/profiles';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -69,14 +68,12 @@ export function ExtractHoroscopeDetailsForm() {
       if (currentUser) {
         setIsLoadingProfile(true);
         try {
-          const userDocRef = doc(db, "users", currentUser.uid);
-          const docSnap = await getDoc(userDocRef);
-          if (docSnap.exists()) {
-            const data = docSnap.data();
+          const data = await getProfile(currentUser.uid);
+          if (data) {
             form.reset({
               dateOfBirth: data.dob || "1990-01-01",
-              timeOfBirth: data.timeOfBirth || "12:00 PM", // Assuming timeOfBirth is stored
-              placeOfBirth: data.location || "Delhi, India", // Using location as a proxy for placeOfBirth for now
+              timeOfBirth: (typeof data.timeOfBirth === "string" && data.timeOfBirth) || "12:00 PM",
+              placeOfBirth: data.location || "Delhi, India",
               horoscopeFileDataUri: undefined,
               horoscopeFile: undefined,
             });

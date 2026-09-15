@@ -8,11 +8,23 @@ import { UserCircle, Settings, Star, Search, MessageCircle, CreditCard, Sparkles
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { auth, db } from "@/lib/firebase/config";
-import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
-import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, writeBatch, serverTimestamp, Timestamp, orderBy, limit, getDocs, addDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { auth, onAuthStateChanged, type AuthUser as FirebaseUser } from "@/lib/supabase/auth";
+import { Timestamp } from "@/lib/supabase/timestamp";
+import { getProfile, listProfiles, updateUserProfile } from "@/lib/supabase/profiles";
+import { subscribeToPendingRequests, updateMatchRequestStatus } from "@/lib/supabase/matches";
+import { subscribeToChats, createChatDocument } from "@/lib/supabase/chats";
+import {
+  subscribeToPosts,
+  createPost,
+  togglePostLike,
+  addPostComment,
+  markPostCommentsRead,
+  listPosts,
+  countUnreadLikedPosts,
+  countUnreadCommentedPosts,
+} from "@/lib/supabase/posts";
 import { useToast } from "@/hooks/use-toast";
-import { calculateAge, getCompositeId } from "@/lib/utils";
+import { calculateAge } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -303,10 +315,8 @@ export default function DashboardPage() {
         setUserDisplayName(user.displayName || mockUser.name);
 
         try {
-          const userDocRef = doc(db, "users", user.uid);
-          const userSnap = await getDoc(userDocRef);
-          if (userSnap.exists()) {
-            const userData = userSnap.data();
+          const userData = await getProfile(user.uid);
+          if (userData) {
             setUserAvatarUrl(userData.photoURL || user.photoURL || mockUser.avatarUrl);
             setUserAvatarHint(userData.dataAiHint || (userData.photoURL && !userData.photoURL.includes("placehold.co") ? "user avatar" : mockUser.dataAiHint));
             setProfileCompletion(calculateProfileCompletion(userData));
@@ -362,21 +372,19 @@ export default function DashboardPage() {
   });
 
   const fetchSuggestionsFromPosts = async (currentUserId: string): Promise<QuickSuggestionProfile[]> => {
-    const postsQuery = query(collection(db, "posts"), orderBy("timestamp", "desc"), limit(30));
-    const postsSnapshot = await getDocs(postsQuery);
+    const postsSnapshot = await listPosts(30);
     const suggestions: QuickSuggestionProfile[] = [];
     const seenUserIds = new Set<string>();
 
-    for (const postDoc of postsSnapshot.docs) {
-      const postData = postDoc.data();
+    for (const postData of postsSnapshot) {
       const authorId = postData.userId as string | undefined;
       if (!authorId || authorId === currentUserId || seenUserIds.has(authorId)) continue;
       seenUserIds.add(authorId);
 
       try {
-        const userSnap = await getDoc(doc(db, "users", authorId));
-        if (userSnap.exists()) {
-          suggestions.push(mapUserDocToSuggestion(authorId, userSnap.data()));
+        const userSnap = await getProfile(authorId);
+        if (userSnap) {
+          suggestions.push(mapUserDocToSuggestion(authorId, userSnap));
         } else {
           suggestions.push({
             id: authorId,
@@ -420,13 +428,11 @@ export default function DashboardPage() {
         try {
           // Prefer listing profiles (same pattern as Discover). This fails if Firestore
           // rules deny collection list on `users` — fall back to post authors below.
-          const usersQuery = query(collection(db, "users"), orderBy("displayName"), limit(10));
-          const querySnapshot = await getDocs(usersQuery);
-          console.log("Dashboard Suggestions: Query snapshot received. Empty:", querySnapshot.empty, "Docs count:", querySnapshot.docs.length);
+          const querySnapshot = await listProfiles({ limit: 10, excludeId: currentUserId });
+          console.log("Dashboard Suggestions: Query snapshot received. Docs count:", querySnapshot.length);
 
-          for (const docSnap of querySnapshot.docs) {
-            if (docSnap.id === currentUserId) continue;
-            suggestions.push(mapUserDocToSuggestion(docSnap.id, docSnap.data()));
+          for (const profile of querySnapshot) {
+            suggestions.push(mapUserDocToSuggestion(profile.id, profile));
             if (suggestions.length >= 3) break;
           }
         } catch (listError) {
@@ -471,38 +477,18 @@ export default function DashboardPage() {
 
     console.log(`Dashboard Requests: Setting up match requests listener for user UID: ${currentUser.uid}`);
 
-    const requestsQuery = query(collection(db, "matchRequests"), where("receiverUid", "==", currentUser.uid), where("status", "==", "pending"), orderBy("createdAt", "asc"));
-
-    const unsubscribeRequests = onSnapshot(
-      requestsQuery,
-      async (snapshot) => {
-        console.log(`Dashboard Requests: Snapshot received. Empty: ${snapshot.empty}, Docs count: ${snapshot.docs.length}, HasPendingWrites: ${snapshot.metadata.hasPendingWrites}`);
-
-        if (snapshot.metadata.hasPendingWrites) {
-          console.log("Dashboard Requests: Snapshot has pending writes, waiting for server confirmation...");
-        }
-
-        if (snapshot.empty) {
-          console.log("Dashboard Requests: No 'pending' matchRequests found for current user. Clearing requests list.");
+    const unsubscribeRequests = subscribeToPendingRequests(
+      currentUser.uid,
+      async (rows) => {
+        if (rows.length === 0) {
           setMatchRequests([]);
           setIsLoadingRequests(false);
           return;
         }
 
-        const requestsPromises = snapshot.docs.map(async (requestDoc) => {
-          const data = requestDoc.data();
-          console.log(`Dashboard Requests: Processing requestDoc ID: ${requestDoc.id}, Raw Data:`, JSON.parse(JSON.stringify(data)));
-
+        const requestsPromises = rows.map(async (data) => {
           const senderUid = data.senderUid;
-          if (!senderUid) {
-            console.error(`Dashboard Requests: CRITICAL - senderUid missing in requestDoc ${requestDoc.id}. Data:`, data, "Skipping this request.");
-            return null;
-          }
-
-          if (!data.createdAt || !(data.createdAt instanceof Timestamp)) {
-            console.warn(`Dashboard Requests: Invalid or missing 'createdAt' timestamp for request ${requestDoc.id}. Actual value:`, data.createdAt, "Skipping this request.");
-            return null;
-          }
+          if (!senderUid) return null;
 
           let senderName = "User";
           let senderAvatarUrl = "https://placehold.co/80x80.png";
@@ -512,61 +498,47 @@ export default function DashboardPage() {
           let senderLocation;
 
           try {
-            console.log(`Dashboard Requests: Fetching sender profile for UID ${senderUid} (request ${requestDoc.id})`);
-            const senderDocRef = doc(db, "users", senderUid);
-            const senderSnap = await getDoc(senderDocRef);
-
-            if (senderSnap.exists()) {
-              const senderData = senderSnap.data();
+            const senderData = await getProfile(senderUid);
+            if (senderData) {
               senderName = senderData.displayName || "User (Fetched)";
               senderAvatarUrl = senderData.photoURL || "https://placehold.co/80x80.png";
               senderDataAiHint = senderData.dataAiHint || (senderData.photoURL && !senderData.photoURL.includes("placehold.co") ? "person professional" : "person placeholder");
               senderAge = calculateAge(senderData.dob);
               senderProfession = senderData.profession;
               senderLocation = senderData.location;
-              console.log(`Dashboard Requests: Successfully fetched sender ${senderName} (UID: ${senderUid}) for request ${requestDoc.id}. Age: ${senderAge}, Location: ${senderLocation}`);
-            } else {
-              console.warn(`Dashboard Requests: Sender profile for UID ${senderUid} not found (request ${requestDoc.id}). Using defaults.`);
             }
           } catch (fetchError) {
-            console.error(`Dashboard Requests: Error fetching sender profile for UID ${senderUid} (request ${requestDoc.id}):`, fetchError);
+            console.error(`Dashboard Requests: Error fetching sender profile for UID ${senderUid}:`, fetchError);
           }
 
           return {
-            id: requestDoc.id,
-            senderUid: senderUid,
-            senderName: senderName,
-            senderAvatarUrl: senderAvatarUrl,
-            senderDataAiHint: senderDataAiHint,
-            senderAge: senderAge,
-            senderProfession: senderProfession,
-            senderLocation: senderLocation,
+            id: data.id,
+            senderUid,
+            senderName,
+            senderAvatarUrl,
+            senderDataAiHint,
+            senderAge,
+            senderProfession,
+            senderLocation,
             timestamp: data.createdAt as Timestamp,
           } as MatchRequest;
         });
 
         try {
-          let fetchedRequests = await Promise.all(requestsPromises);
-          fetchedRequests = fetchedRequests.filter((req) => req !== null).reverse();
-          console.log(`Dashboard Requests: Final processed requests (before setting state, count: ${fetchedRequests.length}):`, JSON.parse(JSON.stringify(fetchedRequests)));
+          const fetchedRequests = (await Promise.all(requestsPromises)).filter((req) => req !== null);
           setMatchRequests(fetchedRequests as MatchRequest[]);
         } catch (processingError) {
           console.error("Dashboard Requests: Error processing request promises: ", processingError);
           setMatchRequests([]);
         } finally {
           setIsLoadingRequests(false);
-          console.log("Dashboard Requests: Finished processing snapshot, isLoadingRequests set to false.");
         }
       },
       (error) => {
-        console.error("Dashboard Requests: Error in onSnapshot for match requests: ", error);
-        // Permission errors mean Firestore rules need updating in Firebase Console — avoid noisy toasts.
-        if ((error as { code?: string })?.code !== "permission-denied") {
-          toast({ title: "Error Loading Requests", description: "Could not load match requests. " + error.message, variant: "destructive" });
-        }
+        console.error("Dashboard Requests: Error loading match requests: ", error);
+        toast({ title: "Error Loading Requests", description: "Could not load match requests. " + error.message, variant: "destructive" });
         setMatchRequests([]);
         setIsLoadingRequests(false);
-        console.log("Dashboard Requests: Error in onSnapshot, isLoadingRequests set to false.");
       }
     );
 
@@ -591,67 +563,59 @@ export default function DashboardPage() {
 
     // Add connections listener
     console.log(`Dashboard Connections: Setting up connections listener for user UID: ${currentUser.uid}`);
-    const connectionsQuery = query(collection(db, "chats"), where("participants", "array-contains", currentUser.uid), orderBy("lastMessageTimestamp", "desc"));
+    const unsubscribeConnections = subscribeToChats(
+      currentUser.uid,
+      async (chats) => {
+        if (chats.length === 0) {
+          setConnections([]);
+          setUnreadMessageCount(0);
+          setIsLoadingConnections(false);
+          return;
+        }
 
-    const unsubscribeConnections = onSnapshot(
-      connectionsQuery,
-      async (snapshot) => {
-      console.log(`Dashboard Connections: Snapshot received. Empty: ${snapshot.empty}, Docs count: ${snapshot.docs.length}`);
+        let totalUnread = 0;
+        const connectionsPromises = chats.map(async (data) => {
+          const otherUserId = data.participants.find((id: string) => id !== currentUser.uid);
+          if (!otherUserId) return null;
+          const otherUserDetails = data.participantDetails[otherUserId];
+          const unread = data.unreadBy?.[currentUser.uid] || 0;
+          totalUnread += unread;
 
-      if (snapshot.empty) {
-        setConnections([]);
-        setUnreadMessageCount(0);
-        setIsLoadingConnections(false);
-        return;
-      }
-
-      let totalUnread = 0;
-      const connectionsPromises = snapshot.docs.map(async (chatDoc) => {
-        const data = chatDoc.data();
-        const otherUserId = data.participants.find((id: string) => id !== currentUser.uid);
-        const otherUserDetails = data.participantDetails[otherUserId];
-
-        const unread = data.unreadBy?.[currentUser.uid] || 0;
-        totalUnread += unread;
+          try {
+            const userData = await getProfile(otherUserId);
+            return {
+              id: data.id,
+              userId: otherUserId,
+              displayName: otherUserDetails?.displayName || "User",
+              photoURL: otherUserDetails?.photoURL || "https://placehold.co/100x100.png",
+              dataAiHint: otherUserDetails?.dataAiHint || "person placeholder",
+              lastMessageText: data.lastMessageText,
+              lastMessageTimestamp: data.lastMessageTimestamp,
+              unreadCount: unread,
+              age: userData ? calculateAge(userData.dob) : undefined,
+              profession: userData?.profession,
+              location: userData?.location,
+            } as Connection;
+          } catch (error) {
+            console.error(`Dashboard Connections: Error fetching user details for ${otherUserId}:`, error);
+            return null;
+          }
+        });
 
         try {
-          const userDocRef = doc(db, "users", otherUserId);
-          const userSnap = await getDoc(userDocRef);
-          const userData = userSnap.exists() ? userSnap.data() : null;
-
-          return {
-            id: chatDoc.id,
-            userId: otherUserId,
-            displayName: otherUserDetails?.displayName || "User",
-            photoURL: otherUserDetails?.photoURL || "https://placehold.co/100x100.png",
-            dataAiHint: otherUserDetails?.dataAiHint || "person placeholder",
-            lastMessageText: data.lastMessageText,
-            lastMessageTimestamp: data.lastMessageTimestamp,
-            unreadCount: unread,
-            age: userData ? calculateAge(userData.dob) : undefined,
-            profession: userData?.profession,
-            location: userData?.location,
-          } as Connection;
+          const fetchedConnections = await Promise.all(connectionsPromises);
+          setConnections(fetchedConnections.filter((conn) => conn !== null) as Connection[]);
+          setUnreadMessageCount(totalUnread);
         } catch (error) {
-          console.error(`Dashboard Connections: Error fetching user details for ${otherUserId}:`, error);
-          return null;
+          console.error("Dashboard Connections: Error processing connections:", error);
+          setConnections([]);
+          setUnreadMessageCount(0);
+        } finally {
+          setIsLoadingConnections(false);
         }
-      });
-
-      try {
-        const fetchedConnections = await Promise.all(connectionsPromises);
-        setConnections(fetchedConnections.filter((conn) => conn !== null) as Connection[]);
-        setUnreadMessageCount(totalUnread);
-      } catch (error) {
-        console.error("Dashboard Connections: Error processing connections:", error);
-        setConnections([]);
-        setUnreadMessageCount(0);
-      } finally {
-        setIsLoadingConnections(false);
-      }
-    },
+      },
       (error) => {
-        console.error("Dashboard Connections: Error in onSnapshot:", error);
+        console.error("Dashboard Connections: Error loading chats:", error);
         setConnections([]);
         setUnreadMessageCount(0);
         setIsLoadingConnections(false);
@@ -667,34 +631,23 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!currentUser) return;
 
-    const postsQuery = query(
-      collection(db, "posts"),
-      orderBy("timestamp", "desc")
-    );
-
-    const unsubscribe = onSnapshot(
-      postsQuery,
-      (snapshot) => {
-        const postsData = snapshot.docs.map(doc => {
-          const data = doc.data();
+    const unsubscribe = subscribeToPosts(
+      (postsDataRaw) => {
+        const postsData = postsDataRaw.map((data) => {
           const commentNotifications = data.commentNotifications?.[currentUser.uid] || { count: 0, lastSeen: null };
-          
           return {
-            id: doc.id,
             ...data,
             isLiked: data.likedBy?.includes(currentUser.uid) || false,
-            unreadComments: commentNotifications.count || 0
+            unreadComments: commentNotifications.count || 0,
           } as Post;
         });
         setPosts(postsData);
         setIsLoadingPosts(false);
-
-        // Update total unread comment count
         const totalUnreadComments = postsData.reduce((total, post) => total + (post.unreadComments || 0), 0);
         setUnreadCommentCount(totalUnreadComments);
       },
       (error) => {
-        console.error("Dashboard Posts: Error in onSnapshot:", error);
+        console.error("Dashboard Posts: Error loading posts:", error);
         setPosts([]);
         setIsLoadingPosts(false);
       }
@@ -709,25 +662,19 @@ export default function DashboardPage() {
       return;
     }
 
-    const userPostsQuery = query(
-      collection(db, "posts"),
-      where("userId", "==", currentUser.uid),
-      where("lastLikedAt", ">", lastSeenLikeNotificationsTimestamp)
-    );
+    let cancelled = false;
+    countUnreadLikedPosts(currentUser.uid, lastSeenLikeNotificationsTimestamp)
+      .then((count) => {
+        if (!cancelled) setUnreadLikeCount(count);
+      })
+      .catch((error) => {
+        console.error("Dashboard Likes: Error counting unread likes:", error);
+        if (!cancelled) setUnreadLikeCount(0);
+      });
 
-    const unsubscribeLikes = onSnapshot(
-      userPostsQuery,
-      (snapshot) => {
-        setUnreadLikeCount(snapshot.docs.length);
-        console.log(`Unread likes count: ${snapshot.docs.length}`);
-      },
-      (error) => {
-        console.error("Dashboard Likes: Error in onSnapshot:", error);
-        setUnreadLikeCount(0);
-      }
-    );
-
-    return () => unsubscribeLikes();
+    return () => {
+      cancelled = true;
+    };
   }, [currentUser, lastSeenLikeNotificationsTimestamp]);
 
   useEffect(() => {
@@ -736,76 +683,20 @@ export default function DashboardPage() {
       return;
     }
 
-    const userPostsQuery = query(
-      collection(db, "posts"),
-      where("userId", "==", currentUser.uid),
-      where("lastCommentedAt", ">", lastSeenCommentNotificationsTimestamp)
-    );
+    let cancelled = false;
+    countUnreadCommentedPosts(currentUser.uid, lastSeenCommentNotificationsTimestamp)
+      .then((count) => {
+        if (!cancelled) setUnreadCommentCount(count);
+      })
+      .catch((error) => {
+        console.error("Dashboard Comments: Error counting unread comments:", error);
+        if (!cancelled) setUnreadCommentCount(0);
+      });
 
-    const unsubscribeComments = onSnapshot(
-      userPostsQuery,
-      (snapshot) => {
-        setUnreadCommentCount(snapshot.docs.length);
-        console.log(`Unread comments count: ${snapshot.docs.length}`);
-      },
-      (error) => {
-        console.error("Dashboard Comments: Error in onSnapshot:", error);
-        setUnreadCommentCount(0);
-      }
-    );
-
-    return () => unsubscribeComments();
+    return () => {
+      cancelled = true;
+    };
   }, [currentUser, lastSeenCommentNotificationsTimestamp]);
-
-  const createChatDocument = async (user1Uid: string, user2Uid: string) => {
-    const user1DocRef = doc(db, "users", user1Uid);
-    const user2DocRef = doc(db, "users", user2Uid);
-
-    const [user1Snap, user2Snap] = await Promise.all([getDoc(user1DocRef), getDoc(user2DocRef)]);
-
-    if (!user1Snap.exists() || !user2Snap.exists()) {
-      const errorMsg = `One or both user profiles not found for chat creation. User1 (${user1Uid}) exists: ${user1Snap.exists()}, User2 (${user2Uid}) exists: ${user2Snap.exists()}`;
-      console.error("Dashboard Chat: " + errorMsg);
-      throw new Error(errorMsg);
-    }
-    const user1Data = user1Snap.data();
-    const user2Data = user2Snap.data();
-
-    const chatId = getCompositeId(user1Uid, user2Uid);
-    const chatDocRef = doc(db, "chats", chatId);
-
-    console.log(`Dashboard Chat: Creating/updating chat document for ${user1Uid} and ${user2Uid} with chatId ${chatId}`);
-
-    const batch = writeBatch(db);
-    batch.set(
-      chatDocRef,
-      {
-        participants: [user1Uid, user2Uid].sort(),
-        participantDetails: {
-          [user1Uid]: {
-            displayName: user1Data.displayName || "User",
-            photoURL: user1Data.photoURL || "https://placehold.co/100x100.png",
-            dataAiHint: user1Data.dataAiHint || (user1Data.photoURL && !user1Data.photoURL.includes("placehold.co") ? "person avatar" : "person placeholder"),
-          },
-          [user2Uid]: {
-            displayName: user2Data.displayName || "User",
-            photoURL: user2Data.photoURL || "https://placehold.co/100x100.png",
-            dataAiHint: user2Data.dataAiHint || (user2Data.photoURL && !user2Data.photoURL.includes("placehold.co") ? "person avatar" : "person placeholder"),
-          },
-        },
-        lastMessageText: "You are now connected!",
-        lastMessageSenderId: null,
-        lastMessageTimestamp: serverTimestamp(),
-        createdAt: serverTimestamp(),
-        unreadBy: { [user1Uid]: 0, [user2Uid]: 0 },
-      },
-      { merge: true }
-    );
-
-    await batch.commit();
-    console.log(`Dashboard Chat: Chat document ${chatId} created/updated successfully.`);
-    return chatId;
-  };
 
   const handleAcceptRequest = async (request: MatchRequest) => {
     if (!currentUser) {
@@ -813,14 +704,11 @@ export default function DashboardPage() {
       toast({ title: "Error", description: "You must be logged in to accept requests.", variant: "destructive" });
       return;
     }
-    console.log(`Dashboard Accept: User ${currentUser.uid} accepting request ID: ${request.id}, from sender: ${request.senderUid}`);
     setProcessingRequestId(request.id);
-    const requestDocRef = doc(db, "matchRequests", request.id);
     try {
-      await updateDoc(requestDocRef, { status: "accepted", updatedAt: serverTimestamp() });
+      await updateMatchRequestStatus(request.id, "accepted");
       await createChatDocument(currentUser.uid, request.senderUid);
       toast({ title: "Request Accepted!", description: `You are now matched with ${request.senderName}.` });
-      console.log(`Dashboard Accept: Request ${request.id} accepted and chat created.`);
     } catch (error: any) {
       console.error("Dashboard Accept: Error accepting request:", error);
       toast({ title: "Error", description: "Failed to accept request: " + error.message, variant: "destructive" });
@@ -835,13 +723,10 @@ export default function DashboardPage() {
       toast({ title: "Error", description: "You must be logged in to decline requests.", variant: "destructive" });
       return;
     }
-    console.log(`Dashboard Decline: User ${currentUser.uid} declining request ID: ${requestId}`);
     setProcessingRequestId(requestId);
-    const requestDocRef = doc(db, "matchRequests", requestId);
     try {
-      await updateDoc(requestDocRef, { status: "declined_by_receiver", updatedAt: serverTimestamp() });
+      await updateMatchRequestStatus(requestId, "declined_by_receiver");
       toast({ title: "Request Declined", description: `You have declined the request from ${senderName}.` });
-      console.log(`Dashboard Decline: Request ${requestId} declined.`);
     } catch (error: any) {
       console.error("Dashboard Decline: Error declining request:", error);
       toast({ title: "Error", description: "Failed to decline request: " + error.message, variant: "destructive" });
@@ -855,18 +740,12 @@ export default function DashboardPage() {
     if (!newPost.trim() || !currentUser) return;
 
     try {
-      const postData = {
+      await createPost({
         userId: currentUser.uid,
         userName: userDisplayName,
         userAvatar: userAvatarUrl,
         content: newPost.trim(),
-        timestamp: serverTimestamp(),
-        likes: 0,
-        likedBy: [],
-        comments: 0,
-      };
-
-      await addDoc(collection(db, "posts"), postData);
+      });
       setNewPost("");
       toast({
         title: "Posted successfully!",
@@ -884,39 +763,19 @@ export default function DashboardPage() {
 
   const handleLikePost = async (postId: string) => {
     if (!currentUser) {
-      console.error("Error liking post: No current user.");
       toast({ title: "Error", description: "You must be logged in to like posts.", variant: "destructive" });
       return;
     }
 
     try {
-      const postRef = doc(db, "posts", postId);
-      const postDoc = await getDoc(postRef);
-      
-      if (!postDoc.exists()) {
-        throw new Error("Post not found");
-      }
-
-      const postData = postDoc.data();
-      const likedBy = postData.likedBy || [];
-      const isLiked = likedBy.includes(currentUser.uid);
-
-      await updateDoc(postRef, {
-        likes: isLiked ? postData.likes - 1 : postData.likes + 1,
-        likedBy: isLiked 
-          ? arrayRemove(currentUser.uid)
-          : arrayUnion(currentUser.uid),
-        lastLikedAt: serverTimestamp(),
-      });
-
-      // Update local state
+      const result = await togglePostLike(postId, currentUser.uid);
       setPosts(posts.map((post: Post) => {
         if (post.id === postId) {
           return {
             ...post,
-            likes: isLiked ? post.likes - 1 : post.likes + 1,
-            isLiked: !isLiked,
-            lastLikedAt: new Timestamp(Math.floor(Date.now() / 1000), 0),
+            likes: result.likes,
+            isLiked: result.isLiked,
+            lastLikedAt: Timestamp.now(),
           };
         }
         return post;
@@ -935,11 +794,10 @@ export default function DashboardPage() {
     if (!currentUser) return;
 
     try {
-      const userRef = doc(db, "users", currentUser.uid);
-      await updateDoc(userRef, {
-        lastSeenLikeNotificationsTimestamp: serverTimestamp(),
+      await updateUserProfile(currentUser.uid, {
+        lastSeenLikeNotificationsTimestamp: new Date().toISOString(),
       });
-      setUnreadLikeCount(0); // Optimistically update UI
+      setUnreadLikeCount(0);
       toast({
         title: "Notifications Cleared",
         description: "All new likes have been marked as read.",
@@ -958,11 +816,10 @@ export default function DashboardPage() {
     if (!currentUser) return;
 
     try {
-      const userRef = doc(db, "users", currentUser.uid);
-      await updateDoc(userRef, {
-        lastSeenCommentNotificationsTimestamp: serverTimestamp(),
+      await updateUserProfile(currentUser.uid, {
+        lastSeenCommentNotificationsTimestamp: new Date().toISOString(),
       });
-      setUnreadCommentCount(0); // Optimistically update UI
+      setUnreadCommentCount(0);
       toast({
         title: "Notifications Cleared",
         description: "All new comments have been marked as read.",
@@ -981,18 +838,16 @@ export default function DashboardPage() {
     if (!currentUser) return;
 
     try {
-      const userRef = doc(db, "users", currentUser.uid);
-      const updateData: any = {};
-      
+      const updateData: Record<string, string> = {};
       if (unreadLikeCount > 0) {
-        updateData.lastSeenLikeNotificationsTimestamp = serverTimestamp();
+        updateData.lastSeenLikeNotificationsTimestamp = new Date().toISOString();
       }
       if (unreadCommentCount > 0) {
-        updateData.lastSeenCommentNotificationsTimestamp = serverTimestamp();
+        updateData.lastSeenCommentNotificationsTimestamp = new Date().toISOString();
       }
 
       if (Object.keys(updateData).length > 0) {
-        await updateDoc(userRef, updateData);
+        await updateUserProfile(currentUser.uid, updateData);
         setUnreadLikeCount(0);
         setUnreadCommentCount(0);
         toast({
@@ -1015,34 +870,9 @@ export default function DashboardPage() {
     if (!currentUser || !commentText[postId]?.trim()) return;
 
     try {
-      const postRef = doc(db, "posts", postId);
-      const postDoc = await getDoc(postRef);
-      
-      if (!postDoc.exists()) {
-        throw new Error("Post not found");
-      }
-
-      const postData = postDoc.data();
-      const postOwnerId = postData.userId;
-
-      // Don't notify if user is commenting on their own post
-      if (postOwnerId !== currentUser.uid) {
-        // Update the post owner's notification count
-        const userRef = doc(db, "users", postOwnerId);
-        const userDoc = await getDoc(userRef);
-        
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          const currentNotifications = userData.commentNotifications || {};
-          const postNotifications = currentNotifications[postId] || { count: 0, lastSeen: null };
-          
-          await updateDoc(userRef, {
-            [`commentNotifications.${postId}.count`]: (postNotifications.count || 0) + 1,
-            [`commentNotifications.${postId}.lastSeen`]: postNotifications.lastSeen || null,
-            lastSeenCommentNotificationsTimestamp: userData.lastSeenCommentNotificationsTimestamp || null
-          });
-        }
-      }
+      const post = posts.find((item) => item.id === postId);
+      const postOwnerId = post?.userId;
+      if (!postOwnerId) throw new Error("Post not found");
 
       const newComment: Comment = {
         id: crypto.randomUUID(),
@@ -1051,38 +881,20 @@ export default function DashboardPage() {
         userAvatar: userAvatarUrl,
         content: commentText[postId].trim(),
         timestamp: Timestamp.now(),
-        isRead: postOwnerId === currentUser.uid // Mark as read if it's the owner's comment
+        isRead: postOwnerId === currentUser.uid
       };
 
-      // Update the post document with the new comment
-      await updateDoc(postRef, {
-        comments: (postData.comments || 0) + 1,
-        lastCommentedAt: serverTimestamp(),
-        commentList: arrayUnion(newComment),
-        [`commentNotifications.${postOwnerId}.count`]: postOwnerId === currentUser.uid ? 0 : (postData.commentNotifications?.[postOwnerId]?.count || 0) + 1,
-        [`commentNotifications.${postOwnerId}.lastSeen`]: postData.commentNotifications?.[postOwnerId]?.lastSeen || null
-      });
+      await addPostComment(postId, newComment, postOwnerId);
 
-      // Clear the comment input and close the form
       setCommentText(prev => ({ ...prev, [postId]: "" }));
-      setPosts(posts.map(post => 
-        post.id === postId ? { ...post, isCommenting: false } : post
+      setPosts(posts.map(item =>
+        item.id === postId ? { ...item, isCommenting: false } : item
       ));
 
-      // Show success toast
       toast({
         title: "Comment posted",
         description: "Your comment has been added successfully.",
       });
-
-      // If the post owner is the current user, mark the notification as read
-      if (postOwnerId === currentUser.uid) {
-        await updateDoc(postRef, {
-          [`commentNotifications.${currentUser.uid}.count`]: 0,
-          [`commentNotifications.${currentUser.uid}.lastSeen`]: serverTimestamp()
-        });
-      }
-
     } catch (error: any) {
       console.error("Error posting comment:", error);
       toast({
@@ -1115,18 +927,12 @@ export default function DashboardPage() {
     if (!currentUser) return;
 
     try {
-      const postRef = doc(db, "posts", postId);
-      const userRef = doc(db, "users", currentUser.uid);
-
-      // Update both post and user documents
-      await updateDoc(postRef, {
-        [`commentNotifications.${currentUser.uid}.count`]: 0,
-        [`commentNotifications.${currentUser.uid}.lastSeen`]: serverTimestamp()
-      });
-
-      await updateDoc(userRef, {
-        [`commentNotifications.${postId}.count`]: 0,
-        [`commentNotifications.${postId}.lastSeen`]: serverTimestamp()
+      await markPostCommentsRead(postId, currentUser.uid);
+      await updateUserProfile(currentUser.uid, {
+        commentNotifications: {
+          ...(await getProfile(currentUser.uid))?.commentNotifications,
+          [postId]: { count: 0, lastSeen: Timestamp.now() },
+        },
       });
 
       // Update local state

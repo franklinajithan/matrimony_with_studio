@@ -5,9 +5,8 @@ import { Logo } from '@/components/shared/Logo';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase/config';
+import { auth, onAuthStateChanged, type AuthUser as FirebaseUser } from '@/lib/supabase/auth';
+import { getProfile } from '@/lib/supabase/profiles';
 import { Loader2 } from 'lucide-react';
 
 // Minimal toast for redirection messages
@@ -48,13 +47,11 @@ export default function AdminLayout({
       if (user) {
         try {
           console.log("AdminLayout: Current user UID:", user.uid);
-          const userDocRef = doc(db, "users", user.uid);
-          const userDocSnap = await getDoc(userDocRef);
+          const userData = await getProfile(user.uid);
 
-          console.log("AdminLayout: userDocSnap.exists():", userDocSnap.exists());
-          if (userDocSnap.exists()) {
-            const userData = userDocSnap.data();
-            console.log("AdminLayout: User data from Firestore:", userData);
+          console.log("AdminLayout: user profile:", userData);
+          if (userData) {
+            console.log("AdminLayout: User data from Postgres:", userData);
             console.log("AdminLayout: userData.isAdmin value:", userData?.isAdmin);
             console.log("AdminLayout: typeof userData.isAdmin:", typeof userData?.isAdmin);
 
@@ -72,7 +69,7 @@ export default function AdminLayout({
               router.replace('/');
             }
           } else {
-            console.log("AdminLayout: User document does not exist in Firestore.");
+            console.log("AdminLayout: User profile does not exist.");
             setIsAdmin(false);
             toast({
               title: "Access Denied",

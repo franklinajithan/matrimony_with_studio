@@ -2,8 +2,8 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { db } from '@/lib/firebase/config';
-import { collection, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
+import { subscribeToSuccessStories } from '@/lib/supabase/stories';
+import type { Timestamp } from '@/lib/supabase/timestamp';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -29,16 +29,14 @@ export default function AdminSuccessStoriesPage() {
 
   useEffect(() => {
     setIsLoading(true);
-    const storiesColRef = collection(db, 'successStories');
-    // Order by submission date, newest first for pending, or by status then date.
-    const q = query(storiesColRef, orderBy('status', 'asc'), orderBy('submittedAt', 'desc'));
-
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const fetchedStories: SuccessStoryData[] = [];
-      querySnapshot.forEach((doc) => {
-        fetchedStories.push({ id: doc.id, ...doc.data() } as SuccessStoryData);
-      });
-      setStories(fetchedStories);
+    const unsubscribe = subscribeToSuccessStories((fetchedStories) => {
+      setStories(fetchedStories.map((story) => ({
+        id: story.id,
+        coupleNames: story.coupleNames,
+        status: story.status,
+        submittedAt: story.submittedAt || undefined,
+        storyText: story.storyText,
+      })));
       setIsLoading(false);
     }, (error) => {
       console.error("Error fetching success stories:", error);

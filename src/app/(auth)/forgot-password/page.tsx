@@ -11,8 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Loader2, ArrowLeft } from "lucide-react";
 import React, { useState } from "react";
-import { auth } from "@/lib/firebase/config";
-import { sendPasswordResetEmail } from "firebase/auth";
+import { auth, sendPasswordResetEmail } from "@/lib/supabase/auth";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),

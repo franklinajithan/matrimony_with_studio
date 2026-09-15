@@ -15,8 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Mail, Lock, User, ChromeIcon, Eye, EyeOff, Loader2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase/config';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth, createUserWithEmailAndPassword, updateProfile } from '@/lib/supabase/auth';
 
 const signupSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -50,7 +49,9 @@ export default function SignupPage() {
   async function onSubmit(values: z.infer<typeof signupSchema>) {
     setIsLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password, {
+        displayName: values.name,
+      });
       const user = userCredential.user;
 
       if (user) {
@@ -67,7 +68,7 @@ export default function SignupPage() {
       router.push('/login');
 
     } catch (error: any) {
-      console.error("Firebase signup error:", error);
+      console.error("Signup error:", error);
       let errorMessage = "An unexpected error occurred. Please try again or check the console for details.";
 
       if (error && typeof error === 'object' && 'code' in error) {
@@ -82,7 +83,7 @@ export default function SignupPage() {
             errorMessage = 'The email address is not valid. Please check and try again.';
             break;
           case 'auth/operation-not-allowed':
-            errorMessage = 'Email/Password sign-up is currently disabled. Please contact support or check Firebase project configuration (Authentication -> Sign-in method).';
+            errorMessage = 'Email/Password sign-up is currently disabled. Please contact support or check Supabase Auth settings.';
             break;
           case 'auth/network-request-failed':
             errorMessage = 'A network error occurred. Please check your internet connection and try again.';
@@ -107,7 +108,7 @@ export default function SignupPage() {
   const handleGoogleSignIn = () => {
     toast({
       title: "Google Sign-In",
-      description: "Google Sign-In to be implemented with Firebase.",
+      description: "Google Sign-In to be implemented with Supabase.",
     });
     // Placeholder for signInWithPopup(auth, googleProvider)
   };

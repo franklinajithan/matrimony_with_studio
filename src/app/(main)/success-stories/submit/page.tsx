@@ -13,9 +13,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Users, BookOpen, Image as ImageIcon, Mail, CheckSquare, Loader2, Send } from 'lucide-react';
 import { Checkbox } from "@/components/ui/checkbox";
 import React, { useState } from "react";
-import { db, auth } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { uploadFile } from '@/lib/firebase/storageService';
+import { auth } from '@/lib/supabase/auth';
+import { uploadFile } from '@/lib/supabase/storage';
+import { createSuccessStory } from '@/lib/supabase/stories';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -67,22 +67,15 @@ export default function SubmitSuccessStoryPage() {
         photoStoragePath = filePath;
       }
 
-      const storyData = {
+      await createSuccessStory({
         coupleNames: values.coupleNames,
         storyText: values.storyText,
-        originalStoryText: values.storyText, // Store the original text
-        photoUrl: photoUrl,
-        photoStoragePath: photoStoragePath,
+        originalStoryText: values.storyText,
+        photoUrl,
+        photoStoragePath,
         contactEmail: values.email || null,
         submittedByUid: currentUser ? currentUser.uid : null,
-        status: "pending", // Initial status
-        submittedAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        adminNotes: null,
-        approvedAt: null,
-      };
-
-      await addDoc(collection(db, "successStories"), storyData);
+      });
 
       toast({
         title: "Story Submitted!",

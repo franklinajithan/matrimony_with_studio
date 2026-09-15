@@ -11,11 +11,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { User, Image as ImageIcon, Info, Loader2, MapPin, Briefcase, Cake } from 'lucide-react';
 import { useState, useEffect } from "react";
-import { auth, db } from "@/lib/firebase/config";
-import { updateProfile } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { uploadFile } from "@/lib/firebase/storageService";
-import { updateUserProfile } from "@/lib/firebase/userService";
+import { auth, updateProfile } from "@/lib/supabase/auth";
+import { uploadFile } from "@/lib/supabase/storage";
+import { getProfile, updateUserProfile } from "@/lib/supabase/profiles";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const profileSchema = z.object({
@@ -58,9 +56,8 @@ export default function SettingsPage() {
       if (!user) return;
 
       try {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) {
-          const data = userDoc.data();
+        const data = await getProfile(user.uid);
+        if (data) {
           form.reset({
             displayName: data.displayName || "",
             bio: data.bio || "",

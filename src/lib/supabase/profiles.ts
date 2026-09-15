@@ -1,0 +1,253 @@
+import { supabase } from "./client";
+import { Timestamp } from "./timestamp";
+import type { Profile, StoredPhoto } from "./types";
+
+type ProfileRow = Record<string, unknown>;
+
+function asString(value: unknown, fallback = ""): string {
+  return typeof value === "string" ? value : fallback;
+}
+
+function mapCommentNotifications(
+  raw: unknown
+): Profile["commentNotifications"] {
+  if (!raw || typeof raw !== "object") return {};
+  const result: Profile["commentNotifications"] = {};
+  for (const [key, value] of Object.entries(raw as Record<string, any>)) {
+    result[key] = {
+      count: Number(value?.count || 0),
+      lastSeen: Timestamp.fromISO(value?.lastSeen || value?.last_seen),
+    };
+  }
+  return result;
+}
+
+export function mapProfile(row: ProfileRow | null): Profile | null {
+  if (!row) return null;
+  const id = String(row.id);
+  return {
+    id,
+    uid: id,
+    email: (row.email as string | null) ?? null,
+    displayName: asString(row.display_name),
+    bio: asString(row.bio),
+    photoURL: asString(row.photo_url),
+    dataAiHint: asString(row.data_ai_hint),
+    location: asString(row.location),
+    profession: asString(row.profession),
+    height: asString(row.height),
+    dob: asString(row.dob),
+    religion: asString(row.religion),
+    caste: asString(row.caste),
+    language: asString(row.language),
+    hobbies: asString(row.hobbies),
+    favoriteMovies: asString(row.favorite_movies),
+    favoriteMusic: asString(row.favorite_music),
+    educationLevel: asString(row.education_level),
+    smokingHabits: asString(row.smoking_habits),
+    drinkingHabits: asString(row.drinking_habits),
+    sunSign: asString(row.sun_sign),
+    moonSign: asString(row.moon_sign),
+    nakshatra: asString(row.nakshatra),
+    horoscopeInfo: asString(row.horoscope_info),
+    horoscopeFileName: asString(row.horoscope_file_name),
+    horoscopeFileUrl: asString(row.horoscope_file_url),
+    additionalPhotoUrls: Array.isArray(row.additional_photo_urls)
+      ? (row.additional_photo_urls as StoredPhoto[])
+      : [],
+    isAdmin: Boolean(row.is_admin),
+    isVerified: Boolean(row.is_verified),
+    lastSeenLikeNotificationsTimestamp: Timestamp.fromISO(
+      row.last_seen_like_notifications_at as string | null
+    ),
+    lastSeenCommentNotificationsTimestamp: Timestamp.fromISO(
+      row.last_seen_comment_notifications_at as string | null
+    ),
+    commentNotifications: mapCommentNotifications(row.comment_notifications),
+    extra: (row.extra as Record<string, unknown>) || {},
+    createdAt: Timestamp.fromISO(row.created_at as string | null),
+    updatedAt: Timestamp.fromISO(row.updated_at as string | null),
+  };
+}
+
+const CAMEL_TO_SNAKE: Record<string, string> = {
+  displayName: "display_name",
+  photoURL: "photo_url",
+  dataAiHint: "data_ai_hint",
+  favoriteMovies: "favorite_movies",
+  favoriteMusic: "favorite_music",
+  educationLevel: "education_level",
+  smokingHabits: "smoking_habits",
+  drinkingHabits: "drinking_habits",
+  sunSign: "sun_sign",
+  moonSign: "moon_sign",
+  horoscopeInfo: "horoscope_info",
+  horoscopeFileName: "horoscope_file_name",
+  horoscopeFileUrl: "horoscope_file_url",
+  additionalPhotoUrls: "additional_photo_urls",
+  isAdmin: "is_admin",
+  isVerified: "is_verified",
+  lastSeenLikeNotificationsTimestamp: "last_seen_like_notifications_at",
+  lastSeenCommentNotificationsTimestamp: "last_seen_comment_notifications_at",
+  commentNotifications: "comment_notifications",
+  email: "email",
+  bio: "bio",
+  location: "location",
+  profession: "profession",
+  height: "height",
+  dob: "dob",
+  religion: "religion",
+  caste: "caste",
+  language: "language",
+  hobbies: "hobbies",
+  nakshatra: "nakshatra",
+};
+
+const IGNORE_KEYS = new Set([
+  "id",
+  "uid",
+  "searchTerms",
+  "createdAt",
+  "updatedAt",
+  "search_text",
+]);
+
+function toIso(value: unknown): string | null {
+  if (!value) return null;
+  if (typeof value === "string") return value;
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "object" && value !== null && "toDate" in value) {
+    return (value as { toDate: () => Date }).toDate().toISOString();
+  }
+  return null;
+}
+
+export function profileInputToRow(userData: Record<string, any>): Record<string, unknown> {
+  const row: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(userData)) {
+    if (IGNORE_KEYS.has(key) || value === undefined) continue;
+    const column = CAMEL_TO_SNAKE[key] || (key.includes("_") ? key : null);
+    if (!column) continue;
+
+    if (
+      column === "last_seen_like_notifications_at" ||
+      column === "last_seen_comment_notifications_at"
+    ) {
+      row[column] = toIso(value);
+    } else if (column === "comment_notifications" && value && typeof value === "object") {
+      row[column] = Object.fromEntries(
+        Object.entries(value as Record<string, any>).map(([key, note]) => [
+          key,
+          {
+            count: Number(note?.count || 0),
+            lastSeen: toIso(note?.lastSeen || note?.last_seen),
+          },
+        ])
+      );
+    } else {
+      row[column] = value;
+    }
+  }
+
+  return row;
+}
+
+export async function getProfile(userId: string): Promise<Profile | null> {
+  const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+  if (error) throw error;
+  return mapProfile(data);
+}
+
+export async function listProfiles(options?: {
+  limit?: number;
+  offset?: number;
+  excludeId?: string;
+}): Promise<Profile[]> {
+  const limit = options?.limit ?? 20;
+  const offset = options?.offset ?? 0;
+
+  let query = supabase
+    .from("profiles")
+    .select("*")
+    .order("display_name", { ascending: true, nullsFirst: false })
+    .range(offset, offset + limit - 1);
+
+  if (options?.excludeId) {
+    query = query.neq("id", options.excludeId);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data || []).map((row) => mapProfile(row)!);
+}
+
+export async function searchProfiles(term: string, limit = 20): Promise<Profile[]> {
+  const cleaned = term.trim();
+  if (!cleaned) return [];
+  const pattern = `%${cleaned.replace(/[%_,]/g, " ").trim()}%`;
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .or(
+      `display_name.ilike."${pattern}",profession.ilike."${pattern}",location.ilike."${pattern}",search_text.ilike."${pattern}"`
+    )
+    .order("display_name", { ascending: true, nullsFirst: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data || []).map((row) => mapProfile(row)!);
+}
+
+export async function createUserProfile(userId: string, userData: Record<string, any>) {
+  const row = {
+    id: userId,
+    ...profileInputToRow(userData),
+  };
+  const { error } = await supabase.from("profiles").upsert(row, { onConflict: "id" });
+  if (error) throw error;
+  return true;
+}
+
+export async function updateUserProfile(userId: string, userData: Record<string, any>) {
+  const row = profileInputToRow(userData);
+  const { error } = await supabase.from("profiles").update(row).eq("id", userId);
+  if (error) throw error;
+  return true;
+}
+
+export async function updateAllUsersSearchTerms() {
+  // search_text is a generated column; nothing to backfill.
+  return true;
+}
+
+export function subscribeToProfiles(
+  onChange: (profiles: Profile[]) => void,
+  onError?: (error: Error) => void
+): () => void {
+  const load = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .order("display_name", { ascending: true, nullsFirst: false });
+      if (error) throw error;
+      onChange((data || []).map((row) => mapProfile(row)!));
+    } catch (error) {
+      onError?.(error as Error);
+    }
+  };
+
+  void load();
+  const channel = supabase
+    .channel("profiles-admin")
+    .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => {
+      void load();
+    })
+    .subscribe();
+
+  return () => {
+    void supabase.removeChannel(channel);
+  };
+}
