@@ -12,6 +12,7 @@ import { MatchSearchPanel } from "@/components/landing/MatchSearchPanel";
 import {
   CommunitySection,
   FaqSection,
+  FeatureGrid,
   FeaturesOverview,
   FinalCta,
   GlobalLocationsSection,
@@ -57,10 +58,9 @@ export default function LandingPage() {
       <main>
         <LandingHero />
         <TrustStrip />
-        <GlobalLocationsSection />
         <WhyCupidMatch />
-        <MemberShowcase />
         <HowItWorks />
+        <FeatureGrid />
         <PrivacySection />
         <PricingTeaser />
         <FaqSection />

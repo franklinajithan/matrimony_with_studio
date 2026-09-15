@@ -13,6 +13,10 @@ import {
   Smartphone,
   Sparkles,
   UserRound,
+  Wand2,
+  Map,
+  Users,
+  CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -183,6 +187,91 @@ export function HowItWorks() {
             </li>
           ))}
         </ol>
+      </div>
+    </section>
+  );
+}
+
+export function FeatureGrid() {
+  const features = [
+    {
+      icon: Wand2,
+      title: "AI Profile Studio",
+      description: "Get help crafting your biography and prompts. Translate approved text between languages.",
+      status: "Coming soon" as const,
+    },
+    {
+      icon: Map,
+      title: "Future Map",
+      description: "Compare current location, future plans, relocation openness, and career flexibility.",
+      status: "Coming soon" as const,
+    },
+    {
+      icon: Sparkles,
+      title: "Culture Preferences",
+      description: "Express language, festivals, food, and traditions with granular importance levels.",
+      status: "Coming soon" as const,
+    },
+    {
+      icon: Users,
+      title: "Family Circle",
+      description: "Invite family with member-controlled permissions. View, suggest, or comment with boundaries.",
+      status: "Coming soon" as const,
+    },
+    {
+      icon: CheckCircle2,
+      title: "Verification",
+      description: "Optional identity and liveness checks. Know exactly what each badge means.",
+      status: "Coming soon" as const,
+    },
+    {
+      icon: MessageCircle,
+      title: "Guided Conversations",
+      description: "Meaningful prompts and optional AI assistance to help start important conversations.",
+      status: "Available" as const,
+    },
+  ];
+
+  return (
+    <section className="bg-accent/10 px-4 py-20 sm:px-6" aria-labelledby="features-heading">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-16 text-center">
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+            Platform Features
+          </p>
+          <h2 id="features-heading" className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
+            Built for meaningful connections
+          </h2>
+          <p className="mx-auto mt-4 max-w-3xl text-lg text-muted-foreground">
+            Tools designed to help you understand compatibility and build confidence in your decisions
+          </p>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {features.map((feature) => (
+            <div
+              key={feature.title}
+              className="group relative rounded-3xl border border-border bg-card p-8 shadow-sm transition-all hover:shadow-md"
+            >
+              {feature.status === "Coming soon" && (
+                <div className="absolute right-4 top-4 rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
+                  Coming soon
+                </div>
+              )}
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <feature.icon className="h-6 w-6" aria-hidden="true" />
+              </div>
+              <h3 className="mb-3 text-lg font-bold text-foreground">{feature.title}</h3>
+              <p className="text-sm leading-relaxed text-muted-foreground">{feature.description}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-12 text-center">
+          <p className="text-sm text-muted-foreground">
+            Features marked "Coming soon" are in development. Only implemented features are shown in member-facing flows.
+          </p>
+        </div>
       </div>
     </section>
   );
@@ -692,17 +781,17 @@ export function PricingTeaser() {
   ];
 
   return (
-    <section className="bg-white px-4 py-20 sm:px-6" aria-labelledby="pricing-heading">
+    <section className="bg-background px-4 py-20 sm:px-6" aria-labelledby="pricing-heading">
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
-          <p className="text-sm font-bold uppercase tracking-wider text-purple-600">
-            Choose your plan
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+            Pricing
           </p>
-          <h2 id="pricing-heading" className="mt-2 text-4xl font-bold text-gray-900 sm:text-5xl">
+          <h2 id="pricing-heading" className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
             Start free. Upgrade when you need more.
           </h2>
-          <p className="mx-auto mt-4 max-w-3xl text-lg text-gray-600">
-            Create your profile free. Then upgrade to unlock more features.
+          <p className="mx-auto mt-4 max-w-3xl text-lg text-muted-foreground">
+            Create your profile free. Then upgrade to unlock additional features when you're ready.
           </p>
         </div>
 
@@ -712,18 +801,18 @@ export function PricingTeaser() {
               key={plan.name}
               className={`rounded-3xl border-2 p-8 transition-all ${
                 plan.highlighted
-                  ? "scale-105 border-purple-500 bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-2xl"
-                  : "border-purple-100 bg-white hover:scale-105 hover:shadow-xl"
+                  ? "scale-105 border-primary bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-xl"
+                  : "border-border bg-card hover:shadow-md"
               }`}
             >
               {plan.highlighted && (
-                <div className="mb-4 inline-block rounded-full bg-white px-4 py-1 text-xs font-bold text-purple-600">
+                <div className="mb-4 inline-block rounded-full bg-card px-4 py-1 text-xs font-bold text-primary">
                   MOST POPULAR
                 </div>
               )}
               <h3
                 className={`text-2xl font-bold ${
-                  plan.highlighted ? "text-white" : "text-gray-900"
+                  plan.highlighted ? "text-primary-foreground" : "text-foreground"
                 }`}
               >
                 {plan.name}
@@ -731,14 +820,14 @@ export function PricingTeaser() {
               <div className="mt-4">
                 <span
                   className={`text-5xl font-bold ${
-                    plan.highlighted ? "text-white" : "text-gray-900"
+                    plan.highlighted ? "text-primary-foreground" : "text-foreground"
                   }`}
                 >
                   {plan.price}
                 </span>
                 <span
                   className={`ml-2 text-sm ${
-                    plan.highlighted ? "text-purple-100" : "text-gray-600"
+                    plan.highlighted ? "text-primary-foreground/80" : "text-muted-foreground"
                   }`}
                 >
                   {plan.period}
@@ -746,7 +835,7 @@ export function PricingTeaser() {
               </div>
               <p
                 className={`mt-2 text-sm ${
-                  plan.highlighted ? "text-purple-100" : "text-gray-600"
+                  plan.highlighted ? "text-primary-foreground/80" : "text-muted-foreground"
                 }`}
               >
                 {plan.description}
@@ -756,12 +845,12 @@ export function PricingTeaser() {
                   <li
                     key={feature}
                     className={`flex items-center gap-2 ${
-                      plan.highlighted ? "text-white" : "text-gray-700"
+                      plan.highlighted ? "text-primary-foreground" : "text-foreground"
                     }`}
                   >
                     <BadgeCheck
                       className={`h-5 w-5 ${
-                        plan.highlighted ? "text-white" : "text-purple-500"
+                        plan.highlighted ? "text-primary-foreground" : "text-primary"
                       }`}
                     />
                     <span className="text-sm">{feature}</span>
@@ -770,10 +859,10 @@ export function PricingTeaser() {
               </ul>
               <Button
                 asChild
-                className={`mt-8 w-full rounded-full py-6 text-base font-semibold ${
+                className={`mt-8 w-full rounded-full py-6 text-base font-semibold transition-all ${
                   plan.highlighted
-                    ? "bg-white text-purple-600 hover:bg-gray-100"
-                    : "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90"
+                    ? "bg-card text-primary hover:bg-card/90"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90"
                 }`}
               >
                 <Link href="/pricing">{plan.cta}</Link>
@@ -789,40 +878,52 @@ export function PricingTeaser() {
 export function FaqSection() {
   const faqs = [
     {
-      q: "Is creating a CupidMatch profile free?",
-      a: "Yes. You can create a profile at no cost and explore core matching features. Paid plans are available if you want additional capabilities.",
+      q: "Who is CupidMatch for?",
+      a: "CupidMatch is for Sri Lankan adults worldwide seeking marriage. We serve never-married, divorced, and widowed members aged 18+ in the UK, Canada, Australia, and other countries, as well as people in Sri Lanka open to international relationships.",
     },
     {
-      q: "Who can see my photos and personal details?",
-      a: "CupidMatch is designed so you remain in control of what you share. Profile settings help you manage visibility as conversations progress.",
+      q: "How do international matches work?",
+      a: "Our Future Map feature (coming soon) helps you compare current location, future settlement plans, relocation openness, and long-distance tolerance. You can express where you are now and where you want to be.",
     },
     {
-      q: "Can I use CupidMatch outside India or Sri Lanka?",
-      a: "Yes. CupidMatch is built for Indian and Sri Lankan communities worldwide, including people living in the UK and across the diaspora.",
+      q: "What verification is available?",
+      a: "We offer optional identity and liveness checks. Each verification badge states exactly what was checked — we never imply that verification guarantees safety or honesty. Email and phone verification are also available.",
     },
     {
-      q: "Does CupidMatch support horoscope matching?",
-      a: "Yes. Horoscope compatibility tools are available for members who want to include them in their matching journey.",
+      q: "How does family involvement work?",
+      a: "Family Circle (coming soon) allows member-controlled invitations with granular permissions. You decide who can view your profile, suggest matches, or comment privately. Family helpers cannot impersonate you or accept matches on your behalf.",
     },
     {
-      q: "How do profile verification and reporting work?",
-      a: "CupidMatch is designed to support clearer verification signals and reporting tools so members can flag inappropriate behaviour and feel more confident while connecting.",
+      q: "What privacy controls do I have?",
+      a: "You control profile visibility, photo reveal requests, and who can contact you. Privacy defaults minimize exposure. You can block or report members, and pause your account at any time.",
+    },
+    {
+      q: "How do AI recommendations work?",
+      a: "Our matching algorithm is deterministic and explainable. You'll see clear evidence-based reasons for each suggestion, like shared settlement preferences or aligned family expectations. AI doesn't decide who is eligible — you do.",
+    },
+    {
+      q: "Can I cancel my subscription?",
+      a: "Yes. You can cancel anytime through your account settings or billing portal. Core safety features remain available to everyone, regardless of subscription status.",
     },
   ];
 
   return (
-    <section id="faq" className="scroll-mt-24 bg-[#FBF5F1] px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="faq-heading">
+    <section id="faq" className="scroll-mt-24 bg-accent/10 px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="faq-heading">
       <div className="mx-auto max-w-3xl">
-        <h2 id="faq-heading" className="font-serif text-3xl font-semibold text-[#271624] sm:text-4xl">
+        <h2 id="faq-heading" className="text-3xl font-bold text-foreground sm:text-4xl">
           Frequently asked questions
         </h2>
-        <Accordion type="single" collapsible className="mt-8 rounded-2xl border border-[#EADFD6] bg-white px-5">
+        <Accordion type="single" collapsible className="mt-10 space-y-4">
           {faqs.map((item, index) => (
-            <AccordionItem key={item.q} value={`item-${index}`} className="border-[#EADFD6]">
-              <AccordionTrigger className="text-left text-[#271624] hover:no-underline hover:text-[#4B164C] focus-visible:ring-2 focus-visible:ring-[#4B164C]">
+            <AccordionItem 
+              key={item.q} 
+              value={`item-${index}`} 
+              className="rounded-2xl border border-border bg-card px-6 shadow-sm"
+            >
+              <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline hover:text-primary">
                 {item.q}
               </AccordionTrigger>
-              <AccordionContent className="text-[#725E6D] leading-6">{item.a}</AccordionContent>
+              <AccordionContent className="leading-relaxed text-muted-foreground">{item.a}</AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
@@ -834,36 +935,37 @@ export function FaqSection() {
 export function FinalCta() {
   return (
     <section className="px-4 pb-20 sm:px-6 sm:pb-24" aria-labelledby="cta-heading">
-      <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-[#30122A] px-6 py-14 text-center text-[#FFFDF9] sm:px-12 sm:py-16">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#D6B56D]/15 text-[#F2C96D]">
+      <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary to-primary/90 px-6 py-14 text-center text-primary-foreground shadow-xl sm:px-12 sm:py-16">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-card/20 text-card">
           <Heart className="h-5 w-5 fill-current" aria-hidden="true" />
         </div>
         <h2
           id="cta-heading"
-          className="mx-auto mt-5 max-w-3xl font-serif text-3xl font-semibold tracking-tight sm:text-4xl"
+          className="mx-auto mt-5 max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl"
         >
-          A meaningful future can start with one introduction.
+          Connect with clarity and confidence
         </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-[#F0E0E8] sm:text-base">
-          Create your profile, set your preferences and meet people looking for the same kind of
-          commitment.
+        <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 opacity-90 sm:text-base">
+          Create your profile, set your preferences, and meet people who understand where you come from — and where you're going.
         </p>
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button
             asChild
-            className={`h-12 rounded-full bg-[#D6B56D] px-8 text-[#30122A] hover:bg-[#F2C96D] ${focusRingOnDark}`}
+            size="lg"
+            className="h-12 rounded-full bg-card px-8 font-semibold text-primary shadow-md hover:bg-card/90"
           >
-            <Link href="/signup">Create my free profile</Link>
+            <Link href="/signup">Build my profile</Link>
           </Button>
           <Button
             asChild
+            size="lg"
             variant="outline"
-            className={`h-12 rounded-full border-[#D6B56D]/40 bg-transparent px-8 text-[#FFFDF9] hover:bg-white/10 hover:text-white ${focusRingOnDark}`}
+            className="h-12 rounded-full border-2 border-card/40 bg-transparent px-8 font-semibold text-card hover:bg-card/10"
           >
-            <Link href="/success-stories">View success stories</Link>
+            <Link href="/success-stories">Success stories</Link>
           </Button>
         </div>
-        <p className="mt-6 text-sm text-[#F2C96D]">Free to join · Your privacy stays in your hands</p>
+        <p className="mt-6 text-sm opacity-80">Free to join · Privacy controls built in</p>
       </div>
     </section>
   );
