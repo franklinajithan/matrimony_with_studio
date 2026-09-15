@@ -1,6 +1,6 @@
 # Supabase (PostgreSQL)
 
-This app uses **Supabase Auth**, **Postgres**, and **Storage** instead of Firebase.
+This app uses **Supabase Auth**, **Postgres**, and **Storage**.
 
 ## 1. Create a project
 
@@ -9,40 +9,50 @@ This app uses **Supabase Auth**, **Postgres**, and **Storage** instead of Fireba
 
 ## 2. Run the schema
 
-In the Supabase dashboard open **SQL Editor**, paste the contents of `schema.sql`, and run it.
+For a **new** project:
 
-That creates tables, indexes, row-level security, realtime publication, and a public `media` storage bucket.
+1. Run `schema.sql` in the SQL editor.
+2. Then run `migrations/20260915_phase2a_auth_onboarding.sql`.
+
+For the **existing** CupidMatch database, run only the Phase 2A migration. Do not drop tables.
+
+Local helper (uses `DATABASE_URL` from `.env.local`, never commit that file):
+
+```bash
+node scripts/apply-migration.mjs
+```
 
 ## 3. App environment variables
 
-Copy `.env.example` to `.env.local` in the project root:
+See `docs/deployment.md`. Copy `.env.example` to `.env.local`.
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_ANON_KEY
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+NEXT_PUBLIC_SITE_URL=http://localhost:9002
 ```
 
-Find both values under **Project Settings → API**.
+Do not put the database password, service-role key, or secret API key in `NEXT_PUBLIC_` variables.
 
 ## 4. Auth settings
 
 In **Authentication → Providers**, enable **Email**.
 
-Optional but recommended:
+Keep **Confirm email enabled** (required for production). Local signup shows `/signup/check-email` until the user opens the confirmation link.
 
-- Turn off “Confirm email” while developing so signup can continue immediately.
-- Set **Site URL** to `http://localhost:9002` (this app’s Next.js port) and add your production URL.
+**URL configuration**
+
+- Site URL: `http://localhost:9002` locally, production origin in production
+- Redirect URLs must include:
+  - `http://localhost:9002/auth/callback`
+  - `https://YOUR_PRODUCTION_DOMAIN/auth/callback`
 
 ## 5. First admin user
 
-Sign up in the app, then in the SQL editor:
+Sign up in the app, confirm the email, then in the SQL editor:
 
 ```sql
 update public.profiles
 set is_admin = true
 where email = 'you@example.com';
 ```
-
-## 6. Existing Firebase data
-
-This is a new database. Firestore documents and Firebase Storage files are not migrated automatically. Recreate accounts (or import users) and re-upload photos after switching.

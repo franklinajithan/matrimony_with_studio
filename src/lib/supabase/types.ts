@@ -19,6 +19,18 @@ export type Profile = {
   profession: string;
   height: string;
   dob: string;
+  ageYears?: number;
+  isPublished?: boolean;
+  onboardingStep?: number;
+  onboardingDraft?: Record<string, unknown>;
+  country?: string;
+  region?: string;
+  languages?: string[];
+  relationshipIntentions?: Record<string, unknown>;
+  valuesLifestyle?: Record<string, unknown>;
+  culturalFamily?: Record<string, unknown>;
+  settlement?: Record<string, unknown>;
+  photoPrivacy?: "members" | "connections" | "hidden";
   religion: string;
   caste: string;
   language: string;

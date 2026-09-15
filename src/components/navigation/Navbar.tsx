@@ -80,6 +80,7 @@ export function Navbar() {
         description: "You have been successfully logged out.",
       });
       router.push("/");
+      router.refresh();
     } catch (error) {
       console.error("Logout error:", error);
       toast({

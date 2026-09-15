@@ -1,5 +1,6 @@
-import type { User as SupabaseAuthUser } from "@supabase/supabase-js";
+import type { User as SupabaseAuthUser, Session } from "@supabase/supabase-js";
 import { supabase } from "./client";
+import { getSiteUrl } from "./env";
 
 export type AuthUser = {
   uid: string;
@@ -44,13 +45,24 @@ function mapAuthError(error: { message?: string; status?: number } | null, fallb
     code = "auth/user-not-found";
   } else if (lower.includes("network")) {
     code = "auth/network-request-failed";
-  } else if (lower.includes("too many")) {
+  } else if (lower.includes("too many") || lower.includes("rate limit")) {
     code = "auth/too-many-requests";
+  } else if (lower.includes("expired") || lower.includes("invalid") && lower.includes("link")) {
+    code = "auth/expired-action-code";
+  } else if (lower.includes("invalid api key") || lower.includes("invalid jwt")) {
+    code = "auth/invalid-api-key";
+  } else if (lower.includes("email not confirmed") || lower.includes("email_not_confirmed")) {
+    code = "auth/email-not-confirmed";
   }
 
   const err = new Error(message) as Error & { code: string };
   err.code = code;
   throw err;
+}
+
+function callbackUrl(next: string): string {
+  const origin = getSiteUrl();
+  return `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
 }
 
 async function hydrateSession() {
@@ -106,7 +118,7 @@ export async function signInWithEmailAndPassword(
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) mapAuthError(error, "Login failed");
   cachedUser = mapUser(data.user);
-  return { user: cachedUser };
+  return { user: cachedUser, session: data.session };
 }
 
 export async function createUserWithEmailAndPassword(
@@ -118,24 +130,54 @@ export async function createUserWithEmailAndPassword(
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: extras?.displayName ? { data: { display_name: extras.displayName } } : undefined,
+    options: {
+      emailRedirectTo: callbackUrl("/onboarding"),
+      data: extras?.displayName ? { display_name: extras.displayName } : undefined,
+    },
   });
   if (error) mapAuthError(error, "Signup failed");
-  cachedUser = mapUser(data.user);
-  return { user: cachedUser };
+  cachedUser = mapUser(data.session?.user ?? data.user);
+  return {
+    user: cachedUser,
+    session: data.session as Session | null,
+    needsEmailConfirmation: !data.session,
+  };
 }
 
 export async function signOut(_auth?: unknown) {
-  const { error } = await supabase.auth.signOut();
+  const { error } = await supabase.auth.signOut({ scope: "local" });
   if (error) mapAuthError(error, "Logout failed");
   cachedUser = null;
+  if (typeof window !== "undefined") {
+    try {
+      Object.keys(window.localStorage)
+        .filter((key) => key.startsWith("sb-") || key.includes("firebase"))
+        .forEach((key) => window.localStorage.removeItem(key));
+    } catch {
+      // ignore storage access errors
+    }
+  }
 }
 
 export async function sendPasswordResetEmail(_auth: unknown, email: string) {
-  const redirectTo =
-    typeof window !== "undefined" ? `${window.location.origin}/login` : undefined;
-  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: callbackUrl("/reset-password"),
+  });
   if (error) mapAuthError(error, "Could not send reset email");
+}
+
+export async function updatePassword(password: string) {
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) mapAuthError(error, "Could not update password");
+}
+
+export async function resendSignupConfirmation(email: string) {
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: { emailRedirectTo: callbackUrl("/onboarding") },
+  });
+  if (error) mapAuthError(error, "Could not resend confirmation email");
 }
 
 export async function updateProfile(

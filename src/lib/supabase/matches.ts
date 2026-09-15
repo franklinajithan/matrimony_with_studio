@@ -79,6 +79,48 @@ export function subscribeToMatchRequest(
   };
 }
 
+export async function listPendingRequests(receiverId: string): Promise<MatchRequestRow[]> {
+  const { data, error } = await supabase
+    .from("match_requests")
+    .select("*")
+    .eq("receiver_id", receiverId)
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map((row) => mapRequest(row)!);
+}
+
+export async function countPendingRequests(receiverId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from("match_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("receiver_id", receiverId)
+    .eq("status", "pending");
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export async function listAcceptedConnections(userId: string): Promise<MatchRequestRow[]> {
+  const { data, error } = await supabase
+    .from("match_requests")
+    .select("*")
+    .eq("status", "accepted")
+    .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+    .order("updated_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map((row) => mapRequest(row)!);
+}
+
+export async function countAcceptedConnections(userId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from("match_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "accepted")
+    .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
+  if (error) throw error;
+  return count ?? 0;
+}
+
 export function subscribeToPendingRequests(
   receiverId: string,
   onChange: (requests: MatchRequestRow[]) => void,

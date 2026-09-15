@@ -287,12 +287,14 @@ alter table public.messages enable row level security;
 alter table public.posts enable row level security;
 alter table public.success_stories enable row level security;
 
--- Profiles
+-- Profiles: owners and admins only. Discovery uses public.discovery_profiles.
 drop policy if exists "profiles_select_authenticated" on public.profiles;
 drop policy if exists "profiles_select_public" on public.profiles;
-create policy "profiles_select_public"
+drop policy if exists "profiles_select_own_or_admin" on public.profiles;
+create policy "profiles_select_own_or_admin"
   on public.profiles for select
-  using (true);
+  to authenticated
+  using (id = auth.uid() or public.is_admin());
 
 drop policy if exists "profiles_insert_own" on public.profiles;
 create policy "profiles_insert_own"
@@ -306,6 +308,10 @@ create policy "profiles_update_own_or_admin"
   to authenticated
   using (id = auth.uid() or public.is_admin())
   with check (id = auth.uid() or public.is_admin());
+
+revoke all on table public.profiles from anon;
+revoke all on table public.profiles from public;
+grant select, insert, update on table public.profiles to authenticated;
 
 -- Likes
 drop policy if exists "likes_select_authenticated" on public.likes;
@@ -481,31 +487,58 @@ end $$;
 -- Storage bucket + policies
 -- ---------------------------------------------------------------------------
 insert into storage.buckets (id, name, public)
-values ('media', 'media', true)
+values ('media', 'media', false)
 on conflict (id) do nothing;
 
 drop policy if exists "media_public_read" on storage.objects;
-create policy "media_public_read"
+drop policy if exists "media_authenticated_insert" on storage.objects;
+drop policy if exists "media_authenticated_update" on storage.objects;
+drop policy if exists "media_authenticated_delete" on storage.objects;
+drop policy if exists "media_select_authenticated" on storage.objects;
+drop policy if exists "media_insert_own_folder" on storage.objects;
+drop policy if exists "media_update_own_folder" on storage.objects;
+drop policy if exists "media_delete_own_folder" on storage.objects;
+
+create policy "media_select_authenticated"
   on storage.objects for select
+  to authenticated
   using (bucket_id = 'media');
 
-drop policy if exists "media_authenticated_insert" on storage.objects;
-create policy "media_authenticated_insert"
+create policy "media_insert_own_folder"
   on storage.objects for insert
   to authenticated
-  with check (bucket_id = 'media');
+  with check (
+    bucket_id = 'media'
+    and (storage.foldername(name))[1] = 'users'
+    and (storage.foldername(name))[2] = auth.uid()::text
+  );
 
-drop policy if exists "media_authenticated_update" on storage.objects;
-create policy "media_authenticated_update"
+create policy "media_update_own_folder"
   on storage.objects for update
   to authenticated
-  using (bucket_id = 'media');
+  using (
+    bucket_id = 'media'
+    and (storage.foldername(name))[1] = 'users'
+    and (storage.foldername(name))[2] = auth.uid()::text
+  )
+  with check (
+    bucket_id = 'media'
+    and (storage.foldername(name))[1] = 'users'
+    and (storage.foldername(name))[2] = auth.uid()::text
+  );
 
-drop policy if exists "media_authenticated_delete" on storage.objects;
-create policy "media_authenticated_delete"
+create policy "media_delete_own_folder"
   on storage.objects for delete
   to authenticated
-  using (bucket_id = 'media');
+  using (
+    bucket_id = 'media'
+    and (storage.foldername(name))[1] = 'users'
+    and (storage.foldername(name))[2] = auth.uid()::text
+  );
+
+-- Phase 2A additive columns, discovery view, and privileged-field protection:
+--   supabase/migrations/20260915_phase2a_auth_onboarding.sql
+-- Run that file on existing databases. Do not drop tables.
 
 -- After your first signup, promote yourself in the SQL editor:
 --   update public.profiles set is_admin = true where email = 'you@example.com';

@@ -67,6 +67,7 @@ export default function DiscoverPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const [lastOffset, setLastOffset] = useState(0);
   const lastOffsetRef = useRef(0);
   const [hasMore, setHasMore] = useState(true);
@@ -77,6 +78,7 @@ export default function DiscoverPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
+      setAuthReady(true);
     });
     return () => unsubscribe();
   }, []);
@@ -116,7 +118,7 @@ export default function DiscoverPage() {
       const fetchedProfilesBatch: Profile[] = rows.map((data) => ({
         id: data.id,
         name: data.displayName || "N/A",
-        age: calculateAge(data.dob),
+        age: data.ageYears ?? calculateAge(data.dob),
         profession: data.profession || "N/A",
         location: data.location || "N/A",
         imageUrl: data.photoURL || `https://placehold.co/600x800.png?text=${data.displayName ? data.displayName.substring(0,1) : 'P'}`,
@@ -151,8 +153,15 @@ export default function DiscoverPage() {
   }, [currentUser]); // Added currentUser as dependency
 
   useEffect(() => {
+    if (!authReady) return;
+    if (!currentUser) {
+      setIsLoading(false);
+      setProfiles([]);
+      setError(null);
+      return;
+    }
     fetchProfiles(true);
-  }, [currentUser, fetchProfiles]); // fetchProfiles will re-run if currentUser changes.
+  }, [currentUser, authReady, fetchProfiles]);
 
   const handleLikeToggle = async (profileId: string, currentLikeStatus: boolean) => {
     if (!currentUser || currentUser.uid === profileId) {
@@ -181,7 +190,7 @@ export default function DiscoverPage() {
   };
 
 
-  if (isLoading && profiles.length === 0) {
+  if (!authReady || (isLoading && profiles.length === 0 && currentUser)) {
     return (
       <div className="space-y-8">
         <div className="text-center">
@@ -191,6 +200,20 @@ export default function DiscoverPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {[...Array(PROFILES_PER_PAGE)].map((_, i) => <ProfileCardSkeleton key={i} />)}
         </div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="space-y-6 px-4 py-12 text-center">
+        <h1 className="font-headline text-4xl font-semibold text-gray-800">Discover your match</h1>
+        <p className="mx-auto max-w-lg text-lg text-muted-foreground">
+          Sign in to browse published member profiles. Unpublished and private details stay hidden.
+        </p>
+        <Button asChild className="min-h-11">
+          <Link href="/login?next=/discover">Log in to continue</Link>
+        </Button>
       </div>
     );
   }

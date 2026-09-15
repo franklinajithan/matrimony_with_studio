@@ -1,8 +1,34 @@
 # CupidMatch Implementation Status
 
 **Last Updated:** September 15, 2026  
-**Current Phase:** Phase 1 - Design Foundation & Validation  
-**Overall Progress:** Phase 1 Near Complete (Pending Performance Fix)
+**Current Phase:** Phase 2A complete; authenticated dashboard overview redesigned  
+**Overall Progress:** Phase 1 near complete; Phase 2A implemented against live Supabase
+
+---
+
+## Authenticated dashboard (overview)
+
+The `/dashboard` route is now a member overview rather than a social feed.
+
+**Priorities:** complete and publish a profile, set partner preferences, discover people, manage interests/connections, and control privacy.
+
+**Data reused (anon/session client only):**
+- Own `profiles` row via `getProfile` and `draftFromProfile`
+- Readiness from documented onboarding fields in `src/lib/onboarding/readiness.ts`
+- Discovery from `discovery_profiles` (`listProfiles`)
+- Received likes, accepted match requests, chat unread counts
+- Photo privacy from `photo_privacy` / onboarding draft
+
+**Screenshots** (local, unpublished draft account):
+- `artifacts/screenshots/dashboard/overview-1440px.png`
+- `artifacts/screenshots/dashboard/overview-768px.png`
+- `artifacts/screenshots/dashboard/overview-390px.png`
+- `artifacts/screenshots/dashboard/overview-390px-drawer.png`
+- No paused profile state (draft or published only)
+- Age-range partner preference is shown as “Not set” (not stored)
+- `/dashboard/preferences` remains a mock editor; the overview edits real fields via `/onboarding?step=2`
+- Social posts stay in `src/lib/supabase/posts.ts` but are not on the dashboard; there is no community feed route
+- Horoscope stays at `/dashboard/horoscope` under profile navigation
 
 ---
 
@@ -126,8 +152,8 @@
 **Repository:** matrimony_with_studio  
 **Branch:** cursor/enhance-landing-page-2151  
 **Framework:** Next.js 15.3.3 with Turbopack  
-**Database:** Firebase Firestore  
-**Authentication:** Firebase Auth (with placeholder credentials)
+**Database:** Supabase Postgres  
+**Authentication:** Supabase Auth (email confirmation required)
 
 ### Existing Capabilities
 
@@ -489,12 +515,30 @@ Sections to implement:
 
 ---
 
-## Phase 2 Status: Not Started
+## Phase 2A Status: Authentication and Onboarding
 
-**Status:** 📋 Planned  
-**Progress:** 0%
+**Status:** Implemented in repository  
+**Date:** September 15, 2026
 
-Awaiting Phase 1 completion.
+### What landed
+- Cookie-based Supabase session (`@supabase/ssr`) with middleware protection
+- Signup, login, logout, password reset, email confirmation callback, confirmation-pending screen
+- Additive SQL migration for private profiles, discovery view, privileged-field trigger, private media bucket
+- Resumable 8-step onboarding with server validation, draft persistence, and explicit publish
+- Authorization unit tests plus `npm run test:authz` against the live project
+- Deployment env documentation in `docs/deployment.md`
+
+### Not in this slice
+- AI matching
+- Messaging changes
+- Vercel deployment (env vars must be set in the dashboard, then redeploy)
+
+---
+
+## Phase 2 Status: In Progress (2A complete)
+
+**Status:** 🔄 Phase 2A done; 2B+ not started  
+**Progress:** Authentication + onboarding
 
 ---
 
@@ -632,6 +676,20 @@ npm run genkit:dev
 ## Change Log
 
 ### September 15, 2026
+
+**5:40 PM UTC - Authenticated dashboard redesign**
+- Replaced the social-feed dashboard with a member overview: profile readiness, activity, discovery, preferences, and privacy
+- Added dashboard shell (sidebar, mobile drawer, bottom nav) and real counts from likes, match requests, and chats
+- Removed the post composer from the primary dashboard layout; `posts.ts` and stored posts are unchanged
+- Login welcome toast is one-shot via sessionStorage, auto-dismisses, and no longer says “redirecting”
+- New routes: `/dashboard/interests` (likes) and `/dashboard/privacy` (publication + photo privacy)
+
+**4:00 PM UTC - Phase 2A complete in repository**
+- Cookie-based Supabase Auth with protected routes and confirmation callback
+- Additive privacy/onboarding SQL applied to the live project (tables not dropped)
+- Resumable onboarding wizard with server-side save/publish
+- Live two-account authorization checks passed
+- Deployment env documented; Vercel not deployed from this task
 
 **11:00 AM UTC - Phase 1: 75% Complete**
 - Completed Feature Grid section with 6 platform features

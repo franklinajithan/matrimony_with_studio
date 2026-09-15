@@ -138,7 +138,7 @@ export default function ProfilePage() {
           const data = await getProfile(user.uid);
           if (data) {
             const transformedData: AIUserProfileSchema = {
-              age: calculateAge(data.dob) || 0,
+              age: (data.ageYears ?? calculateAge(data.dob)) || 0,
               religion: data.religion || "",
               caste: data.caste || "",
               language: data.language || "",
@@ -208,7 +208,7 @@ export default function ProfilePage() {
           const profileData: ViewedUserProfileData = {
             userId: data.id,
             name: data.displayName || "N/A",
-            age: calculateAge(data.dob) || 0,
+            age: (data.ageYears ?? calculateAge(data.dob)) || 0,
             profession: data.profession || "N/A",
             location: data.location || "N/A",
             height: Number(data.height) || 0,

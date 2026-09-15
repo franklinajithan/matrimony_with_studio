@@ -6,6 +6,8 @@ export {
   createUserWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
+  updatePassword,
+  resendSignupConfirmation,
   updateProfile,
 } from "./auth";
 export type { AuthUser, User } from "./auth";
@@ -13,6 +15,7 @@ export { Timestamp, serverTimestamp } from "./timestamp";
 export {
   getProfile,
   listProfiles,
+  listProfilesByIds,
   searchProfiles,
   createUserProfile,
   updateUserProfile,
@@ -21,7 +24,16 @@ export {
   mapProfile,
 } from "./profiles";
 export { uploadFile } from "./storage";
-export { hasLiked, getLikedIds, likeProfile, unlikeProfile, subscribeToLike } from "./likes";
+export {
+  hasLiked,
+  getLikedIds,
+  likeProfile,
+  unlikeProfile,
+  subscribeToLike,
+  countReceivedLikes,
+  listReceivedLikes,
+  listSentLikes,
+} from "./likes";
 export {
   getMatchRequest,
   createMatchRequest,
@@ -29,10 +41,16 @@ export {
   deleteMatchRequest,
   subscribeToMatchRequest,
   subscribeToPendingRequests,
+  listPendingRequests,
+  countPendingRequests,
+  listAcceptedConnections,
+  countAcceptedConnections,
 } from "./matches";
 export {
   getChat,
   listChatsForUser,
+  unreadMessageCount,
+  countUnreadMessages,
   createChatDocument,
   updateChatParticipantDetails,
   clearUnread,

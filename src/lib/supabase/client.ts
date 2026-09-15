@@ -1,23 +1,29 @@
+import { createBrowserClient } from "@supabase/ssr";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseAnonKey, getSupabaseUrl, isSupabaseConfigured } from "./env";
 
-const stripQuotes = (value?: string) => value?.replace(/^["']|["']$/g, "");
+export { isSupabaseConfigured, getSupabaseAnonKey, getSupabaseUrl } from "./env";
 
-const supabaseUrl =
-  stripQuotes(process.env.NEXT_PUBLIC_SUPABASE_URL) || "https://placeholder.supabase.co";
-const supabaseAnonKey =
-  stripQuotes(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) || "placeholder-anon-key";
+function createBrowserSupabase(): SupabaseClient {
+  const url = getSupabaseUrl() || "https://placeholder.supabase.co";
+  const key = getSupabaseAnonKey() || "placeholder-anon-key";
 
-export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-  },
-});
+  if (typeof window === "undefined") {
+    return createClient(url, key, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    });
+  }
 
-export function isSupabaseConfigured(): boolean {
-  return Boolean(
-    stripQuotes(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
-      stripQuotes(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
-  );
+  return createBrowserClient(url, key, {
+    cookieOptions: {
+      path: "/",
+      sameSite: "lax",
+    },
+  });
 }
+
+export const supabase: SupabaseClient = createBrowserSupabase();

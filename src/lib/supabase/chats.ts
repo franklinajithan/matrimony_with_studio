@@ -52,6 +52,15 @@ export async function listChatsForUser(userId: string): Promise<ChatRow[]> {
   return (data || []).map((row) => mapChat(row)!);
 }
 
+export function unreadMessageCount(chats: ChatRow[], userId: string): number {
+  return chats.reduce((sum, chat) => sum + Number(chat.unreadBy?.[userId] || 0), 0);
+}
+
+export async function countUnreadMessages(userId: string): Promise<number> {
+  const chats = await listChatsForUser(userId);
+  return unreadMessageCount(chats, userId);
+}
+
 export async function createChatDocument(user1Uid: string, user2Uid: string): Promise<string> {
   const [user1, user2] = await Promise.all([getProfile(user1Uid), getProfile(user2Uid)]);
   if (!user1 || !user2) {

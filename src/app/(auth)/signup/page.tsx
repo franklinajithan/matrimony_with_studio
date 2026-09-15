@@ -1,32 +1,33 @@
-
 "use client";
 
-import Link from 'next/link';
+import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, User, ChromeIcon, Eye, EyeOff, Loader2 } from 'lucide-react';
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { auth, createUserWithEmailAndPassword, updateProfile } from '@/lib/supabase/auth';
+import { Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { auth, createUserWithEmailAndPassword } from "@/lib/supabase/auth";
 
-const signupSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Invalid email address." }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
-  confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters." }),
-  terms: z.boolean().refine(val => val === true, { message: "You must accept the terms and conditions." }),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords do not match.",
-  path: ["confirmPassword"],
-});
+const signupSchema = z
+  .object({
+    name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+    email: z.string().email({ message: "Enter a valid email address." }),
+    password: z.string().min(8, { message: "Password must be at least 8 characters." }),
+    confirmPassword: z.string().min(8, { message: "Confirm your password." }),
+    terms: z.boolean().refine((val) => val === true, { message: "You must accept the terms to continue." }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
+  });
 
 export default function SignupPage() {
   const { toast } = useToast();
@@ -34,6 +35,7 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
@@ -48,78 +50,63 @@ export default function SignupPage() {
 
   async function onSubmit(values: z.infer<typeof signupSchema>) {
     setIsLoading(true);
+    setFormError(null);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password, {
+      const result = await createUserWithEmailAndPassword(auth, values.email, values.password, {
         displayName: values.name,
       });
-      const user = userCredential.user;
 
-      if (user) {
-        await updateProfile(user, {
-          displayName: values.name,
+      if (result.needsEmailConfirmation) {
+        toast({
+          title: "Confirm your email",
+          description: "We sent a confirmation link. Open it to continue your profile.",
         });
+        router.push(`/signup/check-email?email=${encodeURIComponent(values.email)}`);
+        return;
       }
 
       toast({
-        title: "Account Created!",
-        description: "Welcome to CupidMatch! Please log in to continue.",
-        variant: "default",
+        title: "Account created",
+        description: "You can now build your profile.",
       });
-      router.push('/login');
-
-    } catch (error: any) {
-      console.error("Signup error:", error);
-      let errorMessage = "An unexpected error occurred. Please try again or check the console for details.";
-
-      if (error && typeof error === 'object' && 'code' in error) {
-        switch (error.code) {
-          case 'auth/email-already-in-use':
-            errorMessage = 'This email address is already in use. Please try logging in or use a different email.';
-            break;
-          case 'auth/weak-password':
-            errorMessage = 'The password is too weak. It must be at least 6 characters long.';
-            break;
-          case 'auth/invalid-email':
-            errorMessage = 'The email address is not valid. Please check and try again.';
-            break;
-          case 'auth/operation-not-allowed':
-            errorMessage = 'Email/Password sign-up is currently disabled. Please contact support or check Supabase Auth settings.';
-            break;
-          case 'auth/network-request-failed':
-            errorMessage = 'A network error occurred. Please check your internet connection and try again.';
-            break;
-          default:
-            errorMessage = (error as any).message || `An error occurred (Code: ${error.code}). Please try again.`;
-        }
-      } else if (error instanceof Error) {
+      router.push("/onboarding");
+      router.refresh();
+    } catch (error: unknown) {
+      const code = typeof error === "object" && error && "code" in error ? String((error as { code: string }).code) : "";
+      let errorMessage = "Could not create your account. Please try again.";
+      if (code === "auth/email-already-in-use") {
+        errorMessage = "An account with this email already exists. Try logging in.";
+      } else if (code === "auth/invalid-api-key") {
+        errorMessage = "This deployment is missing a valid Supabase key. Set NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in Vercel and redeploy.";
+      } else if (code === "auth/weak-password") {
+        errorMessage = "Choose a stronger password (at least 8 characters).";
+      } else if (code === "auth/invalid-email") {
+        errorMessage = "Enter a valid email address.";
+      } else if (code === "auth/too-many-requests") {
+        errorMessage = "Supabase has temporarily paused confirmation emails. Wait about an hour, then try once more. Do not keep submitting.";
+      } else if (error instanceof Error && error.message) {
         errorMessage = error.message;
       }
-
-      toast({
-        title: "Signup Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      setFormError(errorMessage);
+      toast({ title: "Signup failed", description: errorMessage, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   }
 
-  const handleGoogleSignIn = () => {
-    toast({
-      title: "Google Sign-In",
-      description: "Google Sign-In to be implemented with Supabase.",
-    });
-    // Placeholder for signInWithPopup(auth, googleProvider)
-  };
-
   return (
     <Card className="w-full max-w-md shadow-2xl">
       <CardHeader className="text-center">
-        <CardTitle className="font-headline text-3xl text-primary">Create Your Account</CardTitle>
-        <CardDescription>Join CupidMatch today and start your journey to find love.</CardDescription>
+        <CardTitle className="font-headline text-3xl text-primary">Create your account</CardTitle>
+        <CardDescription>Join CupidMatch. You will confirm your email before publishing a profile.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {formError && (
+          <Alert variant="destructive">
+            <AlertTitle>Could not create account</AlertTitle>
+            <AlertDescription>{formError}</AlertDescription>
+          </Alert>
+        )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -127,9 +114,9 @@ export default function SignupPage() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center"><User className="mr-2 h-4 w-4 text-muted-foreground" />Full Name</FormLabel>
+                  <FormLabel className="flex items-center"><User className="mr-2 h-4 w-4 text-muted-foreground" />Full name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Your Name" {...field} disabled={isLoading} />
+                    <Input autoComplete="name" placeholder="Your name" {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -142,7 +129,7 @@ export default function SignupPage() {
                 <FormItem>
                   <FormLabel className="flex items-center"><Mail className="mr-2 h-4 w-4 text-muted-foreground" />Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="you@example.com" {...field} disabled={isLoading} />
+                    <Input type="email" autoComplete="email" placeholder="you@example.com" {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -156,18 +143,19 @@ export default function SignupPage() {
                   <FormLabel className="flex items-center"><Lock className="mr-2 h-4 w-4 text-muted-foreground" />Password</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Input 
-                        type={showPassword ? "text" : "password"} 
-                        placeholder="••••••••" 
-                        {...field} 
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        placeholder="At least 8 characters"
+                        {...field}
                         className="pr-10"
                         disabled={isLoading}
                       />
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
-                        className="absolute inset-y-0 right-0 h-full px-3 text-muted-foreground hover:text-primary"
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute inset-y-0 right-0 h-full min-w-11 px-3 text-muted-foreground hover:text-primary"
                         onClick={() => setShowPassword(!showPassword)}
                         disabled={isLoading}
                         tabIndex={-1}
@@ -186,21 +174,22 @@ export default function SignupPage() {
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center"><Lock className="mr-2 h-4 w-4 text-muted-foreground" />Confirm Password</FormLabel>
+                  <FormLabel className="flex items-center"><Lock className="mr-2 h-4 w-4 text-muted-foreground" />Confirm password</FormLabel>
                   <FormControl>
-                     <div className="relative">
-                      <Input 
-                        type={showConfirmPassword ? "text" : "password"} 
-                        placeholder="••••••••" 
-                        {...field} 
+                    <div className="relative">
+                      <Input
+                        type={showConfirmPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        placeholder="••••••••"
+                        {...field}
                         className="pr-10"
                         disabled={isLoading}
                       />
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
-                        className="absolute inset-y-0 right-0 h-full px-3 text-muted-foreground hover:text-primary"
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute inset-y-0 right-0 h-full min-w-11 px-3 text-muted-foreground hover:text-primary"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         disabled={isLoading}
                         tabIndex={-1}
@@ -218,13 +207,9 @@ export default function SignupPage() {
               control={form.control}
               name="terms"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm bg-muted/50">
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-muted/50">
                   <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      disabled={isLoading}
-                    />
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={isLoading} />
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>
@@ -235,29 +220,16 @@ export default function SignupPage() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isLoading}>
+            <Button type="submit" className="w-full min-h-11" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Account
+              Create account
             </Button>
           </form>
         </Form>
-        <div className="mt-6 relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">
-              Or sign up with
-            </span>
-          </div>
-        </div>
-        <Button variant="outline" className="w-full mt-6" onClick={handleGoogleSignIn} disabled={isLoading}>
-           <ChromeIcon className="mr-2 h-5 w-5" /> Google
-        </Button>
       </CardContent>
       <CardFooter className="flex justify-center">
         <p className="text-sm text-muted-foreground">
-          Already have an account?{' '}
+          Already have an account?{" "}
           <Link href="/login" className="font-medium text-primary hover:underline">
             Log in
           </Link>

@@ -39,6 +39,51 @@ export async function unlikeProfile(likerId: string, likedId: string) {
   if (error) throw error;
 }
 
+export type LikeRow = {
+  likerId: string;
+  likedId: string;
+  createdAt: string | null;
+};
+
+function mapLike(row: Record<string, unknown>): LikeRow {
+  return {
+    likerId: String(row.liker_id),
+    likedId: String(row.liked_id),
+    createdAt: (row.created_at as string | null) ?? null,
+  };
+}
+
+export async function countReceivedLikes(userId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from("likes")
+    .select("liker_id", { count: "exact", head: true })
+    .eq("liked_id", userId);
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export async function listReceivedLikes(userId: string, limit = 20): Promise<LikeRow[]> {
+  const { data, error } = await supabase
+    .from("likes")
+    .select("liker_id, liked_id, created_at")
+    .eq("liked_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data || []).map((row) => mapLike(row));
+}
+
+export async function listSentLikes(userId: string, limit = 20): Promise<LikeRow[]> {
+  const { data, error } = await supabase
+    .from("likes")
+    .select("liker_id, liked_id, created_at")
+    .eq("liker_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data || []).map((row) => mapLike(row));
+}
+
 export function subscribeToLike(
   likerId: string,
   likedId: string,

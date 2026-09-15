@@ -1,6 +1,7 @@
 import { supabase } from "./client";
 import { Timestamp } from "./timestamp";
 import type { Profile, StoredPhoto } from "./types";
+import { omitEmptyDefaults, stripPrivilegedFields } from "./privileged";
 
 type ProfileRow = Record<string, unknown>;
 
@@ -25,6 +26,13 @@ function mapCommentNotifications(
 export function mapProfile(row: ProfileRow | null): Profile | null {
   if (!row) return null;
   const id = String(row.id);
+  const dob = asString(row.dob);
+  const ageYears =
+    typeof row.age_years === "number"
+      ? row.age_years
+      : row.age_years != null
+        ? Number(row.age_years)
+        : undefined;
   return {
     id,
     uid: id,
@@ -36,7 +44,8 @@ export function mapProfile(row: ProfileRow | null): Profile | null {
     location: asString(row.location),
     profession: asString(row.profession),
     height: asString(row.height),
-    dob: asString(row.dob),
+    dob,
+    ageYears: Number.isFinite(ageYears) ? ageYears : undefined,
     religion: asString(row.religion),
     caste: asString(row.caste),
     language: asString(row.language),
@@ -57,6 +66,17 @@ export function mapProfile(row: ProfileRow | null): Profile | null {
       : [],
     isAdmin: Boolean(row.is_admin),
     isVerified: Boolean(row.is_verified),
+    isPublished: Boolean(row.is_published),
+    onboardingStep: Number(row.onboarding_step || 0),
+    onboardingDraft: (row.onboarding_draft as Record<string, unknown>) || {},
+    country: asString(row.country),
+    region: asString(row.region),
+    languages: Array.isArray(row.languages) ? (row.languages as string[]) : [],
+    relationshipIntentions: (row.relationship_intentions as Record<string, unknown>) || {},
+    valuesLifestyle: (row.values_lifestyle as Record<string, unknown>) || {},
+    culturalFamily: (row.cultural_family as Record<string, unknown>) || {},
+    settlement: (row.settlement as Record<string, unknown>) || {},
+    photoPrivacy: asString(row.photo_privacy, "members") as Profile["photoPrivacy"],
     lastSeenLikeNotificationsTimestamp: Timestamp.fromISO(
       row.last_seen_like_notifications_at as string | null
     ),
@@ -87,9 +107,16 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   additionalPhotoUrls: "additional_photo_urls",
   isAdmin: "is_admin",
   isVerified: "is_verified",
+  isPublished: "is_published",
+  onboardingStep: "onboarding_step",
+  onboardingDraft: "onboarding_draft",
+  photoPrivacy: "photo_privacy",
   lastSeenLikeNotificationsTimestamp: "last_seen_like_notifications_at",
   lastSeenCommentNotificationsTimestamp: "last_seen_comment_notifications_at",
   commentNotifications: "comment_notifications",
+  relationshipIntentions: "relationship_intentions",
+  valuesLifestyle: "values_lifestyle",
+  culturalFamily: "cultural_family",
   email: "email",
   bio: "bio",
   location: "location",
@@ -101,6 +128,10 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   language: "language",
   hobbies: "hobbies",
   nakshatra: "nakshatra",
+  country: "country",
+  region: "region",
+  languages: "languages",
+  settlement: "settlement",
 };
 
 const IGNORE_KEYS = new Set([
@@ -110,6 +141,19 @@ const IGNORE_KEYS = new Set([
   "createdAt",
   "updatedAt",
   "search_text",
+  "ageYears",
+  "age_years",
+  "isAdmin",
+  "is_admin",
+  "isVerified",
+  "is_verified",
+  "subscriptionPlan",
+  "subscription_plan",
+  "subscriptionEntitlements",
+  "subscription_entitlements",
+  "email",
+  "isPublished",
+  "is_published",
 ]);
 
 function toIso(value: unknown): string | null {
@@ -123,12 +167,14 @@ function toIso(value: unknown): string | null {
 }
 
 export function profileInputToRow(userData: Record<string, any>): Record<string, unknown> {
+  const sanitized = stripPrivilegedFields(userData);
   const row: Record<string, unknown> = {};
 
-  for (const [key, value] of Object.entries(userData)) {
+  for (const [key, value] of Object.entries(sanitized)) {
     if (IGNORE_KEYS.has(key) || value === undefined) continue;
     const column = CAMEL_TO_SNAKE[key] || (key.includes("_") ? key : null);
     if (!column) continue;
+    if (IGNORE_KEYS.has(column)) continue;
 
     if (
       column === "last_seen_like_notifications_at" ||
@@ -137,8 +183,8 @@ export function profileInputToRow(userData: Record<string, any>): Record<string,
       row[column] = toIso(value);
     } else if (column === "comment_notifications" && value && typeof value === "object") {
       row[column] = Object.fromEntries(
-        Object.entries(value as Record<string, any>).map(([key, note]) => [
-          key,
+        Object.entries(value as Record<string, any>).map(([noteKey, note]) => [
+          noteKey,
           {
             count: Number(note?.count || 0),
             lastSeen: toIso(note?.lastSeen || note?.last_seen),
@@ -150,13 +196,25 @@ export function profileInputToRow(userData: Record<string, any>): Record<string,
     }
   }
 
-  return row;
+  return omitEmptyDefaults(row);
 }
 
 export async function getProfile(userId: string): Promise<Profile | null> {
-  const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
-  if (error) throw error;
-  return mapProfile(data);
+  const { data: own, error: ownError } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .maybeSingle();
+  if (ownError) throw ownError;
+  if (own) return mapProfile(own);
+
+  const { data: published, error: publishedError } = await supabase
+    .from("discovery_profiles")
+    .select("*")
+    .eq("id", userId)
+    .maybeSingle();
+  if (publishedError) throw publishedError;
+  return mapProfile(published);
 }
 
 export async function listProfiles(options?: {
@@ -168,7 +226,7 @@ export async function listProfiles(options?: {
   const offset = options?.offset ?? 0;
 
   let query = supabase
-    .from("profiles")
+    .from("discovery_profiles")
     .select("*")
     .order("display_name", { ascending: true, nullsFirst: false })
     .range(offset, offset + limit - 1);
@@ -182,16 +240,24 @@ export async function listProfiles(options?: {
   return (data || []).map((row) => mapProfile(row)!);
 }
 
+export async function listProfilesByIds(ids: string[]): Promise<Profile[]> {
+  const unique = Array.from(new Set(ids.filter(Boolean)));
+  if (unique.length === 0) return [];
+  const { data, error } = await supabase.from("discovery_profiles").select("*").in("id", unique);
+  if (error) throw error;
+  return (data || []).map((row) => mapProfile(row)!);
+}
+
 export async function searchProfiles(term: string, limit = 20): Promise<Profile[]> {
   const cleaned = term.trim();
   if (!cleaned) return [];
   const pattern = `%${cleaned.replace(/[%_,]/g, " ").trim()}%`;
 
   const { data, error } = await supabase
-    .from("profiles")
+    .from("discovery_profiles")
     .select("*")
     .or(
-      `display_name.ilike."${pattern}",profession.ilike."${pattern}",location.ilike."${pattern}",search_text.ilike."${pattern}"`
+      `display_name.ilike."${pattern}",profession.ilike."${pattern}",location.ilike."${pattern}"`
     )
     .order("display_name", { ascending: true, nullsFirst: false })
     .limit(limit);
@@ -212,13 +278,13 @@ export async function createUserProfile(userId: string, userData: Record<string,
 
 export async function updateUserProfile(userId: string, userData: Record<string, any>) {
   const row = profileInputToRow(userData);
+  if (Object.keys(row).length === 0) return true;
   const { error } = await supabase.from("profiles").update(row).eq("id", userId);
   if (error) throw error;
   return true;
 }
 
 export async function updateAllUsersSearchTerms() {
-  // search_text is a generated column; nothing to backfill.
   return true;
 }
 

@@ -47,7 +47,7 @@ function SearchPageContent() {
         id: data.id,
         displayName: data.displayName || "User",
         photoURL: data.photoURL || "https://placehold.co/400x400.png",
-        age: calculateAge(data.dob),
+        age: data.ageYears ?? calculateAge(data.dob),
         profession: data.profession,
         location: data.location,
         bio: data.bio,
