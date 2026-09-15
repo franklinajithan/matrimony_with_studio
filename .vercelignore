@@ -1,0 +1,8 @@
+# Vercel build ignores
+.genkit
+*.log
+.env*
+!.env.example
+
+# Optional: ignore AI flows if they cause build issues
+# src/ai/

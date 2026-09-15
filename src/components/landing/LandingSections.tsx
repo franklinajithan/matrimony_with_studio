@@ -1,4 +1,5 @@
 import {
+  ArrowRight,
   BadgeCheck,
   Eye,
   Filter,
@@ -12,6 +13,10 @@ import {
   Smartphone,
   Sparkles,
   UserRound,
+  Wand2,
+  Map,
+  Users,
+  CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -25,108 +30,102 @@ import { focusRing, focusRingOnDark } from "@/components/landing/brand";
 
 export function TrustStrip() {
   const items = [
-    { icon: Heart, label: "Profiles built for serious intentions" },
-    { icon: Lock, label: "Privacy controls" },
-    { icon: Languages, label: "Cultural and language preferences" },
-    { icon: MessageCircle, label: "Secure conversations" },
+    { icon: Lock, label: "Privacy controls", description: "You choose what to share" },
+    { icon: Shield, label: "Verification available", description: "Optional identity checks" },
+    { icon: Languages, label: "Sinhala · Tamil · English", description: "Three languages supported" },
   ];
 
   return (
-    <section className="px-4 py-10 sm:px-6" aria-label="Trust highlights">
-      <ul className="mx-auto grid max-w-6xl gap-4 rounded-2xl border border-[#EADFD6] bg-white px-4 py-5 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
-        {items.map((item) => (
-          <li key={item.label} className="flex items-center gap-3 text-sm text-[#271624]">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F8EAF1] text-[#4B164C]">
-              <item.icon className="h-4 w-4" aria-hidden="true" />
-            </span>
-            <span className="leading-5 text-[#725E6D]">{item.label}</span>
-          </li>
-        ))}
-      </ul>
+    <section className="border-y border-border bg-accent/10 px-4 py-12 sm:px-6" aria-label="Trust highlights">
+      <div className="mx-auto max-w-7xl">
+        <h2 className="mb-10 text-center text-2xl font-bold text-foreground sm:text-3xl">
+          More than a match score
+        </h2>
+        <ul className="grid gap-6 sm:grid-cols-3">
+          {items.map((item) => (
+            <li
+              key={item.label}
+              className="flex flex-col items-center rounded-2xl border border-border bg-card p-6 text-center shadow-sm transition-all hover:shadow-md"
+            >
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <item.icon className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <span className="mt-3 text-sm font-semibold leading-5 text-foreground">{item.label}</span>
+              <span className="mt-1 text-xs text-muted-foreground">{item.description}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }
 
 export function WhyCupidMatch() {
-  const cards = [
+  const features = [
     {
-      icon: UserRound,
-      title: "Profiles with purpose",
-      description: "Detailed profiles help you understand the person beyond a photograph.",
-      highlighted: true,
+      icon: "🤝",
+      title: "Shared Values",
+      subtitle: "More than surface compatibility",
+      description: "Match based on life goals, communication style, and what truly matters to you both.",
     },
     {
-      icon: Sparkles,
-      title: "Smarter compatibility",
-      description: "Suggestions shaped by your values, lifestyle and long-term preferences.",
-      highlighted: false,
+      icon: "🌍",
+      title: "Life Goals",
+      subtitle: "Plan your future together",
+      description: "Understand relocation openness, career flexibility, and where you both want to settle.",
     },
     {
-      icon: MoonStar,
-      title: "Tradition, respected",
-      description: "Horoscope compatibility is available when it matters to you and your family.",
-      highlighted: false,
+      icon: "💬",
+      title: "Communication Preferences",
+      subtitle: "How you connect matters",
+      description: "Discover how you both handle disagreements and build understanding.",
     },
     {
-      icon: Lock,
-      title: "Privacy in your hands",
-      description: "Choose what you share, who can see it and when you are ready to connect.",
-      highlighted: false,
+      icon: "👨‍👩‍👧",
+      title: "Family Expectations",
+      subtitle: "Respect and boundaries",
+      description: "Define involvement levels, living arrangements, and responsibilities that work for you.",
+    },
+    {
+      icon: "🏡",
+      title: "Lifestyle",
+      subtitle: "Day-to-day compatibility",
+      description: "Explore daily routines, social preferences, and practical lifestyle alignment.",
+    },
+    {
+      icon: "🎭",
+      title: "Cultural Preferences",
+      subtitle: "Optional and self-described",
+      description: "Language, traditions, festivals — share what's meaningful while staying flexible.",
     },
   ];
 
   return (
-    <section className="bg-[#FBF5F1] px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="why-heading">
-      <div className="mx-auto max-w-6xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A52A68]">
-          The CupidMatch difference
-        </p>
-        <h2 id="why-heading" className="mt-3 max-w-2xl font-serif text-3xl font-semibold text-[#271624] sm:text-4xl">
-          Modern matching. Cultural understanding.
-        </h2>
-        <p className="mt-4 max-w-2xl text-base leading-7 text-[#725E6D]">
-          Technology can introduce you. Trust, shared values and honest conversation help you
-          decide what comes next.
-        </p>
+    <section className="bg-background px-4 py-20 sm:px-6" aria-labelledby="why-heading">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-16 text-center">
+          <h2 id="why-heading" className="text-3xl font-bold text-foreground sm:text-4xl">
+            Designed around the whole relationship
+          </h2>
+          <p className="mx-auto mt-4 max-w-3xl text-lg text-muted-foreground">
+            Understand compatibility through shared values and practical future plans
+          </p>
+        </div>
 
-        <div className="mt-10 grid gap-5 md:grid-cols-2">
-          {cards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <article
-                key={card.title}
-                className={
-                  card.highlighted
-                    ? "rounded-2xl border border-[#4B164C]/25 bg-[#4B164C] p-7 text-[#FFFDF9] shadow-[0_16px_40px_rgba(48,18,42,0.16)]"
-                    : "rounded-2xl border border-[#EADFD6] bg-white p-7 transition duration-200 hover:-translate-y-0.5 hover:border-[#D6B56D]/70 hover:shadow-[0_12px_30px_rgba(48,18,42,0.08)]"
-                }
-              >
-                <div
-                  className={
-                    card.highlighted
-                      ? "flex h-11 w-11 items-center justify-center rounded-xl bg-[#D6B56D]/20 text-[#F2C96D]"
-                      : "flex h-11 w-11 items-center justify-center rounded-xl bg-[#F8EAF1] text-[#4B164C]"
-                  }
-                >
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                </div>
-                <h3
-                  className={`mt-5 font-serif text-xl font-semibold ${
-                    card.highlighted ? "text-[#FFFDF9]" : "text-[#271624]"
-                  }`}
-                >
-                  {card.title}
-                </h3>
-                <p
-                  className={`mt-2 text-sm leading-6 ${
-                    card.highlighted ? "text-[#F0E0E8]" : "text-[#725E6D]"
-                  }`}
-                >
-                  {card.description}
-                </p>
-              </article>
-            );
-          })}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {features.map((feature) => (
+            <div
+              key={feature.title}
+              className="group rounded-3xl border border-border bg-card p-8 shadow-sm transition-all hover:shadow-md"
+            >
+              <div className="mb-4 text-4xl">{feature.icon}</div>
+              <div className="mb-3">
+                <h3 className="text-lg font-bold text-foreground">{feature.title}</h3>
+                <p className="text-sm font-medium text-primary">{feature.subtitle}</p>
+              </div>
+              <p className="text-sm leading-relaxed text-muted-foreground">{feature.description}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -136,51 +135,143 @@ export function WhyCupidMatch() {
 export function HowItWorks() {
   const steps = [
     {
-      number: "01",
-      title: "Tell us who you are",
-      description: "Create a thoughtful profile and share the values that matter to you.",
+      number: "1",
+      icon: "📝",
+      title: "Tell us what matters",
+      description: "Build your profile with your values, lifestyle, future plans, and what you're looking for in a partner.",
     },
     {
-      number: "02",
-      title: "Meet compatible people",
-      description: "Explore considered suggestions instead of endless random profiles.",
+      number: "2",
+      icon: "💡",
+      title: "Understand each introduction",
+      description: "See clear explanations for every match — why this person was suggested and what you have in common.",
     },
     {
-      number: "03",
-      title: "Build a real connection",
-      description: "Start a secure conversation and take the next step with confidence.",
+      number: "3",
+      icon: "💬",
+      title: "Connect at your own pace",
+      description: "Send interest, start conversations, and take things forward when it feels right for both of you.",
     },
   ];
 
   return (
-    <section className="px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="how-heading">
-      <div className="mx-auto max-w-6xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A52A68]">How it works</p>
-        <h2 id="how-heading" className="mt-3 font-serif text-3xl font-semibold text-[#271624] sm:text-4xl">
-          From profile to possibility
-        </h2>
+    <section className="bg-gradient-to-br from-accent/20 to-background px-4 py-20 sm:px-6" aria-labelledby="how-heading">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-16 text-center">
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+            Getting Started
+          </p>
+          <h2 id="how-heading" className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
+            How it works
+          </h2>
+        </div>
 
-        <ol className="relative mt-10 grid gap-6 lg:grid-cols-3">
+        <ol className="grid gap-8 md:grid-cols-3">
           {steps.map((step, index) => (
-            <li key={step.number} className="relative rounded-2xl border border-[#EADFD6] bg-white p-7">
+            <li key={step.number} className="relative">
+              <div className="rounded-3xl border border-border bg-card p-8 shadow-sm transition-all hover:shadow-md">
+                <div className="mb-5 flex items-center justify-between">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground">
+                    {step.number}
+                  </span>
+                  <span className="text-4xl">{step.icon}</span>
+                </div>
+                <h3 className="mb-3 text-xl font-bold text-foreground">{step.title}</h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">{step.description}</p>
+              </div>
               {index < steps.length - 1 && (
-                <span
-                  aria-hidden="true"
-                  className="absolute right-[-13px] top-1/2 z-10 hidden h-px w-6 -translate-y-1/2 border-t border-dashed border-[#D6B56D] lg:block"
-                />
+                <div className="absolute -right-4 top-1/2 hidden -translate-y-1/2 lg:block">
+                  <ArrowRight className="h-8 w-8 text-border" aria-hidden="true" />
+                </div>
               )}
-              {index < steps.length - 1 && (
-                <span
-                  aria-hidden="true"
-                  className="absolute bottom-[-18px] left-8 h-5 w-px border-l border-dashed border-[#D6B56D] lg:hidden"
-                />
-              )}
-              <span className="font-serif text-3xl font-semibold text-[#D6B56D]">{step.number}</span>
-              <h3 className="mt-4 text-lg font-semibold text-[#271624]">{step.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-[#725E6D]">{step.description}</p>
             </li>
           ))}
         </ol>
+      </div>
+    </section>
+  );
+}
+
+export function FeatureGrid() {
+  const features = [
+    {
+      icon: Wand2,
+      title: "AI Profile Studio",
+      description: "Get help crafting your biography and prompts. Translate approved text between languages.",
+      status: "Coming soon" as const,
+    },
+    {
+      icon: Map,
+      title: "Future Map",
+      description: "Compare current location, future plans, relocation openness, and career flexibility.",
+      status: "Coming soon" as const,
+    },
+    {
+      icon: Sparkles,
+      title: "Culture Preferences",
+      description: "Express language, festivals, food, and traditions with granular importance levels.",
+      status: "Coming soon" as const,
+    },
+    {
+      icon: Users,
+      title: "Family Circle",
+      description: "Invite family with member-controlled permissions. View, suggest, or comment with boundaries.",
+      status: "Coming soon" as const,
+    },
+    {
+      icon: CheckCircle2,
+      title: "Verification",
+      description: "Optional identity and liveness checks. Know exactly what each badge means.",
+      status: "Coming soon" as const,
+    },
+    {
+      icon: MessageCircle,
+      title: "Guided Conversations",
+      description: "Meaningful prompts and optional AI assistance to help start important conversations.",
+      status: "Available" as const,
+    },
+  ];
+
+  return (
+    <section className="bg-accent/10 px-4 py-20 sm:px-6" aria-labelledby="features-heading">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-16 text-center">
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+            Platform Features
+          </p>
+          <h2 id="features-heading" className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
+            Built for meaningful connections
+          </h2>
+          <p className="mx-auto mt-4 max-w-3xl text-lg text-muted-foreground">
+            Tools designed to help you understand compatibility and build confidence in your decisions
+          </p>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {features.map((feature) => (
+            <div
+              key={feature.title}
+              className="group relative rounded-3xl border border-border bg-card p-8 shadow-sm transition-all hover:shadow-md"
+            >
+              {feature.status === "Coming soon" && (
+                <div className="absolute right-4 top-4 rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
+                  Coming soon
+                </div>
+              )}
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <feature.icon className="h-6 w-6" aria-hidden="true" />
+              </div>
+              <h3 className="mb-3 text-lg font-bold text-foreground">{feature.title}</h3>
+              <p className="text-sm leading-relaxed text-muted-foreground">{feature.description}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-12 text-center">
+          <p className="text-sm text-muted-foreground">
+            Features marked "Coming soon" are in development. Only implemented features are shown in member-facing flows.
+          </p>
+        </div>
       </div>
     </section>
   );
@@ -299,30 +390,31 @@ export function PrivacySection() {
   const points = [
     "Choose who can view your personal details",
     "Control photo and contact-information visibility",
-    "Use clear verification signals",
-    "Block or report inappropriate users",
-    "Chat securely before sharing external contact information",
+    "Understand verification signals clearly",
+    "Block or report inappropriate behavior",
+    "Chat securely before sharing contact information",
+    "Pause or delete your account anytime",
   ];
 
   return (
-    <section className="px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="privacy-heading">
+    <section className="bg-background px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="privacy-heading">
       <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-2 lg:items-center">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A52A68]">
-            Built around trust
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+            Safety Centre
           </p>
-          <h2 id="privacy-heading" className="mt-3 font-serif text-3xl font-semibold text-[#271624] sm:text-4xl">
+          <h2 id="privacy-heading" className="mt-3 text-3xl font-bold text-foreground sm:text-4xl">
             Take your time. Stay in control.
           </h2>
-          <p className="mt-4 text-base leading-7 text-[#725E6D]">
+          <p className="mt-4 text-base leading-7 text-muted-foreground">
             A matrimony profile contains personal information. CupidMatch is designed to help you
-            share thoughtfully, connect securely and move forward at your own pace.
+            share thoughtfully, connect securely, and move forward at your own pace.
           </p>
         </div>
-        <ul className="space-y-3 rounded-2xl border border-[#EADFD6] bg-white p-6 sm:p-7">
+        <ul className="space-y-3 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-7">
           {points.map((point) => (
-            <li key={point} className="flex gap-3 text-sm leading-6 text-[#271624]">
-              <Shield className="mt-0.5 h-4 w-4 shrink-0 text-[#D6B56D]" aria-hidden="true" />
+            <li key={point} className="flex gap-3 text-sm leading-6 text-foreground">
+              <Shield className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
               <span>{point}</span>
             </li>
           ))}
@@ -331,6 +423,91 @@ export function PrivacySection() {
     </section>
   );
 }
+
+export function InternationalRelationships() {
+  const locations = [
+    {
+      name: "London",
+      country: "United Kingdom",
+      image: "🏛️",
+    },
+    {
+      name: "Toronto",
+      country: "Canada",
+      image: "🍁",
+    },
+    {
+      name: "Colombo",
+      country: "Sri Lanka",
+      image: "🌴",
+    },
+    {
+      name: "Melbourne",
+      country: "Australia",
+      image: "🦘",
+    },
+  ];
+
+  return (
+    <section className="bg-gradient-to-br from-accent/20 to-background px-4 py-20 sm:px-6" aria-labelledby="international-heading">
+      <div className="mx-auto max-w-7xl text-center">
+        <h2 id="international-heading" className="text-3xl font-bold text-foreground sm:text-4xl">
+          Built for life between countries
+        </h2>
+        <p className="mx-auto mt-4 max-w-3xl text-lg text-muted-foreground">
+          Whether you're in London, Toronto, Melbourne or Colombo, find someone who understands the beauty and complexity of living across cultures.
+        </p>
+
+        <div className="relative mt-16">
+          {/* Connecting lines */}
+          <svg className="absolute left-0 top-0 h-full w-full" style={{ zIndex: 0 }} aria-hidden="true">
+            <defs>
+              <linearGradient id="line-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style={{ stopColor: "hsl(var(--primary))", stopOpacity: 0.3 }} />
+                <stop offset="100%" style={{ stopColor: "hsl(var(--secondary))", stopOpacity: 0.3 }} />
+              </linearGradient>
+            </defs>
+            <path
+              d="M150,80 Q400,150 650,80"
+              stroke="url(#line-gradient)"
+              strokeWidth="2"
+              fill="none"
+              strokeDasharray="5,5"
+            />
+            <path
+              d="M150,80 Q400,20 650,80"
+              stroke="url(#line-gradient)"
+              strokeWidth="2"
+              fill="none"
+              strokeDasharray="5,5"
+            />
+          </svg>
+
+          <div className="relative z-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {locations.map((location) => (
+              <div
+                key={location.name}
+                className="group relative overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-md transition-all hover:shadow-lg"
+              >
+                <div className="mb-4 text-6xl">{location.image}</div>
+                <h3 className="text-xl font-bold text-foreground">{location.name}</h3>
+                <p className="text-sm text-muted-foreground">{location.country}</p>
+                <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 opacity-50 transition-all group-hover:scale-150" aria-hidden="true" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p className="mx-auto mt-12 max-w-2xl text-sm text-muted-foreground">
+          Future Map feature (coming soon) will help you compare current location, future settlement plans, and relocation openness.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+// Legacy export for compatibility
+export const GlobalLocationsSection = InternationalRelationships;
 
 export function CommunitySection() {
   const chips = [
@@ -382,40 +559,179 @@ export function CommunitySection() {
   );
 }
 
+export function DiscoveryPreview() {
+  const demoProfiles = [
+    {
+      name: "Sample Profile A",
+      location: "London",
+      image: "👩🏽",
+      interests: ["Travel", "Reading", "Yoga"],
+    },
+    {
+      name: "Sample Profile B",
+      location: "Toronto",
+      image: "👨🏾",
+      interests: ["Photography", "Hiking", "Cooking"],
+    },
+    {
+      name: "Sample Profile C",
+      location: "Melbourne",
+      image: "👩🏻",
+      interests: ["Fitness", "Tech", "Food"],
+    },
+  ];
+
+  return (
+    <section className="bg-background px-4 py-20 sm:px-6" aria-labelledby="discovery-heading">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-12 text-center">
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+            Discovery
+          </p>
+          <h2 id="discovery-heading" className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
+            Find compatible matches
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
+            See clearly labelled sample profiles below
+          </p>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {demoProfiles.map((profile, index) => (
+            <div
+              key={index}
+              className="group overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all hover:shadow-md"
+            >
+              {/* Demo Label */}
+              <div className="border-b border-border bg-accent/50 px-4 py-2">
+                <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                  <Eye className="h-3 w-3" aria-hidden="true" />
+                  Sample Profile Preview
+                </p>
+              </div>
+
+              <div className="relative h-48 bg-gradient-to-br from-accent/30 to-accent/10">
+                <div className="flex h-full items-center justify-center text-7xl">{profile.image}</div>
+              </div>
+              
+              <div className="p-6">
+                <div className="mb-3">
+                  <h3 className="text-lg font-bold text-foreground">{profile.name}</h3>
+                  <p className="text-sm text-muted-foreground">{profile.location}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {profile.interests.map((interest) => (
+                    <span
+                      key={interest}
+                      className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground"
+                    >
+                      {interest}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-10 text-center text-sm text-muted-foreground">
+          These are illustrative sample profiles. Real member profiles are only visible to signed-in members with mutual consent.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+// Legacy export for compatibility
+export const MemberShowcase = DiscoveryPreview;
+
+export function FamilyCirclePreview() {
+  return (
+    <section className="bg-gradient-to-br from-accent/20 to-background px-4 py-20 sm:px-6" aria-labelledby="family-circle-heading">
+      <div className="mx-auto max-w-7xl">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+            Coming Soon
+          </p>
+          <h2 id="family-circle-heading" className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
+            Family Circle
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Invite family members to join your journey — on your terms, with granular permissions you control.
+          </p>
+        </div>
+
+        <div className="mx-auto mt-12 max-w-4xl">
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <Users className="h-6 w-6 text-primary" aria-hidden="true" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground">Member-owned invitations</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                You decide who to invite, when, and what they can see. Revoke access anytime.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <Shield className="h-6 w-6 text-primary" aria-hidden="true" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground">Granular permissions</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Control exactly what family members can view, comment on, or help decide. Full audit trail included.
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            This feature is in development. It supports cultural respect for family involvement while keeping you in full control.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function SuccessStoriesPreview() {
   return (
-    <section className="px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="stories-heading">
+    <section className="bg-background px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="stories-heading">
       <div className="mx-auto max-w-6xl">
         <div className="max-w-2xl">
-          <h2 id="stories-heading" className="font-serif text-3xl font-semibold text-[#271624] sm:text-4xl">
+          <h2 id="stories-heading" className="text-3xl font-bold text-foreground sm:text-4xl">
             Stories that began with an introduction
           </h2>
-          <p className="mt-4 text-base leading-7 text-[#725E6D]">
+          <p className="mt-4 text-base leading-7 text-muted-foreground">
             We are carefully gathering real journeys from couples who met through CupidMatch. Until
             verified stories are ready to share, you can browse the success stories space or submit
             your own.
           </p>
         </div>
 
-        <div className="mt-8 rounded-3xl border border-[#EADFD6] bg-[#FBF5F1] p-8 sm:p-10">
-          <p className="font-serif text-2xl font-semibold text-[#4B164C]">
-            Real stories. Shared with care.
-          </p>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-[#725E6D]">
-            Success stories will appear here once couples choose to share them. We do not publish
-            invented testimonials.
-          </p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Button asChild className={`rounded-full bg-[#4B164C] px-6 text-white hover:bg-[#742158] ${focusRing}`}>
-              <Link href="/success-stories">View success stories</Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              className={`rounded-full border-[#EADFD6] px-6 text-[#4B164C] hover:bg-white ${focusRing}`}
-            >
-              <Link href="/success-stories/submit">Share your story</Link>
-            </Button>
+        <div className="mt-8 rounded-3xl border border-border bg-accent/30 p-8 sm:p-10">
+          <div className="flex items-start gap-3">
+            <Heart className="mt-1 h-6 w-6 text-primary" aria-hidden="true" />
+            <div className="flex-1">
+              <p className="text-2xl font-bold text-foreground">
+                Real stories. Shared with care.
+              </p>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+                Success stories will appear here once couples choose to share them. We do not publish
+                invented testimonials or fabricated couples.
+              </p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <Button asChild className="rounded-full bg-primary px-6 text-primary-foreground hover:bg-primary/90">
+                  <Link href="/success-stories">View success stories</Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="rounded-full border-2 px-6"
+                >
+                  <Link href="/success-stories/submit">Share your story</Link>
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -460,24 +776,142 @@ export function FeaturesOverview() {
 }
 
 export function PricingTeaser() {
+  const plans = [
+    {
+      name: "Free",
+      price: "LKR 0",
+      period: "per month",
+      description: "Join and start looking for your match",
+      features: [
+        "Create your profile",
+        "Unlimited messaging",
+        "100,000+ profiles",
+        "Organize",
+      ],
+      cta: "Get started",
+      highlighted: false,
+    },
+    {
+      name: "Plus",
+      price: "LKR 1,200",
+      period: "per month",
+      description: "Get noticed faster",
+      features: [
+        "Unlimited messaging",
+        "1-on-1 video call",
+        "See who's visited you",
+        "Organize",
+      ],
+      cta: "Choose Plus",
+      highlighted: true,
+    },
+    {
+      name: "Elite",
+      price: "LKR 2,400",
+      period: "per month",
+      description: "Make the most of your search",
+      features: [
+        "Unlimited messaging",
+        "Get top positioning",
+        "1-on-1 video call",
+        "See who's viewed you",
+        "Organize",
+      ],
+      cta: "Choose Elite",
+      highlighted: false,
+    },
+  ];
+
   return (
-    <section className="px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="pricing-heading">
-      <div className="mx-auto max-w-6xl rounded-3xl border border-[#EADFD6] bg-white p-8 sm:p-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
-        <div className="max-w-2xl">
-          <h2 id="pricing-heading" className="font-serif text-3xl font-semibold text-[#271624] sm:text-4xl">
+    <section className="bg-background px-4 py-20 sm:px-6" aria-labelledby="pricing-heading">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-16 text-center">
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+            Pricing
+          </p>
+          <h2 id="pricing-heading" className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
             Start free. Upgrade when you need more.
           </h2>
-          <p className="mt-4 text-base leading-7 text-[#725E6D]">
-            Creating a profile is free, and you can explore core matching features at your own pace.
-            Premium and Elite plans are available when you want additional capabilities.
-          </p>
-          <p className="mt-3 text-sm text-[#725E6D]">
-            Current plans include Free (£0), Premium (£9.99/month) and Elite (£19.99/month).
+          <p className="mx-auto mt-4 max-w-3xl text-lg text-muted-foreground">
+            Create your profile free. Then upgrade to unlock additional features when you're ready.
           </p>
         </div>
-        <Button asChild className={`mt-6 h-12 shrink-0 rounded-full bg-[#4B164C] px-7 text-white hover:bg-[#742158] lg:mt-0 ${focusRing}`}>
-          <Link href="/pricing">View pricing</Link>
-        </Button>
+
+        <div className="grid gap-8 lg:grid-cols-3">
+          {plans.map((plan) => (
+            <div
+              key={plan.name}
+              className={`rounded-3xl border-2 p-8 transition-all ${
+                plan.highlighted
+                  ? "scale-105 border-primary bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-xl"
+                  : "border-border bg-card hover:shadow-md"
+              }`}
+            >
+              {plan.highlighted && (
+                <div className="mb-4 inline-block rounded-full bg-card px-4 py-1 text-xs font-bold text-primary">
+                  MOST POPULAR
+                </div>
+              )}
+              <h3
+                className={`text-2xl font-bold ${
+                  plan.highlighted ? "text-primary-foreground" : "text-foreground"
+                }`}
+              >
+                {plan.name}
+              </h3>
+              <div className="mt-4">
+                <span
+                  className={`text-5xl font-bold ${
+                    plan.highlighted ? "text-primary-foreground" : "text-foreground"
+                  }`}
+                >
+                  {plan.price}
+                </span>
+                <span
+                  className={`ml-2 text-sm ${
+                    plan.highlighted ? "text-primary-foreground/80" : "text-muted-foreground"
+                  }`}
+                >
+                  {plan.period}
+                </span>
+              </div>
+              <p
+                className={`mt-2 text-sm ${
+                  plan.highlighted ? "text-primary-foreground/80" : "text-muted-foreground"
+                }`}
+              >
+                {plan.description}
+              </p>
+              <ul className="mt-8 space-y-3">
+                {plan.features.map((feature) => (
+                  <li
+                    key={feature}
+                    className={`flex items-center gap-2 ${
+                      plan.highlighted ? "text-primary-foreground" : "text-foreground"
+                    }`}
+                  >
+                    <BadgeCheck
+                      className={`h-5 w-5 ${
+                        plan.highlighted ? "text-primary-foreground" : "text-primary"
+                      }`}
+                    />
+                    <span className="text-sm">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button
+                asChild
+                className={`mt-8 w-full rounded-full py-6 text-base font-semibold transition-all ${
+                  plan.highlighted
+                    ? "bg-card text-primary hover:bg-card/90"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90"
+                }`}
+              >
+                <Link href="/pricing">{plan.cta}</Link>
+              </Button>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -486,40 +920,52 @@ export function PricingTeaser() {
 export function FaqSection() {
   const faqs = [
     {
-      q: "Is creating a CupidMatch profile free?",
-      a: "Yes. You can create a profile at no cost and explore core matching features. Paid plans are available if you want additional capabilities.",
+      q: "Who is CupidMatch for?",
+      a: "CupidMatch is for Sri Lankan adults worldwide seeking marriage. We serve never-married, divorced, and widowed members aged 18+ in the UK, Canada, Australia, and other countries, as well as people in Sri Lanka open to international relationships.",
     },
     {
-      q: "Who can see my photos and personal details?",
-      a: "CupidMatch is designed so you remain in control of what you share. Profile settings help you manage visibility as conversations progress.",
+      q: "How do international matches work?",
+      a: "Our Future Map feature (coming soon) helps you compare current location, future settlement plans, relocation openness, and long-distance tolerance. You can express where you are now and where you want to be.",
     },
     {
-      q: "Can I use CupidMatch outside India or Sri Lanka?",
-      a: "Yes. CupidMatch is built for Indian and Sri Lankan communities worldwide, including people living in the UK and across the diaspora.",
+      q: "What verification is available?",
+      a: "We offer optional identity and liveness checks. Each verification badge states exactly what was checked — we never imply that verification guarantees safety or honesty. Email and phone verification are also available.",
     },
     {
-      q: "Does CupidMatch support horoscope matching?",
-      a: "Yes. Horoscope compatibility tools are available for members who want to include them in their matching journey.",
+      q: "How does family involvement work?",
+      a: "Family Circle (coming soon) allows member-controlled invitations with granular permissions. You decide who can view your profile, suggest matches, or comment privately. Family helpers cannot impersonate you or accept matches on your behalf.",
     },
     {
-      q: "How do profile verification and reporting work?",
-      a: "CupidMatch is designed to support clearer verification signals and reporting tools so members can flag inappropriate behaviour and feel more confident while connecting.",
+      q: "What privacy controls do I have?",
+      a: "You control profile visibility, photo reveal requests, and who can contact you. Privacy defaults minimize exposure. You can block or report members, and pause your account at any time.",
+    },
+    {
+      q: "How do AI recommendations work?",
+      a: "Our matching algorithm is deterministic and explainable. You'll see clear evidence-based reasons for each suggestion, like shared settlement preferences or aligned family expectations. AI doesn't decide who is eligible — you do.",
+    },
+    {
+      q: "Can I cancel my subscription?",
+      a: "Yes. You can cancel anytime through your account settings or billing portal. Core safety features remain available to everyone, regardless of subscription status.",
     },
   ];
 
   return (
-    <section id="faq" className="scroll-mt-24 bg-[#FBF5F1] px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="faq-heading">
+    <section id="faq" className="scroll-mt-24 bg-accent/10 px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="faq-heading">
       <div className="mx-auto max-w-3xl">
-        <h2 id="faq-heading" className="font-serif text-3xl font-semibold text-[#271624] sm:text-4xl">
+        <h2 id="faq-heading" className="text-3xl font-bold text-foreground sm:text-4xl">
           Frequently asked questions
         </h2>
-        <Accordion type="single" collapsible className="mt-8 rounded-2xl border border-[#EADFD6] bg-white px-5">
+        <Accordion type="single" collapsible className="mt-10 space-y-4">
           {faqs.map((item, index) => (
-            <AccordionItem key={item.q} value={`item-${index}`} className="border-[#EADFD6]">
-              <AccordionTrigger className="text-left text-[#271624] hover:no-underline hover:text-[#4B164C] focus-visible:ring-2 focus-visible:ring-[#4B164C]">
+            <AccordionItem 
+              key={item.q} 
+              value={`item-${index}`} 
+              className="rounded-2xl border border-border bg-card px-6 shadow-sm"
+            >
+              <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline hover:text-primary">
                 {item.q}
               </AccordionTrigger>
-              <AccordionContent className="text-[#725E6D] leading-6">{item.a}</AccordionContent>
+              <AccordionContent className="leading-relaxed text-muted-foreground">{item.a}</AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
@@ -531,36 +977,37 @@ export function FaqSection() {
 export function FinalCta() {
   return (
     <section className="px-4 pb-20 sm:px-6 sm:pb-24" aria-labelledby="cta-heading">
-      <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-[#30122A] px-6 py-14 text-center text-[#FFFDF9] sm:px-12 sm:py-16">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#D6B56D]/15 text-[#F2C96D]">
+      <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary to-primary/90 px-6 py-14 text-center text-primary-foreground shadow-xl sm:px-12 sm:py-16">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-card/20 text-card">
           <Heart className="h-5 w-5 fill-current" aria-hidden="true" />
         </div>
         <h2
           id="cta-heading"
-          className="mx-auto mt-5 max-w-3xl font-serif text-3xl font-semibold tracking-tight sm:text-4xl"
+          className="mx-auto mt-5 max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl"
         >
-          A meaningful future can start with one introduction.
+          Connect with clarity and confidence
         </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-[#F0E0E8] sm:text-base">
-          Create your profile, set your preferences and meet people looking for the same kind of
-          commitment.
+        <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 opacity-90 sm:text-base">
+          Create your profile, set your preferences, and meet people who understand where you come from — and where you're going.
         </p>
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button
             asChild
-            className={`h-12 rounded-full bg-[#D6B56D] px-8 text-[#30122A] hover:bg-[#F2C96D] ${focusRingOnDark}`}
+            size="lg"
+            className="h-12 rounded-full bg-card px-8 font-semibold text-primary shadow-md hover:bg-card/90"
           >
-            <Link href="/signup">Create my free profile</Link>
+            <Link href="/signup">Build my profile</Link>
           </Button>
           <Button
             asChild
+            size="lg"
             variant="outline"
-            className={`h-12 rounded-full border-[#D6B56D]/40 bg-transparent px-8 text-[#FFFDF9] hover:bg-white/10 hover:text-white ${focusRingOnDark}`}
+            className="h-12 rounded-full border-2 border-card/40 bg-transparent px-8 font-semibold text-card hover:bg-card/10"
           >
-            <Link href="/success-stories">View success stories</Link>
+            <Link href="/success-stories">Success stories</Link>
           </Button>
         </div>
-        <p className="mt-6 text-sm text-[#F2C96D]">Free to join · Your privacy stays in your hands</p>
+        <p className="mt-6 text-sm opacity-80">Free to join · Privacy controls built in</p>
       </div>
     </section>
   );
