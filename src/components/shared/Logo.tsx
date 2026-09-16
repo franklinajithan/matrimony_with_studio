@@ -28,15 +28,9 @@ function resolveSize(size: LogoSize | undefined, iconSize: number | undefined): 
 }
 
 const SIZE_CLASS: Record<LogoSize, string> = {
-  sm: "h-10 w-auto sm:h-11",
-  md: "h-11 w-auto sm:h-12 md:h-14",
-  lg: "h-12 w-auto sm:h-14 md:h-16",
-};
-
-const SIZE_PX: Record<LogoSize, { width: number; height: number }> = {
-  sm: { width: 220, height: 44 },
-  md: { width: 280, height: 56 },
-  lg: { width: 340, height: 68 },
+  sm: "w-36 sm:w-40",
+  md: "w-44 sm:w-48 md:w-[13rem]",
+  lg: "w-48 sm:w-56 md:w-64",
 };
 
 export function Logo({
@@ -49,13 +43,13 @@ export function Logo({
 }: LogoProps) {
   const resolved = resolveSize(size, iconSize);
   const onDark = invert || Boolean(textColor?.includes("white"));
-  const dims = SIZE_PX[resolved];
 
   return (
     <Link
       href={href}
       className={cn(
-        "inline-flex shrink-0 items-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7B3FA0] focus-visible:ring-offset-2",
+        "inline-flex max-w-full shrink-0 items-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7B3FA0] focus-visible:ring-offset-2",
+        SIZE_CLASS[resolved],
         className
       )}
       aria-label="CupidMatch home"
@@ -63,9 +57,16 @@ export function Logo({
       <Image
         src="/images/cupidmatch-logo.png"
         alt="CupidMatch"
-        width={dims.width}
-        height={dims.height}
-        className={cn(SIZE_CLASS[resolved], "max-w-full object-contain object-left", onDark && "brightness-0 invert")}
+        width={944}
+        height={234}
+        sizes={
+          resolved === "sm"
+            ? "(min-width: 640px) 160px, 144px"
+            : resolved === "lg"
+              ? "(min-width: 768px) 256px, (min-width: 640px) 224px, 192px"
+              : "(min-width: 768px) 208px, (min-width: 640px) 192px, 176px"
+        }
+        className={cn("h-auto w-full object-contain object-left", onDark && "brightness-0 invert")}
         priority
       />
     </Link>
