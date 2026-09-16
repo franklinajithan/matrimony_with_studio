@@ -26,9 +26,7 @@ function mapStoredPhotos(raw: unknown): StoredPhoto[] {
   });
 }
 
-function mapCommentNotifications(
-  raw: unknown
-): Profile["commentNotifications"] {
+function mapCommentNotifications(raw: unknown): Profile["commentNotifications"] {
   if (!raw || typeof raw !== "object") return {};
   const result: Profile["commentNotifications"] = {};
   for (const [key, value] of Object.entries(raw as Record<string, any>)) {
@@ -44,12 +42,7 @@ export function mapProfile(row: ProfileRow | null): Profile | null {
   if (!row) return null;
   const id = String(row.id);
   const dob = asString(row.dob);
-  const ageYears =
-    typeof row.age_years === "number"
-      ? row.age_years
-      : row.age_years != null
-        ? Number(row.age_years)
-        : undefined;
+  const ageYears = typeof row.age_years === "number" ? row.age_years : row.age_years != null ? Number(row.age_years) : undefined;
   return {
     id,
     uid: id,
@@ -92,12 +85,8 @@ export function mapProfile(row: ProfileRow | null): Profile | null {
     culturalFamily: (row.cultural_family as Record<string, unknown>) || {},
     settlement: (row.settlement as Record<string, unknown>) || {},
     photoPrivacy: asString(row.photo_privacy, "members") as Profile["photoPrivacy"],
-    lastSeenLikeNotificationsTimestamp: Timestamp.fromISO(
-      row.last_seen_like_notifications_at as string | null
-    ),
-    lastSeenCommentNotificationsTimestamp: Timestamp.fromISO(
-      row.last_seen_comment_notifications_at as string | null
-    ),
+    lastSeenLikeNotificationsTimestamp: Timestamp.fromISO(row.last_seen_like_notifications_at as string | null),
+    lastSeenCommentNotificationsTimestamp: Timestamp.fromISO(row.last_seen_comment_notifications_at as string | null),
     commentNotifications: mapCommentNotifications(row.comment_notifications),
     extra: (row.extra as Record<string, unknown>) || {},
     createdAt: Timestamp.fromISO(row.created_at as string | null),
@@ -106,153 +95,96 @@ export function mapProfile(row: ProfileRow | null): Profile | null {
 }
 
 const CAMEL_TO_SNAKE: Record<string, string> = {
-  displayName: "display_name",
-  photoURL: "photo_url",
-  dataAiHint: "data_ai_hint",
-  favoriteMovies: "favorite_movies",
-  favoriteMusic: "favorite_music",
-  educationLevel: "education_level",
-  smokingHabits: "smoking_habits",
-  drinkingHabits: "drinking_habits",
-  sunSign: "sun_sign",
-  moonSign: "moon_sign",
-  horoscopeInfo: "horoscope_info",
-  horoscopeFileName: "horoscope_file_name",
-  horoscopeFileUrl: "horoscope_file_url",
-  additionalPhotoUrls: "additional_photo_urls",
-  isAdmin: "is_admin",
-  isVerified: "is_verified",
-  isPublished: "is_published",
-  onboardingStep: "onboarding_step",
-  onboardingDraft: "onboarding_draft",
-  photoPrivacy: "photo_privacy",
-  lastSeenLikeNotificationsTimestamp: "last_seen_like_notifications_at",
-  lastSeenCommentNotificationsTimestamp: "last_seen_comment_notifications_at",
-  commentNotifications: "comment_notifications",
-  relationshipIntentions: "relationship_intentions",
-  valuesLifestyle: "values_lifestyle",
-  culturalFamily: "cultural_family",
-  email: "email",
-  bio: "bio",
-  location: "location",
-  profession: "profession",
-  height: "height",
-  dob: "dob",
-  religion: "religion",
-  caste: "caste",
-  language: "language",
-  hobbies: "hobbies",
-  nakshatra: "nakshatra",
-  country: "country",
-  region: "region",
-  languages: "languages",
-  settlement: "settlement",
+  displayName: "display_name", photoURL: "photo_url", dataAiHint: "data_ai_hint",
+  favoriteMovies: "favorite_movies", favoriteMusic: "favorite_music", educationLevel: "education_level",
+  smokingHabits: "smoking_habits", drinkingHabits: "drinking_habits", sunSign: "sun_sign", moonSign: "moon_sign",
+  horoscopeInfo: "horoscope_info", horoscopeFileName: "horoscope_file_name", horoscopeFileUrl: "horoscope_file_url",
+  additionalPhotoUrls: "additional_photo_urls", isAdmin: "is_admin", isVerified: "is_verified", isPublished: "is_published",
+  onboardingStep: "onboarding_step", onboardingDraft: "onboarding_draft", photoPrivacy: "photo_privacy",
+  lastSeenLikeNotificationsTimestamp: "last_seen_like_notifications_at", lastSeenCommentNotificationsTimestamp: "last_seen_comment_notifications_at",
+  commentNotifications: "comment_notifications", relationshipIntentions: "relationship_intentions", valuesLifestyle: "values_lifestyle",
+  culturalFamily: "cultural_family", email: "email", bio: "bio", location: "location", profession: "profession", height: "height",
+  dob: "dob", religion: "religion", caste: "caste", language: "language", hobbies: "hobbies", nakshatra: "nakshatra",
+  country: "country", region: "region", languages: "languages", settlement: "settlement",
 };
 
 const IGNORE_KEYS = new Set([
-  "id",
-  "uid",
-  "searchTerms",
-  "createdAt",
-  "updatedAt",
-  "search_text",
-  "ageYears",
-  "age_years",
-  "isAdmin",
-  "is_admin",
-  "isVerified",
-  "is_verified",
-  "subscriptionPlan",
-  "subscription_plan",
-  "subscriptionEntitlements",
-  "subscription_entitlements",
-  "email",
-  "isPublished",
-  "is_published",
+  "id", "uid", "searchTerms", "createdAt", "updatedAt", "search_text", "ageYears", "age_years", "isAdmin", "is_admin",
+  "isVerified", "is_verified", "subscriptionPlan", "subscription_plan", "subscriptionEntitlements", "subscription_entitlements",
+  "email", "isPublished", "is_published",
 ]);
 
 function toIso(value: unknown): string | null {
   if (!value) return null;
   if (typeof value === "string") return value;
   if (value instanceof Date) return value.toISOString();
-  if (typeof value === "object" && value !== null && "toDate" in value) {
-    return (value as { toDate: () => Date }).toDate().toISOString();
-  }
+  if (typeof value === "object" && value !== null && "toDate" in value) return (value as { toDate: () => Date }).toDate().toISOString();
   return null;
 }
 
 export function profileInputToRow(userData: Record<string, any>): Record<string, unknown> {
   const sanitized = stripPrivilegedFields(userData);
   const row: Record<string, unknown> = {};
-
   for (const [key, value] of Object.entries(sanitized)) {
     if (IGNORE_KEYS.has(key) || value === undefined) continue;
     const column = CAMEL_TO_SNAKE[key] || (key.includes("_") ? key : null);
-    if (!column) continue;
-    if (IGNORE_KEYS.has(column)) continue;
-
-    if (
-      column === "last_seen_like_notifications_at" ||
-      column === "last_seen_comment_notifications_at"
-    ) {
+    if (!column || IGNORE_KEYS.has(column)) continue;
+    if (column === "last_seen_like_notifications_at" || column === "last_seen_comment_notifications_at") {
       row[column] = toIso(value);
     } else if (column === "comment_notifications" && value && typeof value === "object") {
-      row[column] = Object.fromEntries(
-        Object.entries(value as Record<string, any>).map(([noteKey, note]) => [
-          noteKey,
-          {
-            count: Number(note?.count || 0),
-            lastSeen: toIso(note?.lastSeen || note?.last_seen),
-          },
-        ])
-      );
-    } else {
-      row[column] = value;
-    }
+      row[column] = Object.fromEntries(Object.entries(value as Record<string, any>).map(([noteKey, note]) => [noteKey, {
+        count: Number(note?.count || 0), lastSeen: toIso(note?.lastSeen || note?.last_seen),
+      }]));
+    } else row[column] = value;
   }
-
   return omitEmptyDefaults(row);
 }
 
 export async function getProfile(userId: string): Promise<Profile | null> {
-  const { data: own, error: ownError } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", userId)
-    .maybeSingle();
+  const { data: own, error: ownError } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
   if (ownError) throw ownError;
-  if (own) return mapProfile(own);
-
-  const { data: published, error: publishedError } = await supabase
-    .from("discovery_profiles")
-    .select("*")
-    .eq("id", userId)
-    .maybeSingle();
+  if (own) {
+    // OAuth providers can have the account avatar before the profile row has a photo.
+    // Use that same durable auth avatar as a fallback on every device.
+    if (!asString(own.photo_url)) {
+      const { data: authData } = await supabase.auth.getUser();
+      if (authData.user?.id === userId) {
+        const meta = authData.user.user_metadata || {};
+        const authPhoto = asString(meta.photo_url || meta.avatar_url);
+        if (authPhoto) own.photo_url = authPhoto;
+      }
+    }
+    return mapProfile(own);
+  }
+  const { data: published, error: publishedError } = await supabase.from("discovery_profiles").select("*").eq("id", userId).maybeSingle();
   if (publishedError) throw publishedError;
   return mapProfile(published);
 }
 
-export async function listProfiles(options?: {
-  limit?: number;
-  offset?: number;
-  excludeId?: string;
-}): Promise<Profile[]> {
+export async function listProfiles(options?: { limit?: number; offset?: number; excludeId?: string }): Promise<Profile[]> {
   const limit = options?.limit ?? 20;
   const offset = options?.offset ?? 0;
-
-  let query = supabase
-    .from("discovery_profiles")
-    .select("*")
-    .order("display_name", { ascending: true, nullsFirst: false })
-    .range(offset, offset + limit - 1);
-
-  if (options?.excludeId) {
-    query = query.neq("id", options.excludeId);
-  }
-
+  let query = supabase.from("discovery_profiles").select("*").order("display_name", { ascending: true, nullsFirst: false }).range(offset, offset + limit - 1);
+  if (options?.excludeId) query = query.neq("id", options.excludeId);
   const { data, error } = await query;
   if (error) throw error;
-  return (data || []).map((row) => mapProfile(row)!);
+
+  // Defence in depth: never show the signed-in member to themselves. This also
+  // handles legacy/duplicate discovery rows whose id differs but email belongs
+  // to the current authenticated account.
+  const { data: authData } = await supabase.auth.getUser();
+  const authUser = authData.user;
+  const authEmail = authUser?.email?.trim().toLowerCase();
+  return (data || [])
+    .filter((row) => {
+      const rowId = String(row.id || "");
+      const rowEmail = typeof row.email === "string" ? row.email.trim().toLowerCase() : "";
+      if (authUser?.id && rowId === authUser.id) return false;
+      if (options?.excludeId && rowId === options.excludeId) return false;
+      if (authEmail && rowEmail && rowEmail === authEmail) return false;
+      return true;
+    })
+    .map((row) => mapProfile(row)!);
 }
 
 export async function listProfilesByIds(ids: string[]): Promise<Profile[]> {
@@ -267,25 +199,15 @@ export async function searchProfiles(term: string, limit = 20): Promise<Profile[
   const cleaned = term.trim();
   if (!cleaned) return [];
   const pattern = `%${cleaned.replace(/[%_,]/g, " ").trim()}%`;
-
-  const { data, error } = await supabase
-    .from("discovery_profiles")
-    .select("*")
-    .or(
-      `display_name.ilike."${pattern}",profession.ilike."${pattern}",location.ilike."${pattern}"`
-    )
-    .order("display_name", { ascending: true, nullsFirst: false })
-    .limit(limit);
-
+  const { data, error } = await supabase.from("discovery_profiles").select("*")
+    .or(`display_name.ilike."${pattern}",profession.ilike."${pattern}",location.ilike."${pattern}"`)
+    .order("display_name", { ascending: true, nullsFirst: false }).limit(limit);
   if (error) throw error;
   return (data || []).map((row) => mapProfile(row)!);
 }
 
 export async function createUserProfile(userId: string, userData: Record<string, any>) {
-  const row = {
-    id: userId,
-    ...profileInputToRow(userData),
-  };
+  const row = { id: userId, ...profileInputToRow(userData) };
   const { error } = await supabase.from("profiles").upsert(row, { onConflict: "id" });
   if (error) throw error;
   return true;
@@ -299,47 +221,25 @@ export async function updateUserProfile(userId: string, userData: Record<string,
   return true;
 }
 
-/** Toggle discovery visibility. Checked = visible in Discover; unchecked = hidden draft. */
 export async function setProfilePublished(userId: string, isPublished: boolean) {
   const patch: Record<string, unknown> = { is_published: isPublished };
-  if (isPublished) {
-    patch.onboarding_step = 8;
-  }
+  if (isPublished) patch.onboarding_step = 8;
   const { error } = await supabase.from("profiles").update(patch).eq("id", userId);
   if (error) throw error;
   return true;
 }
 
-export async function updateAllUsersSearchTerms() {
-  return true;
-}
+export async function updateAllUsersSearchTerms() { return true; }
 
-export function subscribeToProfiles(
-  onChange: (profiles: Profile[]) => void,
-  onError?: (error: Error) => void
-): () => void {
+export function subscribeToProfiles(onChange: (profiles: Profile[]) => void, onError?: (error: Error) => void): () => void {
   const load = async () => {
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("display_name", { ascending: true, nullsFirst: false });
+      const { data, error } = await supabase.from("profiles").select("*").order("display_name", { ascending: true, nullsFirst: false });
       if (error) throw error;
       onChange((data || []).map((row) => mapProfile(row)!));
-    } catch (error) {
-      onError?.(error as Error);
-    }
+    } catch (error) { onError?.(error as Error); }
   };
-
   void load();
-  const channel = supabase
-    .channel("profiles-admin")
-    .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => {
-      void load();
-    })
-    .subscribe();
-
-  return () => {
-    void supabase.removeChannel(channel);
-  };
+  const channel = supabase.channel("profiles-admin").on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => { void load(); }).subscribe();
+  return () => { void supabase.removeChannel(channel); };
 }
