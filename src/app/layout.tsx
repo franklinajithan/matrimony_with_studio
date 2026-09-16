@@ -8,6 +8,8 @@ const productionHost =
   process.env.VERCEL_URL ||
   'matrimony-with-studio.vercel.app';
 const siteUrl = productionHost.startsWith('http') ? productionHost : `https://${productionHost}`;
+const SHARE_CARD_VERSION = '2';
+const shareCardImage = `/opengraph-image?v=${SHARE_CARD_VERSION}`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -18,13 +20,13 @@ export const metadata: Metadata = {
     siteName: 'CupidMatch',
     title: 'CupidMatch - Find Your Perfect Match',
     description: 'Meaningful matrimony connections for Indian and Sri Lankan communities.',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'CupidMatch - Find Your Perfect Match' }],
+    images: [{ url: shareCardImage, width: 1200, height: 630, alt: 'CupidMatch - Find Your Perfect Match' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'CupidMatch - Find Your Perfect Match',
     description: 'Meaningful matrimony connections for Indian and Sri Lankan communities.',
-    images: ['/opengraph-image'],
+    images: [shareCardImage],
   },
 };
 
