@@ -7,6 +7,8 @@ export const alt = 'CupidMatch shared biodata';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
+const logoUrl = 'https://matrimony-with-studio.vercel.app/images/cupidmatch-logo.png';
+
 type Props = { params: Promise<{ token: string }> };
 
 function contentOf(value: unknown): BiodataContent {
@@ -47,14 +49,14 @@ export default async function Image({ params }: Props) {
           {photo ? (
             <img src={photo} width="310" height="390" style={{ width: 310, height: 390, objectFit: 'cover', borderRadius: 28, boxShadow: '0 14px 40px rgba(0,0,0,.16)' }} />
           ) : (
-            <div style={{ width: 250, height: 250, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff', color: '#7027E8', fontSize: 120 }}>♥</div>
+            <img src={logoUrl} width="310" height="250" style={{ width: 310, height: 250, objectFit: 'contain' }} />
           )}
         </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '55px 70px' }}>
-          <div style={{ fontSize: 27, color: '#7027E8', fontWeight: 700, display: 'flex' }}>♥ CupidMatch</div>
-          <div style={{ marginTop: 28, fontSize: 58, lineHeight: 1.08, color: '#24152f', fontWeight: 800, display: 'flex' }}>{name}</div>
-          <div style={{ marginTop: 22, fontSize: 27, color: '#6b6070', display: 'flex' }}>Biodata shared securely through CupidMatch</div>
-          <div style={{ marginTop: 42, fontSize: 20, color: '#8a7d91', display: 'flex' }}>Open the link to view the shared details</div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '48px 64px' }}>
+          <img src={logoUrl} width="330" height="96" style={{ width: 330, height: 96, objectFit: 'contain', objectPosition: 'left center' }} />
+          <div style={{ marginTop: 22, fontSize: 58, lineHeight: 1.08, color: '#24152f', fontWeight: 800, display: 'flex' }}>{name}</div>
+          <div style={{ marginTop: 20, fontSize: 27, color: '#6b6070', display: 'flex' }}>Biodata shared securely through CupidMatch</div>
+          <div style={{ marginTop: 34, fontSize: 20, color: '#8a7d91', display: 'flex' }}>Open the link to view the shared details</div>
         </div>
       </div>
     </div>,
