@@ -470,12 +470,16 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
+      {isMessagesRoute ? (
+        <div
+          aria-hidden="true"
+          className="h-[calc(60px+env(safe-area-inset-bottom))] shrink-0 lg:hidden"
+        />
+      ) : null}
+
       <nav
         className={cn(
-          "z-50 border-t border-violet-700/20 bg-violet-600 pb-[env(safe-area-inset-bottom)] shadow-lg lg:hidden",
-          isMessagesRoute
-            ? "relative inset-x-auto bottom-auto shrink-0"
-            : "fixed inset-x-0 bottom-0",
+          "fixed inset-x-0 bottom-0 z-50 border-t border-violet-700/20 bg-violet-600 pb-[env(safe-area-inset-bottom)] shadow-lg lg:hidden",
           drawerOpen && "hidden"
         )}
         aria-label="Primary"
