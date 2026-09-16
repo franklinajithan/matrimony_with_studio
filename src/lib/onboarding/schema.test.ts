@@ -11,7 +11,6 @@ import { EMPTY_ONBOARDING_DRAFT } from "@/lib/onboarding/schema";
 const adultDraft = {
   displayName: "Amina Perera",
   dob: "1995-03-12",
-  confirmedAdult: true,
   country: "Sri Lanka",
   region: "Colombo",
   languages: ["English", "Sinhala"],
@@ -25,13 +24,20 @@ const adultDraft = {
 };
 
 describe("onboarding validation", () => {
-  it("requires adult eligibility from date of birth", () => {
+  it("uses DOB itself for adult eligibility without a second checkbox", () => {
     expect(isAdult("2015-01-01")).toBe(false);
-    expect(isAdult("1990-01-01")).toBe(true);
-    expect(validateOnboardingStep(0, parseOnboardingDraft({ displayName: "A", dob: "2015-01-01", confirmedAdult: true }))).not.toEqual([]);
+    expect(isAdult("1980-06-29")).toBe(true);
+    expect(validateOnboardingStep(0, parseOnboardingDraft({ displayName: "Ajithan", dob: "1980-06-29", confirmedAdult: false }))).toEqual([]);
+    expect(validateOnboardingStep(0, parseOnboardingDraft({ displayName: "Amina", dob: "2015-01-01", confirmedAdult: true }))).not.toEqual([]);
   });
 
-  it("does not publish without explicit confirmation", () => {
+  it("checks the exact 18th birthday boundary", () => {
+    expect(isAdult("2008-09-16", new Date(2026, 8, 16, 12))).toBe(true);
+    expect(isAdult("2008-09-17", new Date(2026, 8, 16, 12))).toBe(false);
+    expect(isAdult("not-a-date")).toBe(false);
+  });
+
+  it("does not publish without final review confirmation", () => {
     const errors = validateForPublish(parseOnboardingDraft({ ...adultDraft, reviewConfirmed: false }));
     expect(errors.some((error) => error.toLowerCase().includes("confirm"))).toBe(true);
   });
