@@ -7,11 +7,7 @@ export function mediaPathForUser(userId: string, fileName: string, folder = "pho
   return `users/${userId}/${folder}/${Date.now()}-${safeName}`;
 }
 
-/**
- * Profile photos deliberately use one stable path per user.
- * Replacing the photo updates the same object, so every screen/device reads
- * the same account-owned image instead of retaining an old timestamped URL.
- */
+/** One stable profile-photo object per account, shared by every screen/device. */
 export function profilePhotoPathForUser(userId: string, fileName: string): string {
   const extension = fileName.toLowerCase().match(/\.(jpe?g|png|webp)$/)?.[0] || ".jpg";
   return `users/${userId}/profile_photo/profile${extension}`;
@@ -50,12 +46,7 @@ export function getPublicMediaUrl(path: string): string {
   return data.publicUrl;
 }
 
-/**
- * Normalize any stored photo value into something an <img> can load.
- * - Local public assets (`/profiles/...`) stay as-is
- * - Storage paths / signed URLs become durable public media URLs
- * - External http(s) URLs stay as-is when not in our bucket
- */
+/** Normalize a stored photo value into something an <img> can load. */
 export function resolveMediaUrl(urlOrPath: string | null | undefined): string {
   if (!urlOrPath) return "";
   const value = urlOrPath.trim();
@@ -101,15 +92,19 @@ function describeUploadError(error: { message?: string }, path: string): Error {
   return new Error(message || `Failed to upload file to ${path}.`);
 }
 
-/**
- * Upload a file and return the durable storage path (not a temporary signed URL).
- * Use resolveMediaUrl(path) when you need a display URL.
- */
+/** Upload a file and return its durable storage path. */
 export async function uploadFile(file: File, path: string): Promise<string> {
   if (!file) throw new Error("No file provided for upload.");
   if (!path) throw new Error("No path provided for upload.");
 
-  const { error } = await supabase.storage.from(MEDIA_BUCKET).upload(path, file, {
+  // Existing callers still create timestamped profile_photo paths. Normalize them
+  // here so the account always has one canonical profile-photo object.
+  const profileMatch = path.match(/^users\/([^/]+)\/profile_photo\//);
+  const uploadPath = profileMatch
+    ? profilePhotoPathForUser(profileMatch[1], file.name)
+    : path;
+
+  const { error } = await supabase.storage.from(MEDIA_BUCKET).upload(uploadPath, file, {
     upsert: true,
     contentType: file.type || undefined,
     cacheControl: "3600",
@@ -117,10 +112,10 @@ export async function uploadFile(file: File, path: string): Promise<string> {
 
   if (error) {
     console.error("Error uploading file:", error);
-    throw describeUploadError(error, path);
+    throw describeUploadError(error, uploadPath);
   }
 
-  return path;
+  return uploadPath;
 }
 
 /** Upload and return both durable path and display URL. */
@@ -130,7 +125,6 @@ export async function uploadMediaFile(
 ): Promise<{ path: string; url: string }> {
   const storedPath = await uploadFile(file, path);
   const publicUrl = getPublicMediaUrl(storedPath);
-  // Prefer public URL; fall back to a long-lived signed URL if bucket is still private.
   if (publicUrl) {
     return { path: storedPath, url: publicUrl };
   }
