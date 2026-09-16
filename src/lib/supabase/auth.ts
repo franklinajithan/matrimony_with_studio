@@ -12,6 +12,8 @@ export type AuthUser = {
 /** Firebase-compatible alias used across existing pages. */
 export type User = AuthUser;
 
+export type OAuthProvider = "google" | "facebook";
+
 let cachedUser: AuthUser | null = null;
 let authReady: Promise<void> | null = null;
 
@@ -126,6 +128,28 @@ export async function signInWithEmailAndPassword(
   if (error) mapAuthError(error, "Login failed");
   cachedUser = mapUser(data.user);
   return { user: cachedUser, session: data.session };
+}
+
+/** Starts a Supabase-hosted OAuth flow. Provider secrets remain in Supabase. */
+export async function signInWithOAuth(provider: OAuthProvider, next = "/dashboard") {
+  if (!isSupabaseConfigured()) {
+    const err = new Error(
+      "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, then restart the app."
+    ) as Error & { code: string };
+    err.code = "auth/invalid-api-key";
+    throw err;
+  }
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: callbackUrl(next),
+      scopes: provider === "facebook" ? "email,public_profile" : "openid email profile",
+    },
+  });
+
+  if (error) mapAuthError(error, `Could not continue with ${provider}`);
+  return data;
 }
 
 export async function createUserWithEmailAndPassword(

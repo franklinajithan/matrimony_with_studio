@@ -62,3 +62,36 @@ This repository was not assumed to have Vercel env vars configured. Add them in 
 - Signup confirmation: `/auth/callback?next=/onboarding`
 - Password recovery: `/auth/callback?next=/reset-password`
 - Expired/invalid links land on `/login?error=expired_link` or `/login?error=invalid_link`
+
+## Google and Facebook OAuth
+
+OAuth client secrets belong in **Supabase only**. Do not add Google or Facebook secrets to
+`NEXT_PUBLIC_*` variables or commit them to this repository.
+
+Use this provider callback URL in both Google Cloud and Meta for Developers:
+
+```text
+https://YOUR_SUPABASE_PROJECT_REF.supabase.co/auth/v1/callback
+```
+
+### Google
+
+1. In Google Cloud Console, configure the OAuth consent screen.
+2. Create an **OAuth 2.0 Client ID** for a Web application.
+3. Add the Supabase callback URL above as an authorised redirect URI.
+4. In Supabase → Authentication → Providers → Google, enable Google and paste the client ID and client secret.
+
+### Facebook
+
+1. In Meta for Developers, create an app and add **Facebook Login**.
+2. Add the Supabase callback URL above to **Valid OAuth Redirect URIs**.
+3. Keep `email` and `public_profile` available and complete Meta's required privacy/data-deletion URLs before switching the app to Live.
+4. In Supabase → Authentication → Providers → Facebook, enable Facebook and paste the App ID and App Secret.
+
+The application callback remains:
+
+```text
+https://YOUR_PRODUCTION_DOMAIN/auth/callback
+```
+
+It must remain in Supabase Authentication → URL Configuration → Redirect URLs.

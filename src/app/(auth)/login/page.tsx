@@ -19,6 +19,7 @@ import { draftFromProfile } from "@/lib/onboarding/persist";
 import { firstIncompleteOnboardingStep } from "@/lib/onboarding/readiness";
 import { safeInternalPath } from "@/lib/auth/safe-redirect";
 import { markLoginWelcomePending } from "@/lib/auth/welcome-toast";
+import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Enter a valid email address." }),
@@ -118,6 +119,7 @@ function LoginForm() {
             <AlertDescription>{formError}</AlertDescription>
           </Alert>
         )}
+        <SocialAuthButtons next={nextPath || "/dashboard"} />
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField

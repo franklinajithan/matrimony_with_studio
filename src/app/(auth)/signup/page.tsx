@@ -15,6 +15,7 @@ import { Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth, createUserWithEmailAndPassword } from "@/lib/supabase/auth";
+import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
 
 const signupSchema = z
   .object({
@@ -107,6 +108,12 @@ export default function SignupPage() {
             <AlertDescription>{formError}</AlertDescription>
           </Alert>
         )}
+        <SocialAuthButtons next="/onboarding" />
+        <p className="text-center text-xs leading-relaxed text-muted-foreground">
+          By continuing with Google or Facebook, you agree to the{" "}
+          <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link>{" "}
+          and <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
+        </p>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
