@@ -1,7 +1,4 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 import { LandingHero } from "@/components/landing/LandingHero";
 import {
   TrustStrip,
@@ -19,31 +16,13 @@ import {
 } from "@/components/landing/LandingSections";
 import { Navbar } from "@/components/navigation/Navbar";
 import { Footer } from "@/components/navigation/Footer";
-import { onAuthStateChanged, auth } from "@/lib/supabase/auth";
-import { Loader2 } from "lucide-react";
+import { getServerAuthUser } from "@/lib/supabase/server";
 
-export default function HomePage() {
-  const router = useRouter();
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+export default async function HomePage() {
+  const user = await getServerAuthUser();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // Redirect authenticated users to dashboard
-        router.replace("/dashboard");
-      } else {
-        setIsCheckingAuth(false);
-      }
-    });
-    return () => unsubscribe();
-  }, [router]);
-
-  if (isCheckingAuth) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-violet-600" />
-      </div>
-    );
+  if (user) {
+    redirect("/dashboard");
   }
 
   return (

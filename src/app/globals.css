@@ -5,12 +5,12 @@
 @layer base {
   :root {
     /* CupidMatch Design Tokens — Light Mode */
-    /* Background & Surfaces: Warm ivory (#FBF8F4) */
     --background: 40 33% 98%;
-    --foreground: 267 20% 10%; /* Near-black #17151D */
+    --foreground: 267 20% 10%;
 
     --muted: 270 16% 97%;
-    --muted-foreground: 285 10% 40%; /* Darker muted gray for WCAG AA contrast */
+    /* Deliberately darker than the original token so small secondary copy meets AA more reliably. */
+    --muted-foreground: 285 12% 32%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 267 20% 10%;
@@ -18,18 +18,15 @@
     --card: 0 0% 100%;
     --card-foreground: 267 20% 10%;
 
-    --border: 270 24% 92%; /* Soft lavender #EAE4EF */
+    --border: 270 24% 92%;
     --input: 270 24% 92%;
 
-    /* Primary: Violet (#7027E8) */
     --primary: 265 81% 53%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: Coral (#FF6F72) */
     --secondary: 359 100% 72%;
     --secondary-foreground: 0 0% 100%;
 
-    /* Accent: Soft violet (#EEE7FF) */
     --accent: 260 100% 96%;
     --accent-foreground: 265 81% 53%;
 
@@ -58,39 +55,28 @@
   .dark {
     --background: 327 28% 8%;
     --foreground: 40 40% 96%;
-
     --muted: 327 20% 16%;
-    --muted-foreground: 28 20% 70%;
-
+    --muted-foreground: 28 20% 76%;
     --popover: 327 24% 10%;
     --popover-foreground: 40 40% 96%;
-
     --card: 327 22% 12%;
     --card-foreground: 40 40% 96%;
-
     --border: 327 16% 22%;
     --input: 327 16% 20%;
-
     --primary: 43 55% 63%;
     --primary-foreground: 327 28% 12%;
-
     --secondary: 328 40% 40%;
     --secondary-foreground: 0 0% 100%;
-
     --accent: 327 20% 18%;
     --accent-foreground: 40 40% 96%;
-
     --destructive: 0 60% 50%;
     --destructive-foreground: 0 0% 98%;
-
     --ring: 43 55% 63%;
-
     --chart-1: 43 55% 63%;
     --chart-2: 328 40% 50%;
     --chart-3: 299 40% 55%;
     --chart-4: 28 20% 70%;
     --chart-5: 327 20% 35%;
-
     --sidebar-background: 327 24% 10%;
     --sidebar-foreground: 40 40% 96%;
     --sidebar-primary: 43 55% 63%;
@@ -109,125 +95,50 @@
   body {
     @apply bg-background text-foreground;
   }
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 3px solid hsl(var(--ring));
+    outline-offset: 3px;
+  }
 }
 
-/* Subtle animations — respect reduced motion */
 @layer utilities {
-  /* Legacy animations */
-  @keyframes cupid-route-travel {
-    to {
-      stroke-dashoffset: -280;
-    }
-  }
-
+  @keyframes cupid-route-travel { to { stroke-dashoffset: -280; } }
   @keyframes cupid-scroll-hint {
-    0%,
-    100% {
-      transform: translateY(0);
-      opacity: 0.55;
-    }
-    50% {
-      transform: translateY(6px);
-      opacity: 1;
-    }
+    0%, 100% { transform: translateY(0); opacity: 0.55; }
+    50% { transform: translateY(6px); opacity: 1; }
   }
-
-  /* New decorative animations */
   @keyframes cupid-path-float {
-    0%,
-    100% {
-      transform: translateY(0);
-      opacity: 0.15;
-    }
-    50% {
-      transform: translateY(-10px);
-      opacity: 0.25;
-    }
+    0%, 100% { transform: translateY(0); opacity: 0.15; }
+    50% { transform: translateY(-10px); opacity: 0.25; }
   }
-
-  @keyframes cupid-orbit-rotate-slow {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  @keyframes cupid-orbit-rotate-reverse {
-    from {
-      transform: rotate(360deg);
-    }
-    to {
-      transform: rotate(0deg);
-    }
-  }
-
+  @keyframes cupid-orbit-rotate-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes cupid-orbit-rotate-reverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
   @keyframes cupid-orbit-pulse {
-    0%,
-    100% {
-      opacity: 0.4;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.8;
-      transform: scale(1.2);
-    }
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.2); }
   }
-
   @keyframes cupid-fade-in-up {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
-  /* Animation classes */
-  .cupid-route-travel {
-    stroke-dasharray: 10 270;
-    stroke-dashoffset: 0;
-    animation: cupid-route-travel 18s linear infinite;
-  }
+  .cupid-route-travel { stroke-dasharray: 10 270; stroke-dashoffset: 0; animation: cupid-route-travel 18s linear infinite; }
+  .cupid-route-travel-delayed { stroke-dasharray: 10 270; stroke-dashoffset: 0; animation: cupid-route-travel 22s linear infinite; animation-delay: -7s; }
+  .cupid-scroll-hint { animation: cupid-scroll-hint 2.8s ease-in-out infinite; }
+  .cupid-path-float { animation: cupid-path-float 8s ease-in-out infinite; }
+  .cupid-orbit-rotate-slow { transform-origin: center; animation: cupid-orbit-rotate-slow 40s linear infinite; }
+  .cupid-orbit-rotate-reverse { transform-origin: center; animation: cupid-orbit-rotate-reverse 30s linear infinite; }
+  .cupid-orbit-pulse { animation: cupid-orbit-pulse 3s ease-in-out infinite; }
+  .cupid-fade-in-up { animation: cupid-fade-in-up 0.6s ease-out forwards; }
 
-  .cupid-route-travel-delayed {
-    stroke-dasharray: 10 270;
-    stroke-dashoffset: 0;
-    animation: cupid-route-travel 22s linear infinite;
-    animation-delay: -7s;
-  }
-
-  .cupid-scroll-hint {
-    animation: cupid-scroll-hint 2.8s ease-in-out infinite;
-  }
-
-  .cupid-path-float {
-    animation: cupid-path-float 8s ease-in-out infinite;
-  }
-
-  .cupid-orbit-rotate-slow {
-    transform-origin: center;
-    animation: cupid-orbit-rotate-slow 40s linear infinite;
-  }
-
-  .cupid-orbit-rotate-reverse {
-    transform-origin: center;
-    animation: cupid-orbit-rotate-reverse 30s linear infinite;
-  }
-
-  .cupid-orbit-pulse {
-    animation: cupid-orbit-pulse 3s ease-in-out infinite;
-  }
-
-  .cupid-fade-in-up {
-    animation: cupid-fade-in-up 0.6s ease-out forwards;
-  }
-
-  /* Respect user motion preferences */
   @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto !important; }
+    *, *::before, *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
     .cupid-route-travel,
     .cupid-route-travel-delayed,
     .cupid-scroll-hint,
@@ -235,8 +146,6 @@
     .cupid-orbit-rotate-slow,
     .cupid-orbit-rotate-reverse,
     .cupid-orbit-pulse,
-    .cupid-fade-in-up {
-      animation: none !important;
-    }
+    .cupid-fade-in-up { animation: none !important; }
   }
 }
