@@ -9,17 +9,15 @@ import {
   Loader2,
   MessageCircle,
   RefreshCw,
-  Shield,
+  ShieldCheck,
   SlidersHorizontal,
+  Sparkles,
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PairedOrbit } from "@/components/decorative/PairedOrbit";
-import { CulturalLinePattern } from "@/components/decorative/CulturalLinePattern";
 import { MemberAvatar } from "@/components/dashboard/MemberAvatar";
 import { auth, onAuthStateChanged } from "@/lib/supabase/auth";
 import {
@@ -33,88 +31,69 @@ import {
   firstName,
   formatLanguageList,
   formatLookingFor,
-  formatPhotoPrivacy,
   formatRelocation,
 } from "@/lib/onboarding/readiness";
-import { calculateAge } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 
-function CountValue({ result }: { result: CountResult }) {
-  if (result.status === "error") {
-    return <span className="text-sm font-medium text-destructive">Unavailable</span>;
-  }
-  return <span className="text-xl font-semibold text-foreground">{result.value}</span>;
+function countText(result: CountResult) {
+  return result.status === "error" ? "—" : String(result.value);
 }
 
 function OverviewSkeleton() {
   return (
-    <div className="space-y-6" aria-hidden="true">
-      <Skeleton className="h-36 w-full rounded-xl" />
-      <Skeleton className="h-40 w-full rounded-xl" />
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Skeleton className="h-20 rounded-xl" />
-        <Skeleton className="h-20 rounded-xl" />
-        <Skeleton className="h-20 rounded-xl" />
+    <div className="mx-auto max-w-6xl space-y-5" aria-hidden="true">
+      <Skeleton className="h-44 w-full rounded-[28px]" />
+      <Skeleton className="h-10 w-56 rounded-xl" />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Skeleton className="h-72 rounded-3xl" />
+        <Skeleton className="h-72 rounded-3xl" />
+        <Skeleton className="h-72 rounded-3xl" />
       </div>
-      <Skeleton className="h-64 w-full rounded-xl" />
+      <Skeleton className="h-20 rounded-2xl" />
     </div>
   );
 }
 
-function DiscoveryCard({
-  person,
-  onInterest,
-  sending,
-}: {
+function DiscoveryCard({ person, onInterest, sending }: {
   person: DiscoveryPerson;
   onInterest: (id: string) => void;
   sending: boolean;
 }) {
-  const age = person.age ?? undefined;
   return (
-    <article className="flex gap-3 rounded-xl border border-border bg-card p-3">
-      <MemberAvatar
-        name={person.displayName}
-        photoURL={person.photoURL}
-        className="h-16 w-16 rounded-xl"
-        alt={`Profile photo of ${person.displayName}`}
-      />
-      <div className="min-w-0 flex-1">
+    <article className="group overflow-hidden rounded-3xl border border-[#eadde7] bg-white shadow-[0_12px_34px_rgba(75,32,67,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(75,32,67,0.13)]">
+      <Link href={`/profile/${person.id}`} className="block bg-gradient-to-br from-[#f8e9f0] via-[#f3eef8] to-[#fff8f1] p-4">
+        <MemberAvatar
+          name={person.displayName}
+          photoURL={person.photoURL}
+          className="mx-auto h-40 w-40 rounded-[26px] border-4 border-white text-2xl shadow-md sm:h-44 sm:w-44"
+          alt={`Profile photo of ${person.displayName}`}
+        />
+      </Link>
+      <div className="p-4">
         <div className="flex items-start justify-between gap-2">
-          <div>
-            <Link
-              href={`/profile/${person.id}`}
-              className="font-semibold text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
-            >
-              {person.displayName}
-              {age ? <span className="font-normal text-muted-foreground">, {age}</span> : null}
+          <div className="min-w-0">
+            <Link href={`/profile/${person.id}`} className="text-lg font-semibold text-[#3b1837] hover:text-primary">
+              {person.displayName}{person.age ? <span className="font-normal text-[#745d70]">, {person.age}</span> : null}
             </Link>
             {person.isVerified ? (
-              <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-                <CheckCircle2 className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                Identity verified
+              <p className="mt-0.5 flex items-center gap-1 text-xs text-[#6d5b69]">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" /> Verified profile
               </p>
             ) : null}
           </div>
         </div>
-        <p className="mt-1 truncate text-sm text-muted-foreground">
-          {[person.profession, person.location].filter(Boolean).join(" · ") || "Details visible on their profile"}
+        <p className="mt-2 line-clamp-2 min-h-10 text-sm text-[#745d70]">
+          {[person.profession, person.location].filter(Boolean).join(" · ") || "View their profile to learn more"}
         </p>
         {person.sharedPreference ? (
-          <p className="mt-1 text-xs text-primary">{person.sharedPreference}</p>
+          <p className="mt-2 inline-flex rounded-full bg-[#f5eafa] px-2.5 py-1 text-xs font-medium text-[#713c78]">{person.sharedPreference}</p>
         ) : null}
-        <div className="mt-3 flex gap-2">
-          <Button asChild size="sm" variant="outline" className="min-h-10">
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <Button asChild variant="outline" className="min-h-11 rounded-xl border-[#dcc9d8] bg-white">
             <Link href={`/profile/${person.id}`}>View profile</Link>
           </Button>
-          <Button
-            size="sm"
-            className="min-h-10"
-            disabled={sending}
-            onClick={() => onInterest(person.id)}
-          >
-            {sending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Heart className="mr-1 h-4 w-4" />}
+          <Button className="min-h-11 rounded-xl" disabled={sending} onClick={() => onInterest(person.id)}>
+            {sending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Heart className="mr-1.5 h-4 w-4" />}
             Interest
           </Button>
         </div>
@@ -145,11 +124,9 @@ export function DashboardOverview() {
     setLoading(true);
     setError(null);
     try {
-      const overview = await loadDashboardOverview(userId);
-      setData(overview);
+      setData(await loadDashboardOverview(userId));
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Could not load your overview.";
-      setError(message);
+      setError(err instanceof Error ? err.message : "Could not load your overview.");
       setData(null);
     } finally {
       setLoading(false);
@@ -181,371 +158,142 @@ export function DashboardOverview() {
     }
   };
 
-  if (loading) {
-    return (
-      <div role="status" aria-live="polite">
-        <span className="sr-only">Loading your overview</span>
-        <OverviewSkeleton />
-      </div>
-    );
-  }
+  if (loading) return <div role="status"><span className="sr-only">Loading your overview</span><OverviewSkeleton /></div>;
 
   if (error || !data) {
     return (
-      <Card className="border-border">
-        <CardHeader>
-          <CardTitle>We could not load your overview</CardTitle>
-          <CardDescription>{error || "Something went wrong."}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button onClick={() => void load()} className="min-h-11">
-            <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
-            Try again
-          </Button>
-        </CardContent>
+      <Card className="mx-auto max-w-3xl border-border">
+        <CardHeader><CardTitle>We could not load your overview</CardTitle><CardDescription>{error || "Something went wrong."}</CardDescription></CardHeader>
+        <CardContent><Button onClick={() => void load()}><RefreshCw className="mr-2 h-4 w-4" />Try again</Button></CardContent>
       </Card>
     );
   }
 
   const { profile, draft, readiness } = data;
-  const displayName = profile.displayName || "there";
-  const age = profile.ageYears ?? calculateAge(profile.dob);
-  const countries =
-    (draft.preferredSettlement && draft.preferredSettlement.length > 0
-      ? draft.preferredSettlement.join(", ")
-      : draft.country) || null;
+  const displayName = firstName(profile.displayName || "there");
+  const countries = (draft.preferredSettlement?.length ? draft.preferredSettlement.join(", ") : draft.country) || null;
   const languages = formatLanguageList(draft.languages);
-  const relocation = formatRelocation(draft.relocationOpenness);
   const lookingFor = formatLookingFor(draft.lookingFor);
+  const relocation = formatRelocation(draft.relocationOpenness);
+  const hasConversation = data.recent.status === "ok" && data.recent.items.length > 0;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <section
-        aria-labelledby="welcome-heading"
-        className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 sm:p-6"
-      >
-        <CulturalLinePattern position="top-right" />
-        <div className="pointer-events-none absolute -bottom-10 -left-8 opacity-40 motion-reduce:hidden" aria-hidden="true">
-          <PairedOrbit size="sm" animate={false} />
-        </div>
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center">
-          <MemberAvatar
-            name={profile.displayName || "Member"}
-            photoURL={profile.photoURL || draft.photoURL}
-            className="h-20 w-20 text-lg"
-          />
+    <div className="mx-auto max-w-6xl space-y-7 pb-8">
+      <section className="relative overflow-hidden rounded-[30px] border border-[#eadce5] bg-[radial-gradient(circle_at_88%_12%,rgba(184,113,172,0.20),transparent_34%),linear-gradient(135deg,#fffaf4_0%,#fff_45%,#f8eef7_100%)] p-5 shadow-[0_14px_45px_rgba(67,31,61,0.08)] sm:p-7">
+        <div className="absolute -right-12 -top-14 h-40 w-40 rounded-full border border-[#dcb8d4]/50" aria-hidden="true" />
+        <div className="relative flex flex-col gap-5 md:flex-row md:items-center">
+          <MemberAvatar name={profile.displayName || "Member"} photoURL={profile.photoURL || draft.photoURL} className="h-20 w-20 border-4 border-white text-lg shadow-md" />
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 id="welcome-heading" className="text-2xl font-semibold tracking-tight text-foreground">
-                Welcome back, {firstName(displayName)}
-              </h2>
-              <Badge variant="outline" className="capitalize">
-                {readiness.state}
-              </Badge>
-            </div>
-            <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-              Let’s take the next step towards a meaningful connection.
-            </p>
-            {age ? <p className="mt-1 text-sm text-muted-foreground">{age} years old</p> : null}
+            <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#8d5b84]">Your CupidMatch journey</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-[#351532] sm:text-3xl">Welcome, {displayName}</h1>
+            <p className="mt-1.5 max-w-2xl text-sm text-[#745d70] sm:text-base">Find someone who shares your values, your outlook and the life you want to build.</p>
           </div>
-          <Button asChild className="min-h-11 shrink-0">
-            <Link href={readiness.primaryAction.href}>
-              {readiness.primaryAction.label}
-              <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-            </Link>
+          <Button asChild size="lg" className="min-h-12 rounded-xl px-5 shadow-sm">
+            <Link href="/discover">Discover matches<ArrowRight className="ml-2 h-4 w-4" /></Link>
           </Button>
         </div>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="space-y-6">
-          <Card className="border-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Profile readiness</CardTitle>
-              <CardDescription>
-                {readiness.isComplete
-                  ? readiness.isPublished
-                    ? "Your profile is published."
-                    : "Your profile is complete. Publish when you are ready — a completed profile still needs an explicit publish."
-                  : "Complete the remaining details when you have a moment."}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <div className="mb-2 flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    {readiness.filled} of {readiness.total} core details
-                  </span>
-                  <span className="font-medium text-foreground">{readiness.percent}%</span>
-                </div>
-                <Progress
-                  value={readiness.percent}
-                  className="h-2 bg-[#EFECE8] motion-reduce:transition-none"
-                  aria-label="Profile readiness"
-                  aria-valuetext={`${readiness.percent} percent complete`}
-                />
-              </div>
-              {!readiness.isPublished ? (
-                <p className="text-sm text-muted-foreground">Only you can see your draft.</p>
-              ) : null}
-              {readiness.nextActions.length > 0 ? (
-                <ul className="space-y-2">
-                  {readiness.nextActions.map((action) => (
-                    <li key={action.id}>
-                      <Link
-                        href={action.href}
-                        className="inline-flex min-h-10 items-center text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
-                      >
-                        {action.label}
-                        <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </CardContent>
-          </Card>
-
-          <section aria-labelledby="activity-heading">
-            <h2 id="activity-heading" className="sr-only">
-              Activity overview
-            </h2>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Link
-                href="/dashboard/interests"
-                className="rounded-xl border border-border bg-card p-4 outline-none transition-colors hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Heart className="h-4 w-4" aria-hidden="true" />
-                  Received interests
-                </p>
-                <div className="mt-2">
-                  <CountValue result={data.receivedInterests} />
-                </div>
-                {data.receivedInterests.status === "error" ? (
-                  <button type="button" onClick={() => void load()} className="mt-2 text-xs text-primary underline">
-                    Retry
-                  </button>
-                ) : null}
-              </Link>
-              <Link
-                href="/messages"
-                className="rounded-xl border border-border bg-card p-4 outline-none transition-colors hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Users className="h-4 w-4" aria-hidden="true" />
-                  Connections
-                </p>
-                <div className="mt-2">
-                  <CountValue result={data.connections} />
-                </div>
-                {data.connections.status === "error" ? (
-                  <button type="button" onClick={() => void load()} className="mt-2 text-xs text-primary underline">
-                    Retry
-                  </button>
-                ) : null}
-              </Link>
-              <Link
-                href="/messages"
-                className="rounded-xl border border-border bg-card p-4 outline-none transition-colors hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MessageCircle className="h-4 w-4" aria-hidden="true" />
-                  Unread messages
-                </p>
-                <div className="mt-2">
-                  <CountValue result={data.unreadMessages} />
-                </div>
-                {data.unreadMessages.status === "error" ? (
-                  <button type="button" onClick={() => void load()} className="mt-2 text-xs text-primary underline">
-                    Retry
-                  </button>
-                ) : null}
-              </Link>
-            </div>
-          </section>
-
-          <section aria-labelledby="explore-heading" className="space-y-4">
-            <div className="flex items-center justify-between gap-3">
-              <h2 id="explore-heading" className="text-lg font-semibold text-foreground">
-                People to explore
-              </h2>
-              {data.discovery.status === "ok" ? (
-                <Button asChild variant="ghost" size="sm">
-                  <Link href="/discover">See all</Link>
-                </Button>
-              ) : null}
-            </div>
-
-            {data.discovery.status === "unpublished" ? (
-              <Card className="border-border">
-                <CardContent className="flex flex-col items-center px-6 py-10 text-center">
-                  <div className="relative mb-4" aria-hidden="true">
-                    <PairedOrbit size="sm" animate={false} />
-                  </div>
-                  <h3 className="text-lg font-semibold">Publish your profile to start discovering people</h3>
-                  <p className="mt-2 max-w-md text-sm text-muted-foreground">
-                    Completing and publishing your profile is the next step. Other members will not see a draft.
-                  </p>
-                  <Button asChild className="mt-5 min-h-11">
-                    <Link href={readiness.primaryAction.href}>Continue my profile</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : null}
-
-            {data.discovery.status === "empty" ? (
-              <Card className="border-border">
-                <CardContent className="px-6 py-10 text-center">
-                  <h3 className="text-lg font-semibold">Your next connection is still ahead.</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Try adjusting your preferences or check back as the community grows.
-                  </p>
-                  <Button asChild variant="outline" className="mt-5 min-h-11">
-                    <Link href="/onboarding?step=2">Review preferences</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : null}
-
-            {data.discovery.status === "error" ? (
-              <Card className="border-border">
-                <CardHeader>
-                  <CardTitle className="text-lg">Discovery is unavailable</CardTitle>
-                  <CardDescription>
-                    We could not load people to explore right now. {data.discovery.message}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={() => void load()} variant="outline" className="min-h-11">
-                    <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
-                    Try again
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : null}
-
-            {data.discovery.status === "ok" ? (
-              <div className="grid gap-3 md:grid-cols-2">
-                {data.discovery.people.map((person) => (
-                  <DiscoveryCard
-                    key={person.id}
-                    person={person}
-                    sending={likingId === person.id}
-                    onInterest={handleInterest}
-                  />
-                ))}
-              </div>
-            ) : null}
-          </section>
+      <section aria-labelledby="matches-heading" className="space-y-4">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#9b668f]">Chosen around your preferences</p>
+            <h2 id="matches-heading" className="mt-1 text-2xl font-semibold text-[#351532]">Suggested matches</h2>
+          </div>
+          <Button asChild variant="ghost" className="hidden sm:inline-flex"><Link href="/discover">Explore all<ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
         </div>
 
-        <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
-          <Card className="border-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <SlidersHorizontal className="h-4 w-4 text-primary" aria-hidden="true" />
-                Partner preferences
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <PreferenceRow label="Looking for" value={lookingFor} />
-              <PreferenceRow label="Countries" value={countries} />
-              <PreferenceRow label="Languages" value={languages} />
-              <PreferenceRow label="Relocation" value={relocation} />
-              <PreferenceRow label="Age range" value={null} />
-              <Button asChild variant="outline" className="mt-2 min-h-11 w-full">
-                <Link href="/onboarding?step=2">Edit preferences</Link>
-              </Button>
-            </CardContent>
-          </Card>
+        {data.discovery.status === "ok" ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {data.discovery.people.slice(0, 3).map((person) => (
+              <DiscoveryCard key={person.id} person={person} sending={likingId === person.id} onInterest={handleInterest} />
+            ))}
+          </div>
+        ) : data.discovery.status === "unpublished" ? (
+          <div className="rounded-3xl border border-[#eadde7] bg-white px-6 py-8 text-center shadow-sm">
+            <Sparkles className="mx-auto h-8 w-8 text-[#9b668f]" />
+            <h3 className="mt-3 text-lg font-semibold text-[#351532]">Complete your profile to meet the right people</h3>
+            <p className="mx-auto mt-2 max-w-lg text-sm text-[#745d70]">Your profile stays private until you publish it. Once ready, we can show real members who fit your preferences.</p>
+            <Button asChild className="mt-5 rounded-xl"><Link href={readiness.primaryAction.href}>Continue my profile</Link></Button>
+          </div>
+        ) : data.discovery.status === "empty" ? (
+          <div className="rounded-3xl border border-[#eadde7] bg-[linear-gradient(135deg,#fff,#fbf2f7)] px-6 py-8 text-center shadow-sm">
+            <Heart className="mx-auto h-8 w-8 text-[#a56b97]" />
+            <h3 className="mt-3 text-lg font-semibold text-[#351532]">No close matches yet</h3>
+            <p className="mx-auto mt-2 max-w-lg text-sm text-[#745d70]">We won’t invent profiles to fill this space. Widen a preference or explore the community to see more real members.</p>
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              <Button asChild className="rounded-xl"><Link href="/onboarding?step=2">Adjust preferences</Link></Button>
+              <Button asChild variant="outline" className="rounded-xl"><Link href="/discover">Explore all profiles</Link></Button>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-3xl border border-[#eadde7] bg-white px-6 py-8 text-center">
+            <p className="text-sm text-[#745d70]">Matches could not be loaded right now.</p>
+            <Button variant="outline" className="mt-4 rounded-xl" onClick={() => void load()}><RefreshCw className="mr-2 h-4 w-4" />Try again</Button>
+          </div>
+        )}
+        <Button asChild variant="outline" className="w-full rounded-xl sm:hidden"><Link href="/discover">Explore all profiles</Link></Button>
+      </section>
 
-          <Card className="border-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Shield className="h-4 w-4 text-primary" aria-hidden="true" />
-                Privacy
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <p>
-                <span className="text-muted-foreground">Visibility: </span>
-                {profile.isPublished
-                  ? "Published — visible to eligible members in discovery"
-                  : "Draft — only you can see this profile"}
-              </p>
-              <p>
-                <span className="text-muted-foreground">Photos: </span>
-                {formatPhotoPrivacy(draft.photoPrivacy)}
-              </p>
-              <Button asChild variant="outline" className="min-h-11 w-full">
-                <Link href="/dashboard/privacy">Manage privacy</Link>
-              </Button>
-            </CardContent>
-          </Card>
+      <section aria-label="Your activity" className="grid overflow-hidden rounded-2xl border border-[#eadde7] bg-white shadow-sm sm:grid-cols-3">
+        <Link href="/dashboard/interests" className="flex items-center gap-3 p-4 hover:bg-[#fff8fb] sm:border-r sm:border-[#eee2ea]">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-[#faedf3] text-[#9a4f78]"><Heart className="h-4 w-4" /></span>
+          <span><strong className="block text-lg text-[#351532]">{countText(data.receivedInterests)}</strong><span className="text-xs text-[#745d70]">Received interests</span></span>
+        </Link>
+        <Link href="/connections" className="flex items-center gap-3 border-t border-[#eee2ea] p-4 hover:bg-[#fff8fb] sm:border-r sm:border-t-0">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-[#f1edfb] text-[#7254a1]"><Users className="h-4 w-4" /></span>
+          <span><strong className="block text-lg text-[#351532]">{countText(data.connections)}</strong><span className="text-xs text-[#745d70]">Connections</span></span>
+        </Link>
+        <Link href="/messages" className="flex items-center gap-3 border-t border-[#eee2ea] p-4 hover:bg-[#fff8fb] sm:border-t-0">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-[#edf8f4] text-[#367b66]"><MessageCircle className="h-4 w-4" /></span>
+          <span><strong className="block text-lg text-[#351532]">{countText(data.unreadMessages)}</strong><span className="text-xs text-[#745d70]">Unread messages</span></span>
+        </Link>
+      </section>
+
+      {hasConversation ? (
+        <section aria-labelledby="conversation-heading" className="rounded-3xl border border-[#eadde7] bg-white p-5 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#9b668f]">Keep the connection moving</p>
+              <h2 id="conversation-heading" className="mt-1 text-xl font-semibold text-[#351532]">Continue your conversation</h2>
+              <p className="mt-1 text-sm text-[#745d70]">{data.recent.items[0].title}</p>
+            </div>
+            <Button asChild className="rounded-xl"><Link href={data.recent.items[0].href}>Open conversation<ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
+          </div>
+        </section>
+      ) : null}
+
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_330px]">
+        <section className="rounded-3xl border border-[#eadde7] bg-white p-5 shadow-sm sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#9b668f]">Small improvements, better introductions</p>
+              <h2 className="mt-1 text-xl font-semibold text-[#351532]">Your profile is {readiness.percent}% complete</h2>
+            </div>
+            <Button asChild variant="outline" size="sm" className="rounded-xl"><Link href={readiness.primaryAction.href}>{readiness.primaryAction.label}</Link></Button>
+          </div>
+          <Progress value={readiness.percent} className="mt-5 h-2.5 bg-[#f0e7ed]" aria-label="Profile completion" />
+          <p className="mt-3 text-sm text-[#745d70]">
+            {readiness.isPublished ? "Your profile is published and ready to be discovered." : "Finish the most useful details, then publish when you’re comfortable."}
+          </p>
+        </section>
+
+        <aside className="rounded-3xl border border-[#eadde7] bg-[#fffaf6] p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="flex items-center gap-2 font-semibold text-[#351532]"><SlidersHorizontal className="h-4 w-4 text-[#9b668f]" />Preferences</h2>
+            <Link href="/onboarding?step=2" className="text-sm font-medium text-primary hover:underline">Edit</Link>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {[lookingFor, countries, languages, relocation].filter(Boolean).map((value) => (
+              <span key={value} className="max-w-full truncate rounded-full border border-[#e5d4df] bg-white px-3 py-1.5 text-xs text-[#634f60]">{value}</span>
+            ))}
+            {![lookingFor, countries, languages, relocation].some(Boolean) ? <span className="text-sm text-[#745d70]">No preferences set yet.</span> : null}
+          </div>
+          <div className="mt-5 flex items-center gap-2 border-t border-[#eadde7] pt-4 text-xs text-[#745d70]">
+            <ShieldCheck className="h-4 w-4 text-emerald-600" /> Privacy controls remain in your hands.
+          </div>
         </aside>
       </div>
-
-      <section id="recent-activity" aria-labelledby="recent-heading">
-        <h2 id="recent-heading" className="sr-only">
-          Recent activity
-        </h2>
-        <RecentActivity data={data} onRetry={() => void load()} />
-      </section>
     </div>
-  );
-}
-
-function PreferenceRow({ label, value }: { label: string; value: string | null }) {
-  return (
-    <div className="flex items-start justify-between gap-3">
-      <span className="text-muted-foreground">{label}</span>
-      <span className={cn("max-w-[60%] text-right", !value && "text-muted-foreground")}>
-        {value || "Not set"}
-      </span>
-    </div>
-  );
-}
-
-function RecentActivity({
-  data,
-  onRetry,
-}: {
-  data: DashboardOverviewData;
-  onRetry: () => void;
-}) {
-  return (
-    <Card className="border-border">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">Recent activity</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {data.recent.status === "error" ? (
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">We could not load recent activity.</p>
-            <Button size="sm" variant="outline" onClick={onRetry}>
-              Retry
-            </Button>
-          </div>
-        ) : data.recent.items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Nothing new yet. When someone expresses interest or you connect, it will appear here.
-          </p>
-        ) : (
-          <ul className="space-y-3">
-            {data.recent.items.map((item) => (
-              <li key={item.id}>
-                <Link
-                  href={item.href}
-                  className="block rounded-md text-sm text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  {item.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </CardContent>
-    </Card>
   );
 }
