@@ -615,7 +615,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                 </div>
               </header>
 
-              <div className="relative flex-1 overflow-y-auto bg-background px-3 py-4 sm:px-6">
+              <div className="relative flex-1 overflow-y-auto bg-gradient-to-b from-background via-background to-violet-50/30 px-3 py-4 sm:px-5 lg:px-7">
                 {isLoadingMessages ? (
                   <div className="flex h-full items-center justify-center">
                     <Loader2 className="h-7 w-7 animate-spin text-primary" />
@@ -628,7 +628,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                     </p>
                   </div>
                 ) : (
-                  <div className="mx-auto flex max-w-3xl flex-col gap-0.5">
+                  <div className="flex w-full flex-col gap-0.5">
                     {messages.map((message, index) => {
                       const mine = message.senderId === currentUser.uid;
                       const prev = messages[index - 1];
@@ -652,7 +652,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                           ) : null}
                           <div
                             className={cn(
-                              "flex items-end gap-2",
+                              "flex w-full items-end gap-2",
                               mine ? "justify-end" : "justify-start",
                               startsGroup && "mt-2"
                             )}
@@ -669,7 +669,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                             ) : null}
                             <div
                               className={cn(
-                                "relative max-w-[82%] rounded-[20px] px-3.5 py-2 text-[15px] leading-5 sm:max-w-[70%]",
+                                "relative max-w-[82%] rounded-[20px] px-3.5 py-2 text-[15px] leading-5 sm:max-w-[68%] lg:max-w-[62%]",
                                 mine
                                   ? "bg-gradient-to-br from-violet-600 to-fuchsia-500 text-white"
                                   : "bg-[#f0f2f5] text-[#050505]",
@@ -705,8 +705,8 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                 )}
               </div>
 
-              <footer className="shrink-0 border-t border-border/60 bg-background px-2 py-2 sm:px-3">
-                <div className="mx-auto flex max-w-3xl items-end gap-1.5 sm:gap-2">
+              <footer className="shrink-0 border-t border-border/60 bg-background px-2 py-2 sm:px-4 lg:px-6">
+                <div className="flex w-full items-end gap-1.5 sm:gap-2">
                   <Button
                     type="button"
                     variant="ghost"
@@ -790,9 +790,6 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                     </Button>
                   )}
                 </div>
-                <p className="mt-1 hidden text-center text-[11px] text-muted-foreground sm:block">
-                  Press Enter to send · Shift+Enter for a new line
-                </p>
               </footer>
             </>
           )}
