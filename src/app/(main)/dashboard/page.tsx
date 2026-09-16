@@ -109,7 +109,7 @@ export default function DashboardPage() {
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
           <Button variant="outline" asChild>
-            <Link href="/profile">View my profile</Link>
+            <Link href={`/profile/${currentUser.id}`}>View my profile</Link>
           </Button>
           <Button asChild>
             <Link href="/dashboard/edit-profile">Edit profile</Link>

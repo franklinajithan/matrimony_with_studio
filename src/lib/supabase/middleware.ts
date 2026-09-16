@@ -18,7 +18,7 @@ const PROTECTED_PREFIXES = [
 const AUTH_ONLY_PREFIXES = ["/login", "/signup"];
 
 function isProtectedPath(pathname: string): boolean {
-  if (pathname.startsWith("/profile/")) return true;
+  if (pathname === "/profile" || pathname.startsWith("/profile/")) return true;
   return PROTECTED_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   );

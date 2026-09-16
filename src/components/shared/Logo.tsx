@@ -27,6 +27,8 @@ function resolveSize(size: LogoSize | undefined, iconSize: number | undefined): 
   return "md";
 }
 
+const LOGO_SRC = "/images/acd9ebcc-ba25-41bb-9d0c-b5c24683ce37.png";
+
 const SIZE_CLASS: Record<LogoSize, string> = {
   sm: "w-36 sm:w-40",
   md: "w-44 sm:w-48 md:w-[13rem]",
@@ -55,10 +57,10 @@ export function Logo({
       aria-label="CupidMatch home"
     >
       <Image
-        src="/images/cupidmatch-logo.png"
+        src={LOGO_SRC}
         alt="CupidMatch"
-        width={944}
-        height={234}
+        width={1983}
+        height={793}
         sizes={
           resolved === "sm"
             ? "(min-width: 640px) 160px, 144px"
