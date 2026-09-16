@@ -170,6 +170,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [badges, setBadges] = useState<NavBadges>({ interests: 0, connections: 0, messages: 0 });
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  const isMessagesRoute = pathname === "/messages" || pathname.startsWith("/messages/");
+
   useLoginWelcomeToast();
 
   const headerUnread = badges.interests + badges.connections + badges.messages;
@@ -303,20 +305,42 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      className={cn(
+        "bg-background",
+        isMessagesRoute
+          ? "flex h-[100svh] h-[100dvh] flex-col overflow-hidden"
+          : "min-h-screen"
+      )}
+    >
       <a
         href="#dashboard-main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-card focus:px-3 focus:py-2"
       >
         Skip to overview
       </a>
-      <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
-        <aside className="sticky top-0 hidden h-screen border-r border-border bg-card lg:block">
+      <div
+        className={cn(
+          "lg:grid lg:grid-cols-[240px_minmax(0,1fr)]",
+          isMessagesRoute && "min-h-0 flex-1"
+        )}
+      >
+        <aside
+          className={cn(
+            "sticky top-0 hidden border-r border-border bg-card lg:block",
+            isMessagesRoute ? "h-full" : "h-screen"
+          )}
+        >
           <SidebarBody pathname={pathname} onLogout={handleLogout} badges={badges} />
         </aside>
 
-        <div className="flex min-h-screen flex-col">
-          <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
+        <div
+          className={cn(
+            "flex flex-col",
+            isMessagesRoute ? "h-full min-h-0" : "min-h-screen"
+          )}
+        >
+          <header className="sticky top-0 z-40 shrink-0 border-b border-border bg-background/95 backdrop-blur">
             <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
               <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
                 <SheetTrigger asChild>
@@ -432,7 +456,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
           <main
             id="dashboard-main"
-            className="flex-1 px-4 py-6 sm:px-6 lg:px-8 pb-24 lg:pb-8"
+            className={cn(
+              "flex-1",
+              isMessagesRoute
+                ? "min-h-0 overflow-hidden p-0"
+                : "px-4 py-6 pb-24 sm:px-6 lg:px-8 lg:pb-8"
+            )}
           >
             <DashboardChromeProvider value={chromeValue}>
               {children}
@@ -443,11 +472,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
       <nav
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 border-t border-violet-700/20 bg-violet-600 pb-[env(safe-area-inset-bottom)] shadow-lg lg:hidden",
+          "z-50 border-t border-violet-700/20 bg-violet-600 pb-[env(safe-area-inset-bottom)] shadow-lg lg:hidden",
+          isMessagesRoute
+            ? "relative inset-x-auto bottom-auto shrink-0"
+            : "fixed inset-x-0 bottom-0",
           drawerOpen && "hidden"
         )}
         aria-label="Primary"
-        style={{ position: 'fixed' }}
       >
         <ul className="grid grid-cols-5 px-2 py-2">
           {dashboardMobileNav.map((item) => {
