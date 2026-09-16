@@ -1,10 +1,41 @@
-
 import * as React from "react"
 
+import { DateOfBirthPicker } from "@/components/profile/DateOfBirthPicker"
 import { cn } from "@/lib/utils"
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, ...props }, ref) => {
+    const isDobInput = type === "date" && (props.id === "dob" || props.name === "dob")
+
+    if (isDobInput) {
+      const value = typeof props.value === "string" ? props.value : ""
+      return (
+        <div className={className}>
+          <input
+            ref={ref}
+            type="hidden"
+            id={props.id}
+            name={props.name}
+            value={value}
+            readOnly
+            aria-hidden="true"
+            tabIndex={-1}
+          />
+          <DateOfBirthPicker
+            id={props.id ? `${props.id}-picker` : "dob-picker"}
+            value={value}
+            disabled={props.disabled}
+            onChange={(nextValue) => {
+              props.onChange?.({
+                target: { value: nextValue, name: props.name },
+                currentTarget: { value: nextValue, name: props.name },
+              } as React.ChangeEvent<HTMLInputElement>)
+            }}
+          />
+        </div>
+      )
+    }
+
     return (
       <input
         type={type}
@@ -14,7 +45,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
         )}
         ref={ref}
         {...props}
-        value={props.value ?? ""} // Ensure value is always a string, defaults to "" if null/undefined
+        value={props.value ?? ""}
       />
     )
   }
