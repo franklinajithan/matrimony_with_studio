@@ -502,44 +502,97 @@ export default function ProfilePage() {
     if (!currentFirebaseUser || !viewedUserProfile || currentFirebaseUser.uid === viewedUserProfile.userId) return null;
 
     return (
-      <div className="mt-auto pt-6 space-y-3 border-t">
-        <div className="flex space-x-3">
-          <Button onClick={handleLikeToggle} disabled={isLiking} variant={hasLiked ? "default" : "outline"} className="flex-1">
-            {isLiking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Heart className={cn("mr-2 h-4 w-4", hasLiked && "fill-current")} />}
-            {hasLiked ? "Liked" : "Like"}
-          </Button>
-
-          {requestStatus === "none" && (
-            <Button onClick={handleSendRequest} disabled={isProcessingRequest} className="flex-1 bg-secondary hover:bg-secondary/90 text-secondary-foreground">
-              {isProcessingRequest ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />} Send Request
-            </Button>
+      <div className="flex items-center gap-2">
+        <Button 
+          onClick={handleLikeToggle} 
+          disabled={isLiking} 
+          variant={hasLiked ? "default" : "outline"}
+          size="sm"
+          className="shrink-0"
+        >
+          {isLiking ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Heart className={cn("h-4 w-4 sm:mr-2", hasLiked && "fill-current")} />
           )}
-          {requestStatus === "pending_sent" && (
-            <Button onClick={handleCancelRequest} disabled={isProcessingRequest} variant="outline" className="flex-1">
-              {isProcessingRequest ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />} Request Sent
-            </Button>
-          )}
-          {requestStatus === "pending_received" && (
-            <>
-              <Button onClick={handleAcceptRequest} disabled={isProcessingRequest} className="flex-1 bg-green-600 hover:bg-green-700 text-white">
-                {isProcessingRequest ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserCheck className="mr-2 h-4 w-4" />} Accept
-              </Button>
-              <Button onClick={handleDeclineRequest} disabled={isProcessingRequest} variant="destructive" className="flex-1">
-                {isProcessingRequest ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserX className="mr-2 h-4 w-4" />} Decline
-              </Button>
-            </>
-          )}
-          {requestStatus === "accepted" && (
-            <Button asChild className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isProcessingRequest}>
-              <Link href={`/messages/${getCompositeId(currentFirebaseUser.uid, viewedUserProfile.userId)}`}>
-                <MessageSquare className="mr-2 h-4 w-4" /> Message
-              </Link>
-            </Button>
-          )}
-        </div>
-        <Button variant="link" className="w-full text-xs text-muted-foreground hover:text-destructive p-0 h-auto">
-          Report Profile
+          <span className="hidden sm:inline">{hasLiked ? "Liked" : "Like"}</span>
         </Button>
+
+        {requestStatus === "none" && (
+          <Button 
+            onClick={handleSendRequest} 
+            disabled={isProcessingRequest} 
+            size="sm"
+            className="shrink-0 bg-violet-600 hover:bg-violet-700 text-white"
+          >
+            {isProcessingRequest ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <MessageSquare className="h-4 w-4 sm:mr-2" />
+            )}
+            <span className="hidden sm:inline">Message</span>
+          </Button>
+        )}
+        {requestStatus === "pending_sent" && (
+          <Button 
+            onClick={handleCancelRequest} 
+            disabled={isProcessingRequest} 
+            variant="outline" 
+            size="sm"
+            className="shrink-0"
+          >
+            {isProcessingRequest ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <XCircle className="h-4 w-4 sm:mr-2" />
+            )}
+            <span className="hidden sm:inline">Request Sent</span>
+          </Button>
+        )}
+        {requestStatus === "pending_received" && (
+          <>
+            <Button 
+              onClick={handleAcceptRequest} 
+              disabled={isProcessingRequest} 
+              size="sm"
+              className="shrink-0 bg-green-600 hover:bg-green-700 text-white"
+            >
+              {isProcessingRequest ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <UserCheck className="h-4 w-4 sm:mr-2" />
+              )}
+              <span className="hidden sm:inline">Accept</span>
+            </Button>
+            <Button 
+              onClick={handleDeclineRequest} 
+              disabled={isProcessingRequest} 
+              variant="destructive" 
+              size="sm"
+              className="shrink-0"
+            >
+              {isProcessingRequest ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <UserX className="h-4 w-4 sm:mr-2" />
+              )}
+              <span className="hidden sm:inline">Decline</span>
+            </Button>
+          </>
+        )}
+        {requestStatus === "accepted" && (
+          <Button 
+            asChild 
+            size="sm"
+            className="shrink-0 bg-violet-600 hover:bg-violet-700 text-white" 
+            disabled={isProcessingRequest}
+          >
+            <Link href={`/messages/${getCompositeId(currentFirebaseUser.uid, viewedUserProfile.userId)}`}>
+              <MessageSquare className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Message</span>
+            </Link>
+          </Button>
+        )}
       </div>
     );
   };
@@ -600,20 +653,24 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-background">
       {/* Sticky Profile Header */}
       <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Avatar className="h-16 w-16 border-2 border-background">
-              <AvatarImage src={viewedUserProfile?.photoURL} alt={viewedUserProfile?.name} />
-              <AvatarFallback>{viewedUserProfile?.name?.substring(0, 2)}</AvatarFallback>
-            </Avatar>
-            <div>
-              <h1 className="font-headline text-2xl text-primary">{viewedUserProfile?.name}</h1>
-              <p className="text-sm text-muted-foreground">
-                {viewedUserProfile?.age} years • {viewedUserProfile?.location}
-              </p>
+        <div className="max-w-4xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <Avatar className="h-12 w-12 sm:h-16 sm:w-16 border-2 border-background shrink-0">
+                <AvatarImage src={viewedUserProfile?.photoURL} alt={viewedUserProfile?.name} />
+                <AvatarFallback>{viewedUserProfile?.name?.substring(0, 2)}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <h1 className="font-headline text-lg sm:text-2xl text-primary truncate">{viewedUserProfile?.name}</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                  {viewedUserProfile?.age} years • {viewedUserProfile?.location}
+                </p>
+              </div>
+            </div>
+            <div className="shrink-0">
+              {renderActionButtons()}
             </div>
           </div>
-          {renderActionButtons()}
         </div>
       </div>
 
