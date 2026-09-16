@@ -7,6 +7,16 @@ export function mediaPathForUser(userId: string, fileName: string, folder = "pho
   return `users/${userId}/${folder}/${Date.now()}-${safeName}`;
 }
 
+/**
+ * Profile photos deliberately use one stable path per user.
+ * Replacing the photo updates the same object, so every screen/device reads
+ * the same account-owned image instead of retaining an old timestamped URL.
+ */
+export function profilePhotoPathForUser(userId: string, fileName: string): string {
+  const extension = fileName.toLowerCase().match(/\.(jpe?g|png|webp)$/)?.[0] || ".jpg";
+  return `users/${userId}/profile_photo/profile${extension}`;
+}
+
 export function extractStoragePath(urlOrPath: string | null | undefined): string | null {
   if (!urlOrPath) return null;
   const value = urlOrPath.trim();
