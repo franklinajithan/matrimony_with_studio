@@ -403,7 +403,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
   }
 
   return (
-    <div className="-mx-4 -my-6 flex h-[calc(100dvh-11rem)] flex-col overflow-hidden border-y border-border bg-[#efeae2] sm:-mx-6 lg:-mx-8 lg:h-[calc(100dvh-5.5rem)] lg:rounded-none lg:border-x-0">
+    <div className="-mx-4 -my-6 flex h-[calc(100dvh-10.5rem)] flex-col overflow-hidden border-y border-border bg-[#efeae2] sm:-mx-6 lg:-mx-8 lg:h-[calc(100dvh-5.5rem)] lg:rounded-none lg:border-x-0">
       <div className="flex min-h-0 flex-1 bg-background">
         {/* Conversation list */}
         <aside
