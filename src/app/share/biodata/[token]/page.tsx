@@ -8,14 +8,48 @@ import type {
 import { defaultDesignForTemplate } from "@/lib/biodata/defaults";
 import { DocumentRenderer } from "@/components/biodata/DocumentRenderer";
 
-export const metadata: Metadata = {
-  title: "Shared biodata",
-  robots: { index: false, follow: false },
-};
+export const robots = { index: false, follow: false };
 
 type PageProps = {
   params: Promise<{ token: string }>;
 };
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { token } = await params;
+  const link = await getShareByToken(token);
+  if (!link) {
+    return { title: "Shared biodata unavailable", robots };
+  }
+
+  const snap = link.snapshot;
+  const content = asContent(snap.content);
+  const visibility = asVisibility(snap.visibility);
+  const safeName = findSafeName(content);
+  const title = safeName ? `${safeName}'s Biodata | CupidMatch` : "Shared Biodata | CupidMatch";
+  const description = "A private biodata shared securely through CupidMatch.";
+  const imageUrl = `/share/biodata/${encodeURIComponent(token)}/opengraph-image`;
+
+  return {
+    title,
+    description,
+    robots,
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
+    other: {
+      "cupidmatch:photo-visible": visibility.includePhoto ? "true" : "false",
+    },
+  };
+}
 
 function asContent(value: unknown): BiodataContent {
   if (value && typeof value === "object" && !Array.isArray(value)) {
@@ -46,6 +80,20 @@ function asVisibility(value: unknown): BiodataVisibility {
     includeReligious: false,
     includeHoroscope: false,
   };
+}
+
+function findSafeName(content: BiodataContent): string | undefined {
+  const labels = new Set(["name", "full name", "பெயர்", "නම"]);
+  for (const section of content.sections) {
+    if (!section.visible) continue;
+    for (const field of section.fields) {
+      if (!field.visible) continue;
+      if (labels.has(field.label.trim().toLowerCase()) && field.value.trim()) {
+        return field.value.trim().slice(0, 80);
+      }
+    }
+  }
+  return undefined;
 }
 
 export default async function SharedBiodataPage({ params }: PageProps) {
