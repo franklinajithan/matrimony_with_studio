@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const MONTHS = [
@@ -20,12 +19,6 @@ function parseDob(value?: string): DateParts {
 function daysInMonth(year: string, month: string) {
   if (!year || !month) return 31;
   return new Date(Number(year), Number(month), 0).getDate();
-}
-
-function formatDob(value?: string) {
-  const { year, month, day } = parseDob(value);
-  if (!year || !month || !day) return "";
-  return `${Number(day)} ${MONTHS[Number(month) - 1]} ${year}`;
 }
 
 export interface DateOfBirthPickerProps {
@@ -57,7 +50,7 @@ export function DateOfBirthPicker({
   const maxDays = daysInMonth(selected.year, selected.month);
 
   useEffect(() => {
-    if (value) setSelected(parseDob(value));
+    setSelected(parseDob(value));
   }, [value]);
 
   function update(part: keyof DateParts, nextValue: string) {
@@ -74,41 +67,24 @@ export function DateOfBirthPicker({
     }
   }
 
-  const selectClass = "min-h-12 w-full rounded-xl border border-input bg-background px-3 text-base text-foreground shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50";
+  const selectClass = "h-10 min-h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm";
 
   return (
-    <div className={cn("space-y-3", className)} id={id}>
+    <div className={cn("w-full", className)} id={id}>
       <div className="grid grid-cols-[0.8fr_1.35fr_1fr] gap-2 sm:gap-3">
-        <label className="space-y-1.5">
-          <span className="text-xs font-medium text-muted-foreground">Day</span>
-          <select aria-label="Birth day" className={selectClass} value={selected.day} onChange={(event) => update("day", event.target.value)} disabled={disabled}>
-            <option value="">Day</option>
-            {Array.from({ length: maxDays }, (_, index) => index + 1).map((day) => <option key={day} value={day}>{day}</option>)}
-          </select>
-        </label>
-        <label className="space-y-1.5">
-          <span className="text-xs font-medium text-muted-foreground">Month</span>
-          <select aria-label="Birth month" className={selectClass} value={selected.month} onChange={(event) => update("month", event.target.value)} disabled={disabled}>
-            <option value="">Month</option>
-            {MONTHS.map((month, index) => <option key={month} value={index + 1}>{month}</option>)}
-          </select>
-        </label>
-        <label className="space-y-1.5">
-          <span className="text-xs font-medium text-muted-foreground">Year</span>
-          <select aria-label="Birth year" className={selectClass} value={selected.year} onChange={(event) => update("year", event.target.value)} disabled={disabled}>
-            <option value="">Year</option>
-            {years.map((year) => <option key={year} value={year}>{year}</option>)}
-          </select>
-        </label>
+        <select aria-label="Birth day" className={selectClass} value={selected.day} onChange={(event) => update("day", event.target.value)} disabled={disabled}>
+          <option value="">Day</option>
+          {Array.from({ length: maxDays }, (_, index) => index + 1).map((day) => <option key={day} value={day}>{day}</option>)}
+        </select>
+        <select aria-label="Birth month" className={selectClass} value={selected.month} onChange={(event) => update("month", event.target.value)} disabled={disabled}>
+          <option value="">Month</option>
+          {MONTHS.map((month, index) => <option key={month} value={index + 1}>{month}</option>)}
+        </select>
+        <select aria-label="Birth year" className={selectClass} value={selected.year} onChange={(event) => update("year", event.target.value)} disabled={disabled}>
+          <option value="">Year</option>
+          {years.map((year) => <option key={year} value={year}>{year}</option>)}
+        </select>
       </div>
-      {value ? (
-        <div className="flex items-center gap-2 rounded-xl bg-muted/60 px-3 py-2 text-sm text-foreground" aria-live="polite">
-          <CalendarDays className="h-4 w-4 text-primary" aria-hidden />
-          <span>{formatDob(value)}</span>
-        </div>
-      ) : (
-        <p className="text-xs text-muted-foreground">Choose day, month and year. You must be at least {minimumAge}.</p>
-      )}
     </div>
   );
 }
