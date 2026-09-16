@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useLoginWelcomeToast } from "@/hooks/use-login-welcome-toast";
 import { Loader2, Check, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
@@ -27,6 +27,7 @@ import {
 import { auth, onAuthStateChanged } from "@/lib/supabase/auth";
 import { mediaPathForUser, resolveMediaUrl, uploadMediaFile } from "@/lib/supabase/storage";
 import { ProfilePhotoEditor } from "@/components/profile/ProfilePhotoEditor";
+import { dashboardMobileNav, isNavActive } from "@/components/dashboard/nav";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -59,6 +60,7 @@ const PHOTO_PRIVACY = [
 export function OnboardingWizard() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const { toast } = useToast();
   useLoginWelcomeToast();
   const [draft, setDraft] = useState<OnboardingDraft>(EMPTY_ONBOARDING_DRAFT);
@@ -380,7 +382,7 @@ export function OnboardingWizard() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:py-10">
+      <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:py-10 pb-24 lg:pb-10">
         <p className="text-sm font-medium text-primary">Step {step + 1} of {ONBOARDING_STEPS.length}</p>
         <h1 className="mt-1 font-headline text-3xl text-foreground sm:text-4xl">{current.title}</h1>
         <p className="mt-2 text-muted-foreground">{current.description}</p>
@@ -660,6 +662,36 @@ export function OnboardingWizard() {
           </div>
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-violet-700/20 bg-violet-600 pb-[env(safe-area-inset-bottom)] shadow-lg lg:hidden"
+        aria-label="Primary"
+      >
+        <ul className="grid grid-cols-5 px-2 py-2">
+          {dashboardMobileNav.map((item) => {
+            const Icon = item.icon;
+            const active = isNavActive(pathname, item);
+            return (
+              <li key={item.label}>
+                <Link
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-white",
+                    active
+                      ? "bg-white text-violet-700 shadow-sm"
+                      : "text-white hover:bg-violet-500"
+                  )}
+                >
+                  <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
     </div>
   );
 }
