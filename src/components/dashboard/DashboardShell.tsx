@@ -443,10 +443,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
       <nav
         className={cn(
-          "fixed inset-x-0 bottom-0 z-40 border-t border-violet-700/20 bg-violet-600 pb-[env(safe-area-inset-bottom)] shadow-lg lg:hidden",
+          "fixed inset-x-0 bottom-0 z-50 border-t border-violet-700/20 bg-violet-600 pb-[env(safe-area-inset-bottom)] shadow-lg lg:hidden",
           drawerOpen && "hidden"
         )}
         aria-label="Primary"
+        style={{ position: 'fixed' }}
       >
         <ul className="grid grid-cols-5 px-2 py-2">
           {dashboardMobileNav.map((item) => {
