@@ -403,7 +403,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
   }
 
   return (
-    <div className="-mx-4 -my-6 mb-0 flex h-[calc(100dvh-9.5rem)] flex-col overflow-hidden border-y border-border bg-[#efeae2] sm:-mx-6 lg:-mx-8 lg:h-[calc(100dvh-5.5rem)] lg:mb-0 lg:rounded-none lg:border-x-0" style={{ position: 'relative' }}>
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[#efeae2]">
       <div className="flex min-h-0 flex-1 bg-background">
         {/* Conversation list */}
         <aside
@@ -683,7 +683,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                 )}
               </div>
 
-              <footer className="sticky bottom-0 border-t border-border bg-[#f0f2f5] px-2 py-2 dark:bg-muted/40 sm:px-3">
+              <footer className="shrink-0 border-t border-border bg-[#f0f2f5] px-2 py-2 dark:bg-muted/40 sm:px-3">
                 <div className="mx-auto flex max-w-3xl items-end gap-1.5 sm:gap-2">
                   <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
                     <PopoverTrigger asChild>
