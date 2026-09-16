@@ -502,35 +502,39 @@ export default function ProfilePage() {
     if (!currentFirebaseUser || !viewedUserProfile || currentFirebaseUser.uid === viewedUserProfile.userId) return null;
 
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <Button 
           onClick={handleLikeToggle} 
           disabled={isLiking} 
           variant={hasLiked ? "default" : "outline"}
-          size="sm"
-          className="shrink-0"
+          size="icon"
+          className="h-9 w-9 shrink-0 sm:h-10 sm:w-auto sm:px-4"
         >
           {isLiking ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <Heart className={cn("h-4 w-4 sm:mr-2", hasLiked && "fill-current")} />
+            <>
+              <Heart className={cn("h-4 w-4", hasLiked && "fill-current")} />
+              <span className="hidden sm:inline sm:ml-2">{hasLiked ? "Liked" : "Like"}</span>
+            </>
           )}
-          <span className="hidden sm:inline">{hasLiked ? "Liked" : "Like"}</span>
         </Button>
 
         {requestStatus === "none" && (
           <Button 
             onClick={handleSendRequest} 
             disabled={isProcessingRequest} 
-            size="sm"
-            className="shrink-0 bg-violet-600 hover:bg-violet-700 text-white"
+            size="icon"
+            className="h-9 w-9 shrink-0 bg-violet-600 hover:bg-violet-700 text-white sm:h-10 sm:w-auto sm:px-4"
           >
             {isProcessingRequest ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <MessageSquare className="h-4 w-4 sm:mr-2" />
+              <>
+                <MessageSquare className="h-4 w-4" />
+                <span className="hidden sm:inline sm:ml-2">Message</span>
+              </>
             )}
-            <span className="hidden sm:inline">Message</span>
           </Button>
         )}
         {requestStatus === "pending_sent" && (
@@ -538,15 +542,17 @@ export default function ProfilePage() {
             onClick={handleCancelRequest} 
             disabled={isProcessingRequest} 
             variant="outline" 
-            size="sm"
-            className="shrink-0"
+            size="icon"
+            className="h-9 w-9 shrink-0 sm:h-10 sm:w-auto sm:px-4"
           >
             {isProcessingRequest ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <XCircle className="h-4 w-4 sm:mr-2" />
+              <>
+                <XCircle className="h-4 w-4" />
+                <span className="hidden sm:inline sm:ml-2">Sent</span>
+              </>
             )}
-            <span className="hidden sm:inline">Request Sent</span>
           </Button>
         )}
         {requestStatus === "pending_received" && (
@@ -554,42 +560,46 @@ export default function ProfilePage() {
             <Button 
               onClick={handleAcceptRequest} 
               disabled={isProcessingRequest} 
-              size="sm"
-              className="shrink-0 bg-green-600 hover:bg-green-700 text-white"
+              size="icon"
+              className="h-9 w-9 shrink-0 bg-green-600 hover:bg-green-700 text-white sm:h-10 sm:w-auto sm:px-4"
             >
               {isProcessingRequest ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <UserCheck className="h-4 w-4 sm:mr-2" />
+                <>
+                  <UserCheck className="h-4 w-4" />
+                  <span className="hidden sm:inline sm:ml-2">Accept</span>
+                </>
               )}
-              <span className="hidden sm:inline">Accept</span>
             </Button>
             <Button 
               onClick={handleDeclineRequest} 
               disabled={isProcessingRequest} 
               variant="destructive" 
-              size="sm"
-              className="shrink-0"
+              size="icon"
+              className="h-9 w-9 shrink-0 sm:h-10 sm:w-auto sm:px-4"
             >
               {isProcessingRequest ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <UserX className="h-4 w-4 sm:mr-2" />
+                <>
+                  <UserX className="h-4 w-4" />
+                  <span className="hidden sm:inline sm:ml-2">Decline</span>
+                </>
               )}
-              <span className="hidden sm:inline">Decline</span>
             </Button>
           </>
         )}
         {requestStatus === "accepted" && (
           <Button 
             asChild 
-            size="sm"
-            className="shrink-0 bg-violet-600 hover:bg-violet-700 text-white" 
+            size="icon"
+            className="h-9 w-9 shrink-0 bg-violet-600 hover:bg-violet-700 text-white sm:h-10 sm:w-auto sm:px-4" 
             disabled={isProcessingRequest}
           >
-            <Link href={`/messages/${getCompositeId(currentFirebaseUser.uid, viewedUserProfile.userId)}`}>
-              <MessageSquare className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Message</span>
+            <Link href={`/messages/${getCompositeId(currentFirebaseUser.uid, viewedUserProfile.userId)}`} className="flex items-center">
+              <MessageSquare className="h-4 w-4" />
+              <span className="hidden sm:inline sm:ml-2">Message</span>
             </Link>
           </Button>
         )}
@@ -653,23 +663,21 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-background">
       {/* Sticky Profile Header */}
       <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b">
-        <div className="max-w-4xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <Avatar className="h-12 w-12 sm:h-16 sm:w-16 border-2 border-background shrink-0">
+        <div className="max-w-4xl mx-auto px-3 py-2.5 sm:px-4 sm:py-3">
+          <div className="flex items-center justify-between gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
+              <Avatar className="h-11 w-11 sm:h-14 sm:w-14 border-2 border-background shrink-0">
                 <AvatarImage src={viewedUserProfile?.photoURL} alt={viewedUserProfile?.name} />
                 <AvatarFallback>{viewedUserProfile?.name?.substring(0, 2)}</AvatarFallback>
               </Avatar>
-              <div className="min-w-0 flex-1">
-                <h1 className="font-headline text-lg sm:text-2xl text-primary truncate">{viewedUserProfile?.name}</h1>
+              <div className="min-w-0 flex-1 overflow-hidden">
+                <h1 className="font-headline text-base leading-tight sm:text-xl sm:leading-normal text-primary truncate">{viewedUserProfile?.name}</h1>
                 <p className="text-xs sm:text-sm text-muted-foreground truncate">
                   {viewedUserProfile?.age} years • {viewedUserProfile?.location}
                 </p>
               </div>
             </div>
-            <div className="shrink-0">
-              {renderActionButtons()}
-            </div>
+            {renderActionButtons()}
           </div>
         </div>
       </div>
