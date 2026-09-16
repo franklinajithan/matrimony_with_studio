@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -9,7 +9,9 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ] as const;
 
-function parseDob(value?: string) {
+type DateParts = { year: string; month: string; day: string };
+
+function parseDob(value?: string): DateParts {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
   if (!match) return { year: "", month: "", day: "" };
   return { year: match[1], month: String(Number(match[2])), day: String(Number(match[3])) };
@@ -45,7 +47,7 @@ export function DateOfBirthPicker({
   minimumAge = 18,
   oldestYear = 1920,
 }: DateOfBirthPickerProps) {
-  const selected = parseDob(value);
+  const [selected, setSelected] = useState<DateParts>(() => parseDob(value));
   const today = new Date();
   const latestYear = today.getFullYear() - minimumAge;
   const years = useMemo(
@@ -54,17 +56,22 @@ export function DateOfBirthPicker({
   );
   const maxDays = daysInMonth(selected.year, selected.month);
 
-  function update(part: "day" | "month" | "year", nextValue: string) {
+  useEffect(() => {
+    if (value) setSelected(parseDob(value));
+  }, [value]);
+
+  function update(part: keyof DateParts, nextValue: string) {
     const next = { ...selected, [part]: nextValue };
     if (part === "month" || part === "year") {
       const allowedDays = daysInMonth(next.year, next.month);
       if (next.day && Number(next.day) > allowedDays) next.day = String(allowedDays);
     }
+    setSelected(next);
     if (next.year && next.month && next.day) {
       onChange(`${next.year}-${next.month.padStart(2, "0")}-${next.day.padStart(2, "0")}`);
-      return;
+    } else if (value) {
+      onChange("");
     }
-    onChange("");
   }
 
   const selectClass = "min-h-12 w-full rounded-xl border border-input bg-background px-3 text-base text-foreground shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50";
@@ -74,43 +81,21 @@ export function DateOfBirthPicker({
       <div className="grid grid-cols-[0.8fr_1.35fr_1fr] gap-2 sm:gap-3">
         <label className="space-y-1.5">
           <span className="text-xs font-medium text-muted-foreground">Day</span>
-          <select
-            aria-label="Birth day"
-            className={selectClass}
-            value={selected.day}
-            onChange={(event) => update("day", event.target.value)}
-            disabled={disabled}
-          >
+          <select aria-label="Birth day" className={selectClass} value={selected.day} onChange={(event) => update("day", event.target.value)} disabled={disabled}>
             <option value="">Day</option>
-            {Array.from({ length: maxDays }, (_, index) => index + 1).map((day) => (
-              <option key={day} value={day}>{day}</option>
-            ))}
+            {Array.from({ length: maxDays }, (_, index) => index + 1).map((day) => <option key={day} value={day}>{day}</option>)}
           </select>
         </label>
         <label className="space-y-1.5">
           <span className="text-xs font-medium text-muted-foreground">Month</span>
-          <select
-            aria-label="Birth month"
-            className={selectClass}
-            value={selected.month}
-            onChange={(event) => update("month", event.target.value)}
-            disabled={disabled}
-          >
+          <select aria-label="Birth month" className={selectClass} value={selected.month} onChange={(event) => update("month", event.target.value)} disabled={disabled}>
             <option value="">Month</option>
-            {MONTHS.map((month, index) => (
-              <option key={month} value={index + 1}>{month}</option>
-            ))}
+            {MONTHS.map((month, index) => <option key={month} value={index + 1}>{month}</option>)}
           </select>
         </label>
         <label className="space-y-1.5">
           <span className="text-xs font-medium text-muted-foreground">Year</span>
-          <select
-            aria-label="Birth year"
-            className={selectClass}
-            value={selected.year}
-            onChange={(event) => update("year", event.target.value)}
-            disabled={disabled}
-          >
+          <select aria-label="Birth year" className={selectClass} value={selected.year} onChange={(event) => update("year", event.target.value)} disabled={disabled}>
             <option value="">Year</option>
             {years.map((year) => <option key={year} value={year}>{year}</option>)}
           </select>
