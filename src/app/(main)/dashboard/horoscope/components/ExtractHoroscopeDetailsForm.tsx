@@ -72,7 +72,10 @@ export function ExtractHoroscopeDetailsForm() {
           if (data) {
             form.reset({
               dateOfBirth: data.dob || "1990-01-01",
-              timeOfBirth: (typeof data.timeOfBirth === "string" && data.timeOfBirth) || "12:00 PM",
+              timeOfBirth:
+                (typeof (data as { timeOfBirth?: string }).timeOfBirth === "string" &&
+                  (data as { timeOfBirth?: string }).timeOfBirth) ||
+                "12:00 PM",
               placeOfBirth: data.location || "Delhi, India",
               horoscopeFileDataUri: undefined,
               horoscopeFile: undefined,
@@ -205,7 +208,7 @@ export function ExtractHoroscopeDetailsForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Date of Birth</FormLabel>
-                <FormControl><Input type="date" {...field} defaultValue={field.value || ""} /></FormControl>
+                <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -216,7 +219,7 @@ export function ExtractHoroscopeDetailsForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Time of Birth (Local)</FormLabel>
-                <FormControl><Input type="text" placeholder="e.g., 12:00 PM or 14:30" {...field} defaultValue={field.value || ""} /></FormControl>
+                <FormControl><Input type="text" placeholder="e.g., 12:00 PM or 14:30" {...field} value={field.value || ""} /></FormControl>
                  <FormDescription>Enter local time of birth (e.g., 02:30 PM or 14:30).</FormDescription>
                 <FormMessage />
               </FormItem>
@@ -228,7 +231,7 @@ export function ExtractHoroscopeDetailsForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Place of Birth</FormLabel>
-                <FormControl><Input placeholder="e.g., City, Country" {...field} defaultValue={field.value || ""} /></FormControl>
+                <FormControl><Input placeholder="e.g., City, Country" {...field} value={field.value || ""} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}

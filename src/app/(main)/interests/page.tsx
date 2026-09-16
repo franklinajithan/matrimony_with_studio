@@ -19,6 +19,7 @@ import { useDashboardChrome } from "@/components/dashboard/chrome-context";
 import { Loader2, Check, X, Heart, Send } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { getCompositeId } from "@/lib/utils";
+import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
 
 interface InterestWithProfile {
   id: string;
@@ -280,20 +281,25 @@ export default function InterestsPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-violet-600" />
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <PageFrame>
+      <PageHero
+        eyebrow="Interest inbox"
+        title="Interests"
+        description="Review who has reached out, and track requests you’ve sent."
+      />
       <Tabs defaultValue="received" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="received">
+          <TabsList className="grid w-full grid-cols-2 rounded-xl">
+            <TabsTrigger value="received" className="rounded-lg">
               Received {receivedInterests.length > 0 && `(${receivedInterests.length})`}
             </TabsTrigger>
-            <TabsTrigger value="sent">
+            <TabsTrigger value="sent" className="rounded-lg">
               Sent {sentInterests.length > 0 && `(${sentInterests.length})`}
             </TabsTrigger>
           </TabsList>
@@ -461,6 +467,6 @@ export default function InterestsPage() {
             )}
           </TabsContent>
         </Tabs>
-    </div>
+    </PageFrame>
   );
 }

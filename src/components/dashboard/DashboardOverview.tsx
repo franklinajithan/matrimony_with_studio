@@ -19,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MemberAvatar } from "@/components/dashboard/MemberAvatar";
+import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
 import { auth, onAuthStateChanged } from "@/lib/supabase/auth";
 import {
   loadDashboardOverview,
@@ -26,7 +27,7 @@ import {
   type DashboardOverviewData,
   type DiscoveryPerson,
 } from "@/lib/supabase/dashboard";
-import { likeProfile } from "@/lib/supabase/likes";
+import { sendInterest } from "@/lib/supabase/matches";
 import {
   firstName,
   formatLanguageList,
@@ -54,47 +55,64 @@ function OverviewSkeleton() {
   );
 }
 
-function DiscoveryCard({ person, onInterest, sending }: {
+function DiscoveryCard({
+  person,
+  onInterest,
+  sending,
+  interested,
+}: {
   person: DiscoveryPerson;
   onInterest: (id: string) => void;
   sending: boolean;
+  interested: boolean;
 }) {
   return (
-    <article className="group overflow-hidden rounded-3xl border border-[#eadde7] bg-white shadow-[0_12px_34px_rgba(75,32,67,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(75,32,67,0.13)]">
-      <Link href={`/profile/${person.id}`} className="block bg-gradient-to-br from-[#f8e9f0] via-[#f3eef8] to-[#fff8f1] p-4">
+    <article className="group max-w-[240px] overflow-hidden rounded-2xl border border-[#eadde7] bg-white shadow-[0_8px_22px_rgba(75,32,67,0.07)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(75,32,67,0.12)]">
+      <Link href={`/profile/${person.id}`} className="block bg-gradient-to-br from-[#f8e9f0] via-[#f3eef8] to-[#fff8f1] p-2.5">
         <MemberAvatar
           name={person.displayName}
           photoURL={person.photoURL}
-          className="mx-auto h-40 w-40 rounded-[26px] border-4 border-white text-2xl shadow-md sm:h-44 sm:w-44"
+          className="mx-auto h-24 w-24 rounded-2xl border-2 border-white text-lg shadow-sm sm:h-28 sm:w-28"
           alt={`Profile photo of ${person.displayName}`}
         />
       </Link>
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <Link href={`/profile/${person.id}`} className="text-lg font-semibold text-[#3b1837] hover:text-primary">
-              {person.displayName}{person.age ? <span className="font-normal text-[#745d70]">, {person.age}</span> : null}
-            </Link>
-            {person.isVerified ? (
-              <p className="mt-0.5 flex items-center gap-1 text-xs text-[#6d5b69]">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" /> Verified profile
-              </p>
-            ) : null}
-          </div>
+      <div className="space-y-2 p-3">
+        <div className="min-w-0">
+          <Link href={`/profile/${person.id}`} className="line-clamp-1 text-sm font-semibold text-[#3b1837] hover:text-primary">
+            {person.displayName}{person.age ? <span className="font-normal text-[#745d70]">, {person.age}</span> : null}
+          </Link>
+          {person.isVerified ? (
+            <p className="mt-0.5 flex items-center gap-1 text-[11px] text-[#6d5b69]">
+              <CheckCircle2 className="h-3 w-3 text-emerald-600" aria-hidden="true" /> Verified
+            </p>
+          ) : null}
         </div>
-        <p className="mt-2 line-clamp-2 min-h-10 text-sm text-[#745d70]">
-          {[person.profession, person.location].filter(Boolean).join(" · ") || "View their profile to learn more"}
+        <p className="line-clamp-2 min-h-[2.25rem] text-xs text-[#745d70]">
+          {[person.profession, person.location].filter(Boolean).join(" · ") || "View profile for more"}
         </p>
         {person.sharedPreference ? (
-          <p className="mt-2 inline-flex rounded-full bg-[#f5eafa] px-2.5 py-1 text-xs font-medium text-[#713c78]">{person.sharedPreference}</p>
+          <p className="inline-flex rounded-full bg-[#f5eafa] px-2 py-0.5 text-[10px] font-medium text-[#713c78]">{person.sharedPreference}</p>
         ) : null}
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <Button asChild variant="outline" className="min-h-11 rounded-xl border-[#dcc9d8] bg-white">
-            <Link href={`/profile/${person.id}`}>View profile</Link>
+        <div className="grid grid-cols-2 gap-1.5 pt-1">
+          <Button asChild variant="outline" size="sm" className="h-9 rounded-lg border-[#dcc9d8] bg-white px-2 text-xs">
+            <Link href={`/profile/${person.id}`}>View</Link>
           </Button>
-          <Button className="min-h-11 rounded-xl" disabled={sending} onClick={() => onInterest(person.id)}>
-            {sending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Heart className="mr-1.5 h-4 w-4" />}
-            Interest
+          <Button
+            size="sm"
+            className="h-9 rounded-lg px-2 text-xs"
+            variant={interested ? "secondary" : "default"}
+            disabled={sending || interested}
+            onClick={() => onInterest(person.id)}
+            aria-label={interested ? "Interest sent" : "Send interest"}
+          >
+            {sending ? (
+              <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Heart
+                className={`mr-1 h-3.5 w-3.5 ${interested ? "fill-current text-primary" : ""}`}
+              />
+            )}
+            {interested ? "Sent" : "Interest"}
           </Button>
         </div>
       </div>
@@ -110,6 +128,7 @@ export function DashboardOverview() {
   const [userId, setUserId] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [likingId, setLikingId] = useState<string | null>(null);
+  const [interestedIds, setInterestedIds] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -142,16 +161,41 @@ export function DashboardOverview() {
   }, [authReady, load, userId]);
 
   const handleInterest = async (profileId: string) => {
-    if (!userId) return;
+    if (!userId || interestedIds.has(profileId)) return;
     setLikingId(profileId);
     try {
-      await likeProfile(userId, profileId);
+      await sendInterest({
+        senderUid: userId,
+        receiverUid: profileId,
+      });
+      setInterestedIds((prev) => new Set(prev).add(profileId));
+      setData((prev) => {
+        if (!prev || prev.discovery.status !== "ok") return prev;
+        const people = prev.discovery.people.filter((person) => person.id !== profileId);
+        return {
+          ...prev,
+          discovery: people.length > 0 ? { status: "ok", people } : { status: "empty" },
+        };
+      });
       toast({ title: "Interest sent", description: "They will see this in their interests." });
     } catch (err) {
+      const message = err instanceof Error ? err.message : "Please try again.";
+      const already = message.toLowerCase().includes("already");
+      if (already) {
+        setInterestedIds((prev) => new Set(prev).add(profileId));
+        setData((prev) => {
+          if (!prev || prev.discovery.status !== "ok") return prev;
+          const people = prev.discovery.people.filter((person) => person.id !== profileId);
+          return {
+            ...prev,
+            discovery: people.length > 0 ? { status: "ok", people } : { status: "empty" },
+          };
+        });
+      }
       toast({
-        title: "Could not send interest",
-        description: err instanceof Error ? err.message : "Please try again.",
-        variant: "destructive",
+        title: already ? "Already sent" : "Could not send interest",
+        description: message,
+        variant: already ? "default" : "destructive",
       });
     } finally {
       setLikingId(null);
@@ -178,21 +222,27 @@ export function DashboardOverview() {
   const hasConversation = data.recent.status === "ok" && data.recent.items.length > 0;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-7 pb-8">
-      <section className="relative overflow-hidden rounded-[30px] border border-[#eadce5] bg-[radial-gradient(circle_at_88%_12%,rgba(184,113,172,0.20),transparent_34%),linear-gradient(135deg,#fffaf4_0%,#fff_45%,#f8eef7_100%)] p-5 shadow-[0_14px_45px_rgba(67,31,61,0.08)] sm:p-7">
-        <div className="absolute -right-12 -top-14 h-40 w-40 rounded-full border border-[#dcb8d4]/50" aria-hidden="true" />
-        <div className="relative flex flex-col gap-5 md:flex-row md:items-center">
-          <MemberAvatar name={profile.displayName || "Member"} photoURL={profile.photoURL || draft.photoURL} className="h-20 w-20 border-4 border-white text-lg shadow-md" />
-          <div className="min-w-0 flex-1">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#8d5b84]">Your CupidMatch journey</p>
-            <h1 className="text-2xl font-semibold tracking-tight text-[#351532] sm:text-3xl">Welcome, {displayName}</h1>
-            <p className="mt-1.5 max-w-2xl text-sm text-[#745d70] sm:text-base">Find someone who shares your values, your outlook and the life you want to build.</p>
-          </div>
+    <PageFrame>
+      <PageHero
+        eyebrow="Your CupidMatch journey"
+        title={`Welcome, ${displayName}`}
+        description="Find someone who shares your values, your outlook and the life you want to build."
+        leading={
+          <MemberAvatar
+            name={profile.displayName || "Member"}
+            photoURL={profile.photoURL || draft.photoURL}
+            className="h-20 w-20 border-4 border-white text-lg shadow-md"
+          />
+        }
+        actions={
           <Button asChild size="lg" className="min-h-12 rounded-xl px-5 shadow-sm">
-            <Link href="/discover">Discover matches<ArrowRight className="ml-2 h-4 w-4" /></Link>
+            <Link href="/discover">
+              Discover matches
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
           </Button>
-        </div>
-      </section>
+        }
+      />
 
       <section aria-labelledby="matches-heading" className="space-y-4">
         <div className="flex items-end justify-between gap-3">
@@ -204,9 +254,15 @@ export function DashboardOverview() {
         </div>
 
         {data.discovery.status === "ok" ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex flex-wrap gap-3">
             {data.discovery.people.slice(0, 3).map((person) => (
-              <DiscoveryCard key={person.id} person={person} sending={likingId === person.id} onInterest={handleInterest} />
+              <DiscoveryCard
+                key={person.id}
+                person={person}
+                sending={likingId === person.id}
+                interested={interestedIds.has(person.id)}
+                onInterest={handleInterest}
+              />
             ))}
           </div>
         ) : data.discovery.status === "unpublished" ? (
@@ -294,6 +350,6 @@ export function DashboardOverview() {
           </div>
         </aside>
       </div>
-    </div>
+    </PageFrame>
   );
 }

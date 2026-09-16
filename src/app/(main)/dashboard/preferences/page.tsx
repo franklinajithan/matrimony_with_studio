@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
 import { SlidersHorizontal, Users, MapPin, Briefcase, Ruler, Languages, EyeOff } from 'lucide-react'; // Added EyeOff
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -93,15 +94,14 @@ export default function EditPreferencesPage() {
   }
   
   return (
-    <Card className="w-full max-w-2xl mx-auto shadow-xl">
-      <CardHeader>
-        <CardTitle className="font-headline text-3xl text-primary flex items-center gap-2">
-          <SlidersHorizontal className="h-7 w-7" />
-          Edit Match Preferences
-        </CardTitle>
-        <CardDescription>Refine your criteria to find the most compatible partners on CupidMatch.</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <PageFrame>
+      <PageHero
+        eyebrow="Matching"
+        title="Match preferences"
+        description="Refine your criteria to find the most compatible partners on CupidMatch."
+      />
+    <Card className="w-full rounded-2xl border-[#eadde7] shadow-sm">
+      <CardContent className="pt-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="space-y-4 p-4 border rounded-md shadow-sm">
@@ -230,13 +230,14 @@ export default function EditPreferencesPage() {
                 />
             </div>
 
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-3">
+            <Button type="submit" className="w-full rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-3">
               Save Preferences
             </Button>
           </form>
         </Form>
       </CardContent>
     </Card>
+    </PageFrame>
   );
 }
 

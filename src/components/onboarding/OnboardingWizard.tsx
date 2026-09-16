@@ -2,10 +2,9 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useLoginWelcomeToast } from "@/hooks/use-login-welcome-toast";
 import { Loader2, Check, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
-import { Logo } from "@/components/shared/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
 import {
   COUNTRY_OPTIONS,
   EMPTY_ONBOARDING_DRAFT,
@@ -27,7 +27,6 @@ import {
 import { auth, onAuthStateChanged } from "@/lib/supabase/auth";
 import { mediaPathForUser, resolveMediaUrl, uploadMediaFile } from "@/lib/supabase/storage";
 import { ProfilePhotoEditor } from "@/components/profile/ProfilePhotoEditor";
-import { dashboardMobileNav, isNavActive } from "@/components/dashboard/nav";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -60,7 +59,6 @@ const PHOTO_PRIVACY = [
 export function OnboardingWizard() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const pathname = usePathname();
   const { toast } = useToast();
   useLoginWelcomeToast();
   const [draft, setDraft] = useState<OnboardingDraft>(EMPTY_ONBOARDING_DRAFT);
@@ -332,7 +330,7 @@ export function OnboardingWizard() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex min-h-[50vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -340,7 +338,7 @@ export function OnboardingWizard() {
 
   if (!draftReady) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4">
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-4">
         <Alert variant="destructive" className="max-w-lg">
           <AlertTitle>Could not load your saved profile</AlertTitle>
           <AlertDescription className="space-y-3">
@@ -358,69 +356,64 @@ export function OnboardingWizard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
-          <Logo size="md" />
-          <div className="flex items-center gap-2 text-sm">
-            <span
-              className={cn(
-                "inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 font-medium",
-                saveState === "error" ? "bg-destructive/10 text-destructive" : "bg-secondary text-secondary-foreground"
-              )}
-              aria-live="polite"
-            >
-              {saveState === "saving" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              {saveState === "saved" && <Check className="h-3.5 w-3.5" />}
-              {saveState === "error" && <AlertCircle className="h-3.5 w-3.5" />}
-              {saveLabel}
-            </span>
-            <Button variant="ghost" className="min-h-11" onClick={() => window.location.assign("/logout")}>
-              Log out
-            </Button>
-          </div>
-        </div>
-      </header>
+    <PageFrame>
+      <PageHero
+        eyebrow={`Step ${step + 1} of ${ONBOARDING_STEPS.length}`}
+        title={current.title}
+        description={current.description}
+        actions={
+          <span
+            className={cn(
+              "inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium",
+              saveState === "error"
+                ? "bg-destructive/10 text-destructive"
+                : "bg-white/80 text-[#713c78] border border-[#eadce5]"
+            )}
+            aria-live="polite"
+          >
+            {saveState === "saving" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            {saveState === "saved" && <Check className="h-3.5 w-3.5" />}
+            {saveState === "error" && <AlertCircle className="h-3.5 w-3.5" />}
+            {saveLabel}
+          </span>
+        }
+      >
+        <Progress value={progressValue} className="mt-4 h-2.5 bg-[#f0e7ed]" />
+      </PageHero>
 
-      <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:py-10 pb-24 lg:pb-10">
-        <p className="text-sm font-medium text-primary">Step {step + 1} of {ONBOARDING_STEPS.length}</p>
-        <h1 className="mt-1 font-headline text-3xl text-foreground sm:text-4xl">{current.title}</h1>
-        <p className="mt-2 text-muted-foreground">{current.description}</p>
-        <Progress value={progressValue} className="mt-4 h-2" />
+      {isPublished && (
+        <Alert>
+          <AlertTitle>Your profile is already published</AlertTitle>
+          <AlertDescription>
+            You can keep editing this draft. Changes are not shown in discovery until you publish again.{" "}
+            <Link href="/dashboard/edit-profile" className="font-medium text-primary underline">
+              Open profile editor
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
 
-        {isPublished && (
-          <Alert className="mt-6">
-            <AlertTitle>Your profile is already published</AlertTitle>
-            <AlertDescription>
-              You can keep editing this draft. Changes are not shown in discovery until you publish again.{" "}
-              <Link href="/dashboard/edit-profile" className="font-medium text-primary underline">
-                Open profile editor
-              </Link>
-            </AlertDescription>
-          </Alert>
-        )}
+      {saveState === "error" && saveError && (
+        <Alert variant="destructive">
+          <AlertTitle>We could not save your draft</AlertTitle>
+          <AlertDescription>{saveError}</AlertDescription>
+        </Alert>
+      )}
 
-        {saveState === "error" && saveError && (
-          <Alert variant="destructive" className="mt-6">
-            <AlertTitle>We could not save your draft</AlertTitle>
-            <AlertDescription>{saveError}</AlertDescription>
-          </Alert>
-        )}
+      {stepErrors.length > 0 && (
+        <Alert variant="destructive">
+          <AlertTitle>Please check this step</AlertTitle>
+          <AlertDescription>
+            <ul className="list-disc pl-4">
+              {stepErrors.map((error) => (
+                <li key={error}>{error}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
 
-        {stepErrors.length > 0 && (
-          <Alert variant="destructive" className="mt-6">
-            <AlertTitle>Please check this step</AlertTitle>
-            <AlertDescription>
-              <ul className="list-disc pl-4">
-                {stepErrors.map((error) => (
-                  <li key={error}>{error}</li>
-                ))}
-              </ul>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <section className="mt-8 space-y-6 rounded-2xl border bg-card p-4 shadow-sm sm:p-8">
+      <section className="space-y-6 rounded-2xl border border-[#eadde7] bg-white p-4 shadow-sm sm:p-8">
           {step === 0 && (
             <div className="space-y-5">
               <Field label="Display name" htmlFor="displayName">
@@ -639,60 +632,29 @@ export function OnboardingWizard() {
               </label>
             </div>
           )}
-        </section>
+      </section>
 
-        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Button variant="ghost" className="min-h-11" onClick={() => void handleExit()}>
-            Save and exit
+      <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Button variant="ghost" className="min-h-11" onClick={() => void handleExit()}>
+          Save and exit
+        </Button>
+        <div className="flex gap-3">
+          <Button variant="outline" className="min-h-11 flex-1 sm:flex-none" onClick={() => void goBack()} disabled={step === 0 || publishing}>
+            <ChevronLeft className="mr-1 h-4 w-4" /> Back
           </Button>
-          <div className="flex gap-3">
-            <Button variant="outline" className="min-h-11 flex-1 sm:flex-none" onClick={() => void goBack()} disabled={step === 0 || publishing}>
-              <ChevronLeft className="mr-1 h-4 w-4" /> Back
+          {step < 7 ? (
+            <Button className="min-h-11 flex-1 sm:flex-none" onClick={() => void goNext()}>
+              Continue <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
-            {step < 7 ? (
-              <Button className="min-h-11 flex-1 sm:flex-none" onClick={() => void goNext()}>
-                Continue <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            ) : (
-              <Button className="min-h-11 flex-1 sm:flex-none" onClick={() => void handlePublish()} disabled={publishing}>
-                {publishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Publish profile
-              </Button>
-            )}
-          </div>
+          ) : (
+            <Button className="min-h-11 flex-1 sm:flex-none" onClick={() => void handlePublish()} disabled={publishing}>
+              {publishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Publish profile
+            </Button>
+          )}
         </div>
-      </main>
-
-      {/* Mobile Bottom Navigation */}
-      <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-violet-700/20 bg-violet-600 pb-[env(safe-area-inset-bottom)] shadow-lg lg:hidden"
-        aria-label="Primary"
-      >
-        <ul className="grid grid-cols-5 px-2 py-2">
-          {dashboardMobileNav.map((item) => {
-            const Icon = item.icon;
-            const active = isNavActive(pathname, item);
-            return (
-              <li key={item.label}>
-                <Link
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-white",
-                    active
-                      ? "bg-white text-violet-700 shadow-sm"
-                      : "text-white hover:bg-violet-500"
-                  )}
-                >
-                  <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                  <span className="truncate">{item.label}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-    </div>
+      </div>
+    </PageFrame>
   );
 }
 

@@ -6,7 +6,7 @@ import {
 } from "@/lib/onboarding/readiness";
 import type { OnboardingDraft } from "@/lib/onboarding/schema";
 import { countReceivedLikes, listReceivedLikes } from "./likes";
-import { countAcceptedConnections, listAcceptedConnections, listPendingRequests } from "./matches";
+import { countAcceptedConnections, listAcceptedConnections, listPendingRequests, listSentInterestReceiverIds } from "./matches";
 import { listChatsForUser, unreadMessageCount } from "./chats";
 import { getProfile, listProfiles, listProfilesByIds } from "./profiles";
 import type { Profile } from "./types";
@@ -87,22 +87,32 @@ export async function loadDashboardOverview(userId: string): Promise<DashboardOv
   const connectionsTask = countAcceptedConnections(userId);
   const chatsTask = listChatsForUser(userId);
   const pendingTask = listPendingRequests(userId);
+  const sentInterestIdsTask = listSentInterestReceiverIds(userId);
   const discoveryTask = profile.isPublished
-    ? listProfiles({ limit: 6, excludeId: userId })
+    ? listProfiles({ limit: 24, excludeId: userId })
     : Promise.resolve(null);
   const recentLikesTask = listReceivedLikes(userId, 8);
   const acceptedTask = listAcceptedConnections(userId);
 
-  const [likesResult, connectionsResult, chatsResult, pendingResult, discoveryResult, recentLikesResult, acceptedResult] =
-    await Promise.allSettled([
-      likesTask,
-      connectionsTask,
-      chatsTask,
-      pendingTask,
-      discoveryTask,
-      recentLikesTask,
-      acceptedTask,
-    ]);
+  const [
+    likesResult,
+    connectionsResult,
+    chatsResult,
+    pendingResult,
+    sentInterestResult,
+    discoveryResult,
+    recentLikesResult,
+    acceptedResult,
+  ] = await Promise.allSettled([
+    likesTask,
+    connectionsTask,
+    chatsTask,
+    pendingTask,
+    sentInterestIdsTask,
+    discoveryTask,
+    recentLikesTask,
+    acceptedTask,
+  ]);
 
   const receivedInterests = settledNumber(likesResult);
   const connections = settledNumber(connectionsResult);
@@ -129,6 +139,10 @@ export async function loadDashboardOverview(userId: string): Promise<DashboardOv
               : "Could not load requests.",
         };
 
+  const alreadySent = new Set(
+    sentInterestResult.status === "fulfilled" ? sentInterestResult.value : []
+  );
+
   let discovery: DiscoveryResult;
   if (!profile.isPublished) {
     discovery = { status: "unpublished" };
@@ -140,13 +154,15 @@ export async function loadDashboardOverview(userId: string): Promise<DashboardOv
           ? discoveryResult.reason.message
           : "Discovery is unavailable right now.",
     };
-  } else if (!discoveryResult.value || discoveryResult.value.length === 0) {
-    discovery = { status: "empty" };
   } else {
-    discovery = {
-      status: "ok",
-      people: discoveryResult.value.map((person) => mapDiscoveryPerson(person, profile)),
-    };
+    const candidates = (discoveryResult.value || [])
+      .filter((person) => !alreadySent.has(person.id))
+      .slice(0, 6)
+      .map((person) => mapDiscoveryPerson(person, profile));
+    discovery =
+      candidates.length > 0
+        ? { status: "ok", people: candidates }
+        : { status: "empty" };
   }
 
   let recent: DashboardOverviewData["recent"];

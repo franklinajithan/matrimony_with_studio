@@ -45,6 +45,8 @@ export {
   subscribeToPendingRequests,
   listPendingRequests,
   countPendingRequests,
+  listSentRequests,
+  listSentInterestReceiverIds,
   listAcceptedConnections,
   countAcceptedConnections,
   countRecentAcceptedConnections,

@@ -138,6 +138,18 @@ export async function listSentRequests(senderId: string): Promise<MatchRequestRo
   return (data || []).map((row) => mapRequest(row)!);
 }
 
+/** Receiver IDs the member has already sent an interest to (any status). */
+export async function listSentInterestReceiverIds(senderId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from("match_requests")
+    .select("receiver_id")
+    .eq("sender_id", senderId);
+  if (error) throw error;
+  return (data || [])
+    .map((row) => String((row as { receiver_id?: string }).receiver_id || ""))
+    .filter(Boolean);
+}
+
 export async function deleteMatchRequest(id: string) {
   const { error } = await supabase.from("match_requests").delete().eq("id", id);
   if (error) throw error;

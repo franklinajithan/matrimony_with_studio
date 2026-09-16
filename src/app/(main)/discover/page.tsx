@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { listProfiles, type Profile } from "@/lib/supabase/profiles";
 import { getShortlistedIds, addToShortlist, removeFromShortlist } from "@/lib/supabase/shortlist";
-import { sendInterest } from "@/lib/supabase/matches";
+import { sendInterest, listSentInterestReceiverIds } from "@/lib/supabase/matches";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { useToast } from "@/hooks/use-toast";
 import { Heart, Bookmark, MapPin, Briefcase, Languages as LanguagesIcon, Loader2, Search, SlidersHorizontal, X, AlertCircle, RefreshCw, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
 
 type LoadingState = "loading" | "success" | "error" | "session_expired" | "idle";
 
@@ -107,6 +108,7 @@ function DiscoverPageContent() {
   
   // Action states
   const [processingAction, setProcessingAction] = useState<Record<string, boolean>>({});
+  const [sentInterestIds, setSentInterestIds] = useState<Set<string>>(() => new Set());
   
   // Check authentication
   useEffect(() => {
@@ -142,7 +144,12 @@ function DiscoverPageContent() {
       setError(null);
       
       // Fetch discovery profiles
-      const fetchedProfiles = await listProfiles({ limit: 100, excludeId: currentUser.id });
+      const [fetchedProfiles, sentReceiverIds] = await Promise.all([
+        listProfiles({ limit: 100, excludeId: currentUser.id }),
+        listSentInterestReceiverIds(currentUser.id),
+      ]);
+      const sentSet = new Set(sentReceiverIds);
+      setSentInterestIds(sentSet);
       
       // Get shortlisted IDs
       const shortlistedIds = await getShortlistedIds(
@@ -254,7 +261,7 @@ function DiscoverPageContent() {
   };
   
   const handleSendInterest = async (profileId: string) => {
-    if (!currentUser) return;
+    if (!currentUser || sentInterestIds.has(profileId)) return;
     
     setProcessingAction(prev => ({ ...prev, [`interest-${profileId}`]: true }));
     
@@ -263,6 +270,7 @@ function DiscoverPageContent() {
         senderUid: currentUser.id,
         receiverUid: profileId,
       });
+      setSentInterestIds((prev) => new Set(prev).add(profileId));
       
       toast({
         title: "Interest sent",
@@ -272,6 +280,9 @@ function DiscoverPageContent() {
       console.error("Error sending interest:", error);
       const message = error instanceof Error ? error.message : "Failed to send interest. Please try again.";
       const lower = message.toLowerCase();
+      if (lower.includes("already")) {
+        setSentInterestIds((prev) => new Set(prev).add(profileId));
+      }
       toast({
         title: lower.includes("already") ? "Already sent" : "Error",
         description: message,
@@ -321,23 +332,20 @@ function DiscoverPageContent() {
   // Loading state
   if (loadingState === "loading") {
     return (
-      <div className="space-y-6">
-        <div>
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="mt-2 h-5 w-96" />
-        </div>
+      <PageFrame>
+        <Skeleton className="h-40 w-full rounded-[30px]" />
         <Card>
-          <CardContent className="p-4 sm:p-6 space-y-4">
+          <CardContent className="space-y-4 p-4 sm:p-6">
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-32" />
           </CardContent>
         </Card>
-        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <ProfileCardSkeleton key={i} />
           ))}
         </div>
-      </div>
+      </PageFrame>
     );
   }
 
@@ -349,11 +357,12 @@ function DiscoverPageContent() {
   // Error state
   if (loadingState === "error") {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Discover</h1>
-          <p className="mt-1 text-sm text-gray-600">Find someone who shares your values and future plans.</p>
-        </div>
+      <PageFrame>
+        <PageHero
+          eyebrow="Meet people"
+          title="Discover"
+          description="Find someone who shares your values and future plans."
+        />
         <Card>
           <CardContent className="py-12 text-center">
             <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
@@ -368,7 +377,7 @@ function DiscoverPageContent() {
             </Button>
           </CardContent>
         </Card>
-      </div>
+      </PageFrame>
     );
   }
 
@@ -449,11 +458,12 @@ function DiscoverPageContent() {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Supporting text */}
-      <p className="text-sm text-gray-600 sm:text-base">
-        Find someone who shares your values and future plans.
-      </p>
+    <PageFrame>
+      <PageHero
+        eyebrow="Meet people"
+        title="Discover"
+        description="Find someone who shares your values and future plans."
+      />
       
       {/* Search and Filters */}
       <Card>
@@ -648,40 +658,43 @@ function DiscoverPageContent() {
                   type="button"
                   size="sm"
                   className="flex-1 text-xs sm:text-sm"
+                  variant={sentInterestIds.has(profile.id) ? "secondary" : "default"}
                   onClick={() => void handleSendInterest(profile.id)}
-                  disabled={processingAction[`interest-${profile.id}`]}
+                  disabled={processingAction[`interest-${profile.id}`] || sentInterestIds.has(profile.id)}
+                  aria-label={sentInterestIds.has(profile.id) ? "Interest sent" : "Send interest"}
                 >
                   {processingAction[`interest-${profile.id}`] ? (
                     <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <Heart className="mr-1.5 h-3.5 w-3.5" />
+                    <Heart
+                      className={`mr-1.5 h-3.5 w-3.5 ${
+                        sentInterestIds.has(profile.id) ? "fill-current text-primary" : ""
+                      }`}
+                    />
                   )}
-                  Interest
+                  {sentInterestIds.has(profile.id) ? "Already sent" : "Interest"}
                 </Button>
               </CardFooter>
             </Card>
           ))}
         </div>
       )}
-    </div>
+    </PageFrame>
   );
 }
 
 export default function DiscoverPage() {
   return (
     <Suspense fallback={
-      <div className="space-y-6">
-        <div>
-          <div className="h-8 w-64 bg-gray-200 animate-pulse rounded" />
-          <div className="mt-2 h-5 w-96 bg-gray-200 animate-pulse rounded" />
-        </div>
+      <PageFrame>
+        <div className="h-40 w-full animate-pulse rounded-[30px] bg-[#f3e8f0]" />
         <Card>
-          <CardContent className="p-4 sm:p-6 space-y-4">
-            <div className="h-10 w-full bg-gray-200 animate-pulse rounded" />
-            <div className="h-10 w-32 bg-gray-200 animate-pulse rounded" />
+          <CardContent className="space-y-4 p-4 sm:p-6">
+            <div className="h-10 w-full animate-pulse rounded bg-gray-200" />
+            <div className="h-10 w-32 animate-pulse rounded bg-gray-200" />
           </CardContent>
         </Card>
-      </div>
+      </PageFrame>
     }>
       <DiscoverPageContent />
     </Suspense>

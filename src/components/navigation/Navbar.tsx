@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   Settings,
   UserCircle as UserCircleIcon,
-  Loader2,
   Menu,
   Search,
   Shield,
@@ -65,11 +64,27 @@ export function Navbar() {
   const isMarketingPage = marketingPages.includes(pathname);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    let settled = false;
+    const finish = (user: FirebaseUser | null) => {
+      if (settled) return;
+      settled = true;
       setCurrentUser(user);
       setIsLoadingAuth(false);
+    };
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      finish(user);
     });
-    return () => unsubscribe();
+
+    // Never leave the header stuck on a spinner if session hydrate hangs.
+    const timeout = window.setTimeout(() => {
+      finish(auth.currentUser);
+    }, 2500);
+
+    return () => {
+      unsubscribe();
+      window.clearTimeout(timeout);
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -101,6 +116,30 @@ export function Navbar() {
 
   const signUpButtonClass =
     "rounded-full bg-primary px-6 font-semibold text-primary-foreground hover:bg-primary/90 shadow-sm transition-all";
+
+  const authActions = (
+    <div className="ml-auto hidden items-center gap-3 md:flex">
+      {currentUser ? (
+        <>
+          <Button variant="ghost" asChild className="font-medium">
+            <Link href="/dashboard">Dashboard</Link>
+          </Button>
+          <Button asChild className={signUpButtonClass}>
+            <Link href="/dashboard/edit-profile">My profile</Link>
+          </Button>
+        </>
+      ) : (
+        <>
+          <Button variant="ghost" asChild className="font-medium">
+            <Link href="/login">Log in</Link>
+          </Button>
+          <Button asChild className={signUpButtonClass}>
+            <Link href="/signup">Create profile</Link>
+          </Button>
+        </>
+      )}
+    </div>
+  );
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -190,9 +229,17 @@ export function Navbar() {
           )}
 
           {isLoadingAuth ? (
-            <Loader2 className="ml-auto h-5 w-5 animate-spin text-primary" aria-label="Loading account" />
+            <div className="ml-auto flex items-center gap-3">
+              <Button variant="ghost" asChild className="font-medium">
+                <Link href="/login">Log in</Link>
+              </Button>
+              <Button asChild className={cn("hidden sm:inline-flex", signUpButtonClass)}>
+                <Link href="/signup">Create profile</Link>
+              </Button>
+            </div>
+          ) : isMarketingPage ? (
+            authActions
           ) : currentUser ? (
-            !isMarketingPage && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -247,20 +294,8 @@ export function Navbar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            )
           ) : (
-            <div className="ml-auto hidden items-center gap-3 md:flex">
-              <Button
-                variant="ghost"
-                asChild
-                className="font-medium"
-              >
-                <Link href="/login">Log in</Link>
-              </Button>
-              <Button asChild className={signUpButtonClass}>
-                <Link href="/signup">Create profile</Link>
-              </Button>
-            </div>
+            authActions
           )}
 
           {isMarketingPage ? (

@@ -40,6 +40,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
+import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
 
 function firstName(doc: BiodataDocument): string {
   for (const section of doc.content.sections) {
@@ -229,19 +230,19 @@ export default function BiodataPreviewPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4 px-4 py-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-[#7027E8]">Preview</p>
-          <h1 className="text-xl font-semibold">{doc.title}</h1>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" asChild>
+    <PageFrame>
+      <PageHero
+        eyebrow="Preview"
+        title={doc.title}
+        description="Review layout and privacy before you export or share."
+        actions={
+          <div className="flex flex-wrap gap-2">
+          <Button variant="outline" className="rounded-xl border-[#dcc9d8] bg-white/80" asChild>
             <Link href={`/biodata/${doc.id}/edit`}>Edit</Link>
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="bg-[#7027E8] hover:bg-[#5a1ec0]">
+              <Button className="rounded-xl">
                 <Download className="mr-1 h-4 w-4" />
                 Export
               </Button>
@@ -252,16 +253,17 @@ export default function BiodataPreviewPage() {
               <DropdownMenuItem onClick={() => startExport("jpeg")}>JPEG</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" onClick={openShareDialog}>
+          <Button variant="outline" className="rounded-xl border-[#dcc9d8] bg-white/80" onClick={openShareDialog}>
             <Link2 className="mr-1 h-4 w-4" />
             Share link
           </Button>
-          <Button variant="outline" onClick={() => startExport("print")}>
+          <Button variant="outline" className="rounded-xl border-[#dcc9d8] bg-white/80" onClick={() => startExport("print")}>
             <Printer className="mr-1 h-4 w-4" />
             Print
           </Button>
-        </div>
-      </div>
+          </div>
+        }
+      />
 
       <div className="overflow-x-auto rounded-lg border border-[#7027E8]/15 bg-[#F3EEE8]/50 p-4">
         <div ref={rootRef} className="mx-auto w-fit">
@@ -364,6 +366,6 @@ export default function BiodataPreviewPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageFrame>
   );
 }

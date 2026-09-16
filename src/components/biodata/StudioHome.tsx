@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
+import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
 
 const RECENT_KEY = "cupidmatch:biodata-recent-templates";
 const DEFAULT_TEMPLATE = "violet-connection";
@@ -214,47 +215,46 @@ export function StudioHome() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 px-4 py-8">
-      <header className="space-y-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-[#7027E8]">
-          CupidMatch
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight text-[#1a1a1a]">
-          Biodata Studio
-        </h1>
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          Create polished matrimonial biodata from your profile. Drafts stay private until you
-          export — you control what sensitive details appear.
-        </p>
-      </header>
+    <PageFrame>
+      <PageHero
+        eyebrow="CupidMatch"
+        title="Biodata Studio"
+        description="Create polished matrimonial biodata from your profile. Drafts stay private until you export — you control what sensitive details appear."
+      >
+        <div className="mt-4 flex flex-wrap gap-3">
+            <Button
+              size="lg"
+              className="min-h-12 rounded-xl px-5 shadow-sm"
+              disabled={creating}
+              onClick={() => void createWithTemplate(DEFAULT_TEMPLATE)}
+            >
+              {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FilePlus2 className="mr-2 h-4 w-4" />}
+              Create biodata
+            </Button>
+            <Button
+              variant="outline"
+              className="rounded-xl border-[#dcc9d8] bg-white/80"
+              disabled={creating}
+              onClick={() => setTemplatePromptOpen(true)}
+            >
+              <LayoutTemplate className="mr-2 h-4 w-4" />
+              Choose template
+            </Button>
+            {lastDraft ? (
+              <Button variant="outline" className="rounded-xl border-[#dcc9d8] bg-white/80" asChild>
+                <Link href={`/biodata/${lastDraft.id}/edit`}>Continue last draft</Link>
+              </Button>
+            ) : null}
+            <Button variant="ghost" className="rounded-xl" asChild>
+              <Link href="/biodata/templates">Browse templates</Link>
+            </Button>
+        </div>
+      </PageHero>
 
-      <div className="flex flex-wrap gap-3">
-        <Button
-          className="bg-[#7027E8] text-white hover:bg-[#5a1ec0]"
-          disabled={creating}
-          onClick={() => void createWithTemplate(DEFAULT_TEMPLATE)}
-        >
-          {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FilePlus2 className="mr-2 h-4 w-4" />}
-          Create biodata
-        </Button>
-        <Button variant="outline" disabled={creating} onClick={() => setTemplatePromptOpen(true)}>
-          <LayoutTemplate className="mr-2 h-4 w-4" />
-          Choose template
-        </Button>
-        {lastDraft ? (
-          <Button variant="outline" asChild>
-            <Link href={`/biodata/${lastDraft.id}/edit`}>Continue last draft</Link>
-          </Button>
-        ) : null}
-        <Button variant="ghost" asChild>
-          <Link href="/biodata/templates">Browse templates</Link>
-        </Button>
-      </div>
-
-      <Card className="border-[#7027E8]/15 bg-white/70">
+      <Card className="w-full rounded-2xl border-[#eadde7] bg-white/80 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Privacy</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-base text-[#351532]">Privacy</CardTitle>
+          <CardDescription className="text-[#745d70]">
             Studio drafts are private to your account. Before PDF, image, or print export you will
             review which contacts, photo, and sensitive fields to include.
           </CardDescription>
@@ -332,7 +332,7 @@ export function StudioHome() {
               return (
                 <li
                   key={doc.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#7027E8]/15 bg-white px-4 py-3"
+                  className="flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#eadde7] bg-white px-4 py-3 shadow-sm"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-medium">{doc.title}</p>
@@ -432,6 +432,6 @@ export function StudioHome() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageFrame>
   );
 }

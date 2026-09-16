@@ -11,6 +11,7 @@ import { listReceivedLikes, listSentLikes, unlikeProfile, type LikeRow } from "@
 import { listProfilesByIds } from "@/lib/supabase/profiles";
 import type { Profile } from "@/lib/supabase/types";
 import { calculateAge } from "@/lib/utils";
+import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
 
 type InterestList = { status: "ok"; rows: LikeRow[] } | { status: "error"; message: string };
 
@@ -92,7 +93,12 @@ export default function InterestsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <PageFrame>
+      <PageHero
+        eyebrow="Interest inbox"
+        title="Interests"
+        description="Review who has reached out, and track requests you’ve sent."
+      />
       <InterestSection
         title="Received"
         description="Members who have expressed interest in your profile."
@@ -112,7 +118,7 @@ export default function InterestsPage() {
         empty="You have not sent any interests yet."
         onUnlike={handleUnlike}
       />
-    </div>
+    </PageFrame>
   );
 }
 

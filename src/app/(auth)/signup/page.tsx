@@ -115,7 +115,7 @@ export default function SignupPage() {
           and <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
         </p>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form method="post" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="name"

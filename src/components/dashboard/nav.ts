@@ -63,6 +63,7 @@ export function titleForDashboardPath(pathname: string): string {
   if (pathname.startsWith("/dashboard/edit-profile")) return "My profile";
   if (pathname.startsWith("/dashboard/horoscope")) return "Horoscope";
   if (pathname.startsWith("/dashboard/preferences")) return "Partner preferences";
+  if (pathname.startsWith("/onboarding")) return "Complete your profile";
   if (pathname.startsWith("/biodata/templates")) return "Biodata templates";
   if (pathname.startsWith("/biodata") && pathname.includes("/edit")) return "Edit biodata";
   if (pathname.startsWith("/biodata") && pathname.includes("/preview")) return "Preview biodata";

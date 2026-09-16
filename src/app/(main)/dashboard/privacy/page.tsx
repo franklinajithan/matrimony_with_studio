@@ -13,6 +13,7 @@ import { getProfile, setProfilePublished, updateUserProfile } from "@/lib/supaba
 import { draftFromProfile } from "@/lib/onboarding/persist";
 import { formatPhotoPrivacy } from "@/lib/onboarding/readiness";
 import { useToast } from "@/hooks/use-toast";
+import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
 
 const PHOTO_OPTIONS = [
   { id: "members", label: "Visible to members after I publish" },
@@ -109,8 +110,13 @@ export default function PrivacyPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <Card className="border-border">
+    <PageFrame>
+      <PageHero
+        eyebrow="Safety & control"
+        title="Privacy"
+        description="Choose how visible you are in Discover and who can see your photos."
+      />
+      <Card className="rounded-2xl border-[#eadde7] shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg">Profile visibility</CardTitle>
           <CardDescription>
@@ -148,7 +154,7 @@ export default function PrivacyPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-border">
+      <Card className="rounded-2xl border-[#eadde7] shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg">Photo visibility</CardTitle>
           <CardDescription>Choose who can see your photos after you publish.</CardDescription>
@@ -174,7 +180,7 @@ export default function PrivacyPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-border">
+      <Card className="rounded-2xl border-[#eadde7] shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg">Safety</CardTitle>
         </CardHeader>
@@ -182,11 +188,11 @@ export default function PrivacyPage() {
           <p>
             Block and report tools on member profiles control who can contact you. Identity verification is shown only when a member is actually verified.
           </p>
-          <Button asChild variant="outline" className="min-h-11">
+          <Button asChild variant="outline" className="min-h-11 rounded-xl">
             <Link href="/safety">Read safety guidance</Link>
           </Button>
         </CardContent>
       </Card>
-    </div>
+    </PageFrame>
   );
 }

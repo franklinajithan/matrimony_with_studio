@@ -52,6 +52,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
 
 const GALLERY_KEY = "cupidmatch:biodata-gallery";
 const RECENT_KEY = "cupidmatch:biodata-recent-templates";
@@ -336,24 +337,17 @@ export function TemplateGallery() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
-      <header className="space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-[#7027E8]">
-              Biodata Studio
-            </p>
-            <h1 className="text-3xl font-semibold text-[#1a1a1a]">Templates</h1>
-          </div>
-          <Button variant="outline" asChild>
+    <PageFrame>
+      <PageHero
+        eyebrow="Biodata Studio"
+        title="Templates"
+        description="Browse all 20 looks. Favourites sync to your account. Suggestions use only the style, language, and content length you set — never inferred religion."
+        actions={
+          <Button variant="outline" className="rounded-xl border-[#dcc9d8] bg-white/80" asChild>
             <Link href="/biodata">Back to Studio</Link>
           </Button>
-        </div>
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          Browse all 20 looks. Favourites sync to your account. Suggestions use only the style,
-          language, and content length you set — never inferred religion.
-        </p>
-      </header>
+        }
+      />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
@@ -568,6 +562,6 @@ export function TemplateGallery() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageFrame>
   );
 }

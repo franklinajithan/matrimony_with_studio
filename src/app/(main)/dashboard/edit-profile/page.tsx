@@ -61,6 +61,7 @@ import {
   PhotoGalleryEditor,
   type GalleryPhotoItem,
 } from "@/components/profile/PhotoGalleryEditor";
+import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -626,52 +627,57 @@ export default function EditProfilePage() {
   
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit, handleInvalidSubmit)} className="min-h-screen bg-gray-50">
-        {/* Profile Header */}
-        <div className="z-50 bg-white border-b border-gray-200 py-8">
-          <div className="max-w-4xl mx-auto px-4 flex flex-col items-start gap-4">
-            <div className="relative group">
-              <Avatar className="h-40 w-40 border-4 border-gray-200 shadow-lg">
-                <AvatarImage src={profilePhotoPreview || currentProfilePhotoUrl || defaultFirestoreProfile.profilePhotoUrl} alt={form.getValues("fullName") || "User"} data-ai-hint={profilePhotoPreview ? "new upload preview" : currentDataAiHint} />
-                <AvatarFallback className="text-4xl text-gray-700">{form.getValues("fullName")?.substring(0, 2) || "U"}</AvatarFallback>
-              </Avatar>
-              {profilePhotoPreview && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute -top-2 -right-2 h-9 w-9 rounded-full bg-destructive/80 text-destructive-foreground hover:bg-destructive"
-                  onClick={clearProfilePhotoSelection}
-                  aria-label="Clear selected profile photo"
-                  disabled={isSaving || anyEnhancementLoading}
-                >
-                  <XCircle className="h-6 w-6" />
-                </Button>
-              )}
-            </div>
-            <div className="text-left space-y-1">
+      <form onSubmit={form.handleSubmit(onSubmit, handleInvalidSubmit)}>
+        <PageFrame>
+          <PageHero
+            eyebrow="Your profile"
+            title="Edit profile"
+            description="Update how you appear to members. Changes stay private until you save."
+            leading={
+              <div className="relative group shrink-0">
+                <Avatar className="h-20 w-20 border-4 border-white text-lg shadow-md sm:h-24 sm:w-24">
+                  <AvatarImage src={profilePhotoPreview || currentProfilePhotoUrl || defaultFirestoreProfile.profilePhotoUrl} alt={form.getValues("fullName") || "User"} data-ai-hint={profilePhotoPreview ? "new upload preview" : currentDataAiHint} />
+                  <AvatarFallback className="text-2xl text-[#713c78]">{form.getValues("fullName")?.substring(0, 2) || "U"}</AvatarFallback>
+                </Avatar>
+                {profilePhotoPreview && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute -top-2 -right-2 h-8 w-8 rounded-full bg-destructive/80 text-destructive-foreground hover:bg-destructive"
+                    onClick={clearProfilePhotoSelection}
+                    aria-label="Clear selected profile photo"
+                    disabled={isSaving || anyEnhancementLoading}
+                  >
+                    <XCircle className="h-5 w-5" />
+                  </Button>
+                )}
+              </div>
+            }
+          >
+            <div className="mt-3 space-y-2">
               <FormField
                 control={form.control}
                 name="fullName"
                 render={({ field }) => (
                   <FormItem className="mb-0">
                     <FormControl>
-                      <Input {...field} className="text-4xl font-extrabold text-gray-900 border-none bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0" disabled={isSaving || anyEnhancementLoading} />
+                      <Input {...field} className="h-auto border-none bg-transparent p-0 text-xl font-semibold text-[#351532] focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-2xl" disabled={isSaving || anyEnhancementLoading} />
                     </FormControl>
                     <FormMessage className="text-xs text-red-500" />
                   </FormItem>
                 )}
               />
-              <div className="flex flex-col items-start gap-1 text-lg text-gray-600">
+              <div className="flex flex-col gap-1 text-sm text-[#745d70] sm:text-base">
                 <div className="flex items-center gap-2">
-                  <MapPin className="h-6 w-6 text-gray-600" />
+                  <MapPin className="h-4 w-4 shrink-0" />
                   <FormField
                     control={form.control}
                     name="location"
                     render={({ field }) => (
                       <FormItem className="mb-0 flex items-center">
                         <FormControl>
-                          <Input {...field} className="border-none bg-transparent p-0 h-auto w-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-600" placeholder="Add location" disabled={isSaving || anyEnhancementLoading} />
+                          <Input {...field} className="h-auto w-auto border-none bg-transparent p-0 text-[#745d70] focus-visible:ring-0 focus-visible:ring-offset-0" placeholder="Add location" disabled={isSaving || anyEnhancementLoading} />
                         </FormControl>
                         <FormMessage className="text-xs text-red-500" />
                       </FormItem>
@@ -679,14 +685,14 @@ export default function EditProfilePage() {
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <Briefcase className="h-6 w-6 text-gray-600" />
+                  <Briefcase className="h-4 w-4 shrink-0" />
                   <FormField
                     control={form.control}
                     name="profession"
                     render={({ field }) => (
                       <FormItem className="mb-0 flex items-center">
                         <FormControl>
-                          <Input {...field} className="border-none bg-transparent p-0 h-auto w-auto focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-600" placeholder="Add profession" disabled={isSaving || anyEnhancementLoading} />
+                          <Input {...field} className="h-auto w-auto border-none bg-transparent p-0 text-[#745d70] focus-visible:ring-0 focus-visible:ring-offset-0" placeholder="Add profession" disabled={isSaving || anyEnhancementLoading} />
                         </FormControl>
                         <FormMessage className="text-xs text-red-500" />
                       </FormItem>
@@ -694,14 +700,14 @@ export default function EditProfilePage() {
                   />
                 </div>
               </div>
-              <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2.5">
+              <div className="mt-2 flex flex-wrap items-center gap-3 rounded-xl border border-[#eadce5] bg-white/70 px-3 py-2.5">
                 <Checkbox
                   id="profile-visible"
                   checked={isProfileVisible}
                   disabled={isSaving || visibilitySaving || anyEnhancementLoading}
                   onCheckedChange={(value) => void handleVisibilityChange(value === true)}
                 />
-                <Label htmlFor="profile-visible" className="flex cursor-pointer items-center gap-2 text-sm font-medium text-foreground">
+                <Label htmlFor="profile-visible" className="flex cursor-pointer items-center gap-2 text-sm font-medium text-[#351532]">
                   {isProfileVisible ? (
                     <Eye className="h-4 w-4 text-primary" aria-hidden />
                   ) : (
@@ -710,18 +716,16 @@ export default function EditProfilePage() {
                   {isProfileVisible ? "Visible in Discover" : "Invisible — hidden from Discover"}
                 </Label>
                 {visibilitySaving ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
-                <Button asChild variant="outline" size="sm" className="ml-auto">
+                <Button asChild variant="outline" size="sm" className="ml-auto rounded-xl border-[#dcc9d8]">
                   <Link href="/biodata">Biodata Studio</Link>
                 </Button>
               </div>
             </div>
-          </div>
-        </div>
+          </PageHero>
 
         {/* Main Content */}
-        <div className="max-w-4xl mx-auto px-4 py-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-4 rounded-xl">
               <TabsTrigger value="about">About</TabsTrigger>
               <TabsTrigger value="photos">Photos</TabsTrigger>
               <TabsTrigger value="interests">Interests</TabsTrigger>
@@ -1242,21 +1246,15 @@ export default function EditProfilePage() {
               </Card>
             </TabsContent>
           </Tabs>
-        </div>
 
-        {/* Save Changes Button at the bottom */}
-        <div className="max-w-4xl mx-auto px-4 py-6 mt-4">
-          <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-md" disabled={isSaving || !profileDataLoaded || anyEnhancementLoading}>
+          <Button type="submit" className="w-full rounded-xl bg-primary text-primary-foreground shadow-md hover:bg-primary/90" disabled={isSaving || !profileDataLoaded || anyEnhancementLoading}>
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save Changes
           </Button>
-        </div>
 
-        {/* Danger Zone */}
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <Card className="border-destructive/50">
+          <Card className="rounded-2xl border-destructive/50 shadow-sm">
             <CardHeader>
-              <CardTitle className="font-headline text-2xl text-destructive flex items-center">
+              <CardTitle className="font-headline flex items-center text-2xl text-destructive">
                 <AlertTriangle className="mr-2 h-6 w-6" />
                 Danger Zone
               </CardTitle>
@@ -1265,7 +1263,7 @@ export default function EditProfilePage() {
             <CardContent>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="destructive" className="w-full" disabled={isSaving || anyEnhancementLoading}>
+                  <Button variant="destructive" className="w-full rounded-xl" disabled={isSaving || anyEnhancementLoading}>
                     Deactivate Account
                   </Button>
                 </AlertDialogTrigger>
@@ -1282,10 +1280,10 @@ export default function EditProfilePage() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-              <p className="mt-2 text-xs text-muted-foreground text-center">Please be certain before deactivating your account.</p>
+              <p className="mt-2 text-center text-xs text-muted-foreground">Please be certain before deactivating your account.</p>
             </CardContent>
           </Card>
-        </div>
+        </PageFrame>
       </form>
     </Form>
   );

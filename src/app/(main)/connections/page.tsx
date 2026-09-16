@@ -24,6 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
 
 interface ConnectionWithProfile {
   id: string;
@@ -161,35 +162,37 @@ export default function ConnectionsPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-violet-600" />
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto max-w-4xl px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Connections
-          </h1>
-          <p className="mt-2 text-gray-600">
-            {connections.length} {connections.length === 1 ? "connection" : "connections"}
-          </p>
-        </div>
+    <PageFrame>
+      <PageHero
+        eyebrow="Your circle"
+        title="Connections"
+        description={
+          <>
+            {connections.length}{" "}
+            {connections.length === 1 ? "connection" : "connections"} — people you&apos;ve mutually
+            matched with.
+          </>
+        }
+      />
 
         {connections.length === 0 ? (
-          <Card>
+          <Card className="rounded-2xl border-[#eadde7] shadow-sm">
             <CardContent className="py-12 text-center">
-              <Users className="mx-auto h-12 w-12 text-gray-300" />
-              <p className="mt-4 text-gray-600">
+              <Users className="mx-auto h-12 w-12 text-[#d4c0ce]" />
+              <p className="mt-4 text-[#745d70]">
                 No connections yet
               </p>
-              <p className="mt-2 text-sm text-gray-500">
-                When you accept an interest, you'll see them here.
+              <p className="mt-2 text-sm text-[#9b668f]">
+                When you accept an interest, you&apos;ll see them here.
               </p>
-              <Button className="mt-4" asChild>
+              <Button className="mt-4 rounded-xl" asChild>
                 <Link href="/interests">View Interests</Link>
               </Button>
             </CardContent>
@@ -197,27 +200,27 @@ export default function ConnectionsPage() {
         ) : (
           <div className="space-y-4">
             {connections.map((connection) => (
-              <Card key={connection.id}>
+              <Card key={connection.id} className="rounded-2xl border-[#eadde7] shadow-sm">
                 <CardContent className="flex items-center justify-between p-6">
                   <div className="flex items-center gap-4">
                     <Avatar className="h-16 w-16">
                       <AvatarImage src={connection.profile?.photoURL || ""} />
-                      <AvatarFallback className="bg-violet-100 text-violet-700">
+                      <AvatarFallback className="bg-[#f5eafa] text-[#713c78]">
                         {connection.profile?.displayName.charAt(0).toUpperCase() || "U"}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <h3 className="font-semibold text-gray-900">
+                      <h3 className="font-semibold text-[#351532]">
                         {connection.profile?.displayName || "User"}
                         {connection.profile?.ageYears && `, ${connection.profile.ageYears}`}
                       </h3>
                       {connection.profile?.profession && (
-                        <p className="text-sm text-gray-600">{connection.profile.profession}</p>
+                        <p className="text-sm text-[#745d70]">{connection.profile.profession}</p>
                       )}
                       {connection.profile?.location && (
-                        <p className="text-sm text-gray-500">{connection.profile.location}</p>
+                        <p className="text-sm text-[#9b668f]">{connection.profile.location}</p>
                       )}
-                      <p className="mt-1 text-xs text-gray-400">
+                      <p className="mt-1 text-xs text-[#b09aaa]">
                         Connected {formatDistanceToNow(connection.connectedAt, { addSuffix: true })}
                       </p>
                     </div>
@@ -226,6 +229,7 @@ export default function ConnectionsPage() {
                     <Button
                       variant="outline"
                       size="sm"
+                      className="rounded-xl border-[#dcc9d8]"
                       asChild
                     >
                       <Link href={`/profile/${connection.otherUserId}`}>
@@ -270,7 +274,6 @@ export default function ConnectionsPage() {
             ))}
           </div>
         )}
-      </div>
-    </div>
+    </PageFrame>
   );
 }

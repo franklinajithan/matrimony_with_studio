@@ -88,30 +88,18 @@ export function LandingHero() {
             aria-hidden="true"
           />
 
-          <figure className="relative overflow-hidden rounded-2xl shadow-[0_20px_44px_rgba(45,20,60,0.16)]">
+          <figure className="relative overflow-hidden rounded-2xl bg-white shadow-[0_20px_44px_rgba(45,20,60,0.12)] ring-1 ring-white/80">
             <div className="relative aspect-[3/4] w-full">
               <Image
                 src={HERO_IMAGE}
                 alt="A Sri Lankan woman in traditional attire welcoming you with a warm namaste"
                 fill
                 priority
-                sizes="400px"
-                className="object-cover object-[center_18%]"
-              />
-              <div
-                className="absolute inset-0 bg-gradient-to-t from-[#2C1524]/75 via-[#2C1524]/15 to-transparent"
-                aria-hidden="true"
+                quality={95}
+                sizes="(max-width: 1024px) 90vw, 800px"
+                className="object-cover object-[center_18%] brightness-[1.06] contrast-[1.02] saturate-[1.04]"
               />
             </div>
-
-            <figcaption className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
-              <p className="font-serif text-xl font-semibold tracking-wide text-white sm:text-2xl">
-                Ayubowan · Vanakkam
-              </p>
-              <p className="mt-1 max-w-sm text-xs leading-5 text-white/90 sm:text-sm">
-                Welcome — find someone who shares your roots, language, and future.
-              </p>
-            </figcaption>
           </figure>
 
           <div className="relative mt-5 grid grid-cols-2 gap-3">

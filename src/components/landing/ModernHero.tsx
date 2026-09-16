@@ -102,11 +102,12 @@ export function ModernHero() {
               <div className="relative h-[240px] sm:h-[280px] lg:h-[300px]">
                 <Image
                   src={HERO_IMAGE}
-                  alt="Sample profile portrait of a woman in traditional attire"
+                  alt="Welcome portrait — woman in traditional attire greeting with namaste"
                   fill
                   priority
-                  sizes="(max-width: 1024px) 420px, 480px"
-                  className="object-cover object-[center_18%]"
+                  quality={95}
+                  sizes="(max-width: 1024px) 90vw, 800px"
+                  className="object-cover object-[center_20%]"
                 />
               </div>
             </div>

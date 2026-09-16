@@ -54,8 +54,18 @@ function callbackUrl(next: string): string {
 }
 
 async function hydrateSession() {
-  const { data } = await supabase.auth.getSession();
-  cachedUser = mapUser(data.session?.user ?? null);
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      console.warn("Auth session hydrate failed:", error.message);
+      cachedUser = null;
+      return;
+    }
+    cachedUser = mapUser(data.session?.user ?? null);
+  } catch (error) {
+    console.warn("Auth session hydrate error:", error);
+    cachedUser = null;
+  }
 }
 
 export const auth = {
@@ -77,8 +87,13 @@ export function onAuthStateChanged(authOrCallback: unknown, maybeCallback?: Auth
   const callback = (typeof authOrCallback === "function" ? authOrCallback : maybeCallback) as AuthCallback;
   let active = true;
   const emit = async () => {
-    if (!authReady) authReady = hydrateSession();
-    await authReady;
+    try {
+      if (!authReady) authReady = hydrateSession();
+      await authReady;
+    } catch {
+      cachedUser = null;
+      authReady = Promise.resolve();
+    }
     if (active) callback(cachedUser);
   };
   void emit();
