@@ -9,6 +9,7 @@ import { defaultDesignForTemplate } from "@/lib/biodata/defaults";
 import { DocumentRenderer } from "@/components/biodata/DocumentRenderer";
 
 export const robots = { index: false, follow: false };
+const SHARE_CARD_VERSION = "2";
 
 type PageProps = {
   params: Promise<{ token: string }>;
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const safeName = findSafeName(content);
   const title = safeName ? `${safeName}'s Biodata | CupidMatch` : "Shared Biodata | CupidMatch";
   const description = "A private biodata shared securely through CupidMatch.";
-  const imageUrl = `/share/biodata/${encodeURIComponent(token)}/opengraph-image`;
+  const imageUrl = `/share/biodata/${encodeURIComponent(token)}/opengraph-image?v=${SHARE_CARD_VERSION}`;
 
   return {
     title,
