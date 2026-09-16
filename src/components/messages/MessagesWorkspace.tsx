@@ -7,18 +7,19 @@ import {
   ArrowLeft,
   Check,
   CheckCheck,
+  Info,
   Image as ImageIcon,
   Loader2,
   MessageCircle,
-  Mic,
-  MoreVertical,
   Phone,
+  Plus,
   Search,
   SendHorizonal,
   Smile,
+  ThumbsUp,
   Video,
 } from "lucide-react";
-import { format, formatDistanceToNowStrict, isToday, isYesterday } from "date-fns";
+import { format, isToday, isYesterday } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -403,20 +404,30 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
   }
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[#efeae2]">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-background">
       <div className="flex min-h-0 flex-1 bg-background">
         {/* Conversation list */}
         <aside
           className={cn(
-            "flex w-full flex-col border-r border-border bg-background md:w-[360px] lg:w-[400px]",
+            "flex w-full flex-col border-r border-border/70 bg-background md:w-[340px] lg:w-[360px]",
             selectedChatId ? "hidden md:flex" : "flex"
           )}
         >
-          <div className="border-b border-border bg-[#f0f2f5] px-4 py-3 dark:bg-muted/40">
-            <div className="mb-3 flex items-center justify-between">
-              <h1 className="text-xl font-semibold text-foreground">Chats</h1>
-              <Button asChild variant="ghost" size="sm" className="text-primary">
-                <Link href="/discover">Find people</Link>
+          <div className="border-b border-border/60 bg-background px-4 pb-3 pt-4">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">Chats</h1>
+                <p className="mt-0.5 text-xs text-muted-foreground">Your CupidMatch conversations</p>
+              </div>
+              <Button
+                asChild
+                variant="secondary"
+                size="icon"
+                className="h-10 w-10 rounded-full bg-primary/10 text-primary hover:bg-primary/15"
+              >
+                <Link href="/discover" aria-label="Find people" title="Find people">
+                  <Plus className="h-5 w-5" />
+                </Link>
               </Button>
             </div>
             <div className="relative">
@@ -425,7 +436,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search or start a new chat"
-                className="h-10 rounded-lg border-0 bg-background pl-9 shadow-none focus-visible:ring-1"
+                className="h-10 rounded-full border-0 bg-muted/70 pl-9 pr-4 shadow-none focus-visible:ring-2 focus-visible:ring-primary/30"
               />
             </div>
           </div>
@@ -460,21 +471,22 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                     type="button"
                     onClick={() => openChat(convo.id)}
                     className={cn(
-                      "flex w-full items-center gap-3 border-b border-border/60 px-4 py-3 text-left transition-colors hover:bg-muted/50",
-                      active && "bg-[#f0f2f5] dark:bg-muted/60"
+                      "relative flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted/60",
+                      active && "bg-primary/[0.08]"
                     )}
                   >
-                    <Avatar className="h-12 w-12">
+                    {active ? <span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-primary" /> : null}
+                    <Avatar className="h-14 w-14 border border-border/50">
                       <AvatarImage src={convo.otherUserAvatar} alt="" />
                       <AvatarFallback>{initials(convo.otherUserName)}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline justify-between gap-2">
-                        <p className="truncate font-medium text-foreground">{convo.otherUserName}</p>
+                        <p className="truncate font-semibold text-foreground">{convo.otherUserName}</p>
                         <span
                           className={cn(
                             "shrink-0 text-[11px]",
-                            convo.unreadCount > 0 ? "font-semibold text-emerald-600" : "text-muted-foreground"
+                            convo.unreadCount > 0 ? "font-semibold text-primary" : "text-muted-foreground"
                           )}
                         >
                           {convo.timestampLabel}
@@ -492,7 +504,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                           {preview}
                         </p>
                         {convo.unreadCount > 0 ? (
-                          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1.5 text-[11px] font-semibold text-white">
+                          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
                             {convo.unreadCount > 99 ? "99+" : convo.unreadCount}
                           </span>
                         ) : null}
@@ -513,10 +525,10 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
           )}
         >
           {!selectedConversation ? (
-            <div className="flex flex-1 flex-col bg-[#f0f2f5] dark:bg-muted/30">
+            <div className="flex flex-1 flex-col bg-background">
               {selectedChatId ? (
                 <>
-                  <header className="flex items-center gap-2 border-b border-border bg-[#f0f2f5] px-3 py-2.5 dark:bg-muted/40">
+                  <header className="flex items-center gap-2 border-b border-border/60 bg-background px-3 py-2.5">
                     <Button
                       type="button"
                       variant="ghost"
@@ -535,19 +547,24 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                 </>
               ) : (
                 <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-                  <div className="max-w-md rounded-2xl border border-border/70 bg-background px-8 py-10 shadow-sm">
-                    <MessageCircle className="mx-auto h-14 w-14 text-primary/80" />
-                    <h2 className="mt-4 text-2xl font-semibold tracking-tight">CupidMatch Messages</h2>
+                  <div className="max-w-md px-8 py-10">
+                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/20">
+                      <MessageCircle className="h-10 w-10 text-white" />
+                    </div>
+                    <h2 className="mt-5 text-2xl font-bold tracking-tight">Your conversations</h2>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      Pick a conversation to chat in real time — just like WhatsApp or Messenger.
+                      Choose a connection from the left to start a private conversation.
                     </p>
+                    <Button asChild className="mt-6 rounded-full px-6">
+                      <Link href="/discover">Discover people</Link>
+                    </Button>
                   </div>
                 </div>
               )}
             </div>
           ) : (
             <>
-              <header className="flex items-center gap-3 border-b border-border bg-[#f0f2f5] px-3 py-2.5 dark:bg-muted/40">
+              <header className="z-10 flex items-center gap-3 border-b border-border/60 bg-background px-3 py-2.5 shadow-[0_1px_4px_rgba(0,0,0,0.04)] sm:px-4">
                 <Button
                   type="button"
                   variant="ghost"
@@ -570,28 +587,20 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                     <p className="truncate font-semibold text-foreground">
                       {selectedConversation.otherUserName}
                     </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      Tap to view profile
-                      {selectedConversation.originalTimestamp
-                        ? ` · last active ${formatDistanceToNowStrict(
-                            selectedConversation.originalTimestamp.toDate(),
-                            { addSuffix: true }
-                          )}`
-                        : ""}
-                    </p>
+                    <p className="truncate text-xs text-muted-foreground">CupidMatch connection · View profile</p>
                   </div>
                 </Link>
                 <div className="flex items-center gap-0.5">
-                  <Button variant="ghost" size="icon" className="hidden sm:inline-flex" disabled title="Coming soon">
-                    <Video className="h-5 w-5 text-muted-foreground" />
+                  <Button variant="ghost" size="icon" className="hidden rounded-full text-primary sm:inline-flex" disabled title="Video calling coming soon">
+                    <Video className="h-5 w-5" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="hidden sm:inline-flex" disabled title="Coming soon">
-                    <Phone className="h-5 w-5 text-muted-foreground" />
+                  <Button variant="ghost" size="icon" className="hidden rounded-full text-primary sm:inline-flex" disabled title="Voice calling coming soon">
+                    <Phone className="h-5 w-5" />
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" aria-label="Chat options">
-                        <MoreVertical className="h-5 w-5" />
+                        <Info className="h-5 w-5 text-primary" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -606,31 +615,26 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                 </div>
               </header>
 
-              <div
-                className="relative flex-1 overflow-y-auto px-3 py-4 sm:px-6"
-                style={{
-                  backgroundColor: "#efeae2",
-                  backgroundImage:
-                    "radial-gradient(rgba(0,0,0,0.04) 1px, transparent 1px)",
-                  backgroundSize: "18px 18px",
-                }}
-              >
+              <div className="relative flex-1 overflow-y-auto bg-background px-3 py-4 sm:px-6">
                 {isLoadingMessages ? (
                   <div className="flex h-full items-center justify-center">
                     <Loader2 className="h-7 w-7 animate-spin text-primary" />
                   </div>
                 ) : messages.length === 0 ? (
-                  <div className="mx-auto mt-10 max-w-sm rounded-2xl bg-white/90 px-5 py-6 text-center shadow-sm">
+                  <div className="mx-auto mt-10 max-w-sm rounded-3xl bg-muted/60 px-5 py-7 text-center">
                     <p className="text-sm font-medium text-foreground">No messages yet</p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       Say hello and start a warm conversation.
                     </p>
                   </div>
                 ) : (
-                  <div className="mx-auto flex max-w-3xl flex-col gap-1">
+                  <div className="mx-auto flex max-w-3xl flex-col gap-0.5">
                     {messages.map((message, index) => {
                       const mine = message.senderId === currentUser.uid;
                       const prev = messages[index - 1];
+                      const next = messages[index + 1];
+                      const startsGroup = !prev || prev.senderId !== message.senderId;
+                      const endsGroup = !next || next.senderId !== message.senderId;
                       const showDate =
                         !prev?.timestamp ||
                         !message.timestamp ||
@@ -641,24 +645,42 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                         <React.Fragment key={message.id}>
                           {showDate && message.timestamp ? (
                             <div className="my-3 flex justify-center">
-                              <span className="rounded-lg bg-white/90 px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground shadow-sm">
+                              <span className="rounded-full bg-muted px-3 py-1 text-[11px] font-medium text-muted-foreground">
                                 {dateChipLabel(message.timestamp.toDate())}
                               </span>
                             </div>
                           ) : null}
-                          <div className={cn("flex", mine ? "justify-end" : "justify-start")}>
+                          <div
+                            className={cn(
+                              "flex items-end gap-2",
+                              mine ? "justify-end" : "justify-start",
+                              startsGroup && "mt-2"
+                            )}
+                          >
+                            {!mine ? (
+                              endsGroup ? (
+                                <Avatar className="h-7 w-7 shrink-0">
+                                  <AvatarImage src={selectedConversation.otherUserAvatar} alt="" />
+                                  <AvatarFallback className="text-[9px]">{initials(selectedConversation.otherUserName)}</AvatarFallback>
+                                </Avatar>
+                              ) : (
+                                <span className="h-7 w-7 shrink-0" aria-hidden="true" />
+                              )
+                            ) : null}
                             <div
                               className={cn(
-                                "relative max-w-[85%] rounded-2xl px-3 py-2 text-[15px] leading-5 shadow-sm sm:max-w-[70%]",
+                                "relative max-w-[82%] rounded-[20px] px-3.5 py-2 text-[15px] leading-5 sm:max-w-[70%]",
                                 mine
-                                  ? "rounded-br-md bg-[#d9fdd3] text-foreground"
-                                  : "rounded-bl-md bg-white text-foreground",
+                                  ? "bg-gradient-to-br from-violet-600 to-fuchsia-500 text-white"
+                                  : "bg-[#f0f2f5] text-[#050505]",
+                                mine && endsGroup && "rounded-br-md",
+                                !mine && endsGroup && "rounded-bl-md",
                                 message.failed && "opacity-70 ring-1 ring-destructive/40"
                               )}
                             >
                               <p className="whitespace-pre-wrap break-words">{message.text}</p>
-                              <div className="mt-1 flex items-center justify-end gap-1">
-                                <span className="text-[10px] text-muted-foreground">
+                              <div className={cn("mt-1 items-center justify-end gap-1", endsGroup ? "flex" : "hidden")}>
+                                <span className={cn("text-[10px]", mine ? "text-white/75" : "text-muted-foreground")}>
                                   {message.pending
                                     ? "Sending…"
                                     : message.failed
@@ -667,9 +689,9 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                                 </span>
                                 {mine && !message.pending && !message.failed ? (
                                   message.isRead ? (
-                                    <CheckCheck className="h-3.5 w-3.5 text-sky-500" aria-label="Read" />
+                                    <CheckCheck className="h-3.5 w-3.5 text-white/90" aria-label="Read" />
                                   ) : (
-                                    <Check className="h-3.5 w-3.5 text-muted-foreground" aria-label="Sent" />
+                                    <Check className="h-3.5 w-3.5 text-white/75" aria-label="Sent" />
                                   )
                                 ) : null}
                               </div>
@@ -683,12 +705,22 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                 )}
               </div>
 
-              <footer className="shrink-0 border-t border-border bg-[#f0f2f5] px-2 py-2 dark:bg-muted/40 sm:px-3">
+              <footer className="shrink-0 border-t border-border/60 bg-background px-2 py-2 sm:px-3">
                 <div className="mx-auto flex max-w-3xl items-end gap-1.5 sm:gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="mb-0.5 hidden shrink-0 rounded-full text-primary sm:inline-flex"
+                    disabled
+                    title="Attachments coming soon"
+                  >
+                    <Plus className="h-5 w-5" />
+                  </Button>
                   <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
                     <PopoverTrigger asChild>
-                      <Button type="button" variant="ghost" size="icon" className="mb-0.5 shrink-0 rounded-full">
-                        <Smile className="h-5 w-5 text-muted-foreground" />
+                      <Button type="button" variant="ghost" size="icon" className="mb-0.5 shrink-0 rounded-full text-primary">
+                        <Smile className="h-5 w-5" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-2" align="start">
@@ -711,11 +743,11 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="mb-0.5 hidden shrink-0 rounded-full sm:inline-flex"
+                    className="mb-0.5 hidden shrink-0 rounded-full text-primary sm:inline-flex"
                     disabled
                     title="Photo sharing coming soon"
                   >
-                    <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                    <ImageIcon className="h-5 w-5" />
                   </Button>
 
                   <div className="relative min-w-0 flex-1">
@@ -726,7 +758,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                       onKeyDown={onComposerKeyDown}
                       placeholder="Type a message"
                       rows={1}
-                      className="max-h-[140px] min-h-[44px] resize-none rounded-2xl border-0 bg-background px-4 py-3 text-[15px] shadow-none focus-visible:ring-1"
+                      className="max-h-[140px] min-h-[44px] resize-none rounded-[22px] border-0 bg-muted/70 px-4 py-3 text-[15px] shadow-none focus-visible:ring-2 focus-visible:ring-primary/30"
                     />
                   </div>
 
@@ -734,7 +766,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                     <Button
                       type="button"
                       size="icon"
-                      className="mb-0.5 h-11 w-11 shrink-0 rounded-full bg-[#00a884] hover:bg-[#008f72]"
+                      className="mb-0.5 h-11 w-11 shrink-0 rounded-full bg-primary hover:bg-primary/90"
                       onClick={() => void handleSend()}
                       disabled={isSending}
                       aria-label="Send message"
@@ -752,9 +784,9 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                       size="icon"
                       className="mb-0.5 h-11 w-11 shrink-0 rounded-full"
                       disabled
-                      title="Voice notes coming soon"
+                      title="Quick reactions coming soon"
                     >
-                      <Mic className="h-5 w-5 text-muted-foreground" />
+                      <ThumbsUp className="h-5 w-5 text-primary" />
                     </Button>
                   )}
                 </div>
