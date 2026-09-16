@@ -314,63 +314,67 @@ export default function InterestsPage() {
             ) : (
               receivedInterests.map((interest) => (
                 <Card key={interest.id}>
-                  <CardContent className="flex items-center justify-between p-6">
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={interest.profile?.photoURL || ""} />
-                        <AvatarFallback className="bg-violet-100 text-violet-700">
-                          {interest.profile?.displayName.charAt(0).toUpperCase() || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">
-                          {interest.profile?.displayName || "User"}
-                          {interest.profile?.ageYears && `, ${interest.profile.ageYears}`}
-                        </h3>
-                        {interest.profile?.profession && (
-                          <p className="text-sm text-gray-600">{interest.profile.profession}</p>
-                        )}
-                        {interest.profile?.location && (
-                          <p className="text-sm text-gray-500">{interest.profile.location}</p>
-                        )}
-                        <p className="mt-1 text-xs text-gray-400">
-                          Received {formatDistanceToNow(interest.createdAt, { addSuffix: true })}
-                        </p>
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <Avatar className="h-14 w-14 sm:h-16 sm:w-16 shrink-0">
+                          <AvatarImage src={interest.profile?.photoURL || ""} />
+                          <AvatarFallback className="bg-violet-100 text-violet-700">
+                            {interest.profile?.displayName.charAt(0).toUpperCase() || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-gray-900 truncate">
+                            {interest.profile?.displayName || "User"}
+                            {interest.profile?.ageYears && `, ${interest.profile.ageYears}`}
+                          </h3>
+                          {interest.profile?.profession && (
+                            <p className="text-sm text-gray-600 truncate">{interest.profile.profession}</p>
+                          )}
+                          {interest.profile?.location && (
+                            <p className="text-sm text-gray-500 truncate">{interest.profile.location}</p>
+                          )}
+                          <p className="mt-1 text-xs text-gray-400">
+                            Received {formatDistanceToNow(interest.createdAt, { addSuffix: true })}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                      >
-                        <Link href={`/profile/${interest.senderUid}`}>
-                          View Profile
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDecline(interest.id)}
-                        disabled={processingAction[interest.id]}
-                      >
-                        {processingAction[interest.id] ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <X className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => handleAccept(interest.id, interest.senderUid)}
-                        disabled={processingAction[interest.id]}
-                      >
-                        {processingAction[interest.id] ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Check className="h-4 w-4" />
-                        )}
-                      </Button>
+                      <div className="flex gap-2 sm:shrink-0">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 sm:flex-none"
+                          asChild
+                        >
+                          <Link href={`/profile/${interest.senderUid}`}>
+                            View Profile
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDecline(interest.id)}
+                          disabled={processingAction[interest.id]}
+                        >
+                          {processingAction[interest.id] ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <X className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleAccept(interest.id, interest.senderUid)}
+                          disabled={processingAction[interest.id]}
+                          className="bg-violet-600 hover:bg-violet-700"
+                        >
+                          {processingAction[interest.id] ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Check className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -397,55 +401,59 @@ export default function InterestsPage() {
             ) : (
               sentInterests.map((interest) => (
                 <Card key={interest.id}>
-                  <CardContent className="flex items-center justify-between p-6">
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={interest.profile?.photoURL || ""} />
-                        <AvatarFallback className="bg-violet-100 text-violet-700">
-                          {interest.profile?.displayName.charAt(0).toUpperCase() || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">
-                          {interest.profile?.displayName || "User"}
-                          {interest.profile?.ageYears && `, ${interest.profile.ageYears}`}
-                        </h3>
-                        {interest.profile?.profession && (
-                          <p className="text-sm text-gray-600">{interest.profile.profession}</p>
-                        )}
-                        <div className="mt-1 flex items-center gap-2">
-                          <Badge variant={interest.status === "pending" ? "secondary" : "outline"}>
-                            {interest.status}
-                          </Badge>
-                          <p className="text-xs text-gray-400">
-                            {formatDistanceToNow(interest.createdAt, { addSuffix: true })}
-                          </p>
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <Avatar className="h-14 w-14 sm:h-16 sm:w-16 shrink-0">
+                          <AvatarImage src={interest.profile?.photoURL || ""} />
+                          <AvatarFallback className="bg-violet-100 text-violet-700">
+                            {interest.profile?.displayName.charAt(0).toUpperCase() || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-gray-900 truncate">
+                            {interest.profile?.displayName || "User"}
+                            {interest.profile?.ageYears && `, ${interest.profile.ageYears}`}
+                          </h3>
+                          {interest.profile?.profession && (
+                            <p className="text-sm text-gray-600 truncate">{interest.profile.profession}</p>
+                          )}
+                          <div className="mt-1 flex items-center gap-2 flex-wrap">
+                            <Badge variant={interest.status === "pending" ? "secondary" : "outline"} className="shrink-0">
+                              {interest.status}
+                            </Badge>
+                            <p className="text-xs text-gray-400 truncate">
+                              {formatDistanceToNow(interest.createdAt, { addSuffix: true })}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                      >
-                        <Link href={`/profile/${interest.receiverUid}`}>
-                          View Profile
-                        </Link>
-                      </Button>
-                      {interest.status === "pending" && (
+                      <div className="flex gap-2 sm:shrink-0">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
-                          onClick={() => handleWithdraw(interest.id)}
-                          disabled={processingAction[interest.id]}
+                          className="flex-1 sm:flex-none"
+                          asChild
                         >
-                          {processingAction[interest.id] ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : null}
-                          Withdraw
+                          <Link href={`/profile/${interest.receiverUid}`}>
+                            View Profile
+                          </Link>
                         </Button>
-                      )}
+                        {interest.status === "pending" && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="flex-1 sm:flex-none"
+                            onClick={() => handleWithdraw(interest.id)}
+                            disabled={processingAction[interest.id]}
+                          >
+                            {processingAction[interest.id] ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : null}
+                            Withdraw
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
