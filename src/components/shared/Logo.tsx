@@ -28,15 +28,15 @@ function resolveSize(size: LogoSize | undefined, iconSize: number | undefined): 
 }
 
 const SIZE_CLASS: Record<LogoSize, string> = {
-  sm: "h-9 w-auto sm:h-10",
-  md: "h-10 w-auto sm:h-11 md:h-12",
-  lg: "h-11 w-auto sm:h-12 md:h-14",
+  sm: "h-10 w-auto sm:h-11",
+  md: "h-11 w-auto sm:h-12 md:h-14",
+  lg: "h-12 w-auto sm:h-14 md:h-16",
 };
 
 const SIZE_PX: Record<LogoSize, { width: number; height: number }> = {
-  sm: { width: 200, height: 40 },
-  md: { width: 260, height: 48 },
-  lg: { width: 320, height: 56 },
+  sm: { width: 220, height: 44 },
+  md: { width: 280, height: 56 },
+  lg: { width: 340, height: 68 },
 };
 
 export function Logo({
@@ -65,7 +65,7 @@ export function Logo({
         alt="CupidMatch"
         width={dims.width}
         height={dims.height}
-        className={cn(SIZE_CLASS[resolved], "max-w-[min(100%,280px)] object-contain object-left", onDark && "brightness-0 invert")}
+        className={cn(SIZE_CLASS[resolved], "max-w-full object-contain object-left", onDark && "brightness-0 invert")}
         priority
       />
     </Link>

@@ -136,8 +136,8 @@ function SidebarBody({
 }) {
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-border px-4 py-5">
-        <Logo href="/dashboard" size="md" />
+      <div className="border-b border-border px-4 py-4">
+        <Logo href="/dashboard" size="md" className="ml-0" />
       </div>
       <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Dashboard">
         <NavList items={dashboardPrimaryNav} pathname={pathname} onNavigate={onNavigate} badges={badges} />
