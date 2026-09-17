@@ -1,0 +1,1 @@
+Safe deployment behavior without Stripe: pricing can render, entitlement APIs work, Free members remain Free, admins can inspect authorized billing data after migrations, and payment endpoints remain unavailable. There is no code path that silently upgrades a member because billing is missing.
