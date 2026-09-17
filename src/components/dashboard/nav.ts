@@ -32,7 +32,7 @@ export const dashboardAccountNav: DashboardNavItem[] = [
   { href: "/dashboard/edit-profile", label: "My profile", icon: UserCircle, match: "prefix" },
   { href: "/biodata", label: "Biodata Studio", icon: FileText, match: "prefix" },
   { href: "/dashboard/horoscope", label: "Horoscope", icon: Sparkles, match: "prefix" },
-  { href: "/onboarding?step=2", label: "Partner preferences", icon: SlidersHorizontal, match: "prefix" },
+  { href: "/dashboard/preferences", label: "Partner preferences", icon: SlidersHorizontal, match: "prefix" },
   { href: "/dashboard/privacy", label: "Privacy and safety", icon: Shield, match: "prefix" },
   { href: "/pricing", label: "Subscription", icon: CreditCard, match: "prefix" },
 ];
