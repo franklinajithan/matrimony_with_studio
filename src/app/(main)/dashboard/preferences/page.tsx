@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, Loader2, Save, Sparkles } from "lucide-react";
+import { ChevronDown, Heart, Loader2, Save, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,141 +21,31 @@ const GENDERS = ["Woman", "Man", "Non-binary", "No preference"];
 const MARITAL = ["Never married", "Divorced", "Widowed", "Separated", "No preference"];
 const HABITS = ["Never", "Occasionally", "Socially", "Prefer not to say"];
 
-type PreferenceForm = PartnerPreferences & {
-  gender: string;
-  maritalStatuses: string[];
-  heightMin: string;
-  heightMax: string;
-  education: string[];
-  relocation: string;
-  wantsChildren: string;
-  familyInvolvement: string;
-  marriageTimeline: string;
-  mustHaves: string[];
-};
-
-const EMPTY: PreferenceForm = {
-  ageMin: 25, ageMax: 35, gender: "No preference", countries: [], languages: [], religions: [], professions: [],
-  smoking: [], drinking: [], maritalStatuses: [], heightMin: "", heightMax: "", education: [], relocation: "",
-  wantsChildren: "", familyInvolvement: "", marriageTimeline: "", mustHaves: [],
-};
-
+type PreferenceForm = PartnerPreferences & { gender: string; maritalStatuses: string[]; heightMin: string; heightMax: string; education: string[]; relocation: string; wantsChildren: string; familyInvolvement: string; marriageTimeline: string; mustHaves: string[]; };
+const EMPTY: PreferenceForm = { ageMin: 25, ageMax: 35, gender: "No preference", countries: [], languages: [], religions: [], professions: [], smoking: [], drinking: [], maritalStatuses: [], heightMin: "", heightMax: "", education: [], relocation: "", wantsChildren: "", familyInvolvement: "", marriageTimeline: "", mustHaves: [] };
 const list = (value: unknown) => Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
 
 export default function PartnerPreferencesPage() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [userId, setUserId] = useState<string | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [form, setForm] = useState<PreferenceForm>(EMPTY);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => onAuthStateChanged(auth, (user) => {
-    if (!user) { router.replace("/login?next=/dashboard/preferences"); return; }
-    setUserId(user.uid);
-    void getProfile(user.uid).then((p) => {
-      if (!p) return;
-      setProfile(p);
-      const basic = partnerPreferencesFromProfile(p);
-      const extra = ((p.extra || {}) as Record<string, any>).partnerPreferences || {};
-      setForm({
-        ...EMPTY, ...basic,
-        gender: String(extra.gender || "No preference"),
-        maritalStatuses: list(extra.maritalStatuses),
-        heightMin: String(extra.heightMin || ""), heightMax: String(extra.heightMax || ""),
-        education: list(extra.education), relocation: String(extra.relocation || ""),
-        wantsChildren: String(extra.wantsChildren || ""), familyInvolvement: String(extra.familyInvolvement || ""),
-        marriageTimeline: String(extra.marriageTimeline || ""), mustHaves: list(extra.mustHaves),
-      });
-    }).catch(() => toast({ title: "Could not load preferences", variant: "destructive" })).finally(() => setLoading(false));
-  }), [router, toast]);
-
+  const router = useRouter(); const { toast } = useToast();
+  const [userId, setUserId] = useState<string | null>(null); const [profile, setProfile] = useState<Profile | null>(null); const [form, setForm] = useState<PreferenceForm>(EMPTY); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false);
+  useEffect(() => onAuthStateChanged(auth, (user) => { if (!user) { router.replace("/login?next=/dashboard/preferences"); return; } setUserId(user.uid); void getProfile(user.uid).then((p) => { if (!p) return; setProfile(p); const basic = partnerPreferencesFromProfile(p); const extra = ((p.extra || {}) as Record<string, any>).partnerPreferences || {}; setForm({ ...EMPTY, ...basic, gender: String(extra.gender || "No preference"), maritalStatuses: list(extra.maritalStatuses), heightMin: String(extra.heightMin || ""), heightMax: String(extra.heightMax || ""), education: list(extra.education), relocation: String(extra.relocation || ""), wantsChildren: String(extra.wantsChildren || ""), familyInvolvement: String(extra.familyInvolvement || ""), marriageTimeline: String(extra.marriageTimeline || ""), mustHaves: list(extra.mustHaves) }); }).catch(() => toast({ title: "Could not load preferences", variant: "destructive" })).finally(() => setLoading(false)); }), [router, toast]);
   const patch = (next: Partial<PreferenceForm>) => setForm((current) => ({ ...current, ...next }));
-  const toggle = (key: keyof PreferenceForm, value: string) => setForm((current) => {
-    const values = Array.isArray(current[key]) ? current[key] as string[] : [];
-    return { ...current, [key]: values.includes(value) ? values.filter((v) => v !== value) : [...values, value] };
-  });
-
-  async function save() {
-    if (!userId || !profile) return;
-    if (form.ageMin && form.ageMax && form.ageMin > form.ageMax) {
-      toast({ title: "Check age range", description: "Minimum age cannot be higher than maximum age.", variant: "destructive" }); return;
-    }
-    setSaving(true);
-    try {
-      await updateUserProfile(userId, { extra: { ...(profile.extra || {}), partnerPreferences: form } });
-      setProfile({ ...profile, extra: { ...(profile.extra || {}), partnerPreferences: form } });
-      toast({ title: "Partner preferences saved", description: "Discovery will use these as your default filters." });
-    } catch (error) {
-      toast({ title: "Could not save preferences", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
-    } finally { setSaving(false); }
-  }
-
+  const toggle = (key: keyof PreferenceForm, value: string) => setForm((current) => { const values = Array.isArray(current[key]) ? current[key] as string[] : []; return { ...current, [key]: values.includes(value) ? values.filter((v) => v !== value) : [...values, value] }; });
+  async function save() { if (!userId || !profile) return; if (form.ageMin && form.ageMax && form.ageMin > form.ageMax) { toast({ title: "Check age range", description: "Minimum age cannot be higher than maximum age.", variant: "destructive" }); return; } setSaving(true); try { await updateUserProfile(userId, { extra: { ...(profile.extra || {}), partnerPreferences: form } }); setProfile({ ...profile, extra: { ...(profile.extra || {}), partnerPreferences: form } }); toast({ title: "Partner preferences saved", description: "Discovery will use these as your default filters." }); } catch (error) { toast({ title: "Could not save preferences", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" }); } finally { setSaving(false); } }
   if (loading) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-7 w-7 animate-spin text-primary" /></div>;
 
-  return <PageFrame>
-    <PageHero eyebrow="Partner preferences" title="Who are you hoping to meet?" description="Tell CupidMatch about the partner you are looking for. These are not your profile details — they become your default Discovery filters." />
-
+  return <PageFrame><PageHero eyebrow="Partner preferences" title="Who are you hoping to meet?" description="Tell CupidMatch about the partner you are looking for. These are not your profile details — they become your default Discovery filters." />
     <div className="space-y-5">
-      <Section title="The person you're looking for" description="Start with the essentials. You can change these any time.">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Field label="I am looking for"><select className="field" value={form.gender} onChange={(e) => patch({ gender: e.target.value })}>{GENDERS.map(v => <option key={v}>{v}</option>)}</select></Field>
-          <Field label="Minimum age"><Input type="number" min={18} max={99} value={form.ageMin || ""} onChange={(e) => patch({ ageMin: Number(e.target.value) || undefined })} /></Field>
-          <Field label="Maximum age"><Input type="number" min={18} max={99} value={form.ageMax || ""} onChange={(e) => patch({ ageMax: Number(e.target.value) || undefined })} /></Field>
-        </div>
-        <Multi title="Preferred marital status" options={MARITAL} selected={form.maritalStatuses} onToggle={(v) => toggle("maritalStatuses", v)} />
-      </Section>
-
-      <Section title="Where could your partner live?" description="Choose one or more countries. Leave empty if location does not matter.">
-        <Multi title="Preferred countries" options={[...COUNTRY_OPTIONS]} selected={form.countries} onToggle={(v) => toggle("countries", v)} />
-      </Section>
-
-      <Section title="Culture, language & faith" description="Only choose what genuinely matters to you.">
-        <Multi title="Preferred languages" options={LANGUAGE_OPTIONS.map(v => v.label)} selected={form.languages} onToggle={(v) => toggle("languages", v)} />
-        <Multi title="Preferred religion or worldview" options={RELIGIONS} selected={form.religions} onToggle={(v) => toggle("religions", v)} />
-      </Section>
-
-      <Section title="Education, work & lifestyle" description="These are preferences about your future partner, not questions about you.">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Preferred profession(s)"><Input value={form.professions.join(", ")} onChange={(e) => patch({ professions: e.target.value.split(",").map(v => v.trim()).filter(Boolean) })} placeholder="e.g. Engineer, Doctor — or leave empty" /></Field>
-          <Field label="Preferred education"><Input value={form.education.join(", ")} onChange={(e) => patch({ education: e.target.value.split(",").map(v => v.trim()).filter(Boolean) })} placeholder="e.g. Bachelor's, Master's" /></Field>
-          <Field label="Minimum height (optional)"><Input value={form.heightMin} onChange={(e) => patch({ heightMin: e.target.value })} placeholder="e.g. 160 cm" /></Field>
-          <Field label="Maximum height (optional)"><Input value={form.heightMax} onChange={(e) => patch({ heightMax: e.target.value })} placeholder="e.g. 185 cm" /></Field>
-        </div>
-        <Multi title="Smoking preference" options={HABITS} selected={form.smoking} onToggle={(v) => toggle("smoking", v)} />
-        <Multi title="Drinking preference" options={HABITS} selected={form.drinking} onToggle={(v) => toggle("drinking", v)} />
-      </Section>
-
-      <Section title="Building a future together" description="Match on the practical things that can matter in a serious relationship.">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <SelectField label="Relocation" value={form.relocation} onChange={(v) => patch({ relocation: v })} options={["Doesn't matter", "Open to relocating", "Would relocate for the right person", "Prefer someone settled where I am"]} />
-          <SelectField label="Children" value={form.wantsChildren} onChange={(v) => patch({ wantsChildren: v })} options={["Doesn't matter", "Wants children", "Does not want children", "Open to discussing"]} />
-          <SelectField label="Family involvement" value={form.familyInvolvement} onChange={(v) => patch({ familyInvolvement: v })} options={["Doesn't matter", "Close family involvement", "Some family involvement", "Prefer independent decisions"]} />
-          <SelectField label="Marriage timeline" value={form.marriageTimeline} onChange={(v) => patch({ marriageTimeline: v })} options={["Doesn't matter", "Ready when it feels right", "Within 1–2 years", "Still exploring"]} />
-        </div>
-      </Section>
-
-      <Section title="What is non-negotiable?" description="Mark only genuine deal-breakers. CupidMatch can keep profiles outside these requirements out of your default results.">
-        <Multi title="Must-have criteria" options={["Age", "Country", "Language", "Religion", "Marital status", "Smoking", "Drinking", "Children", "Relocation"]} selected={form.mustHaves} onToggle={(v) => toggle("mustHaves", v)} />
-      </Section>
-
-      <div className="sticky bottom-4 z-10 flex flex-col gap-3 rounded-2xl border bg-background/95 p-4 shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground"><Sparkles className="h-4 w-4 text-primary" />Your saved choices automatically become Discovery filters.</div>
-        <Button onClick={() => void save()} disabled={saving} className="min-h-11 rounded-xl">{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}Save partner preferences</Button>
-      </div>
-    </div>
-    <style jsx>{`.field{display:flex;min-height:2.75rem;width:100%;border-radius:.375rem;border:1px solid hsl(var(--input));background:hsl(var(--background));padding:.5rem .75rem;font-size:.875rem}`}</style>
-  </PageFrame>;
+      <Section title="The person you're looking for" description="Start with the essentials. You can change these any time."><div className="grid gap-4 sm:grid-cols-3"><Field label="I am looking for"><select className="field" value={form.gender} onChange={(e) => patch({ gender: e.target.value })}>{GENDERS.map(v => <option key={v}>{v}</option>)}</select></Field><Field label="Minimum age"><Input type="number" min={18} max={99} value={form.ageMin || ""} onChange={(e) => patch({ ageMin: Number(e.target.value) || undefined })} /></Field><Field label="Maximum age"><Input type="number" min={18} max={99} value={form.ageMax || ""} onChange={(e) => patch({ ageMax: Number(e.target.value) || undefined })} /></Field></div><Multi title="Preferred marital status" options={MARITAL} selected={form.maritalStatuses} onToggle={(v) => toggle("maritalStatuses", v)} /></Section>
+      <Section title="Where could your partner live?" description="Choose one or more countries. Leave empty if location does not matter."><Multi title="Preferred countries" options={[...COUNTRY_OPTIONS]} selected={form.countries} onToggle={(v) => toggle("countries", v)} /></Section>
+      <Section title="Culture, language & faith" description="Only choose what genuinely matters to you."><Multi title="Preferred languages" options={LANGUAGE_OPTIONS.map(v => v.label)} selected={form.languages} onToggle={(v) => toggle("languages", v)} /><Multi title="Preferred religion or worldview" options={RELIGIONS} selected={form.religions} onToggle={(v) => toggle("religions", v)} /></Section>
+      <Section title="Education, work & lifestyle" description="These are preferences about your future partner, not questions about you."><div className="grid gap-4 sm:grid-cols-2"><Field label="Preferred profession(s)"><Input value={form.professions.join(", ")} onChange={(e) => patch({ professions: e.target.value.split(",").map(v => v.trim()).filter(Boolean) })} placeholder="e.g. Engineer, Doctor — or leave empty" /></Field><Field label="Preferred education"><Input value={form.education.join(", ")} onChange={(e) => patch({ education: e.target.value.split(",").map(v => v.trim()).filter(Boolean) })} placeholder="e.g. Bachelor's, Master's" /></Field><Field label="Minimum height (optional)"><Input value={form.heightMin} onChange={(e) => patch({ heightMin: e.target.value })} placeholder="e.g. 160 cm" /></Field><Field label="Maximum height (optional)"><Input value={form.heightMax} onChange={(e) => patch({ heightMax: e.target.value })} placeholder="e.g. 185 cm" /></Field></div><Multi title="Smoking preference" options={HABITS} selected={form.smoking} onToggle={(v) => toggle("smoking", v)} /><Multi title="Drinking preference" options={HABITS} selected={form.drinking} onToggle={(v) => toggle("drinking", v)} /></Section>
+      <Section title="Building a future together" description="Match on the practical things that can matter in a serious relationship."><div className="grid gap-4 md:grid-cols-2"><SelectField label="Relocation" hint="Where you'd be open to building a life" value={form.relocation} onChange={(v) => patch({ relocation: v })} options={["Doesn't matter", "Open to relocating", "Would relocate for the right person", "Prefer someone settled where I am"]} /><SelectField label="Children" hint="Your preference for having children" value={form.wantsChildren} onChange={(v) => patch({ wantsChildren: v })} options={["Doesn't matter", "Wants children", "Does not want children", "Open to discussing"]} /><SelectField label="Family involvement" hint="How involved you'd like families to be" value={form.familyInvolvement} onChange={(v) => patch({ familyInvolvement: v })} options={["Doesn't matter", "Close family involvement", "Some family involvement", "Prefer independent decisions"]} /><SelectField label="Marriage timeline" hint="The pace that feels right for you" value={form.marriageTimeline} onChange={(v) => patch({ marriageTimeline: v })} options={["Doesn't matter", "Ready when it feels right", "Within 1–2 years", "Still exploring"]} /></div></Section>
+      <Section title="What is non-negotiable?" description="Mark only genuine deal-breakers. CupidMatch can keep profiles outside these requirements out of your default results."><Multi title="Must-have criteria" options={["Age", "Country", "Language", "Religion", "Marital status", "Smoking", "Drinking", "Children", "Relocation"]} selected={form.mustHaves} onToggle={(v) => toggle("mustHaves", v)} /></Section>
+      <div className="sticky bottom-4 z-10 flex flex-col gap-3 rounded-2xl border bg-background/95 p-4 shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-2 text-sm text-muted-foreground"><Sparkles className="h-4 w-4 text-primary" />Your saved choices automatically become Discovery filters.</div><Button onClick={() => void save()} disabled={saving} className="min-h-11 rounded-xl">{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}Save partner preferences</Button></div>
+    </div><style jsx>{`.field{display:flex;min-height:2.75rem;width:100%;border-radius:.75rem;border:1px solid hsl(var(--input));background:hsl(var(--background));padding:.5rem .75rem;font-size:.875rem}`}</style></PageFrame>;
 }
-
-function Section({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
-  return <section className="rounded-2xl border border-[#eadde7] bg-card p-5 shadow-sm sm:p-6"><div className="mb-5 flex gap-3"><div className="mt-0.5 rounded-full bg-primary/10 p-2"><Heart className="h-4 w-4 text-primary" /></div><div><h2 className="text-lg font-semibold">{title}</h2><p className="mt-1 text-sm text-muted-foreground">{description}</p></div></div><div className="space-y-5">{children}</div></section>;
-}
+function Section({ title, description, children }: { title: string; description: string; children: React.ReactNode }) { return <section className="rounded-2xl border border-[#eadde7] bg-card p-5 shadow-sm sm:p-6"><div className="mb-5 flex gap-3"><div className="mt-0.5 rounded-full bg-primary/10 p-2"><Heart className="h-4 w-4 text-primary" /></div><div><h2 className="text-lg font-semibold">{title}</h2><p className="mt-1 text-sm text-muted-foreground">{description}</p></div></div><div className="space-y-5">{children}</div></section>; }
 function Field({ label, children }: { label: string; children: React.ReactNode }) { return <div className="space-y-2"><Label>{label}</Label>{children}</div>; }
-function Multi({ title, options, selected, onToggle }: { title: string; options: readonly string[]; selected: string[]; onToggle: (value: string) => void }) {
-  return <div><Label className="mb-3 block">{title}</Label><div className="flex flex-wrap gap-2">{options.map((option) => <label key={option} className={`flex min-h-10 cursor-pointer items-center gap-2 rounded-full border px-3 text-sm ${selected.includes(option) ? "border-primary bg-primary/10 text-primary" : "bg-background"}`}><Checkbox checked={selected.includes(option)} onCheckedChange={() => onToggle(option)} /><span>{option}</span></label>)}</div></div>;
-}
-function SelectField({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
-  return <Field label={label}><select className="field" value={value} onChange={(e) => onChange(e.target.value)}><option value="">No preference</option>{options.map(v => <option key={v} value={v}>{v}</option>)}</select></Field>;
-}
+function Multi({ title, options, selected, onToggle }: { title: string; options: readonly string[]; selected: string[]; onToggle: (value: string) => void }) { return <div><Label className="mb-3 block">{title}</Label><div className="flex flex-wrap gap-2">{options.map((option) => <label key={option} className={`flex min-h-10 cursor-pointer items-center gap-2 rounded-full border px-3 text-sm ${selected.includes(option) ? "border-primary bg-primary/10 text-primary" : "bg-background"}`}><Checkbox checked={selected.includes(option)} onCheckedChange={() => onToggle(option)} /><span>{option}</span></label>)}</div></div>; }
+function SelectField({ label, hint, value, options, onChange }: { label: string; hint: string; value: string; options: string[]; onChange: (value: string) => void }) { return <div className="rounded-2xl border border-[#eadde7] bg-[#fffdfd] p-4 transition-shadow focus-within:border-primary/40 focus-within:shadow-sm"><div className="mb-3"><Label className="text-sm font-semibold text-foreground">{label}</Label><p className="mt-1 text-xs leading-5 text-muted-foreground">{hint}</p></div><div className="relative"><select className="h-12 w-full appearance-none rounded-xl border border-[#dfd3dc] bg-white px-4 pr-10 text-sm font-medium text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10" value={value} onChange={(e) => onChange(e.target.value)}><option value="">No preference</option>{options.map(v => <option key={v} value={v}>{v}</option>)}</select><ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /></div></div>; }
