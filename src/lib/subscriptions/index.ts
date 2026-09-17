@@ -24,3 +24,5 @@ export * from './period';
 export * from './launch';
 export * from './fair-use';
 export * from './schema-version';
+export * from './mutability';
+export * from './admin';
