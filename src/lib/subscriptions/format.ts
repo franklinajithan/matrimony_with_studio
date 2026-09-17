@@ -1,0 +1,1 @@
+import { SUBSCRIPTION_CURRENCY,SUBSCRIPTION_LOCALE } from './currency';export const formatSubscriptionPrice=(pence:number)=>new Intl.NumberFormat(SUBSCRIPTION_LOCALE,{style:'currency',currency:SUBSCRIPTION_CURRENCY}).format(pence/100);
