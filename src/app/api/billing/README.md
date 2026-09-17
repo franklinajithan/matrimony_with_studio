@@ -1,0 +1,1 @@
+Billing routes are intentionally fail-closed until the production Stripe account, six Price IDs, secret key and webhook signing secret are configured. A successful browser redirect must never change `member_subscriptions`; only a signature-verified, idempotent webhook handler may do that.
