@@ -1,0 +1,1 @@
+Apply Supabase migrations before exercising the new subscription/admin APIs. The application code is designed to fail closed if billing configuration is absent. Do not enable Stripe purchase CTAs until the production billing checklist is complete.
