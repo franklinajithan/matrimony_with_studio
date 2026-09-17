@@ -1,0 +1,2 @@
+create unique index if not exists member_subscriptions_checkout_session_unique on public.member_subscriptions(stripe_checkout_session_id) where stripe_checkout_session_id is not null;
+create unique index if not exists member_subscriptions_stripe_subscription_unique on public.member_subscriptions(stripe_subscription_id) where stripe_subscription_id is not null;

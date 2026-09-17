@@ -1,0 +1,1 @@
+Test modules are colocated under `src/lib/subscriptions/*.test.ts`. They are compile-checked by CI; a dedicated test runner can be added later. Current assertions cover plan/pricing/entitlement/security invariants and are intentionally dependency-free Node assertions.

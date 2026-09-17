@@ -1,0 +1,1 @@
+import { strict as assert } from 'node:assert';import { effectivePlanCode } from './entitlements';for(const status of ['pending','past_due','canceled','expired','refunded',null])assert.equal(effectivePlanCode({planCode:'premium_plus',status}),'free');

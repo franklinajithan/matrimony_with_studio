@@ -1,0 +1,1 @@
+import { strict as assert } from 'node:assert';import { normalizeLegacyPlan } from './compatibility';assert.equal(normalizeLegacyPlan('plus'),'premium');assert.equal(normalizeLegacyPlan('premium_plus'),'premium_plus');assert.equal(normalizeLegacyPlan('unknown'),'free');

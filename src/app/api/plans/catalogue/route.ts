@@ -1,0 +1,1 @@
+import { NextResponse } from 'next/server';import { orderedPlans } from '@/lib/subscriptions';export async function GET(){return NextResponse.json({plans:orderedPlans()},{headers:{'Cache-Control':'public, max-age=300, s-maxage=300'}});}

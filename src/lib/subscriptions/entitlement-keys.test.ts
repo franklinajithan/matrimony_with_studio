@@ -1,0 +1,1 @@
+import { strict as assert } from 'node:assert';import { BOOLEAN_ENTITLEMENTS,METERED_ENTITLEMENTS } from './entitlement-keys';import { getPlan } from './plans';const keys=new Set([...BOOLEAN_ENTITLEMENTS,...METERED_ENTITLEMENTS]);assert.deepEqual(new Set(Object.keys(getPlan('free').entitlements)),keys);

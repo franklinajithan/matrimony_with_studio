@@ -1,0 +1,1 @@
+Before applying production migrations, take a database backup. The consolidation maps legacy `plus` rows to `premium`; it does not delete member billing history. If rollout is stopped before Stripe activation, keep billing purchase buttons disabled—the server safely falls back to Free for users without verified active/trialing state.

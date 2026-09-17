@@ -1,0 +1,1 @@
+Pricing UI should check live billing readiness and keep purchase buttons disabled while `LIVE_BILLING_ENABLED` is false. Do not enable them merely because Stripe environment variables exist; webhook/provider implementation must also be verified.

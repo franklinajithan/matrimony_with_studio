@@ -1,0 +1,1 @@
+Current admin billing APIs are read-only. Plan editing and manual membership grants are deliberately disabled because they require a service-role server mutation path and audit logging. This prevents the existing browser admin UI from becoming a privileged database write channel.

@@ -1,0 +1,1 @@
+CupidMatch does not paywall basic messaging after a mutual match. `messagingAfterMatch` is true on all three plans. Paid tiers monetize discovery/acceleration/privacy rather than blocking a genuine mutual connection from communicating.

@@ -1,0 +1,1 @@
+This endpoint currently returns 503 by design. Do not replace it with a JSON-body handler. Production implementation must read the raw request body, verify `Stripe-Signature` with `STRIPE_WEBHOOK_SECRET`, reject invalid signatures, deduplicate by Stripe event ID, then update `member_subscriptions` with a trusted server/service-role client and append `subscription_events`.

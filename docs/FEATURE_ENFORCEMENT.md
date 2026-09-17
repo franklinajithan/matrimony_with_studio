@@ -1,0 +1,1 @@
+For a paid feature: call a server route/server action; authenticate; resolve `getServerSubscription()`; check the entitlement; for metered features atomically consume the allowance; then perform the feature action. UI locks/upgrade modals are UX only and must mirror, not replace, this server decision.

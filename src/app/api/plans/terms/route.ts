@@ -1,0 +1,1 @@
+import { NextResponse } from 'next/server';import { BILLING_TERM_OPTIONS,BILLING_TERM_LABELS } from '@/lib/subscriptions';export async function GET(){return NextResponse.json({terms:BILLING_TERM_OPTIONS.map(value=>({value,label:BILLING_TERM_LABELS[value]}))});}

@@ -1,0 +1,1 @@
+All `/api/admin/*` handlers must call `requireServerAdmin()` before reading or mutating protected data. The existing client `/admin` layout is retained for UI behavior but must not be treated as authorization. Billing/admin mutations require trusted server code plus an audit record.

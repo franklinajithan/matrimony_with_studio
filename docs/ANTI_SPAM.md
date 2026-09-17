@@ -1,0 +1,1 @@
+A `null` monthly entitlement means no subscription quota, not permission to spam. Interests/profile sharing remain subject to platform-level abuse/rate limits, blocks, reports and moderation independently of subscription tier.

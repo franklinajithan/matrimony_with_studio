@@ -1,0 +1,1 @@
+import { strict as assert } from 'node:assert';import { SUBSCRIPTION_PHASE } from './phase';assert.equal(SUBSCRIPTION_PHASE.foundation,'implemented');assert.equal(SUBSCRIPTION_PHASE.stripeActivation,'external-gate');

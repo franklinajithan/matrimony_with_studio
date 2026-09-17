@@ -1,0 +1,1 @@
+`GET /api/admin/summary` currently exposes server-authorized member and active/trial subscription counts. Revenue should be added from verified billing events/Stripe data rather than estimated from UI-selected plans.

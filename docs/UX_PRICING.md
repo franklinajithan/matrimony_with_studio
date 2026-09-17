@@ -1,0 +1,1 @@
+Recommended pricing UI: highlight Premium 3 months as Most Popular; show term savings calculated from plan prices; keep Free messaging after mutual match explicit; show Premium+ around privacy/visibility rather than implying better compatibility; disable checkout CTA with a clear “Payments coming soon” state while provider readiness is false.

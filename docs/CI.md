@@ -1,0 +1,1 @@
+`.github/workflows/verify.yml` runs `npm ci`, TypeScript `--noEmit`, and the Next production build on pull requests and pushes to main. Merge should wait for this workflow rather than assuming the connector edits compile.

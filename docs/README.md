@@ -1,0 +1,3 @@
+# CupidMatch technical notes
+
+For the subscription/admin phase see `README_SUBSCRIPTIONS.md`, `SUBSCRIPTIONS.md`, `PRICING_MATRIX.md`, `ENTITLEMENTS.md`, `ADMIN_SECURITY.md`, `SECURITY_INVARIANTS.md`, `LAUNCH_BILLING_CHECKLIST.md`, and `IMPLEMENTATION_STATUS.md`.

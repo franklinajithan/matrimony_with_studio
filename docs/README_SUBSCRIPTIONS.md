@@ -1,0 +1,1 @@
+Subscription implementation docs: `SUBSCRIPTIONS.md` for architecture and Stripe variables, `PRICING_MATRIX.md` for feature tiers, `MIGRATION_NOTES.md` for legacy Plus migration, `ADMIN_SECURITY.md` for authorization, `LAUNCH_BILLING_CHECKLIST.md` for production activation, and `IMPLEMENTATION_STATUS.md` for current limitations.

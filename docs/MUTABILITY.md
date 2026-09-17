@@ -1,0 +1,1 @@
+Browser sessions, including an admin browser, do not directly mutate billing state. Trusted server/service-role operations may mutate it only after authorization/provider verification and should append the appropriate billing/admin audit event.

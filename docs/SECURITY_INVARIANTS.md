@@ -1,0 +1,1 @@
+Security invariants: client plan state never grants access; only active/trialing unexpired server state grants paid entitlements; billing table writes are denied to browser roles; metered counters are consumed atomically; admin APIs re-authorize on the server; payment activation requires a verified/idempotent webhook; missing provider configuration fails closed.

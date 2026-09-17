@@ -1,0 +1,1 @@
+Repository implementation complete for the subscription/admin foundation requested in issue #31, excluding live Stripe activation that requires external account credentials/provider integration. The code fails closed for that external gate.

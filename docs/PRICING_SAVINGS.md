@@ -1,0 +1,1 @@
+At launch pricing, Premium 3 months saves £3.98 versus three monthly payments; Premium 6 months saves £12.95. Premium+ 3 months saves £9.98; Premium+ 6 months saves £29.95. UI can calculate these from plan data rather than hard-coding marketing copy.

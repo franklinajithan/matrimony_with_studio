@@ -1,0 +1,1 @@
+UI code that only needs catalogue/pricing can import from `src/lib/subscriptions/public.ts`; security-sensitive server code should use the server resolver/guards rather than public presentation helpers.

@@ -1,0 +1,1 @@
+POST `{ "plan": "premium" | "premium_plus", "term": "monthly" | "three_months" | "six_months" }`. The endpoint authenticates the member and validates configured Stripe price IDs. It currently fails closed until the Stripe provider implementation is installed; it never grants membership directly.

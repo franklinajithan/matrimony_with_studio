@@ -1,0 +1,1 @@
+Never authorize from a plan stored in React state, query string, localStorage or checkout success URL. Resolve the authenticated user and effective subscription server-side. Treat unknown/invalid/expired states as Free. Use the atomic meter for quotas. Only a verified billing webhook may create/activate paid state.

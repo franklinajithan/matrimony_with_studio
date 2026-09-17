@@ -1,0 +1,1 @@
+`feature/finish-pricing-entitlements` contains the completed repository-side subscription/admin foundation. It should be merged only after CI passes. Stripe card payments remain disabled by design until external Stripe configuration/provider work is available.

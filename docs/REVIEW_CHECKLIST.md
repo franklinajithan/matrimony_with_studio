@@ -1,0 +1,1 @@
+Review checklist: no remaining application `plus` plan code; migrations tolerate legacy tables; paid state fails closed; browser billing writes revoked; admin reads server-authorized; usage atomic; Free mutual-match messaging preserved; pricing exact; checkout/webhook/portal cannot fake success; CI typecheck/build green before merge.

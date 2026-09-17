@@ -1,0 +1,1 @@
+import { NextResponse } from 'next/server';import { SUBSCRIPTION_SCHEMA_VERSION } from '@/lib/subscriptions';export async function GET(){return NextResponse.json({version:SUBSCRIPTION_SCHEMA_VERSION});}

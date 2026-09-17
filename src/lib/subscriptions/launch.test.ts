@@ -1,0 +1,1 @@
+import { strict as assert } from 'node:assert';import { LAUNCH_PRICING } from './launch';import { PLANS } from './plans';assert.deepEqual(PLANS.premium.pricesPence,LAUNCH_PRICING.premium);assert.deepEqual(PLANS.premium_plus.pricesPence,LAUNCH_PRICING.premium_plus);

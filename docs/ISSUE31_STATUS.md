@@ -1,0 +1,1 @@
+Issue #31 repository foundation: implemented in this branch. Remaining external dependency: Stripe account/product/Price configuration and SDK-backed Checkout/Portal/webhook activation. Admin billing mutation UI remains intentionally read-only until trusted audited server writes are implemented.

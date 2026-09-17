@@ -1,0 +1,1 @@
+No route in this branch returns a fake successful checkout, fabricates a Stripe session, or upgrades a user from client input. If Stripe is unavailable, CupidMatch returns an explicit unavailable state and leaves the member on their verified effective plan.

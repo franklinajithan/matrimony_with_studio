@@ -1,0 +1,1 @@
+Primary launch tables: `subscription_plans` (catalogue/entitlements), `member_subscriptions` (verified member billing state), `subscription_events` (provider event audit/idempotency), `subscription_usage` (monthly quotas), `admin_audit_log` (privileged action history). Legacy `user_subscriptions` is compatibility-only.

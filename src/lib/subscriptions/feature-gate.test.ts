@@ -1,0 +1,1 @@
+import { strict as assert } from 'node:assert';import { featureGate } from './feature-gate';assert.equal(featureGate('free','advancedFilters').upgradeRequired,true);assert.equal(featureGate('premium','advancedFilters').allowed,true);assert.equal(featureGate('premium','incognitoMode').allowed,false);assert.equal(featureGate('premium_plus','incognitoMode').allowed,true);

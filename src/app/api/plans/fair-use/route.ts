@@ -1,0 +1,1 @@
+import { NextResponse } from 'next/server';import { FAIR_USE_FEATURES,unlimitedMeansFairUse } from '@/lib/subscriptions';export async function GET(){return NextResponse.json({features:FAIR_USE_FEATURES,unlimitedMeansFairUse});}

@@ -1,0 +1,1 @@
+import { strict as assert } from 'node:assert';import { getPlan } from './plans';assert.equal(getPlan('free').entitlements.interestsPerMonth,10);assert.equal(getPlan('free').entitlements.profileSharesPerMonth,3);assert.equal(getPlan('premium').entitlements.interestsPerMonth,null);assert.equal(getPlan('premium_plus').entitlements.profileBoostsPerMonth,4);
