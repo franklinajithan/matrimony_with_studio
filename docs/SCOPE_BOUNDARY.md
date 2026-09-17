@@ -1,0 +1,1 @@
+Repository code can prepare and secure billing, but it cannot create the user's Stripe account, secret key, webhook signing secret or Price objects without an authorized Stripe connection. Therefore this branch deliberately separates “subscription system implemented” from “live card payments activated.”
