@@ -1,0 +1,1 @@
+Final review before PR: branch is based on current main and contains no behind commits at last comparison; subscription plan conflict is resolved by migration/compatibility code; application plan catalogue contains only Free/Premium/Premium+; paid access is server-resolved and fail-closed; live Stripe remains explicitly disabled rather than simulated.
