@@ -1,0 +1,1 @@
+`GET /api/subscription` returns the authenticated member's effective plan and entitlements. `GET /api/entitlements/:feature` resolves boolean/limit access on the server. Metered actions should call `POST /api/subscription/consume/:feature` immediately as part of the protected action; the database RPC locks the monthly counter to avoid race-condition overuse.
