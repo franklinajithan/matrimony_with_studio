@@ -22,14 +22,15 @@ export type DashboardNavItem = {
 
 export const dashboardPrimaryNav: DashboardNavItem[] = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, match: "exact" },
-  { href: "/discover", label: "Discover", icon: Compass, match: "prefix" },
+  { href: "/discover", label: "Find Matches", icon: Compass, match: "prefix" },
   { href: "/interests", label: "Interests", icon: Heart, match: "prefix" },
   { href: "/connections", label: "Connections", icon: Users, match: "prefix" },
   { href: "/messages", label: "Messages", icon: MessageCircle, match: "prefix" },
 ];
 
 export const dashboardAccountNav: DashboardNavItem[] = [
-  { href: "/dashboard/edit-profile", label: "My profile", icon: UserCircle, match: "prefix" },
+  { href: "/dashboard/edit-profile", label: "My profile", icon: UserCircle, match: "exact" },
+  { href: "/dashboard/edit-profile/match-details", label: "Match profile", icon: Heart, match: "prefix" },
   { href: "/biodata", label: "Biodata Studio", icon: FileText, match: "prefix" },
   { href: "/dashboard/horoscope", label: "Horoscope", icon: Sparkles, match: "prefix" },
   { href: "/dashboard/preferences", label: "Partner preferences", icon: SlidersHorizontal, match: "prefix" },
@@ -39,7 +40,7 @@ export const dashboardAccountNav: DashboardNavItem[] = [
 
 export const dashboardMobileNav: DashboardNavItem[] = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, match: "exact" },
-  { href: "/discover", label: "Discover", icon: Compass, match: "prefix" },
+  { href: "/discover", label: "Matches", icon: Compass, match: "prefix" },
   { href: "/interests", label: "Interests", icon: Heart, match: "prefix" },
   { href: "/messages", label: "Messages", icon: MessageCircle, match: "prefix" },
   { href: "/dashboard/edit-profile", label: "Profile", icon: UserCircle, match: "prefix" },
@@ -55,11 +56,12 @@ export function isNavActive(pathname: string, item: DashboardNavItem): boolean {
 
 export function titleForDashboardPath(pathname: string): string {
   if (pathname === "/dashboard") return "Your overview";
-  if (pathname.startsWith("/discover")) return "Discover";
+  if (pathname.startsWith("/discover")) return "Find Matches";
   if (pathname.startsWith("/interests")) return "Interests";
   if (pathname.startsWith("/connections")) return "Connections";
   if (pathname.startsWith("/messages")) return "Messages";
   if (pathname.startsWith("/dashboard/privacy")) return "Privacy and safety";
+  if (pathname.startsWith("/dashboard/edit-profile/match-details")) return "Match profile";
   if (pathname.startsWith("/dashboard/edit-profile")) return "My profile";
   if (pathname.startsWith("/dashboard/horoscope")) return "Horoscope";
   if (pathname.startsWith("/dashboard/preferences")) return "Partner preferences";
