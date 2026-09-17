@@ -10,3 +10,5 @@ export * from './feature-map';
 export * from './validation';
 export * from './upgrade';
 export * from './errors';
+export * from './durations';
+export * from './savings';
