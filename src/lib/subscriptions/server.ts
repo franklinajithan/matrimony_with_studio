@@ -7,16 +7,10 @@ export async function getServerSubscription() {
   const supabase = await createSupabaseServerClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return { user: null, plan: getPlan('free'), subscription: null };
-
-  const { data } = await supabase
-    .from('member_subscriptions')
-    .select('plan_code,status,current_period_end,cancel_at_period_end')
-    .eq('user_id', auth.user.id)
-    .in('status', ['active', 'trialing', 'past_due'])
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
+  const { data } = await supabase.from('member_subscriptions')
+    .select('plan_code,status,current_period_end,cancel_at_period_end,stripe_customer_id,stripe_subscription_id')
+    .eq('user_id', auth.user.id).in('status', ['active','trialing','past_due'])
+    .order('created_at', { ascending: false }).limit(1).maybeSingle();
   const state: SubscriptionState | null = data ? { planCode: data.plan_code, status: data.status, currentPeriodEnd: data.current_period_end } : null;
   return { user: auth.user, subscription: data, plan: getPlan(effectivePlanCode(state)) };
 }
