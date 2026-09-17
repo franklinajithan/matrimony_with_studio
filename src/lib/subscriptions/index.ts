@@ -14,3 +14,4 @@ export * from './durations';
 export * from './savings';
 export * from './catalogue';
 export * from './compatibility';
+export * from './architecture';
