@@ -22,3 +22,4 @@ export * from './format';
 export * from './terms';
 export * from './period';
 export * from './launch';
+export * from './fair-use';
