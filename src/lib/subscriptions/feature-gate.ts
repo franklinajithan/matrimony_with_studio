@@ -1,0 +1,1 @@
+import { hasEntitlement,type EntitlementKey } from './entitlements';import type { PlanCode } from './plans';export const featureGate=(plan:PlanCode,key:EntitlementKey)=>({allowed:hasEntitlement(plan,key),upgradeRequired:!hasEntitlement(plan,key)});
