@@ -1,0 +1,1 @@
+Use `src/lib/subscriptions/server-only.ts` from route handlers/server components for authenticated plan resolution, admin authorization and billing configuration. It imports `server-only` to prevent accidental client bundling.
