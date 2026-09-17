@@ -1,0 +1,1 @@
+import { strict as assert } from 'node:assert';import { periodIsCurrent } from './period';assert.equal(periodIsCurrent(null),true);assert.equal(periodIsCurrent('invalid'),false);assert.equal(periodIsCurrent('2000-01-01T00:00:00Z'),false);
