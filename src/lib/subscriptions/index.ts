@@ -6,6 +6,7 @@ export * from './usage';
 export * from './security';
 export * from './plan-copy';
 export * from './price-copy';
+export * from './feature-copy';
 export * from './feature-map';
 export * from './validation';
 export * from './upgrade';
