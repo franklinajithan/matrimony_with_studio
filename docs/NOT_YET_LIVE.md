@@ -1,0 +1,1 @@
+Do not advertise paid subscriptions as purchasable yet. The architecture is ready and secure-by-default, but card checkout is not live until Stripe is connected and test-mode lifecycle verification succeeds.
