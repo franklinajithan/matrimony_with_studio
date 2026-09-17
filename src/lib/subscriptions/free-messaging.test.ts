@@ -1,0 +1,1 @@
+import { strict as assert } from 'node:assert';import { getPlan } from './plans';assert.equal(getPlan('free').entitlements.messagingAfterMatch,true);assert.equal(getPlan('premium').entitlements.messagingAfterMatch,true);assert.equal(getPlan('premium_plus').entitlements.messagingAfterMatch,true);
