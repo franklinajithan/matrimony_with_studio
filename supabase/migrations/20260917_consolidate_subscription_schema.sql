@@ -1,14 +1,17 @@
--- Consolidate the legacy Free/Plus/Premium foundation into the launch
--- Free/Premium/Premium+ model without deleting existing member billing history.
-
+-- Consolidate legacy Free/Plus/Premium into launch Free/Premium/Premium+.
 alter table public.subscription_plans drop constraint if exists subscription_plans_code_check;
 alter table public.subscription_plans add column if not exists three_month_price_pence integer not null default 0 check (three_month_price_pence >= 0);
 alter table public.subscription_plans add column if not exists six_month_price_pence integer not null default 0 check (six_month_price_pence >= 0);
 alter table public.subscription_plans add column if not exists active boolean not null default true;
 
--- Convert any old Plus subscription before removing the old plan code.
-update public.user_subscriptions set plan_code = 'premium' where plan_code = 'plus';
-update public.member_subscriptions set plan_code = 'premium' where plan_code = 'plus';
+do $$ begin
+  if to_regclass('public.user_subscriptions') is not null then
+    execute 'update public.user_subscriptions set plan_code = ''premium'' where plan_code = ''plus''';
+  end if;
+  if to_regclass('public.member_subscriptions') is not null then
+    execute 'update public.member_subscriptions set plan_code = ''premium'' where plan_code = ''plus''';
+  end if;
+end $$;
 delete from public.subscription_plans where code = 'plus';
 
 insert into public.subscription_plans(code,name,monthly_price_pence,three_month_price_pence,six_month_price_pence,currency,entitlements,active)
@@ -19,8 +22,6 @@ values
 on conflict (code) do update set name=excluded.name, monthly_price_pence=excluded.monthly_price_pence, three_month_price_pence=excluded.three_month_price_pence, six_month_price_pence=excluded.six_month_price_pence, currency=excluded.currency, entitlements=excluded.entitlements, active=excluded.active, updated_at=now();
 
 alter table public.subscription_plans add constraint subscription_plans_code_check check (code in ('free','premium','premium_plus'));
-
--- Clients can read active plans and their own subscription/usage only. Billing mutation stays server-only.
 drop policy if exists "plans readable" on public.subscription_plans;
 drop policy if exists "active plans are readable" on public.subscription_plans;
 create policy "active plans are readable" on public.subscription_plans for select using (active = true);
