@@ -1,0 +1,1 @@
+import { strict as assert } from 'node:assert';import { formatSubscriptionPrice } from './format';assert.match(formatSubscriptionPrice(799),/7\.99/);assert.match(formatSubscriptionPrice(1499),/14\.99/);
