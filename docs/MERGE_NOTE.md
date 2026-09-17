@@ -1,0 +1,1 @@
+This branch intentionally does not claim live Stripe functionality. Merge delivers the secure subscription/admin foundation and conflict resolution. A separate Stripe activation change should be made only when credentials/provider access are available, then validated in Stripe test mode before production.
