@@ -1,0 +1,1 @@
+Handoff: merge only after Verify workflow passes. Apply migrations. Keep purchase UI disabled. When Stripe is connected, add SDK dependency, service-role server client, Checkout/Portal calls, raw-body signature verification and idempotent event transitions; then run Stripe test-mode lifecycle tests before setting payment readiness true.
