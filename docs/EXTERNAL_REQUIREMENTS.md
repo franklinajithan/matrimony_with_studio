@@ -1,0 +1,1 @@
+External requirements for live payments: an authorized Stripe account; six GBP Price IDs; Stripe secret key; webhook signing secret; production webhook URL; and permission to configure Vercel environment variables. These cannot be fabricated in repository code.
