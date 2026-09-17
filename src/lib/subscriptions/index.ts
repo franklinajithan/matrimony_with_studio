@@ -13,3 +13,4 @@ export * from './errors';
 export * from './durations';
 export * from './savings';
 export * from './catalogue';
+export * from './compatibility';
