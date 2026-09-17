@@ -1,0 +1,1 @@
+The database `subscription_plans` catalogue is intended to become the editable runtime source of truth. `src/lib/subscriptions/plans.ts` is the safe application fallback and currently mirrors launch pricing exactly. Admin price mutation is intentionally not exposed until a trusted service-role write path with audit logging is implemented.
