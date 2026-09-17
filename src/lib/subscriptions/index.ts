@@ -1,5 +1,6 @@
 export * from './plans';
 export * from './entitlements';
+export * from './entitlement-keys';
 export * from './types';
 export * from './constants';
 export * from './usage';
