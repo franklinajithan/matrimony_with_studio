@@ -1,121 +1,39 @@
+import Link from 'next/link';
+import { Check, Crown, Heart, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { PLANS, formatPlanPrice, type PlanCode } from '@/lib/subscriptions/plans';
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check } from "lucide-react";
+const features: Record<PlanCode, string[]> = {
+  free: ['Full profile & photos', 'Partner preferences & match %', '10 interests / month', '3 private profile shares / month', '3 biodata templates', 'Mutual-match messaging'],
+  plus: ['Everything in Free', 'Unlimited interests & messaging', 'Advanced match filters', 'See who likes you', '20 private profile shares / month', 'All biodata templates', 'Read receipts & family introduction', '1 profile boost / month'],
+  premium: ['Everything in Plus', 'Unlimited private profile sharing', '4 profile boosts / month', 'Premium member badge', 'Full horoscope tools', 'Priority support', 'Priority visibility in relevant matches'],
+};
 
-const plans = [
-  {
-    name: "Free",
-    price: "£0",
-    frequency: "/ month",
-    description: "Get started and explore basic features.",
-    features: [
-      "Create Profile",
-      "Basic Search Filters",
-      "Send Limited Likes",
-      "Receive Messages",
-    ],
-    cta: "Sign Up for Free",
-    href: "/signup",
-    isPopular: false,
-  },
-  {
-    name: "Premium",
-    price: "£9.99",
-    frequency: "/ month",
-    description: "Unlock advanced features for serious matchmaking.",
-    features: [
-      "All Free features",
-      "Unlimited Likes",
-      "Advanced Search Filters",
-      "Send & Receive Unlimited Messages",
-      "See Who Liked You",
-      "Profile Boosts",
-      "Verified Badge Priority",
-    ],
-    cta: "Choose Premium",
-    href: "/checkout?plan=premium", // Placeholder
-    isPopular: true,
-  },
-  {
-    name: "Elite",
-    price: "£19.99",
-    frequency: "/ month",
-    description: "For those who want the best experience and support.",
-    features: [
-      "All Premium features",
-      "Dedicated Support Agent",
-      "Horoscope Matching Assistance",
-      "Early Access to New Features",
-      "Higher Profile Visibility",
-    ],
-    cta: "Go Elite",
-    href: "/checkout?plan=elite", // Placeholder
-    isPopular: false,
-  },
-];
+const icons = { free: Heart, plus: Sparkles, premium: Crown };
 
 export default function PricingPage() {
-  return (
-    <div className="space-y-12">
-      <div className="text-center">
-        <h1 className="font-headline text-4xl sm:text-5xl font-semibold text-gray-800">
-          Find the Perfect Plan for You
-        </h1>
-        <p className="mt-4 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-          Choose a plan that suits your needs and enhance your journey to find your perfect match on MatchCraft.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-        {plans.map((plan) => (
-          <Card
-            key={plan.name}
-            className={`flex flex-col shadow-lg hover:shadow-2xl transition-shadow duration-300 ${
-              plan.isPopular ? "border-2 border-primary ring-2 ring-primary/50" : ""
-            }`}
-          >
-            {plan.isPopular && (
-              <div className="py-1 px-4 bg-primary text-primary-foreground text-sm font-semibold text-center rounded-t-lg -mt-px">
-                Most Popular
-              </div>
-            )}
-            <CardHeader className="text-center pt-8">
-              <CardTitle className={`font-headline text-3xl ${plan.isPopular ? 'text-primary' : ''}`}>{plan.name}</CardTitle>
-              <div className="flex items-baseline justify-center mt-2">
-                <span className="text-4xl font-extrabold tracking-tight text-gray-900">{plan.price}</span>
-                <span className="ml-1 text-xl font-semibold text-muted-foreground">{plan.frequency}</span>
-              </div>
-              <CardDescription className="mt-3">{plan.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <ul role="list" className="space-y-3">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start">
-                    <Check className="flex-shrink-0 h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span className="text-sm text-foreground/80">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-            <CardFooter className="mt-6 p-6">
-              <Button
-                asChild
-                className={`w-full text-lg py-3 ${
-                  plan.isPopular
-                    ? "bg-primary hover:bg-primary/90 text-primary-foreground"
-                    : "bg-accent hover:bg-accent/90 text-accent-foreground"
-                }`}
-              >
-                <a href={plan.href}>{plan.cta}</a>
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-       <p className="text-center text-sm text-muted-foreground mt-8">
-        Payments processed securely by Stripe/Razorpay (Integration required).
-      </p>
+  return <main className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
+    <div className="mx-auto max-w-3xl text-center">
+      <span className="inline-flex rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary">CupidMatch membership</span>
+      <h1 className="mt-5 font-headline text-4xl font-semibold tracking-tight sm:text-5xl">Choose how you want to find your match</h1>
+      <p className="mt-4 text-lg text-muted-foreground">Start free. Upgrade when you want more communication, visibility and relationship tools.</p>
     </div>
-  );
+    <div className="mt-12 grid gap-6 lg:grid-cols-3">
+      {(Object.keys(PLANS) as PlanCode[]).map(code => {
+        const plan = PLANS[code]; const Icon = icons[code];
+        return <Card key={code} className={`relative flex flex-col overflow-hidden rounded-3xl ${plan.highlighted ? 'border-primary shadow-xl ring-1 ring-primary' : 'shadow-sm'}`}>
+          {plan.highlighted && <div className="bg-primary py-2 text-center text-xs font-bold uppercase tracking-[.18em] text-primary-foreground">Most popular</div>}
+          <CardHeader className="space-y-4 p-7">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></div>
+            <div><CardTitle className="text-2xl">{plan.name}</CardTitle><p className="mt-2 min-h-12 text-sm text-muted-foreground">{plan.description}</p></div>
+            <div><span className="text-4xl font-bold">{formatPlanPrice(plan.monthlyPricePence)}</span>{plan.monthlyPricePence > 0 && <span className="text-muted-foreground"> / month</span>}</div>
+          </CardHeader>
+          <CardContent className="flex-1 px-7"><div className="space-y-3">{features[code].map(feature => <div key={feature} className="flex gap-3 text-sm"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary"/><span>{feature}</span></div>)}</div></CardContent>
+          <CardFooter className="p-7"><Button asChild variant={plan.highlighted ? 'default' : 'outline'} className="h-12 w-full rounded-xl"><Link href={code === 'free' ? '/signup' : `/signup?plan=${code}`}>{code === 'free' ? 'Start free' : `Choose ${plan.name}`}</Link></Button></CardFooter>
+        </Card>;
+      })}
+    </div>
+    <p className="mt-8 text-center text-sm text-muted-foreground">No payment will be taken until secure checkout is enabled. Subscription billing will be connected through the payment-provider adapter.</p>
+  </main>;
 }
