@@ -1,43 +1,20 @@
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Users, UserCheck, MessageSquareWarning, Settings, BookHeart, CreditCard, BadgePoundSterling, Shield, BarChart3, LifeBuoy } from 'lucide-react';
+import Link from 'next/link';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Users, UserCheck, MessageSquareWarning, Settings, BookHeart } from "lucide-react"; // Added BookHeart
-import Link from "next/link";
-
-const adminSections = [
-  { title: "User Management", description: "View and manage user accounts.", icon: <Users className="h-6 w-6" />, href: "/admin/users" },
-  { title: "Profile Verification", description: "Approve or reject profile verification requests.", icon: <UserCheck className="h-6 w-6" />, href: "/admin/verifications" },
-  { title: "Success Stories", description: "Manage submitted success stories.", icon: <BookHeart className="h-6 w-6" />, href: "/admin/success-stories" }, // Added Success Stories
-  { title: "Reported Content", description: "Review and moderate reported profiles or messages.", icon: <MessageSquareWarning className="h-6 w-6" />, href: "/admin/reports" }, // Placeholder
-  { title: "Site Settings", description: "Configure global application settings.", icon: <Settings className="h-6 w-6" />, href: "/admin/settings" }, // Placeholder
-];
+const sections = [
+  ['Members','Search, review and manage member accounts.',Users,'/admin/users'],
+  ['Plans & Pricing','Manage Free, Plus and Premium access rules.',BadgePoundSterling,'/admin/plans'],
+  ['Subscriptions','Review memberships, renewals and account access.',CreditCard,'/admin/subscriptions'],
+  ['Profile Verification','Review identity and profile verification requests.',UserCheck,'/admin/verifications'],
+  ['Moderation & Reports','Review reported profiles, messages and safety cases.',MessageSquareWarning,'/admin/reports'],
+  ['Success Stories','Manage community success stories.',BookHeart,'/admin/success-stories'],
+  ['Analytics','Monitor membership, engagement and conversion metrics.',BarChart3,'/admin/analytics'],
+  ['Support','Handle member support and account assistance.',LifeBuoy,'/admin/support'],
+  ['Site Settings','Manage operational feature and site configuration.',Settings,'/admin/settings'],
+  ['Admin Security','Roles, permissions and audit activity.',Shield,'/admin/security'],
+] as const;
 
 export default function AdminDashboardPage() {
-  return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-700">Admin Dashboard</h1>
-      <p className="text-slate-600">Welcome to the CupidMatch Admin Panel. Manage your application from here.</p>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {adminSections.map((section) => (
-          <Card key={section.title} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center gap-3 text-primary">
-                {section.icon}
-                <CardTitle className="text-xl">{section.title}</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <CardDescription>{section.description}</CardDescription>
-              <Link href={section.href} className="text-sm text-primary hover:underline mt-3 block">
-                Go to {section.title}
-              </Link>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-       <p className="text-sm text-slate-500 mt-8">
-        Some sections like 'Reported Content' and 'Site Settings' are placeholders. Further development is needed for full functionality.
-      </p>
-    </div>
-  );
+ return <div className="space-y-7"><div><p className="text-sm font-semibold text-primary">CupidMatch operations</p><h1 className="mt-1 text-3xl font-bold text-slate-800">Admin Control Centre</h1><p className="mt-2 text-slate-500">Manage members, subscriptions, safety and the commercial platform from one place.</p></div><div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">{sections.map(([title,description,Icon,href]) => <Link href={href} key={title}><Card className="h-full rounded-2xl transition hover:-translate-y-0.5 hover:shadow-lg"><CardHeader><div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5"/></div><CardTitle className="text-lg">{title}</CardTitle></CardHeader><CardContent><CardDescription>{description}</CardDescription></CardContent></Card></Link>)}</div></div>;
 }
