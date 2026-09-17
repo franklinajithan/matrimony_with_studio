@@ -44,6 +44,8 @@ export function PageHero({
         "relative w-full overflow-hidden rounded-[30px] border border-[#eadce5]",
         "bg-[radial-gradient(circle_at_88%_12%,rgba(184,113,172,0.20),transparent_34%),linear-gradient(135deg,#fffaf4_0%,#fff_45%,#f8eef7_100%)]",
         "p-5 shadow-[0_14px_45px_rgba(67,31,61,0.08)] sm:p-7",
+        "[&_input]:min-w-0 [&_input]:rounded-xl [&_input]:border [&_input]:border-[#dfcfdb] [&_input]:bg-white/90 [&_input]:px-3 [&_input]:py-2 [&_input]:shadow-sm",
+        "[&_input]:transition-colors [&_input]:placeholder:text-[#9a8495] [&_input:focus]:border-[#8b2be2] [&_input:focus]:bg-white",
         className
       )}
     >
