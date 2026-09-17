@@ -1,0 +1,1 @@
+Active/trialing status alone is insufficient when `current_period_end` exists: an elapsed or invalid end date resolves to Free. A null period end is permitted for manually provisioned/trial records until a provider period is recorded.
