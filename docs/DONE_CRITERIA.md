@@ -1,0 +1,1 @@
+Repository-side phase is complete when: one launch plan model exists; legacy Plus is migrated; pricing/entitlements are centralized; server authorization and quota primitives exist; billing/admin tables are protected; admin read/audit foundation exists; CI is green. Live Stripe is a separate external activation gate requiring credentials and provider integration.
