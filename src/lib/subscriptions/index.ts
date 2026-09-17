@@ -9,3 +9,4 @@ export * from './price-copy';
 export * from './feature-map';
 export * from './validation';
 export * from './upgrade';
+export * from './errors';
