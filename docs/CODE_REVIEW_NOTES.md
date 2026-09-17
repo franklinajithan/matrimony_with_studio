@@ -1,0 +1,1 @@
+Review focus: migration order compatibility between the two historical subscription foundations; server-only admin authorization; RLS/write grants; paid-state expiry; atomic usage limits; and fail-closed Stripe routes. No production payment success path is claimed without Stripe credentials/provider integration.
