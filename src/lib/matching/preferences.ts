@@ -26,32 +26,32 @@ export function partnerPreferencesFromProfile(profile: Profile): PartnerPreferen
 export function filtersFromPreferences(prefs: PartnerPreferences): DiscoveryFilters { return { ...prefs, query: "" }; }
 
 function candidateDetails(profile: Profile) {
-  const extra = record(profile.extra); const relationship = record(profile.relationshipIntentions); const lifestyle = record(profile.valuesLifestyle); const family = record(profile.culturalFamily); const settlement = record(profile.settlement); const draft = record(profile.onboardingDraft);
+  const extra = record(profile.extra); const match = record(extra.matchDetails); const relationship = record(profile.relationshipIntentions); const lifestyle = record(profile.valuesLifestyle); const family = record(profile.culturalFamily); const settlement = record(profile.settlement); const draft = record(profile.onboardingDraft);
   return {
-    gender: String(extra.gender || draft.gender || ""), maritalStatus: String(extra.maritalStatus || relationship.maritalStatus || draft.maritalStatus || ""),
-    education: profile.educationLevel || String(extra.education || ""), height: number(profile.height),
-    wantsChildren: String(relationship.wantsChildren || relationship.children || extra.wantsChildren || ""), relocation: String(settlement.relocation || settlement.relocationOpenness || extra.relocation || ""),
-    familyInvolvement: String(family.familyInvolvement || extra.familyInvolvement || ""), marriageTimeline: String(relationship.marriageTimeline || relationship.timeline || extra.marriageTimeline || ""),
-    smoking: profile.smokingHabits || String(lifestyle.smoking || ""), drinking: profile.drinkingHabits || String(lifestyle.drinking || ""),
+    gender: String(match.gender || extra.gender || draft.gender || ""), maritalStatus: String(match.maritalStatus || extra.maritalStatus || relationship.maritalStatus || draft.maritalStatus || ""),
+    country: String(match.country || profile.country || ""), languages: strings(match.languages).length ? strings(match.languages) : (profile.languages?.length ? profile.languages : strings(profile.language)),
+    education: profile.educationLevel || String(match.education || extra.education || ""), height: number(profile.height || match.height),
+    wantsChildren: String(match.wantsChildren || relationship.wantsChildren || relationship.children || extra.wantsChildren || ""), relocation: String(match.relocation || settlement.relocation || settlement.relocationOpenness || extra.relocation || ""),
+    familyInvolvement: String(match.familyInvolvement || family.familyInvolvement || extra.familyInvolvement || ""), marriageTimeline: String(match.marriageTimeline || relationship.marriageTimeline || relationship.timeline || extra.marriageTimeline || ""),
+    smoking: profile.smokingHabits || String(match.smoking || lifestyle.smoking || ""), drinking: profile.drinkingHabits || String(match.drinking || lifestyle.drinking || ""),
   };
 }
 
 export function profileMatchesFilters(profile: Profile, filters: DiscoveryFilters): boolean {
-  const q = filters.query.trim().toLowerCase(); if (q && ![profile.displayName, profile.profession, profile.location, profile.country].some((v) => v?.toLowerCase().includes(q))) return false;
+  const c = candidateDetails(profile); const q = filters.query.trim().toLowerCase(); if (q && ![profile.displayName, profile.profession, profile.location, c.country].some((v) => v?.toLowerCase().includes(q))) return false;
   if (filters.ageMin && profile.ageYears && profile.ageYears < filters.ageMin) return false; if (filters.ageMax && profile.ageYears && profile.ageYears > filters.ageMax) return false;
-  if (!includes(filters.countries, profile.country)) return false; if (filters.languages.length && !filters.languages.some((language) => (profile.languages || [profile.language]).some((v) => same(v, language)))) return false;
+  if (!includes(filters.countries, c.country)) return false; if (filters.languages.length && !filters.languages.some((language) => c.languages.some((v) => same(v, language)))) return false;
   if (!includes(filters.religions, profile.religion)) return false;
   if (filters.professions.length && !filters.professions.some((wanted) => profile.profession?.toLowerCase().includes(wanted.toLowerCase()))) return false;
-  if (!includes(filters.smoking, profile.smokingHabits)) return false; if (!includes(filters.drinking, profile.drinkingHabits)) return false; return true;
+  if (!includes(filters.smoking, c.smoking)) return false; if (!includes(filters.drinking, c.drinking)) return false; return true;
 }
 
 export function preferenceScore(profile: Profile, prefs: PartnerPreferences): PreferenceScore {
   const c = candidateDetails(profile); const checks: { key: string; label: string; applies: boolean; known: boolean; matched: boolean }[] = [];
   const add = (key: string, label: string, applies: boolean, known: boolean, matched: boolean) => checks.push({ key, label, applies, known, matched });
   add("Age", "Age", Boolean(prefs.ageMin || prefs.ageMax), Boolean(profile.ageYears), Boolean(profile.ageYears && (!prefs.ageMin || profile.ageYears >= prefs.ageMin) && (!prefs.ageMax || profile.ageYears <= prefs.ageMax)));
-  add("Country", profile.country || "Country", prefs.countries.length > 0, Boolean(profile.country), includes(prefs.countries, profile.country));
-  const profileLanguages = profile.languages?.length ? profile.languages : strings(profile.language); const language = prefs.languages.find((wanted) => profileLanguages.some((v) => same(v, wanted)));
-  add("Language", language || "Language", prefs.languages.length > 0, profileLanguages.length > 0, Boolean(language));
+  add("Country", c.country || "Country", prefs.countries.length > 0, Boolean(c.country), includes(prefs.countries, c.country));
+  const language = prefs.languages.find((wanted) => c.languages.some((v) => same(v, wanted))); add("Language", language || "Language", prefs.languages.length > 0, c.languages.length > 0, Boolean(language));
   add("Religion", profile.religion || "Religion", prefs.religions.length > 0, Boolean(profile.religion), includes(prefs.religions, profile.religion));
   add("Profession", "Profession", prefs.professions.length > 0, Boolean(profile.profession), prefs.professions.some((wanted) => profile.profession?.toLowerCase().includes(wanted.toLowerCase())));
   add("Smoking", "Smoking", prefs.smoking.length > 0, Boolean(c.smoking), includes(prefs.smoking, c.smoking)); add("Drinking", "Drinking", prefs.drinking.length > 0, Boolean(c.drinking), includes(prefs.drinking, c.drinking));
