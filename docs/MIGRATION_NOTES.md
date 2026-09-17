@@ -1,0 +1,1 @@
+Legacy `plus` memberships are mapped to launch `premium` before the old plan row is removed. The launch plan code constraint permits only `free`, `premium`, and `premium_plus`. Legacy `user_subscriptions` is retained for migration/audit compatibility; new trusted entitlement resolution uses `member_subscriptions`.
