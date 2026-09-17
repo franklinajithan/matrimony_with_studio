@@ -90,3 +90,10 @@ export {
   revokeShareLink,
   getShareByToken,
 } from "./biodata";
+export {
+  resolveSharedProfile,
+  createProfileShareLink,
+  revokeProfileShareLink,
+  listActiveProfileShareLinks,
+} from "./profile-share";
+export type { SharedProfilePublic } from "./profile-share";

@@ -59,6 +59,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ShareProfileButton } from "@/components/profile/ShareProfileButton";
 
 interface StoredPhoto {
   id: string;
@@ -677,7 +678,14 @@ export default function ProfilePage() {
                 </p>
               </div>
             </div>
-            {renderActionButtons()}
+            <div className="flex shrink-0 items-center gap-2">
+              {currentFirebaseUser &&
+              viewedUserProfile &&
+              currentFirebaseUser.uid === viewedUserProfile.userId ? (
+                <ShareProfileButton compact />
+              ) : null}
+              {renderActionButtons()}
+            </div>
           </div>
         </div>
       </div>
