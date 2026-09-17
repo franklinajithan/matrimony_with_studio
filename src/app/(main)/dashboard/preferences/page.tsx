@@ -1,244 +1,161 @@
-
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Heart, Loader2, Save, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
-import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
-import { SlidersHorizontal, Users, MapPin, Briefcase, Ruler, Languages, EyeOff } from 'lucide-react'; // Added EyeOff
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch"; // Added Switch import
+import { Label } from "@/components/ui/label";
+import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
+import { useToast } from "@/hooks/use-toast";
+import { auth, onAuthStateChanged } from "@/lib/supabase/auth";
+import { getProfile, updateUserProfile } from "@/lib/supabase/profiles";
+import { COUNTRY_OPTIONS, LANGUAGE_OPTIONS } from "@/lib/onboarding/schema";
+import type { Profile } from "@/lib/supabase/types";
+import type { PartnerPreferences } from "@/lib/matching/preferences";
+import { partnerPreferencesFromProfile } from "@/lib/matching/preferences";
 
-// Mock existing user preferences
-const currentUserPreferences = {
-  ageRange: { min: 25, max: 35 },
-  heightRange: { min: "5'2\"", max: "6'0\"" }, 
-  religion: ["Hinduism", "Sikhism"],
-  caste: "Any",
-  language: ["English", "Hindi", "Punjabi", "Tamil", "Sinhala"],
-  locationProximity: "100km", 
-  professionType: ["Technology", "Healthcare"],
-  showOnlyVerified: true,
-  rasiNakshatraPref: "Consider", 
-  incognitoMode: false, // Added for mock data consistency
+const RELIGIONS = ["Hinduism", "Christianity", "Islam", "Buddhism", "Sikhism", "Jainism", "Other"];
+const GENDERS = ["Woman", "Man", "Non-binary", "No preference"];
+const MARITAL = ["Never married", "Divorced", "Widowed", "Separated", "No preference"];
+const HABITS = ["Never", "Occasionally", "Socially", "Prefer not to say"];
+
+type PreferenceForm = PartnerPreferences & {
+  gender: string;
+  maritalStatuses: string[];
+  heightMin: string;
+  heightMax: string;
+  education: string[];
+  relocation: string;
+  wantsChildren: string;
+  familyInvolvement: string;
+  marriageTimeline: string;
+  mustHaves: string[];
 };
 
-const preferencesSchema = z.object({
-  ageMin: z.coerce.number().min(18).max(99),
-  ageMax: z.coerce.number().min(18).max(99),
-  heightMin: z.string().optional(), 
-  heightMax: z.string().optional(),
-  religion: z.array(z.string()).optional(), 
-  caste: z.string().optional(),
-  language: z.array(z.string()).optional(), 
-  location: z.string().optional(),
-  profession: z.string().optional(),
-  rasiNakshatraPref: z.enum(["Strict", "Consider", "Ignore"]),
-  showOnlyVerified: z.boolean(),
-  incognitoMode: z.boolean().optional(), // Added incognitoMode to schema
-}).refine(data => data.ageMin <= data.ageMax, {
-  message: "Min age cannot be greater than max age.",
-  path: ["ageMax"],
-});
+const EMPTY: PreferenceForm = {
+  ageMin: 25, ageMax: 35, gender: "No preference", countries: [], languages: [], religions: [], professions: [],
+  smoking: [], drinking: [], maritalStatuses: [], heightMin: "", heightMax: "", education: [], relocation: "",
+  wantsChildren: "", familyInvolvement: "", marriageTimeline: "", mustHaves: [],
+};
 
+const list = (value: unknown) => Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
 
-const religionOptionsForCheckboxes = [
-  { id: "Hinduism", label: "Hinduism" },
-  { id: "Islam", label: "Islam" },
-  { id: "Christianity", label: "Christianity" },
-  { id: "Sikhism", label: "Sikhism" },
-  { id: "Buddhism", label: "Buddhism" },
-  { id: "Jainism", label: "Jainism" },
-  { id: "Zoroastrianism", label: "Zoroastrianism" },
-  { id: "Atheism", label: "Atheism" },
-  { id: "Agnosticism", label: "Agnosticism" },
-  { id: "Spiritual", label: "Spiritual but not religious" },
-  { id: "Other", label: "Other" },
-  { id: "NoPreferenceReligion", label: "Any/No Preference" },
-];
-
-
-export default function EditPreferencesPage() {
+export default function PartnerPreferencesPage() {
+  const router = useRouter();
   const { toast } = useToast();
-  const form = useForm<z.infer<typeof preferencesSchema>>({
-    resolver: zodResolver(preferencesSchema),
-    defaultValues: {
-      ageMin: currentUserPreferences.ageRange.min,
-      ageMax: currentUserPreferences.ageRange.max,
-      heightMin: currentUserPreferences.heightRange.min,
-      heightMax: currentUserPreferences.heightRange.max,
-      religion: currentUserPreferences.religion,
-      caste: currentUserPreferences.caste,
-      language: currentUserPreferences.language,
-      location: currentUserPreferences.locationProximity,
-      profession: currentUserPreferences.professionType.join(', '), 
-      rasiNakshatraPref: currentUserPreferences.rasiNakshatraPref as "Strict" | "Consider" | "Ignore",
-      showOnlyVerified: currentUserPreferences.showOnlyVerified,
-      incognitoMode: currentUserPreferences.incognitoMode || false, // Added default value
-    },
+  const [userId, setUserId] = useState<string | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [form, setForm] = useState<PreferenceForm>(EMPTY);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => onAuthStateChanged(auth, (user) => {
+    if (!user) { router.replace("/login?next=/dashboard/preferences"); return; }
+    setUserId(user.uid);
+    void getProfile(user.uid).then((p) => {
+      if (!p) return;
+      setProfile(p);
+      const basic = partnerPreferencesFromProfile(p);
+      const extra = ((p.extra || {}) as Record<string, any>).partnerPreferences || {};
+      setForm({
+        ...EMPTY, ...basic,
+        gender: String(extra.gender || "No preference"),
+        maritalStatuses: list(extra.maritalStatuses),
+        heightMin: String(extra.heightMin || ""), heightMax: String(extra.heightMax || ""),
+        education: list(extra.education), relocation: String(extra.relocation || ""),
+        wantsChildren: String(extra.wantsChildren || ""), familyInvolvement: String(extra.familyInvolvement || ""),
+        marriageTimeline: String(extra.marriageTimeline || ""), mustHaves: list(extra.mustHaves),
+      });
+    }).catch(() => toast({ title: "Could not load preferences", variant: "destructive" })).finally(() => setLoading(false));
+  }), [router, toast]);
+
+  const patch = (next: Partial<PreferenceForm>) => setForm((current) => ({ ...current, ...next }));
+  const toggle = (key: keyof PreferenceForm, value: string) => setForm((current) => {
+    const values = Array.isArray(current[key]) ? current[key] as string[] : [];
+    return { ...current, [key]: values.includes(value) ? values.filter((v) => v !== value) : [...values, value] };
   });
 
-  async function onSubmit(values: z.infer<typeof preferencesSchema>) {
-    console.log("Preferences update submitted:", values);
-    toast({
-      title: "Preferences Updated (Mock)",
-      description: "Your match preferences would be saved.",
-    });
-    // Here you would save preferences to Firestore
+  async function save() {
+    if (!userId || !profile) return;
+    if (form.ageMin && form.ageMax && form.ageMin > form.ageMax) {
+      toast({ title: "Check age range", description: "Minimum age cannot be higher than maximum age.", variant: "destructive" }); return;
+    }
+    setSaving(true);
+    try {
+      await updateUserProfile(userId, { extra: { ...(profile.extra || {}), partnerPreferences: form } });
+      setProfile({ ...profile, extra: { ...(profile.extra || {}), partnerPreferences: form } });
+      toast({ title: "Partner preferences saved", description: "Discovery will use these as your default filters." });
+    } catch (error) {
+      toast({ title: "Could not save preferences", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
+    } finally { setSaving(false); }
   }
-  
-  return (
-    <PageFrame>
-      <PageHero
-        eyebrow="Matching"
-        title="Match preferences"
-        description="Refine your criteria to find the most compatible partners on CupidMatch."
-      />
-    <Card className="w-full rounded-2xl border-[#eadde7] shadow-sm">
-      <CardContent className="pt-6">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="space-y-4 p-4 border rounded-md shadow-sm">
-                <h3 className="font-semibold text-lg flex items-center gap-2"><Users className="h-5 w-5 text-muted-foreground" />Basic Criteria</h3>
-                <div className="grid md:grid-cols-2 gap-6">
-                    <FormField control={form.control} name="ageMin" render={({ field }) => (
-                    <FormItem><FormLabel>Min Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField control={form.control} name="ageMax" render={({ field }) => (
-                    <FormItem><FormLabel>Max Age</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                </div>
-                <div className="grid md:grid-cols-2 gap-6">
-                    <FormField control={form.control} name="heightMin" render={({ field }) => (
-                    <FormItem><FormLabel className="flex items-center"><Ruler className="mr-2 h-4 w-4 text-muted-foreground" />Min Height</FormLabel><FormControl><Input placeholder="e.g., 5'2&quot; or 157cm" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField control={form.control} name="heightMax" render={({ field }) => (
-                    <FormItem><FormLabel className="flex items-center"><Ruler className="mr-2 h-4 w-4 text-muted-foreground" />Max Height</FormLabel><FormControl><Input placeholder="e.g., 6'0&quot; or 183cm" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                </div>
-            </div>
 
-            <div className="space-y-4 p-4 border rounded-md shadow-sm">
-                <h3 className="font-semibold text-lg">Community & Location</h3>
-                 <FormField control={form.control} name="religion" render={() => (
-                    <FormItem>
-                        <FormLabel>Preferred Religion(s)</FormLabel>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">
-                        {religionOptionsForCheckboxes.map(option => (
-                            <FormField
-                                key={option.id}
-                                control={form.control}
-                                name="religion"
-                                render={({ field }) => (
-                                    <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                                    <FormControl>
-                                        <Checkbox
-                                            checked={field.value?.includes(option.id)}
-                                            onCheckedChange={(checked) => {
-                                                const currentValue = field.value || [];
-                                                if (option.id === "NoPreferenceReligion") {
-                                                    return checked ? field.onChange([]) : field.onChange(currentValue.filter(v => v !== option.id)); 
-                                                }
-                                                return checked
-                                                    ? field.onChange([...currentValue, option.id])
-                                                    : field.onChange(currentValue.filter((value) => value !== option.id))
-                                            }}
-                                        />
-                                    </FormControl>
-                                    <FormLabel className="font-normal text-sm">{option.label}</FormLabel>
-                                    </FormItem>
-                                )}
-                            />
-                        ))}
-                        </div>
-                        <FormMessage />
-                    </FormItem>
-                )} />
-                <FormField control={form.control} name="caste" render={({ field }) => (
-                    <FormItem><FormLabel>Caste/Community (Type 'Any' if no preference)</FormLabel><FormControl><Input placeholder="e.g., Brahmin, Gounder, Any" {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                 <FormField control={form.control} name="language" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel className="flex items-center"><Languages className="mr-2 h-4 w-4 text-muted-foreground" />Preferred Language(s)</FormLabel>
-                         <FormControl><Input placeholder="e.g., English, Tamil, Sinhala (comma-separated)" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )} />
-                <FormField control={form.control} name="location" render={({ field }) => (
-                    <FormItem><FormLabel className="flex items-center"><MapPin className="mr-2 h-4 w-4 text-muted-foreground" />Preferred Location / Proximity</FormLabel><FormControl><Input placeholder="e.g., Colombo, Chennai, Within 100km" {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-            </div>
-            
-            <div className="space-y-4 p-4 border rounded-md shadow-sm">
-                <h3 className="font-semibold text-lg flex items-center gap-2"><Briefcase className="h-5 w-5 text-muted-foreground" />Profession & Lifestyle</h3>
-                <FormField control={form.control} name="profession" render={({ field }) => (
-                    <FormItem><FormLabel>Preferred Profession(s) (comma-separated)</FormLabel><FormControl><Input placeholder="e.g., Doctor, Engineer, Artist, Any" {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-            </div>
+  if (loading) return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="h-7 w-7 animate-spin text-primary" /></div>;
 
-            <div className="space-y-4 p-4 border rounded-md shadow-sm">
-                 <h3 className="font-semibold text-lg">Advanced Settings</h3>
-                 <FormField control={form.control} name="rasiNakshatraPref" render={({ field }) => (
-                    <FormItem><FormLabel>Rasi/Nakshatra Matching</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select Preference" /></SelectTrigger></FormControl>
-                        <SelectContent>
-                            <SelectItem value="Strict">Strictly Match</SelectItem>
-                            <SelectItem value="Consider">Consider Matching</SelectItem>
-                            <SelectItem value="Ignore">Ignore / Not Important</SelectItem>
-                        </SelectContent>
-                    </Select><FormMessage /></FormItem>
-                )} />
-                 <FormField control={form.control} name="showOnlyVerified" render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-muted/20">
-                        <div className="space-y-0.5">
-                            <FormLabel>Show only Admin-Verified Profiles</FormLabel>
-                            <FormDescription>Filter out profiles that haven't been verified by our team.</FormDescription>
-                        </div>
-                        <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                    </FormItem>
-                )} />
-                 <FormField
-                    control={form.control}
-                    name="incognitoMode"
-                    render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-muted/20 mt-4">
-                        <div className="space-y-0.5">
-                            <FormLabel className="flex items-center">
-                            <EyeOff className="mr-2 h-4 w-4 text-muted-foreground" />
-                            Incognito Mode
-                            </FormLabel>
-                            <FormDescription>
-                            Browse profiles without appearing in others' "Viewed Me" list. (May be a premium feature)
-                            </FormDescription>
-                        </div>
-                        <FormControl>
-                            <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            aria-label="Toggle Incognito Mode"
-                            />
-                        </FormControl>
-                        </FormItem>
-                    )}
-                />
-            </div>
+  return <PageFrame>
+    <PageHero eyebrow="Partner preferences" title="Who are you hoping to meet?" description="Tell CupidMatch about the partner you are looking for. These are not your profile details — they become your default Discovery filters." />
 
-            <Button type="submit" className="w-full rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-3">
-              Save Preferences
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
-    </PageFrame>
-  );
+    <div className="space-y-5">
+      <Section title="The person you're looking for" description="Start with the essentials. You can change these any time.">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="I am looking for"><select className="field" value={form.gender} onChange={(e) => patch({ gender: e.target.value })}>{GENDERS.map(v => <option key={v}>{v}</option>)}</select></Field>
+          <Field label="Minimum age"><Input type="number" min={18} max={99} value={form.ageMin || ""} onChange={(e) => patch({ ageMin: Number(e.target.value) || undefined })} /></Field>
+          <Field label="Maximum age"><Input type="number" min={18} max={99} value={form.ageMax || ""} onChange={(e) => patch({ ageMax: Number(e.target.value) || undefined })} /></Field>
+        </div>
+        <Multi title="Preferred marital status" options={MARITAL} selected={form.maritalStatuses} onToggle={(v) => toggle("maritalStatuses", v)} />
+      </Section>
+
+      <Section title="Where could your partner live?" description="Choose one or more countries. Leave empty if location does not matter.">
+        <Multi title="Preferred countries" options={[...COUNTRY_OPTIONS]} selected={form.countries} onToggle={(v) => toggle("countries", v)} />
+      </Section>
+
+      <Section title="Culture, language & faith" description="Only choose what genuinely matters to you.">
+        <Multi title="Preferred languages" options={LANGUAGE_OPTIONS.map(v => v.label)} selected={form.languages} onToggle={(v) => toggle("languages", v)} />
+        <Multi title="Preferred religion or worldview" options={RELIGIONS} selected={form.religions} onToggle={(v) => toggle("religions", v)} />
+      </Section>
+
+      <Section title="Education, work & lifestyle" description="These are preferences about your future partner, not questions about you.">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Preferred profession(s)"><Input value={form.professions.join(", ")} onChange={(e) => patch({ professions: e.target.value.split(",").map(v => v.trim()).filter(Boolean) })} placeholder="e.g. Engineer, Doctor — or leave empty" /></Field>
+          <Field label="Preferred education"><Input value={form.education.join(", ")} onChange={(e) => patch({ education: e.target.value.split(",").map(v => v.trim()).filter(Boolean) })} placeholder="e.g. Bachelor's, Master's" /></Field>
+          <Field label="Minimum height (optional)"><Input value={form.heightMin} onChange={(e) => patch({ heightMin: e.target.value })} placeholder="e.g. 160 cm" /></Field>
+          <Field label="Maximum height (optional)"><Input value={form.heightMax} onChange={(e) => patch({ heightMax: e.target.value })} placeholder="e.g. 185 cm" /></Field>
+        </div>
+        <Multi title="Smoking preference" options={HABITS} selected={form.smoking} onToggle={(v) => toggle("smoking", v)} />
+        <Multi title="Drinking preference" options={HABITS} selected={form.drinking} onToggle={(v) => toggle("drinking", v)} />
+      </Section>
+
+      <Section title="Building a future together" description="Match on the practical things that can matter in a serious relationship.">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <SelectField label="Relocation" value={form.relocation} onChange={(v) => patch({ relocation: v })} options={["Doesn't matter", "Open to relocating", "Would relocate for the right person", "Prefer someone settled where I am"]} />
+          <SelectField label="Children" value={form.wantsChildren} onChange={(v) => patch({ wantsChildren: v })} options={["Doesn't matter", "Wants children", "Does not want children", "Open to discussing"]} />
+          <SelectField label="Family involvement" value={form.familyInvolvement} onChange={(v) => patch({ familyInvolvement: v })} options={["Doesn't matter", "Close family involvement", "Some family involvement", "Prefer independent decisions"]} />
+          <SelectField label="Marriage timeline" value={form.marriageTimeline} onChange={(v) => patch({ marriageTimeline: v })} options={["Doesn't matter", "Ready when it feels right", "Within 1–2 years", "Still exploring"]} />
+        </div>
+      </Section>
+
+      <Section title="What is non-negotiable?" description="Mark only genuine deal-breakers. CupidMatch can keep profiles outside these requirements out of your default results.">
+        <Multi title="Must-have criteria" options={["Age", "Country", "Language", "Religion", "Marital status", "Smoking", "Drinking", "Children", "Relocation"]} selected={form.mustHaves} onToggle={(v) => toggle("mustHaves", v)} />
+      </Section>
+
+      <div className="sticky bottom-4 z-10 flex flex-col gap-3 rounded-2xl border bg-background/95 p-4 shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground"><Sparkles className="h-4 w-4 text-primary" />Your saved choices automatically become Discovery filters.</div>
+        <Button onClick={() => void save()} disabled={saving} className="min-h-11 rounded-xl">{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}Save partner preferences</Button>
+      </div>
+    </div>
+    <style jsx>{`.field{display:flex;min-height:2.75rem;width:100%;border-radius:.375rem;border:1px solid hsl(var(--input));background:hsl(var(--background));padding:.5rem .75rem;font-size:.875rem}`}</style>
+  </PageFrame>;
 }
 
-    
+function Section({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
+  return <section className="rounded-2xl border border-[#eadde7] bg-card p-5 shadow-sm sm:p-6"><div className="mb-5 flex gap-3"><div className="mt-0.5 rounded-full bg-primary/10 p-2"><Heart className="h-4 w-4 text-primary" /></div><div><h2 className="text-lg font-semibold">{title}</h2><p className="mt-1 text-sm text-muted-foreground">{description}</p></div></div><div className="space-y-5">{children}</div></section>;
+}
+function Field({ label, children }: { label: string; children: React.ReactNode }) { return <div className="space-y-2"><Label>{label}</Label>{children}</div>; }
+function Multi({ title, options, selected, onToggle }: { title: string; options: readonly string[]; selected: string[]; onToggle: (value: string) => void }) {
+  return <div><Label className="mb-3 block">{title}</Label><div className="flex flex-wrap gap-2">{options.map((option) => <label key={option} className={`flex min-h-10 cursor-pointer items-center gap-2 rounded-full border px-3 text-sm ${selected.includes(option) ? "border-primary bg-primary/10 text-primary" : "bg-background"}`}><Checkbox checked={selected.includes(option)} onCheckedChange={() => onToggle(option)} /><span>{option}</span></label>)}</div></div>;
+}
+function SelectField({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
+  return <Field label={label}><select className="field" value={value} onChange={(e) => onChange(e.target.value)}><option value="">No preference</option>{options.map(v => <option key={v} value={v}>{v}</option>)}</select></Field>;
+}
