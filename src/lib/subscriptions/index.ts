@@ -23,3 +23,4 @@ export * from './terms';
 export * from './period';
 export * from './launch';
 export * from './fair-use';
+export * from './schema-version';
