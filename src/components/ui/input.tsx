@@ -1,11 +1,13 @@
 import * as React from "react"
 
 import { DateOfBirthPicker } from "@/components/profile/DateOfBirthPicker"
+import { CountryMultiSelectInput } from "@/components/profile/CountryMultiSelectInput"
 import { cn } from "@/lib/utils"
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, ...props }, ref) => {
     const isDobInput = type === "date" && (props.id === "dob" || props.name === "dob")
+    const isPreferredSettlement = props.id === "preferredSettlement" || props.name === "preferredSettlement"
 
     if (isDobInput) {
       const value = typeof props.value === "string" ? props.value : ""
@@ -33,6 +35,19 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
             }}
           />
         </div>
+      )
+    }
+
+    if (isPreferredSettlement) {
+      return (
+        <CountryMultiSelectInput
+          id={props.id}
+          value={typeof props.value === "string" ? props.value : ""}
+          disabled={props.disabled}
+          className={className}
+          placeholder={props.placeholder}
+          onChange={props.onChange}
+        />
       )
     }
 
