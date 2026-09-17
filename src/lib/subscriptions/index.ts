@@ -5,3 +5,4 @@ export * from './constants';
 export * from './usage';
 export * from './security';
 export * from './plan-copy';
+export * from './feature-map';
