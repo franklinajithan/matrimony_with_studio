@@ -1,0 +1,1 @@
+Admin plan edits/manual subscription grants are not exposed yet. Enabling them safely requires a server service-role client, explicit admin re-authorization, input validation, optimistic/concurrency handling and an `admin_audit_log` insert. The current UI remains read-only for billing administration.
