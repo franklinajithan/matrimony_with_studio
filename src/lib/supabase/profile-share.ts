@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/env";
-import { resolveMediaUrl } from "@/lib/supabase/storage";
+import { extractStoragePath, getPublicMediaUrl } from "@/lib/supabase/storage";
 
 export const PROFILE_SHARE_TTL_MS = 48 * 60 * 60 * 1000;
 export const PROFILE_SHARE_MAX_ACTIVE = 10;
@@ -23,16 +23,30 @@ export async function hashShareToken(token: string): Promise<string> {
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 function isPlausibleToken(token: string): boolean { return /^[A-Za-z0-9_-]{32,64}$/.test(token.trim()); }
+
+/** Open Graph image rendering needs an absolute URL; browser-relative /profiles/* URLs are not fetchable by ImageResponse. */
+function absoluteSharedPhotoUrl(value: string): string {
+  const photo = value.trim();
+  if (!photo) return "";
+  if (/^https?:\/\//i.test(photo)) return photo;
+  const storagePath = extractStoragePath(photo);
+  if (storagePath) return getPublicMediaUrl(storagePath);
+  const siteHost = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL || "matrimony-with-studio.vercel.app";
+  const siteUrl = siteHost.startsWith("http") ? siteHost : `https://${siteHost}`;
+  return new URL(photo.startsWith("/") ? photo : `/${photo}`, siteUrl).toString();
+}
+
 function mapResolved(row: Record<string, unknown>): SharedProfilePublic {
   const ageRaw = row.age_years;
   const age = typeof ageRaw === "number" && Number.isFinite(ageRaw) ? ageRaw : ageRaw != null && Number.isFinite(Number(ageRaw)) ? Number(ageRaw) : null;
+  const rawPhoto = typeof row.photo_url === "string" ? row.photo_url : "";
   return {
     linkId: String(row.link_id), profileId: String(row.profile_id), expiresAt: String(row.expires_at),
     displayName: String(row.display_name || "Member").slice(0, 80), age: age != null && age >= 18 && age <= 120 ? age : null,
     location: typeof row.location === "string" && row.location.trim() ? row.location.trim().slice(0, 120) : null,
     profession: typeof row.profession === "string" && row.profession.trim() ? row.profession.trim().slice(0, 120) : null,
     bio: typeof row.bio === "string" && row.bio.trim() ? row.bio.trim().slice(0, 600) : null,
-    photoURL: resolveMediaUrl(typeof row.photo_url === "string" && row.photo_url.trim() ? row.photo_url.trim() : "") || null,
+    photoURL: absoluteSharedPhotoUrl(rawPhoto) || null,
     isVerified: Boolean(row.is_verified),
   };
 }
@@ -56,18 +70,10 @@ export async function createProfileShareLink(ownerId: string, profileId = ownerI
   const supabase = await createSupabaseServerClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user || user.id !== ownerId) throw new Error("Unauthorized");
-
-  // Do not SELECT the target profile here: normal profile RLS intentionally only lets a
-  // member read their own row. The SECURITY DEFINER RPC validates that the target exists
-  // and is published, then creates the share token without weakening profile RLS.
   const token = createRawShareToken();
   const tokenHash = await hashShareToken(token);
   const expiresAt = new Date(Date.now() + PROFILE_SHARE_TTL_MS).toISOString();
-  const { data, error } = await supabase.rpc("create_profile_share", {
-    p_profile_id: profileId,
-    p_token_hash: tokenHash,
-    p_expires_at: expiresAt,
-  });
+  const { data, error } = await supabase.rpc("create_profile_share", { p_profile_id: profileId, p_token_hash: tokenHash, p_expires_at: expiresAt });
   if (error) throw error;
   const inserted = Array.isArray(data) ? data[0] : data;
   if (!inserted?.link_id) throw new Error("Could not create share link.");
