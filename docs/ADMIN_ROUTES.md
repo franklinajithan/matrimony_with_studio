@@ -1,0 +1,1 @@
+Protected billing/admin reads: `/api/admin/access`, `/api/admin/plans`, `/api/admin/subscriptions`, `/api/admin/billing-events`, `/api/admin/audit`, `/api/admin/health`. All call the server admin authorization helper. No client-side admin write API is exposed in this phase.
