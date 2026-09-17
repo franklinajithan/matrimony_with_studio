@@ -17,3 +17,4 @@ export * from './compatibility';
 export * from './architecture';
 export * from './currency';
 export * from './format';
+export * from './terms';
