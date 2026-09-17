@@ -15,3 +15,5 @@ export * from './savings';
 export * from './catalogue';
 export * from './compatibility';
 export * from './architecture';
+export * from './currency';
+export * from './format';
