@@ -105,7 +105,7 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   commentNotifications: "comment_notifications", relationshipIntentions: "relationship_intentions", valuesLifestyle: "values_lifestyle",
   culturalFamily: "cultural_family", email: "email", bio: "bio", location: "location", profession: "profession", height: "height",
   dob: "dob", religion: "religion", caste: "caste", language: "language", hobbies: "hobbies", nakshatra: "nakshatra",
-  country: "country", region: "region", languages: "languages", settlement: "settlement",
+  country: "country", region: "region", languages: "languages", settlement: "settlement", extra: "extra",
 };
 
 const IGNORE_KEYS = new Set([
