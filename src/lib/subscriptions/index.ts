@@ -20,3 +20,4 @@ export * from './currency';
 export * from './format';
 export * from './terms';
 export * from './period';
+export * from './launch';
