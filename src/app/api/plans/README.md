@@ -1,0 +1,1 @@
+`GET /api/plans` exposes the launch catalogue for pricing UI. It is presentation data only. Authentication/authorization code must resolve the member's effective plan server-side instead of trusting a selected plan from this response.
