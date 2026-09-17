@@ -1,0 +1,1 @@
+import { strict as assert } from 'node:assert';import { clientMayMutateSubscription,mustUseVerifiedWebhook } from './security';assert.equal(clientMayMutateSubscription,false);assert.equal(mustUseVerifiedWebhook,true);
