@@ -1,0 +1,1 @@
+Paid subscriptions are **not** a go-live feature until Stripe credentials/Price IDs exist and the provider implementation passes test-mode webhook verification. The rest of CupidMatch can deploy with billing disabled: all paid activation endpoints fail closed and users resolve safely to Free unless a trusted active/trialing subscription already exists.
