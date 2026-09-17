@@ -6,3 +6,4 @@ export * from './usage';
 export * from './security';
 export * from './plan-copy';
 export * from './feature-map';
+export * from './validation';
