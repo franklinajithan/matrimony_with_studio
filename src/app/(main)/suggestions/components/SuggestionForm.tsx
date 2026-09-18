@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useState } from 'react';
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
 import * as z from "zod";
 import { intelligentMatchSuggestions, IntelligentMatchSuggestionsInput, IntelligentMatchSuggestionsOutput } from '@/ai/flows/intelligent-match-suggestions';
@@ -51,7 +50,7 @@ const formSchema = z.object({
   allPotentialMatches: z.array(potentialMatchSchema).min(1, "At least one potential match is required."),
 });
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.input<typeof formSchema>;
 
 const defaultUserProfile: z.input<typeof profileSchema> = {
   age: 30,
@@ -106,7 +105,6 @@ export function SuggestionForm() {
   const [suggestions, setSuggestions] = useState<IntelligentMatchSuggestionsOutput | null>(null);
 
   const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
     defaultValues: {
       userProfile: defaultUserProfile,
       userActivity: {
@@ -122,20 +120,26 @@ export function SuggestionForm() {
     name: "allPotentialMatches",
   });
 
-  async function onSubmit(values: FormData) {
+  async function onSubmit(rawValues: FormData) {
+    const parsed = formSchema.safeParse(rawValues);
+    if (!parsed.success) {
+      const firstIssue = parsed.error.issues[0];
+      toast({
+        title: "Check the form",
+        description: firstIssue?.message || "Please correct the highlighted values and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     setSuggestions(null);
     try {
+      const values = parsed.data;
       const formattedValues: IntelligentMatchSuggestionsInput = {
-        userProfile: {
-            ...values.userProfile,
-        },
-        userActivity: {
-            ...values.userActivity,
-        },
-        allPotentialMatches: values.allPotentialMatches.map(pm => ({
-            ...pm,
-        }))
+        userProfile: values.userProfile,
+        userActivity: values.userActivity,
+        allPotentialMatches: values.allPotentialMatches,
       };
       const result = await intelligentMatchSuggestions(formattedValues);
       setSuggestions(result);

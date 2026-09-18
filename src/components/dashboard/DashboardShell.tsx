@@ -422,7 +422,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-11 gap-2 px-2">
                       <MemberAvatar
-                        displayName={displayName || "Member"}
+                        name={displayName || "Member"}
                         photoURL={photoURL}
                         className="h-8 w-8"
                       />

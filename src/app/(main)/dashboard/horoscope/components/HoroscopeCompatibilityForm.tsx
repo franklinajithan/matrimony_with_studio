@@ -28,10 +28,10 @@ const AstrologicalProfileClientSchema = z.object({
 const HoroscopeCompatibilityFormClientSchema = z.object({
   profile1: AstrologicalProfileClientSchema,
   profile2: AstrologicalProfileClientSchema,
-  comparisonAspects: z.string().optional().transform(val => val ? val.split(',').map(s => s.trim()).filter(Boolean) : undefined),
+  comparisonAspects: z.string().optional(),
 });
 
-type FormData = z.infer<typeof HoroscopeCompatibilityFormClientSchema>;
+type FormData = z.input<typeof HoroscopeCompatibilityFormClientSchema>;
 
 export function HoroscopeCompatibilityForm() {
   const { toast } = useToast();
@@ -116,7 +116,7 @@ export function HoroscopeCompatibilityForm() {
     const flowInput: HoroscopeCompatibilityInput = {
       profile1: values.profile1 as AstrologicalProfile, // Cast as planetaryPositions is not in form schema
       profile2: values.profile2 as AstrologicalProfile, // Cast as planetaryPositions is not in form schema
-      comparisonAspects: values.comparisonAspects,
+      comparisonAspects: values.comparisonAspects ? values.comparisonAspects.split(',').map((s) => s.trim()).filter(Boolean) : undefined,
     };
     
     try {

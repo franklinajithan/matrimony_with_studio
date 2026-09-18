@@ -171,7 +171,7 @@ export function SearchAutocomplete({ className, onSearch, placeholder = "Search 
               {suggestions.map((suggestion, index) => (
                 <button
                   key={suggestion.id}
-                  ref={(el) => (suggestionRefs.current[index] = el)}
+                  ref={(el) => { suggestionRefs.current[index] = el; }}
                   className={cn(
                     "w-full px-4 py-3 text-left hover:bg-accent flex items-center gap-3 transition-colors",
                     selectedIndex === index && "bg-accent"

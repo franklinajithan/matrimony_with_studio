@@ -13,7 +13,7 @@ function mapShortlistEntry(row: Record<string, unknown>): ShortlistEntry {
     id: String(row.id),
     userId: String(row.user_id),
     shortlistedId: String(row.shortlisted_id),
-    createdAt: Timestamp.fromISO(row.created_at as string | null),
+    createdAt: Timestamp.fromISO(row.created_at as string | null) ?? Timestamp.now(),
   };
 }
 
