@@ -34,8 +34,8 @@ function mapReport(row: Record<string, unknown>): Report {
     status: String(row.status) as ReportStatus,
     reviewedBy: row.reviewed_by ? String(row.reviewed_by) : null,
     reviewedAt: Timestamp.fromISO(row.reviewed_at as string | null),
-    createdAt: Timestamp.fromISO(row.created_at as string | null),
-    updatedAt: Timestamp.fromISO(row.updated_at as string | null),
+    createdAt: Timestamp.fromISO(row.created_at as string | null) ?? Timestamp.now(),
+    updatedAt: Timestamp.fromISO(row.updated_at as string | null) ?? Timestamp.now(),
   };
 }
 
