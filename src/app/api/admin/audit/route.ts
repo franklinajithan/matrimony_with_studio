@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { requireServerAdmin } from '@/lib/subscriptions/server';
+import { requireServerAdmin } from '@/lib/auth/admin';
 
 export const dynamic = 'force-dynamic';
 export async function GET() {
@@ -11,3 +11,4 @@ export async function GET() {
   if (error) return NextResponse.json({ error: 'Could not load audit log' }, { status: 500 });
   return NextResponse.json({ events: data }, { headers: { 'Cache-Control': 'no-store' } });
 }
+

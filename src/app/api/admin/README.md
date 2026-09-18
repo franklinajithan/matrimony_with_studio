@@ -1,1 +1,3 @@
-All `/api/admin/*` handlers must call `requireServerAdmin()` before reading or mutating protected data. The existing client `/admin` layout is retained for UI behavior but must not be treated as authorization. Billing/admin mutations require trusted server code plus an audit record.
+All `/api/admin/*` handlers must call `requireServerAdmin()` from `@/lib/auth/admin` before reading or mutating protected data. The guard verifies the Supabase user on the server and calls the existing `is_admin()` database function using that user's session. Missing sessions, non-admin roles and failed checks never grant access.
+
+The active `/admin/layout.tsx` and every admin page also call the server page guard. Page checks are required because Next.js layouts can be reused during navigation. Client components handle presentation only. Future admin writes require the same API authorization, database RLS and an audit record.
