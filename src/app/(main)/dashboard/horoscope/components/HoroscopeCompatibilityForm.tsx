@@ -40,7 +40,7 @@ export function HoroscopeCompatibilityForm() {
   const [analysisResult, setAnalysisResult] = useState<HoroscopeCompatibilityOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const form = useForm<FormInput, unknown, FormData>({
+  const form = useForm<FormInput, any, FormData>({
     resolver: zodResolver(HoroscopeCompatibilityFormClientSchema),
     defaultValues: {
       profile1: { name: "Person 1", sunSign: "Aries", moonSign: "Mesha", ascendant: "Aries Ascendant", nakshatra: "Ashwini Pada 1" },
