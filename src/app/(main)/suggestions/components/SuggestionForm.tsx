@@ -51,7 +51,8 @@ const formSchema = z.object({
   allPotentialMatches: z.array(potentialMatchSchema).min(1, "At least one potential match is required."),
 });
 
-type FormData = z.infer<typeof formSchema>;
+type FormInput = z.input<typeof formSchema>;
+type FormData = z.output<typeof formSchema>;
 
 const defaultUserProfile: z.input<typeof profileSchema> = {
   age: 30,
@@ -105,7 +106,7 @@ export function SuggestionForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<IntelligentMatchSuggestionsOutput | null>(null);
 
-  const form = useForm<FormData>({
+  const form = useForm<FormInput, unknown, FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       userProfile: defaultUserProfile,
