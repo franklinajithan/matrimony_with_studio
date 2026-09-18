@@ -121,6 +121,7 @@ for (const file of adminPages) {
       const guard = { requireAdminPage: async () => { checks++; if (!authorized) throw denied; return user; } };
       const page = load(file, {
         '@/app/admin/guard': guard, './guard': guard,
+        '@/lib/admin/dashboard': { getAdminDashboardMetrics: async () => ({ members: 14, activeUsers: 3, pendingVerification: 12, updatedAt: '2026-09-18T10:00:00Z' }) },
         './page-client': { default: 'AdminPageClient' },
         '@/components/shared/Logo': componentStubs, '@/components/ui/card': componentStubs,
         'lucide-react': componentStubs, 'next/link': { default: 'Link' },
@@ -140,6 +141,7 @@ for (const file of files('src/app/api/admin', 'route.ts')) {
       '@/lib/auth/admin': { requireServerAdmin: async () => { checks++; return null; } },
       '@/lib/supabase/server': { createSupabaseServerClient: () => { throw new Error('Protected data accessed before authorization'); } },
       '@/lib/subscriptions': { ADMIN_BILLING_CAPABILITIES: {} },
+      '@/lib/admin/dashboard': { getAdminDashboardMetrics: () => { throw new Error('Read before authorization'); } },
       'next/server': { NextResponse: { json: (body, init) => ({ body, status: init?.status ?? 200 }) } },
     });
     for (const method of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
@@ -148,5 +150,44 @@ for (const file of files('src/app/api/admin', 'route.ts')) {
       assert.equal(response.status, 403);
     }
     assert.ok(checks > 0);
+  });
+}
+
+for (const [name, payload, error, valid] of [
+  ['real counts', { members: 14, activeUsers: 3, pendingVerification: 12, updatedAt: '2026-09-18T10:00:00Z' }, null, true],
+  ['empty membership', { members: 0, activeUsers: 0, pendingVerification: 0, updatedAt: '2026-09-18T10:00:00Z' }, null, true],
+  ['database error', null, { message: 'Permission denied' }, false],
+  ['missing counts', {}, null, false],
+  ['negative counts', { members: -1, activeUsers: 0, pendingVerification: 0, updatedAt: '2026-09-18T10:00:00Z' }, null, false],
+  ['invalid timestamp', { members: 1, activeUsers: 0, pendingVerification: 0, updatedAt: 'invalid' }, null, false],
+]) {
+  test(`dashboard metrics: ${name}`, async () => {
+    const metrics = load('src/lib/admin/dashboard.ts', {
+      '@/lib/supabase/server': { createSupabaseServerClient: async () => ({ rpc: async (name) => {
+        assert.equal(name, 'admin_dashboard_counts');
+        return { data: payload, error };
+      } }) },
+    });
+    if (valid) assert.deepEqual(await metrics.getAdminDashboardMetrics(), payload);
+    else await assert.rejects(metrics.getAdminDashboardMetrics(), /unavailable/);
+  });
+}
+
+for (const unavailable of [false, true]) {
+  test(`summary API: ${unavailable ? 'returns 503 on failure instead of false zeros' : 'returns counts without caching'}`, async () => {
+    const payload = { members: 14, activeUsers: 3, pendingVerification: 12, updatedAt: '2026-09-18T10:00:00Z' };
+    const api = load('src/app/api/admin/summary/route.ts', {
+      '@/lib/auth/admin': { requireServerAdmin: async () => user },
+      '@/lib/admin/dashboard': { getAdminDashboardMetrics: async () => {
+        if (unavailable) throw new Error('Database failed');
+        return payload;
+      } },
+      'next/server': { NextResponse: { json: (body, init) => ({ body, status: init?.status ?? 200, headers: init?.headers }) } },
+    });
+    const result = await api.GET();
+    assert.equal(result.status, unavailable ? 503 : 200);
+    assert.equal(result.headers['Cache-Control'], 'no-store');
+    if (!unavailable) assert.deepEqual(result.body, payload);
+    else assert.equal(result.body.members, undefined);
   });
 }
