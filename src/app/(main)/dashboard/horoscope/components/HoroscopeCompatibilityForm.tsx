@@ -31,7 +31,8 @@ const HoroscopeCompatibilityFormClientSchema = z.object({
   comparisonAspects: z.string().optional().transform(val => val ? val.split(',').map(s => s.trim()).filter(Boolean) : undefined),
 });
 
-type FormData = z.infer<typeof HoroscopeCompatibilityFormClientSchema>;
+type FormInput = z.input<typeof HoroscopeCompatibilityFormClientSchema>;
+type FormData = z.output<typeof HoroscopeCompatibilityFormClientSchema>;
 
 export function HoroscopeCompatibilityForm() {
   const { toast } = useToast();
@@ -39,7 +40,7 @@ export function HoroscopeCompatibilityForm() {
   const [analysisResult, setAnalysisResult] = useState<HoroscopeCompatibilityOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const form = useForm<FormData>({
+  const form = useForm<FormInput, unknown, FormData>({
     resolver: zodResolver(HoroscopeCompatibilityFormClientSchema),
     defaultValues: {
       profile1: { name: "Person 1", sunSign: "Aries", moonSign: "Mesha", ascendant: "Aries Ascendant", nakshatra: "Ashwini Pada 1" },
