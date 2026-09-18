@@ -9,12 +9,8 @@ import {
   Settings,
   UserCircle as UserCircleIcon,
   Menu,
-  Search,
-  Shield,
-  Heart,
-  DollarSign,
-  HelpCircle,
   Globe,
+  ChevronDown,
 } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { Button } from "@/components/ui/button";
@@ -43,11 +39,12 @@ const mainAppNavLinks = [
 ];
 
 const landingPageNavLinks = [
-  { href: "/discover", label: "Discover", icon: <Search className="h-5 w-5" /> },
-  { href: "/about", label: "How it works", icon: <HelpCircle className="h-5 w-5" /> },
-  { href: "/safety", label: "Safety", icon: <Shield className="h-5 w-5" /> },
-  { href: "/success-stories", label: "Success Stories", icon: <Heart className="h-5 w-5" /> },
-  { href: "/pricing", label: "Pricing", icon: <DollarSign className="h-5 w-5" /> },
+  { href: "/", label: "Home" },
+  { href: "/about", label: "About" },
+  { href: "/success-stories", label: "Success Stories" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/safety", label: "Safety" },
+  { href: "/contact", label: "Help" },
 ];
 
 const marketingPages = ["/", "/about", "/discover", "/safety", "/pricing", "/contact", "/success-stories", "/success-stories/submit"];
@@ -110,15 +107,15 @@ export function Navbar() {
 
   const marketingLinkClass = (href: string) =>
     cn(
-      "h-10 px-4 font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors rounded-md",
-      pathname === href && "text-foreground bg-accent"
+      "relative h-10 rounded-none bg-transparent px-2.5 text-sm font-medium text-[#5C4A66] shadow-none hover:bg-transparent hover:text-[#2A1845]",
+      pathname === href && "text-[#2A1845] after:absolute after:inset-x-1 after:-bottom-0.5 after:h-[3px] after:rounded-full after:bg-[#7C3AED]"
     );
 
   const signUpButtonClass =
-    "rounded-full bg-primary px-6 font-semibold text-primary-foreground hover:bg-primary/90 shadow-sm transition-all";
+    "rounded-full bg-[#7C3AED] px-6 font-semibold text-white hover:bg-[#6D28D9] shadow-sm transition-all";
 
   const authActions = (
-    <div className="ml-auto hidden items-center gap-3 md:flex">
+    <div className="ml-auto hidden items-center gap-3 lg:flex">
       {currentUser ? (
         <>
           <Button variant="ghost" asChild className="font-medium">
@@ -130,11 +127,11 @@ export function Navbar() {
         </>
       ) : (
         <>
-          <Button variant="ghost" asChild className="font-medium">
-            <Link href="/login">Log in</Link>
+          <Button variant="outline" asChild className="h-10 rounded-full border-[#C4B0E8] bg-white px-5 font-semibold text-[#6D28D9] hover:bg-white hover:text-[#6D28D9]">
+            <Link href="/login">Log In</Link>
           </Button>
           <Button asChild className={signUpButtonClass}>
-            <Link href="/signup">Create profile</Link>
+            <Link href="/signup">Sign Up</Link>
           </Button>
         </>
       )}
@@ -143,15 +140,20 @@ export function Navbar() {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="container mx-auto flex h-16 items-center gap-3 px-4 lg:px-6">
-          <div className="flex shrink-0 items-center">
-            <Logo size="md" />
+      <header className="sticky top-0 z-50 w-full border-b border-[#F0E8F4] bg-[#FBF8F4]/95 backdrop-blur supports-[backdrop-filter]:bg-[#FBF8F4]/90">
+        <div className="container mx-auto flex h-[4.5rem] items-center gap-3 px-4 lg:h-20 lg:px-6">
+          <div className="flex shrink-0 flex-col justify-center">
+            <Logo size="sm" className="w-[10.25rem] sm:w-[11rem]" />
+            {isMarketingPage ? (
+              <p className="hidden -mt-0.5 pl-[2.55rem] text-[10px] font-medium tracking-[0.01em] text-[#9B7AA8] sm:block">
+                Real People. Meaningful Connections.
+              </p>
+            ) : null}
           </div>
 
           {isMarketingPage ? (
             <>
-              <nav className="hidden flex-1 items-center justify-center gap-1 md:flex" aria-label="Primary">
+              <nav className="hidden flex-1 items-center justify-center gap-0.5 lg:flex" aria-label="Primary">
                 {landingPageNavLinks.map((link) => (
                   <Button 
                     key={link.label}
@@ -165,21 +167,22 @@ export function Navbar() {
               </nav>
 
               {/* Language Selector - Placeholder until i18n is implemented */}
-              <div className="hidden items-center gap-2 md:flex">
+              <div className="hidden items-center gap-2 lg:flex">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      className="h-9 gap-2 rounded-md border border-border/40"
+                      className="h-10 gap-1.5 rounded-full border border-[#E4D4F5] bg-white px-3.5 text-[#5C4A66] hover:bg-white"
                       aria-label="Select language"
                     >
-                      <Globe className="h-4 w-4" />
+                      <Globe className="h-4 w-4 text-[#7C3AED]" />
                       <span className="text-sm font-medium">
                         {language === 'en' && 'English'}
                         {language === 'si' && 'සිංහල'}
                         {language === 'ta' && 'தமிழ்'}
                       </span>
+                      <ChevronDown className="h-3.5 w-3.5 opacity-70" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -229,12 +232,12 @@ export function Navbar() {
           )}
 
           {isLoadingAuth ? (
-            <div className="ml-auto flex items-center gap-3">
-              <Button variant="ghost" asChild className="font-medium">
-                <Link href="/login">Log in</Link>
+            <div className="ml-auto hidden items-center gap-3 lg:flex">
+              <Button variant="outline" asChild className="h-10 rounded-full border-[#C4B0E8] bg-white px-5 font-semibold text-[#6D28D9] hover:bg-white hover:text-[#6D28D9]">
+                <Link href="/login">Log In</Link>
               </Button>
-              <Button asChild className={cn("hidden sm:inline-flex", signUpButtonClass)}>
-                <Link href="/signup">Create profile</Link>
+              <Button asChild className={signUpButtonClass}>
+                <Link href="/signup">Sign Up</Link>
               </Button>
             </div>
           ) : isMarketingPage ? (
@@ -299,7 +302,7 @@ export function Navbar() {
           )}
 
           {isMarketingPage ? (
-            <div className="ml-auto flex items-center gap-2 md:hidden">
+            <div className="ml-auto flex items-center gap-2 lg:hidden">
               {!currentUser && !isLoadingAuth && (
                 <>
                   <Button asChild size="sm" variant="ghost" className="h-9">
@@ -336,10 +339,7 @@ export function Navbar() {
                         )}
                         onClick={() => setIsSheetOpen(false)}
                       >
-                        <Link href={link.href}>
-                          {React.cloneElement(link.icon, { className: "mr-3 h-5 w-5" })}
-                          {link.label}
-                        </Link>
+                        <Link href={link.href}>{link.label}</Link>
                       </Button>
                     ))}
                     

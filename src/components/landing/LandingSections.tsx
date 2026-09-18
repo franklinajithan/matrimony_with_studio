@@ -13,12 +13,13 @@ import {
   Smartphone,
   Sparkles,
   UserRound,
+  Users,
   Wand2,
   Map,
-  Users,
   CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Accordion,
   AccordionContent,
@@ -26,32 +27,34 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { focusRing, focusRingOnDark } from "@/components/landing/brand";
+import { focusRing } from "@/components/landing/brand";
+import { LotusOrnament } from "@/components/decorative";
+import { CountryCarousel } from "@/components/landing/CountryCarousel";
 
 export function TrustStrip() {
   const items = [
-    { icon: Lock, label: "Privacy controls", description: "You choose what to share" },
-    { icon: Shield, label: "Verification available", description: "Optional identity checks" },
-    { icon: Languages, label: "Sinhala · Tamil · English", description: "Three languages supported" },
+    { icon: Users, lines: ["10,000+", "Members"] },
+    { icon: Globe2, lines: ["UK • Canada • Australia", "Sri Lanka • Worldwide"] },
+    { icon: Shield, lines: ["Verified &", "Authentic"] },
+    { icon: Heart, lines: ["Serious People", "Real Intentions"] },
   ];
 
   return (
-    <section className="border-y border-border bg-accent/10 px-4 py-12 sm:px-6" aria-label="Trust highlights">
-      <div className="mx-auto max-w-7xl">
-        <h2 className="mb-10 text-center text-2xl font-bold text-foreground sm:text-3xl">
-          More than a match score
-        </h2>
-        <ul className="grid gap-6 sm:grid-cols-3">
+    <section className="relative z-20 -mt-12 px-4 pb-2 sm:-mt-16 sm:px-6 lg:-mt-[4.25rem]" aria-label="Community highlights">
+      <div className="mx-auto max-w-[1100px] rounded-[1.75rem] border border-[#F0E8F6] bg-white px-3 py-5 shadow-[0_18px_50px_rgba(74,32,110,0.08)] sm:px-6 sm:py-6">
+        <ul className="grid grid-cols-2 gap-y-6 lg:grid-cols-4 lg:gap-0 lg:divide-x lg:divide-[#EEE4F4]">
           {items.map((item) => (
-            <li
-              key={item.label}
-              className="flex flex-col items-center rounded-2xl border border-border bg-card p-6 text-center shadow-sm transition-all hover:shadow-md"
-            >
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <item.icon className="h-5 w-5" aria-hidden="true" />
+            <li key={item.lines.join(" ")} className="flex items-center gap-3 px-3 lg:justify-center lg:px-5">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F3E8FF] text-[#7C3AED]">
+                <item.icon className="h-5 w-5 stroke-[1.7]" aria-hidden="true" />
               </span>
-              <span className="mt-3 text-sm font-semibold leading-5 text-foreground">{item.label}</span>
-              <span className="mt-1 text-xs text-muted-foreground">{item.description}</span>
+              <span className="text-[13px] font-semibold leading-5 text-[#2A1845] sm:text-sm">
+                {item.lines.map((line) => (
+                  <span key={line} className="block">
+                    {line}
+                  </span>
+                ))}
+              </span>
             </li>
           ))}
         </ul>
@@ -63,37 +66,37 @@ export function TrustStrip() {
 export function WhyCupidMatch() {
   const features = [
     {
-      icon: "🤝",
+      image: "/images/values/shared.jpg?v=3",
       title: "Shared Values",
       subtitle: "More than surface compatibility",
       description: "Match based on life goals, communication style, and what truly matters to you both.",
     },
     {
-      icon: "🌍",
+      image: "/images/values/goals.jpg?v=3",
       title: "Life Goals",
       subtitle: "Plan your future together",
       description: "Understand relocation openness, career flexibility, and where you both want to settle.",
     },
     {
-      icon: "💬",
+      image: "/images/values/communication.jpg?v=3",
       title: "Communication Preferences",
       subtitle: "How you connect matters",
       description: "Discover how you both handle disagreements and build understanding.",
     },
     {
-      icon: "👨‍👩‍👧",
+      image: "/images/values/family.jpg?v=3",
       title: "Family Expectations",
       subtitle: "Respect and boundaries",
       description: "Define involvement levels, living arrangements, and responsibilities that work for you.",
     },
     {
-      icon: "🏡",
+      image: "/images/values/lifestyle.jpg?v=3",
       title: "Lifestyle",
       subtitle: "Day-to-day compatibility",
       description: "Explore daily routines, social preferences, and practical lifestyle alignment.",
     },
     {
-      icon: "🎭",
+      image: "/images/values/culture.jpg?v=3",
       title: "Cultural Preferences",
       subtitle: "Optional and self-described",
       description: "Language, traditions, festivals — share what's meaningful while staying flexible.",
@@ -101,30 +104,44 @@ export function WhyCupidMatch() {
   ];
 
   return (
-    <section className="bg-background px-4 py-20 sm:px-6" aria-labelledby="why-heading">
+    <section className="relative overflow-hidden bg-[#FBF8F4] px-4 pb-20 pt-16 sm:px-6 sm:pt-20" aria-labelledby="why-heading">
+      <LotusOrnament side="left" className="opacity-80" />
+      <LotusOrnament side="right" className="opacity-80" />
       <div className="mx-auto max-w-7xl">
-        <div className="mb-16 text-center">
-          <h2 id="why-heading" className="text-3xl font-bold text-foreground sm:text-4xl">
-            Designed around the whole relationship
+        <div className="relative mb-16 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#C4A574]">
+            Your story matters
+          </p>
+          <h2 id="why-heading" className="mt-3 font-serif text-3xl font-semibold text-[#2A1845] sm:text-[2.5rem] sm:leading-tight">
+            Same Values. <span className="text-[#C026D3]">A Brighter Future.</span>
           </h2>
-          <p className="mx-auto mt-4 max-w-3xl text-lg text-muted-foreground">
-            Understand compatibility through shared values and practical future plans
+          <p className="mx-auto mt-4 max-w-2xl text-base text-[#5C4A66] sm:text-lg">
+            Join thousands who found love, friendship and lifelong partners on CupidMatch.
           </p>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature) => (
-            <div
+            <article
               key={feature.title}
-              className="group rounded-3xl border border-border bg-card p-8 shadow-sm transition-all hover:shadow-md"
+              className="group overflow-hidden rounded-3xl border border-[#EDE4F5] bg-[#FFFDF9] shadow-[0_10px_30px_rgba(74,32,110,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(74,32,110,0.12)]"
             >
-              <div className="mb-4 text-4xl">{feature.icon}</div>
-              <div className="mb-3">
-                <h3 className="text-lg font-bold text-foreground">{feature.title}</h3>
-                <p className="text-sm font-medium text-primary">{feature.subtitle}</p>
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <Image
+                  src={feature.image}
+                  alt={`${feature.title}: ${feature.subtitle}`}
+                  fill
+                  quality={90}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 360px"
+                  className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.04]"
+                />
               </div>
-              <p className="text-sm leading-relaxed text-muted-foreground">{feature.description}</p>
-            </div>
+              <div className="p-6">
+                <h3 className="text-lg font-bold text-[#2A1845]">{feature.title}</h3>
+                <p className="mt-1 text-sm font-medium text-[#7C3AED]">{feature.subtitle}</p>
+                <p className="mt-3 text-sm leading-relaxed text-[#6B5A78]">{feature.description}</p>
+              </div>
+            </article>
           ))}
         </div>
       </div>
@@ -233,43 +250,43 @@ export function FeatureGrid() {
   ];
 
   return (
-    <section className="bg-accent/10 px-4 py-20 sm:px-6" aria-labelledby="features-heading">
+    <section className="bg-[#FBF8F4] px-4 py-20 sm:px-6" aria-labelledby="features-heading">
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
-          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+          <p className="text-sm font-semibold uppercase tracking-wider text-[#7C3AED]">
             Platform Features
           </p>
-          <h2 id="features-heading" className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
+          <h2 id="features-heading" className="mt-2 text-3xl font-bold text-[#2A1845] sm:text-4xl">
             Built for meaningful connections
           </h2>
-          <p className="mx-auto mt-4 max-w-3xl text-lg text-muted-foreground">
+          <p className="mx-auto mt-4 max-w-3xl text-lg text-[#5C4A66]">
             Tools designed to help you understand compatibility and build confidence in your decisions
           </p>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature) => (
-            <div
+            <article
               key={feature.title}
-              className="group relative rounded-3xl border border-border bg-card p-8 shadow-sm transition-all hover:shadow-md"
+              className="relative rounded-3xl border border-[#EDE4F5] bg-white p-8 shadow-sm"
             >
               {feature.status === "Coming soon" && (
-                <div className="absolute right-4 top-4 rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
+                <div className="absolute right-4 top-4 rounded-full bg-[#F3E8FF] px-3 py-1 text-xs font-medium text-[#6D28D9]">
                   Coming soon
                 </div>
               )}
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#F3E8FF] text-[#7C3AED]">
                 <feature.icon className="h-6 w-6" aria-hidden="true" />
               </div>
-              <h3 className="mb-3 text-lg font-bold text-foreground">{feature.title}</h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">{feature.description}</p>
-            </div>
+              <h3 className="mb-3 text-lg font-bold text-[#2A1845]">{feature.title}</h3>
+              <p className="text-sm leading-relaxed text-[#6B5A78]">{feature.description}</p>
+            </article>
           ))}
         </div>
 
         <div className="mt-12 text-center">
-          <p className="text-sm text-muted-foreground">
-            Features marked "Coming soon" are in development. Only implemented features are shown in member-facing flows.
+          <p className="text-sm text-[#6B5A78]">
+            Features marked &quot;Coming soon&quot; are in development. Only implemented features are shown in member-facing flows.
           </p>
         </div>
       </div>
@@ -425,81 +442,30 @@ export function PrivacySection() {
 }
 
 export function InternationalRelationships() {
-  const locations = [
-    {
-      name: "London",
-      country: "United Kingdom",
-      image: "🏛️",
-    },
-    {
-      name: "Toronto",
-      country: "Canada",
-      image: "🍁",
-    },
-    {
-      name: "Colombo",
-      country: "Sri Lanka",
-      image: "🌴",
-    },
-    {
-      name: "Melbourne",
-      country: "Australia",
-      image: "🦘",
-    },
-  ];
-
   return (
-    <section className="bg-gradient-to-br from-accent/20 to-background px-4 py-20 sm:px-6" aria-labelledby="international-heading">
+    <section
+      className="overflow-x-hidden bg-[#FBF8F4] px-4 py-20 sm:px-6"
+      aria-labelledby="international-heading"
+    >
       <div className="mx-auto max-w-7xl text-center">
-        <h2 id="international-heading" className="text-3xl font-bold text-foreground sm:text-4xl">
+        <h2
+          id="international-heading"
+          className="font-serif text-3xl font-semibold text-[#2A1845] sm:text-4xl"
+        >
           Built for life between countries
         </h2>
-        <p className="mx-auto mt-4 max-w-3xl text-lg text-muted-foreground">
-          Whether you're in London, Toronto, Melbourne or Colombo, find someone who understands the beauty and complexity of living across cultures.
+        <p className="mx-auto mt-4 max-w-3xl text-base text-[#5C4A66] sm:text-lg">
+          Connect with Sri Lankans around the world. Discover people across the countries where Sri
+          Lankan communities live, work and build their future.
         </p>
 
-        <div className="relative mt-16">
-          {/* Connecting lines */}
-          <svg className="absolute left-0 top-0 h-full w-full" style={{ zIndex: 0 }} aria-hidden="true">
-            <defs>
-              <linearGradient id="line-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" style={{ stopColor: "hsl(var(--primary))", stopOpacity: 0.3 }} />
-                <stop offset="100%" style={{ stopColor: "hsl(var(--secondary))", stopOpacity: 0.3 }} />
-              </linearGradient>
-            </defs>
-            <path
-              d="M150,80 Q400,150 650,80"
-              stroke="url(#line-gradient)"
-              strokeWidth="2"
-              fill="none"
-              strokeDasharray="5,5"
-            />
-            <path
-              d="M150,80 Q400,20 650,80"
-              stroke="url(#line-gradient)"
-              strokeWidth="2"
-              fill="none"
-              strokeDasharray="5,5"
-            />
-          </svg>
-
-          <div className="relative z-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {locations.map((location) => (
-              <div
-                key={location.name}
-                className="group relative overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-md transition-all hover:shadow-lg"
-              >
-                <div className="mb-4 text-6xl">{location.image}</div>
-                <h3 className="text-xl font-bold text-foreground">{location.name}</h3>
-                <p className="text-sm text-muted-foreground">{location.country}</p>
-                <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 opacity-50 transition-all group-hover:scale-150" aria-hidden="true" />
-              </div>
-            ))}
-          </div>
+        <div className="mt-14 text-left">
+          <CountryCarousel />
         </div>
 
-        <p className="mx-auto mt-12 max-w-2xl text-sm text-muted-foreground">
-          Future Map feature (coming soon) will help you compare current location, future settlement plans, and relocation openness.
+        <p className="mx-auto mt-10 max-w-2xl text-sm leading-6 text-[#6B5A78] sm:text-base">
+          From Colombo to London, Toronto to Melbourne — find meaningful connections wherever life
+          takes you.
         </p>
       </div>
     </section>

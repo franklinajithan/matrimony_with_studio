@@ -20,10 +20,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { DIASPORA_COUNTRY_NAMES } from "@/data/diaspora-countries";
 
 type Person = Profile & { isShortlisted?: boolean };
 const empty: DiscoveryFilters = { query: "", countries: [], languages: [], religions: [], professions: [], smoking: [], drinking: [] };
-const options = { countries: ["United Kingdom", "Canada", "Australia", "Sri Lanka", "United States", "New Zealand", "Singapore"], languages: ["Tamil", "English", "Sinhala"], religions: ["Hinduism", "Christianity", "Islam", "Buddhism", "Sikhism", "Jainism", "Other"] };
+const options = { countries: DIASPORA_COUNTRY_NAMES, languages: ["Tamil", "English", "Sinhala"], religions: ["Hinduism", "Christianity", "Islam", "Buddhism", "Sikhism", "Jainism", "Other"] };
 const first = (values: string[]) => values[0] || "all";
 const list = (value: string) => value === "all" ? [] : [value];
 const hasPreferences = (p: PartnerPreferences) => Boolean(p.ageMin || p.ageMax || p.countries.length || p.languages.length || p.religions.length || p.professions.length || p.smoking.length || p.drinking.length || (p.gender && p.gender !== "No preference") || p.maritalStatuses?.length || p.education?.length || p.heightMin || p.heightMax || p.relocation || p.wantsChildren || p.familyInvolvement || p.marriageTimeline);
@@ -44,7 +45,11 @@ export function PreferenceDiscovery() {
   const load = useCallback(async () => {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.replace("/login?next=/discover"); return; }
+    if (!user) {
+      const next = params.toString() ? `/discover?${params.toString()}` : "/discover";
+      router.replace(`/login?next=${encodeURIComponent(next)}`);
+      return;
+    }
     try {
       const self = await getProfile(user.id);
       if (!self) throw new Error("Complete your profile before finding matches.");

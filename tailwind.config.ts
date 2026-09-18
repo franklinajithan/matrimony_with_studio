@@ -10,10 +10,11 @@ export default {
   ],
   theme: {
     extend: {
-      fontFamily: {
+        fontFamily: {
         body: ['Inter', 'sans-serif'],
         headline: ['Inter', 'sans-serif'],
-        serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+        serif: ['"Playfair Display"', '"Cormorant Garamond"', 'Georgia', 'serif'],
+        script: ['"Great Vibes"', 'cursive'],
         code: ['monospace'],
       },
       colors: {

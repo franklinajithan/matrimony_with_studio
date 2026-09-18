@@ -1,123 +1,114 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Shield,
-  Languages,
-} from "lucide-react";
+import { ArrowRight, Heart, Shield, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ConnectionPaths } from "@/components/decorative";
 import { HERO_IMAGE } from "@/components/landing/brand";
+
+const highlights = [
+  { icon: Users, lines: ["Verified", "Profiles"] },
+  { icon: Shield, lines: ["Safe &", "Secure"] },
+  { icon: Heart, lines: ["Find", "Compatibility"] },
+];
+
+function ScriptHeart({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M12.1 20.3s-7.2-4.4-9.6-8.7C.4 8.1 2.4 4.4 6.3 4.4c1.9 0 3.3 1.1 4.2 2.4.9-1.3 2.4-2.4 4.3-2.4 3.9 0 5.9 3.7 3.8 7.2-2.4 4.3-9.5 8.7-9.5 8.7z" />
+    </svg>
+  );
+}
 
 export function LandingHero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-accent/30 via-background to-background">
-      <ConnectionPaths className="absolute inset-0" variant="subtle" animate={true} />
-
-      <div className="pointer-events-none absolute inset-0 opacity-20">
-        <div className="absolute left-10 top-20 h-32 w-32 rounded-full bg-primary/30 blur-3xl" />
-        <div className="absolute right-20 top-40 h-40 w-40 rounded-full bg-secondary/30 blur-3xl" />
-        <div className="absolute bottom-20 left-1/3 h-36 w-36 rounded-full bg-primary/20 blur-3xl" />
-      </div>
-
-      <div className="relative mx-auto grid max-w-7xl gap-12 px-4 pb-20 pt-16 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-16 lg:pb-28 lg:pt-20">
-        <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-foreground">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/50 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-            </span>
-            For Sri Lankan lives around the world
-          </div>
-
-          <h1 className="mt-8 text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-            Meet someone who understands{" "}
-            <span className="relative inline-block">
-              <span className="relative z-10 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                where you come from
-              </span>
-              <svg
-                className="absolute -bottom-2 left-0 w-full"
-                height="8"
-                viewBox="0 0 200 8"
+    <section className="relative overflow-hidden bg-[#FBF8F4] pt-1 sm:pt-2">
+      <div className="relative mx-auto grid max-w-[1240px] items-start gap-6 px-5 pb-8 sm:px-8 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] lg:items-stretch lg:gap-4 lg:px-10 lg:pb-10">
+        <div className="relative z-10 flex max-w-xl flex-col pt-3 lg:pt-1">
+          <p className="text-[11px] font-semibold uppercase leading-5 tracking-[0.26em] text-[#A078B0] sm:text-xs sm:leading-6">
+            Sri Lankan matchmaking
+            <span className="block">for a brighter tomorrow</span>
+          </p>
+          <h1 className="mt-5 font-serif text-[2.65rem] font-semibold leading-[1.08] tracking-tight text-[#2A1845] sm:text-5xl lg:text-[3.65rem] lg:leading-[1.05]">
+            Find Your
+            <span className="mt-1 flex items-center gap-2 text-[#C026D3] sm:mt-1.5">
+              Perfect Match
+              <Heart
+                className="h-7 w-7 shrink-0 stroke-[1.8] text-[#C026D3] sm:h-8 sm:w-8"
                 fill="none"
                 aria-hidden="true"
-              >
-                <path
-                  d="M1 5.5C40 2.5 80 1 120 2.5C160 4 180 5 199 6"
-                  stroke="currentColor"
-                  className="text-secondary/40"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </span>{" "}
-            — and where you&apos;re going.
+              />
+            </span>
           </h1>
-
-          <p className="mt-6 text-lg leading-8 text-muted-foreground sm:text-xl">
-            Modern relationship intelligence, shaped for Sri Lankan communities worldwide.
-            Connect through shared values, cultural understanding, and practical future plans.
+          <p className="mt-5 max-w-[30rem] text-[15px] leading-7 text-[#5C4A66] sm:text-lg sm:leading-8">
+            A trusted matrimony platform for the Sri Lankan community in the UK, Canada, Australia
+            and beyond. Real people, serious intentions, meaningful connections.
           </p>
 
-          <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+          <ul className="mt-9 flex gap-6 sm:gap-10">
+            {highlights.map((item) => (
+              <li key={item.lines.join(" ")} className="flex w-[4.75rem] flex-col items-center text-center sm:w-24">
+                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#F3E8FF] text-[#8B5CF6]">
+                  <item.icon className="h-6 w-6 stroke-[1.6]" aria-hidden="true" />
+                </span>
+                <span className="mt-2.5 text-[11px] font-semibold leading-[1.25] text-[#4C3A5C] sm:text-xs">
+                  {item.lines.map((line) => (
+                    <span key={line} className="block">
+                      {line}
+                    </span>
+                  ))}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Button
               asChild
-              size="lg"
-              className="h-14 rounded-full bg-gradient-to-r from-primary to-primary/90 px-8 text-base font-semibold shadow-lg transition-all hover:shadow-xl"
+              className="h-12 rounded-full bg-[#7C3AED] px-7 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(124,58,237,0.28)] hover:bg-[#6D28D9]"
             >
               <Link href="/signup">
-                Build my profile
-                <ArrowRight className="ml-2 h-5 w-5" />
+                Create Your Profile
+                <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>
             <Button
               asChild
-              size="lg"
               variant="outline"
-              className="h-14 rounded-full border-2 px-8 text-base font-semibold transition-all"
+              className="h-12 rounded-full border-[#E4D4F5] bg-white px-7 text-sm font-semibold text-[#5B21B6] shadow-sm hover:bg-white hover:text-[#5B21B6]"
             >
-              <Link href="/about">See how matching works</Link>
+              <Link href="/discover">Explore Matches</Link>
             </Button>
           </div>
+
+          <p
+            className="pt-5 mt-10 font-script text-[1.85rem] leading-[1.15] text-[#D946EF] sm:mt-12 sm:text-[2.15rem] lg:mt-auto lg:mb-24"
+            aria-hidden="true"
+          >
+            Good people
+            <span className="block">Brighter futures</span>
+            <ScriptHeart className="mt-1 h-4 w-4 text-[#D946EF]" />
+          </p>
         </div>
 
-        <div className="relative z-10 mx-auto w-full max-w-[400px] lg:ml-auto lg:mr-0">
-          <div
-            className="absolute -inset-3 rounded-[1.75rem] bg-gradient-to-br from-primary/15 via-accent/40 to-secondary/20 blur-sm"
-            aria-hidden="true"
-          />
-
-          <figure className="relative overflow-hidden rounded-2xl bg-white shadow-[0_20px_44px_rgba(45,20,60,0.12)] ring-1 ring-white/80">
-            <div className="relative aspect-[3/4] w-full">
+        <div className="relative mx-auto w-full max-w-[560px] lg:max-w-none lg:pt-1">
+          <figure className="relative overflow-hidden rounded-[1.75rem] shadow-[0_22px_50px_rgba(74,32,110,0.18)] lg:rounded-[2rem]">
+            <div className="relative aspect-[3/4] w-full lg:aspect-auto lg:min-h-[700px] lg:h-[min(74vh,760px)]">
               <Image
                 src={HERO_IMAGE}
-                alt="A Sri Lankan woman in traditional attire welcoming you with a warm namaste"
+                alt="A woman in a purple sari welcoming you with a namaste"
                 fill
                 priority
-                quality={95}
-                sizes="(max-width: 1024px) 90vw, 800px"
-                className="object-cover object-[center_18%] brightness-[1.06] contrast-[1.02] saturate-[1.04]"
+                quality={100}
+                sizes="(max-width: 1024px) 100vw, 720px"
+                className="object-cover object-[center_12%]"
               />
             </div>
+            
           </figure>
-
-          <div className="relative mt-5 grid grid-cols-2 gap-3">
-            <div className="flex items-start gap-3 rounded-2xl border border-border/80 bg-card/90 px-4 py-3 backdrop-blur-sm">
-              <Shield className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
-              <div>
-                <p className="text-sm font-semibold text-foreground">Privacy first</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Member-controlled visibility</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 rounded-2xl border border-border/80 bg-card/90 px-4 py-3 backdrop-blur-sm">
-              <Languages className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
-              <div>
-                <p className="text-sm font-semibold text-foreground">Three languages</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Sinhala · Tamil · English</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </section>

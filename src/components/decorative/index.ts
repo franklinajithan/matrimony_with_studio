@@ -8,3 +8,4 @@
 export { ConnectionPaths } from './ConnectionPaths';
 export { PairedOrbit } from './PairedOrbit';
 export { CulturalLinePattern } from './CulturalLinePattern';
+export { LotusOrnament } from './LotusOrnament';

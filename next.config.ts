@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
       { source: "/dashboard/matches", destination: "/suggestions", permanent: false },
       { source: "/dashboard/connections", destination: "/messages", permanent: false },
       { source: "/dashboard/search", destination: "/search", permanent: false },
-      { source: "/dashboard/discovery", destination: "/discover", permanent: false },
+      { source: "/help", destination: "/contact", permanent: false },
       { source: "/success-stories/priya-rohan", destination: "/success-stories", permanent: false },
       { source: "/success-stories/aisha-sameer", destination: "/success-stories", permanent: false },
       { source: "/success-stories/lakshmi-arjun", destination: "/success-stories", permanent: false },
