@@ -106,7 +106,7 @@ export function SuggestionForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<IntelligentMatchSuggestionsOutput | null>(null);
 
-  const form = useForm<FormInput, unknown, FormData>({
+  const form = useForm<FormInput, any, FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       userProfile: defaultUserProfile,
