@@ -1,1 +1,2 @@
-import { NextResponse } from 'next/server';import { requireServerAdmin } from '@/lib/subscriptions/server';import { ADMIN_BILLING_CAPABILITIES } from '@/lib/subscriptions';export async function GET(){if(!await requireServerAdmin())return NextResponse.json({error:'Forbidden'},{status:403});return NextResponse.json(ADMIN_BILLING_CAPABILITIES);}
+import { NextResponse } from 'next/server';import { requireServerAdmin } from '@/lib/auth/admin';import { ADMIN_BILLING_CAPABILITIES } from '@/lib/subscriptions';export async function GET(){if(!await requireServerAdmin())return NextResponse.json({error:'Forbidden'},{status:403});return NextResponse.json(ADMIN_BILLING_CAPABILITIES);}
+

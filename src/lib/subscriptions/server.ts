@@ -15,10 +15,5 @@ export async function getServerSubscription() {
   return { user: auth.user, subscription: data, plan: getPlan(effectivePlanCode(state)) };
 }
 
-export async function requireServerAdmin() {
-  const supabase = await createSupabaseServerClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return null;
-  const { data, error } = await supabase.rpc('is_current_user_admin');
-  return !error && data === true ? auth.user : null;
-}
+// Keep existing server consumers compatible with the central admin guard.
+export { requireServerAdmin } from '@/lib/auth/admin';
