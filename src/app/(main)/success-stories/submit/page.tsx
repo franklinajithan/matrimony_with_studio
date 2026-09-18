@@ -148,7 +148,7 @@ export default function SubmitSuccessStoryPage() {
               <FormField
                 control={form.control}
                 name="photo"
-                render={({ field: { onChange, ...rest } }) => ( // Destructure onChange for RHF
+                render={({ field: { onChange, onBlur, name, ref } }) => (
                   <FormItem>
                     <FormLabel className="flex items-center"><ImageIcon className="mr-2 h-4 w-4 text-muted-foreground" />Share a Photo (Optional)</FormLabel>
                     <FormControl>
@@ -159,7 +159,9 @@ export default function SubmitSuccessStoryPage() {
                            onChange(e.target.files?.[0]); // RHF's onChange
                            handleFileChange(e); // Custom handler for file name display
                         }}
-                        {...rest} 
+                        name={name}
+                        ref={ref}
+                        onBlur={onBlur}
                         disabled={isSubmitting} 
                       />
                     </FormControl>
