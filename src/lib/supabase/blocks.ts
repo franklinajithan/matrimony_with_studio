@@ -15,7 +15,7 @@ function mapBlock(row: Record<string, unknown>): Block {
     blockerId: String(row.blocker_id),
     blockedId: String(row.blocked_id),
     reason: row.reason ? String(row.reason) : null,
-    createdAt: Timestamp.fromISO(row.created_at as string | null),
+    createdAt: Timestamp.fromISO(row.created_at as string | null) ?? Timestamp.now(),
   };
 }
 
