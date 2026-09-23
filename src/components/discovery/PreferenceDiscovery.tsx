@@ -13,7 +13,6 @@ import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
 import { ShareProfileButton } from "@/components/discovery/ShareProfileButton";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -112,19 +111,141 @@ export function PreferenceDiscovery() {
     </CardContent></Card>
     <div className="flex items-center justify-between"><p className="text-sm text-muted-foreground"><strong className="text-foreground">{results.length}</strong> potential matches</p></div>
     {!results.length ? <Card><CardContent className="py-14 text-center"><Heart className="mx-auto h-10 w-10 text-violet-300"/><h2 className="mt-3 text-lg font-semibold">No close matches yet</h2><p className="mt-1 text-sm text-muted-foreground">Broaden a filter if you want to see more people.</p><Button className="mt-4" variant="outline" onClick={clear}>Show all members</Button></CardContent></Card> :
-    <div className="grid auto-rows-fr grid-cols-2 gap-3 md:grid-cols-3 lg:gap-5 xl:grid-cols-4">{results.map((person) => {
+    <div className="grid grid-cols-2 items-stretch gap-3 md:grid-cols-3 lg:gap-5 xl:grid-cols-4">
+      {results.map((person) => {
       const score = preferences ? preferenceScore(person, preferences) : null;
-      return <Card key={person.id} className="group flex h-full min-h-0 flex-col overflow-hidden">
-        <div className="relative aspect-[3/4] shrink-0 bg-violet-50">{person.photoURL ? <img src={person.photoURL} alt={person.displayName} className="h-full w-full object-cover"/> : <div className="flex h-full items-center justify-center text-4xl font-semibold text-violet-500">{person.displayName?.[0] || "?"}</div>}
-          <div className={`absolute left-2 top-2 max-w-[calc(100%-3.5rem)] rounded-full border border-white/70 bg-white/95 px-2.5 py-1 text-[11px] font-bold shadow-sm ${hasSaved && score?.total ? "text-violet-700" : "text-amber-700"}`}>{hasSaved ? (score && score.total > 0 ? `${score.percentage}% match` : "More details needed") : "Set preferences for match %"}</div>
-          <Button size="icon" variant="secondary" className="absolute right-2 top-2 h-9 w-9 rounded-full bg-white/90" onClick={() => void toggleShortlist(person)}>{busy[`s-${person.id}`] ? <Loader2 className="h-4 w-4 animate-spin"/> : <Bookmark className={`h-4 w-4 ${person.isShortlisted ? "fill-violet-600 text-violet-600" : ""}`}/>}</Button>
-        </div>
-        <CardContent className="flex flex-1 flex-col p-3 sm:p-4"><h2 className="truncate font-semibold">{person.displayName}{person.ageYears ? `, ${person.ageYears}` : ""}</h2><div className="mt-1 min-h-[2.75rem] space-y-1 text-xs text-muted-foreground sm:text-sm">{person.profession ? <p className="flex items-center gap-1"><Briefcase className="h-3.5 w-3.5 shrink-0"/><span className="truncate">{person.profession}</span></p> : <div className="h-[1.25rem]"/>}{(person.location || person.country) ? <p className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5 shrink-0"/><span className="truncate">{person.location || person.country}</span></p> : <div className="h-[1.25rem]"/>}</div>
-          <div className="mt-3 min-h-[5.75rem]">{hasSaved && score && score.total > 0 ? <div className="rounded-xl bg-violet-50 p-2.5"><div className="flex items-center justify-between gap-2"><p className="text-xs font-semibold text-violet-900">{score.percentage}% preference match</p><span className="shrink-0 text-[10px] text-violet-600">{score.matched}/{score.total}</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-violet-100"><div className="h-full rounded-full bg-violet-600" style={{ width: `${score.percentage}%` }}/></div>{score.reasons.length > 0 && <div className="mt-2 flex flex-wrap gap-1">{score.reasons.slice(0,2).map((r) => <Badge key={r} variant="secondary" className="text-[10px]">✓ {r}</Badge>)}</div>}</div> : hasSaved ? <div className="rounded-xl bg-amber-50 p-2.5 text-[11px] text-amber-800">More profile details are needed for a reliable score.</div> : <button type="button" onClick={() => router.push(PREFERENCES_ROUTE)} className="w-full rounded-xl bg-violet-50 p-2.5 text-left text-[11px] font-medium text-violet-800 hover:bg-violet-100">Set Partner Preferences to see your match percentage.</button>}</div>
-        </CardContent>
-        <CardFooter className="mt-auto grid shrink-0 grid-cols-3 gap-1.5 border-t p-2 sm:gap-2 sm:p-3"><Button size="sm" variant="outline" onClick={() => router.push(`/profile/${person.id}`)}>View</Button><ShareProfileButton profileId={person.id} displayName={person.displayName || "Member"}/><Button size="sm" disabled={sent.has(person.id) || busy[`i-${person.id}`]} onClick={() => void interest(person.id)}>{busy[`i-${person.id}`] ? <Loader2 className="h-4 w-4 animate-spin"/> : sent.has(person.id) ? "Sent" : "Interest"}</Button></CardFooter>
-      </Card>;
-    })}</div>}
+      const showScore = Boolean(hasSaved && score && score.total > 0);
+      return (
+        <Card key={person.id} className="flex h-full flex-col overflow-hidden rounded-2xl border-[#eadde7] shadow-sm">
+          {/* Fixed photo height so every card aligns */}
+          <div className="relative h-44 w-full shrink-0 overflow-hidden bg-violet-50 sm:h-52 md:h-56">
+            {person.photoURL ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={person.photoURL}
+                alt={person.displayName}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-4xl font-semibold text-violet-500">
+                {person.displayName?.[0] || "?"}
+              </div>
+            )}
+
+            {showScore ? (
+              <div className="absolute left-2 top-2 rounded-full border border-white/80 bg-white/95 px-2.5 py-1 text-[11px] font-bold text-violet-700 shadow-sm">
+                {score!.percentage}% match
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => router.push(PREFERENCES_ROUTE)}
+                className="absolute left-2 top-2 max-w-[calc(100%-3.25rem)] rounded-full border border-amber-200/80 bg-amber-50/95 px-2.5 py-1 text-left text-[10px] font-semibold leading-tight text-amber-800 shadow-sm hover:bg-amber-100 sm:text-[11px]"
+              >
+                {hasSaved ? "Need more details" : "Set preferences"}
+              </button>
+            )}
+
+            <Button
+              size="icon"
+              variant="secondary"
+              className="absolute right-2 top-2 h-8 w-8 rounded-full bg-white/90 sm:h-9 sm:w-9"
+              onClick={() => void toggleShortlist(person)}
+              aria-label={person.isShortlisted ? "Remove from shortlist" : "Shortlist"}
+            >
+              {busy[`s-${person.id}`] ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Bookmark className={`h-4 w-4 ${person.isShortlisted ? "fill-violet-600 text-violet-600" : ""}`} />
+              )}
+            </Button>
+          </div>
+
+          <CardContent className="flex flex-1 flex-col gap-2 p-3 sm:p-4">
+            <div className="min-w-0">
+              <h2 className="truncate text-sm font-semibold leading-tight text-[#351532] sm:text-base">
+                {person.displayName}
+                {person.ageYears ? (
+                  <span className="font-normal text-muted-foreground">, {person.ageYears}</span>
+                ) : null}
+              </h2>
+              <p className="mt-1 flex min-w-0 items-center gap-1 text-xs text-muted-foreground sm:text-sm">
+                <Briefcase className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span className="truncate">{person.profession || "—"}</span>
+              </p>
+              <p className="mt-0.5 flex min-w-0 items-center gap-1 text-xs text-muted-foreground sm:text-sm">
+                <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span className="truncate">{person.location || person.country || "—"}</span>
+              </p>
+            </div>
+
+            {/* Fixed-height preference panel keeps footers aligned */}
+            <div className="mt-auto h-[4.25rem] shrink-0">
+              {showScore ? (
+                <div className="flex h-full flex-col justify-center rounded-xl bg-violet-50 px-2.5 py-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-xs font-semibold text-violet-900">
+                      {score!.percentage}% preference match
+                    </p>
+                    <span className="shrink-0 text-[10px] text-violet-600">
+                      {score!.matched}/{score!.total}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-violet-100">
+                    <div
+                      className="h-full rounded-full bg-violet-600"
+                      style={{ width: `${score!.percentage}%` }}
+                    />
+                  </div>
+                  {score!.reasons[0] ? (
+                    <p className="mt-1 truncate text-[10px] text-violet-700">✓ {score!.reasons[0]}</p>
+                  ) : null}
+                </div>
+              ) : hasSaved ? (
+                <div className="flex h-full items-center rounded-xl bg-amber-50 px-2.5 py-2 text-[11px] leading-snug text-amber-800">
+                  More profile details are needed for a reliable score.
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => router.push(PREFERENCES_ROUTE)}
+                  className="flex h-full w-full items-center rounded-xl bg-violet-50 px-2.5 py-2 text-left text-[11px] font-medium leading-snug text-violet-800 hover:bg-violet-100"
+                >
+                  Set Partner Preferences to unlock your match %.
+                </button>
+              )}
+            </div>
+          </CardContent>
+
+          <CardFooter className="mt-auto grid shrink-0 grid-cols-3 gap-1.5 border-t border-[#eee2ea] p-2 sm:gap-2 sm:p-3">
+            <Button
+              size="sm"
+              variant="outline"
+              className="min-w-0 px-1.5"
+              onClick={() => router.push(`/profile/${person.id}`)}
+            >
+              View
+            </Button>
+            <ShareProfileButton profileId={person.id} displayName={person.displayName || "Member"} />
+            <Button
+              size="sm"
+              className="min-w-0 px-1.5"
+              disabled={sent.has(person.id) || busy[`i-${person.id}`]}
+              onClick={() => void interest(person.id)}
+            >
+              {busy[`i-${person.id}`] ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : sent.has(person.id) ? (
+                "Sent"
+              ) : (
+                "Interest"
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
+      );
+    })}
+    </div>}
   </PageFrame>;
 }
 

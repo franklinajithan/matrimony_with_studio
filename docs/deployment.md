@@ -42,6 +42,19 @@ Authentication → URL configuration:
 
 Email templates should send users to `/auth/callback` (PKCE `code`) or `/auth/callback?token_hash=...&type=...`.
 
+### Branded confirmation email
+
+Supabase sends the default “Confirm your email address” message until you replace the template in the dashboard (this cannot be changed from the Next.js app alone).
+
+1. Supabase → **Authentication** → **Email** → **Templates** → **Confirm signup**
+2. **Subject:** `Welcome to CupidMatch — confirm your email`
+3. Paste the HTML from [`docs/email-templates/confirm-signup.html`](./email-templates/confirm-signup.html) (body only — omit the HTML comment at the top if the editor complains)
+4. Save, then sign up with a test address and confirm the new design
+
+Keep `{{ .ConfirmationURL }}` in the template — that is the secure confirm link.
+
+Optional later: Authentication → Emails → SMTP settings to send from your own domain (e.g. `hello@cupidmatch…`) instead of `noreply@mail.app.supabase.io`.
+
 ## Vercel Production and Preview
 
 Set these on **both Production and Preview** (Settings → Environment Variables), then redeploy. This task does not deploy.

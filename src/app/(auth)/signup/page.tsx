@@ -105,7 +105,16 @@ export default function SignupPage() {
         {formError && (
           <Alert variant="destructive">
             <AlertTitle>Could not create account</AlertTitle>
-            <AlertDescription>{formError}</AlertDescription>
+            <AlertDescription className="space-y-2">
+              <p>{formError}</p>
+              {formError.toLowerCase().includes("already exists") ? (
+                <p>
+                  <Link href="/login" className="font-medium underline underline-offset-2">
+                    Go to log in
+                  </Link>
+                </p>
+              ) : null}
+            </AlertDescription>
           </Alert>
         )}
         <SocialAuthButtons next="/onboarding" />

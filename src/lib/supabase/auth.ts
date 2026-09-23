@@ -26,13 +26,23 @@ function mapUser(user: SupabaseAuthUser | null): AuthUser | null {
   };
 }
 
-function mapAuthError(error: { message?: string; status?: number } | null, fallback: string): never {
+function mapAuthError(error: { message?: string; status?: number; code?: string } | null, fallback: string): never {
   const message = error?.message || fallback;
   const lower = message.toLowerCase();
+  const apiCode = (error?.code || "").toLowerCase();
   let code = "auth/unknown";
 
   if (lower.includes("invalid login") || lower.includes("invalid credentials")) code = "auth/invalid-credential";
-  else if (lower.includes("already registered") || lower.includes("already been registered")) code = "auth/email-already-in-use";
+  else if (
+    apiCode === "user_already_exists" ||
+    apiCode === "email_exists" ||
+    lower.includes("already registered") ||
+    lower.includes("already been registered") ||
+    lower.includes("user already exists") ||
+    lower.includes("email address is already")
+  ) {
+    code = "auth/email-already-in-use";
+  }
   else if (lower.includes("password") && (lower.includes("weak") || lower.includes("at least"))) code = "auth/weak-password";
   else if (lower.includes("invalid email") || (lower.includes("email") && lower.includes("invalid"))) code = "auth/invalid-email";
   else if (lower.includes("disabled")) code = "auth/user-disabled";
@@ -146,6 +156,18 @@ export async function createUserWithEmailAndPassword(_auth: unknown, email: stri
     },
   });
   if (error) mapAuthError(error, "Signup failed");
+
+  // With "Confirm email" enabled, Supabase often returns a fake success for an
+  // already-registered address (user present, empty identities, no session)
+  // instead of an error — detect that and surface a clear duplicate-email message.
+  const identities = data.user?.identities;
+  if (data.user && Array.isArray(identities) && identities.length === 0 && !data.session) {
+    mapAuthError(
+      { message: "User already registered", code: "user_already_exists" },
+      "An account with this email already exists."
+    );
+  }
+
   cachedUser = mapUser(data.session?.user ?? data.user);
   return { user: cachedUser, session: data.session as Session | null, needsEmailConfirmation: !data.session };
 }
