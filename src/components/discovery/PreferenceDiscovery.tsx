@@ -226,6 +226,7 @@ export function PreferenceDiscovery() {
               size="sm"
               variant="outline"
               className="min-w-0 px-1.5"
+              data-testid={`profile-${person.id}-view`}
               onClick={() => router.push(`/profile/${person.id}`)}
             >
               {t.view}
@@ -234,6 +235,7 @@ export function PreferenceDiscovery() {
             <Button
               size="sm"
               className="min-w-0 px-1.5"
+              data-testid={`profile-${person.id}-interest`}
               disabled={sent.has(person.id) || busy[`i-${person.id}`]}
               onClick={() => void interest(person.id)}
             >
