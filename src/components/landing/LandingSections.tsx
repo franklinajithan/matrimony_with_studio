@@ -536,7 +536,7 @@ export function CommunitySection() {
   );
 }
 
-export function DiscoveryPreview() {
+export function DiscoveryPreview() { const t=useHomeCopy();
   const demoProfiles = [
     {
       name: "Sample Profile A",
@@ -563,13 +563,13 @@ export function DiscoveryPreview() {
       <div className="mx-auto max-w-7xl">
         <div className="mb-12 text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">
-            Discovery
+            {t.discovery}
           </p>
           <h2 id="discovery-heading" className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
-            Find compatible matches
+            {t.findMatches}
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-            See clearly labelled sample profiles below
+            {t.samples}
           </p>
         </div>
 
@@ -583,7 +583,7 @@ export function DiscoveryPreview() {
               <div className="border-b border-border bg-accent/50 px-4 py-2">
                 <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                   <Eye className="h-3 w-3" aria-hidden="true" />
-                  Sample Profile Preview
+                  {t.samplePreview}
                 </p>
               </div>
 
@@ -612,7 +612,7 @@ export function DiscoveryPreview() {
         </div>
 
         <p className="mt-10 text-center text-sm text-muted-foreground">
-          These are illustrative sample profiles. Real member profiles are only visible to signed-in members with mutual consent.
+          {t.sampleNote}
         </p>
       </div>
     </section>
@@ -622,19 +622,19 @@ export function DiscoveryPreview() {
 // Legacy export for compatibility
 export const MemberShowcase = DiscoveryPreview;
 
-export function FamilyCirclePreview() {
+export function FamilyCirclePreview() { const t=useHomeCopy();
   return (
     <section className="bg-gradient-to-br from-accent/20 to-background px-4 py-20 sm:px-6" aria-labelledby="family-circle-heading">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">
-            Coming Soon
+            {t.familySoon}
           </p>
           <h2 id="family-circle-heading" className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
-            Family Circle
+            {t.familyTitle}
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Invite family members to join your journey — on your terms, with granular permissions you control.
+            {t.familyDesc2}
           </p>
         </div>
 
@@ -644,9 +644,9 @@ export function FamilyCirclePreview() {
               <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <Users className="h-6 w-6 text-primary" aria-hidden="true" />
               </div>
-              <h3 className="text-lg font-bold text-foreground">Member-owned invitations</h3>
+              <h3 className="text-lg font-bold text-foreground">{t.owned}</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                You decide who to invite, when, and what they can see. Revoke access anytime.
+                {t.ownedDesc}
               </p>
             </div>
 
@@ -654,15 +654,15 @@ export function FamilyCirclePreview() {
               <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <Shield className="h-6 w-6 text-primary" aria-hidden="true" />
               </div>
-              <h3 className="text-lg font-bold text-foreground">Granular permissions</h3>
+              <h3 className="text-lg font-bold text-foreground">{t.permissions}</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Control exactly what family members can view, comment on, or help decide. Full audit trail included.
+                {t.permissionsDesc}
               </p>
             </div>
           </div>
 
           <p className="mt-8 text-center text-sm text-muted-foreground">
-            This feature is in development. It supports cultural respect for family involvement while keeping you in full control.
+            {t.familyDev}
           </p>
         </div>
       </div>
@@ -670,18 +670,16 @@ export function FamilyCirclePreview() {
   );
 }
 
-export function SuccessStoriesPreview() {
+export function SuccessStoriesPreview() { const t=useHomeCopy();
   return (
     <section className="bg-background px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="stories-heading">
       <div className="mx-auto max-w-6xl">
         <div className="max-w-2xl">
           <h2 id="stories-heading" className="text-3xl font-bold text-foreground sm:text-4xl">
-            Stories that began with an introduction
+            {t.storiesTitle}
           </h2>
           <p className="mt-4 text-base leading-7 text-muted-foreground">
-            We are carefully gathering real journeys from couples who met through CupidMatch. Until
-            verified stories are ready to share, you can browse the success stories space or submit
-            your own.
+            {t.storiesDesc}
           </p>
         </div>
 
@@ -690,22 +688,21 @@ export function SuccessStoriesPreview() {
             <Heart className="mt-1 h-6 w-6 text-primary" aria-hidden="true" />
             <div className="flex-1">
               <p className="text-2xl font-bold text-foreground">
-                Real stories. Shared with care.
+                {t.realStories}
               </p>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-                Success stories will appear here once couples choose to share them. We do not publish
-                invented testimonials or fabricated couples.
+                {t.realStoriesDesc}
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <Button asChild className="rounded-full bg-primary px-6 text-primary-foreground hover:bg-primary/90">
-                  <Link href="/success-stories">View success stories</Link>
+                  <Link href="/success-stories">{t.viewStories}</Link>
                 </Button>
                 <Button
                   asChild
                   variant="outline"
                   className="rounded-full border-2 px-6"
                 >
-                  <Link href="/success-stories/submit">Share your story</Link>
+                  <Link href="/success-stories/submit">{t.shareStory}</Link>
                 </Button>
               </div>
             </div>
@@ -752,22 +749,22 @@ export function FeaturesOverview() {
   );
 }
 
-export function PricingTeaser() {
+export function PricingTeaser() { const t=useHomeCopy();
   return (
     <section className="bg-background px-4 py-20 sm:px-6" aria-labelledby="pricing-heading">
       <div className="mx-auto max-w-5xl text-center">
-        <p className="text-sm font-semibold uppercase tracking-wider text-primary">Pricing</p>
+        <p className="text-sm font-semibold uppercase tracking-wider text-primary">{t.pricingTitle}</p>
         <h2 id="pricing-heading" className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
-          Start free. Upgrade when you need more.
+          {t.pricingHead}
         </h2>
         <p className="mx-auto mt-4 max-w-3xl text-lg text-muted-foreground">
-          CupidMatch uses one membership catalogue. Prices are shown for your selected country and currency on the pricing page.
+          {t.pricingDesc}
         </p>
         <div className="mx-auto mt-8 grid max-w-3xl gap-3 sm:grid-cols-3">
           {[
-            ["Free", "Create your profile and start matching"],
-            ["Premium", "Deeper compatibility and discovery"],
-            ["Premium+", "More privacy, visibility and priority tools"],
+            ["Free", t.freeDesc],
+            ["Premium", t.premiumDesc],
+            ["Premium+", t.plusDesc],
           ].map(([name, description]) => (
             <div key={name} className="rounded-2xl border bg-card p-5 text-left shadow-sm">
               <p className="font-semibold text-foreground">{name}</p>
@@ -776,7 +773,7 @@ export function PricingTeaser() {
           ))}
         </div>
         <Button asChild className="mt-8 rounded-full px-8">
-          <Link href="/pricing">View plans & local pricing</Link>
+          <Link href="/pricing">{t.viewPlans}</Link>
         </Button>
       </div>
     </section>
@@ -840,7 +837,7 @@ export function FaqSection() {
   );
 }
 
-export function FinalCta() {
+export function FinalCta() { const t=useHomeCopy();
   return (
     <section className="px-4 pb-20 sm:px-6 sm:pb-24" aria-labelledby="cta-heading">
       <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary to-primary/90 px-6 py-14 text-center text-primary-foreground shadow-xl sm:px-12 sm:py-16">
@@ -851,10 +848,10 @@ export function FinalCta() {
           id="cta-heading"
           className="mx-auto mt-5 max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl"
         >
-          Connect with clarity and confidence
+          {t.ctaTitle}
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 opacity-90 sm:text-base">
-          Create your profile, set your preferences, and meet people who understand where you come from — and where you're going.
+          {t.ctaDesc}
         </p>
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button
@@ -862,7 +859,7 @@ export function FinalCta() {
             size="lg"
             className="h-12 rounded-full bg-card px-8 font-semibold text-primary shadow-md hover:bg-card/90"
           >
-            <Link href="/signup">Build my profile</Link>
+            <Link href="/signup">{t.buildProfile}</Link>
           </Button>
           <Button
             asChild
@@ -870,10 +867,10 @@ export function FinalCta() {
             variant="outline"
             className="h-12 rounded-full border-2 border-card/40 bg-transparent px-8 font-semibold text-card hover:bg-card/10"
           >
-            <Link href="/success-stories">Success stories</Link>
+            <Link href="/success-stories">{t.successStories}</Link>
           </Button>
         </div>
-        <p className="mt-6 text-sm opacity-80">Free to join · Privacy controls built in</p>
+        <p className="mt-6 text-sm opacity-80">{t.freeJoin}</p>
       </div>
     </section>
   );
