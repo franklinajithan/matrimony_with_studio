@@ -6,12 +6,19 @@ const hasUsers = Boolean(A.email && A.password && B.email && B.password);
 
 async function userId(page: Page) {
   return page.evaluate(async () => {
-    const keys = Object.keys(localStorage);
-    for (const key of keys) {
-      if (!key.includes("auth-token")) continue;
+    const response = await fetch("/api/qa/whoami", { credentials: "include" });
+    if (response.ok) {
+      const data = await response.json();
+      if (data?.id) return String(data.id);
+    }
+
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i) || "";
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
       try {
-        const value = JSON.parse(localStorage.getItem(key) || "null");
-        const id = value?.user?.id;
+        const value = JSON.parse(raw);
+        const id = value?.user?.id || value?.currentSession?.user?.id;
         if (id) return String(id);
       } catch {}
     }
