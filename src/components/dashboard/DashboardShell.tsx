@@ -101,7 +101,6 @@ function NavList({
               aria-label={count > 0 ? `${item.label}, ${count} new` : item.label}
               className={cn(
                 "flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
-                item.label === "Horoscope" && "ml-3 text-[13px]",
                 active
                   ? "bg-accent text-accent-foreground"
                   : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
