@@ -48,8 +48,8 @@ export function ExtractHoroscopeDetailsForm() {
   const form = useForm<FormData>({
     resolver: zodResolver(ExtractHoroscopeDetailsFormClientSchema),
     defaultValues: {
-      dateOfBirth: "", // Will be pre-filled from profile or default
-      timeOfBirth: "", 
+      dateOfBirth: "",
+      timeOfBirth: "",
       placeOfBirth: "",
       horoscopeFileDataUri: undefined,
       horoscopeFile: undefined,
@@ -71,12 +71,12 @@ export function ExtractHoroscopeDetailsForm() {
           const data = await getProfile(currentUser.uid);
           if (data) {
             form.reset({
-              dateOfBirth: data.dob || "1990-01-01",
+              dateOfBirth: data.dob || "",
               timeOfBirth:
                 (typeof (data as { timeOfBirth?: string }).timeOfBirth === "string" &&
                   (data as { timeOfBirth?: string }).timeOfBirth) ||
-                "12:00 PM",
-              placeOfBirth: data.location || "Delhi, India",
+                "",
+              placeOfBirth: data.location || "",
               horoscopeFileDataUri: undefined,
               horoscopeFile: undefined,
             });
@@ -92,9 +92,9 @@ export function ExtractHoroscopeDetailsForm() {
           } else {
              // Set default values if profile doesn't exist or is empty
             form.reset({
-              dateOfBirth: "1990-01-01",
-              timeOfBirth: "12:00 PM",
-              placeOfBirth: "Delhi, India",
+              dateOfBirth: "",
+              timeOfBirth: "",
+              placeOfBirth: "",
               horoscopeFileDataUri: undefined,
               horoscopeFile: undefined,
             });
@@ -103,9 +103,9 @@ export function ExtractHoroscopeDetailsForm() {
           console.error("Failed to fetch profile data:", e);
           toast({ title: "Error", description: "Could not load your profile data for pre-filling.", variant: "destructive" });
            form.reset({ // Fallback to defaults on error
-              dateOfBirth: "1990-01-01",
-              timeOfBirth: "12:00 PM",
-              placeOfBirth: "Delhi, India",
+              dateOfBirth: "",
+              timeOfBirth: "",
+              placeOfBirth: "",
             });
         } finally {
           setIsLoadingProfile(false);
@@ -113,9 +113,9 @@ export function ExtractHoroscopeDetailsForm() {
       } else {
          // No user logged in, set default values
         form.reset({
-          dateOfBirth: "1990-01-01",
-          timeOfBirth: "12:00 PM",
-          placeOfBirth: "Delhi, India",
+          dateOfBirth: "",
+          timeOfBirth: "",
+          placeOfBirth: "",
           horoscopeFileDataUri: undefined,
           horoscopeFile: undefined,
         });
@@ -173,8 +173,8 @@ export function ExtractHoroscopeDetailsForm() {
       const result = await extractHoroscopeDetails(flowInput);
       setAnalysisResult(result);
       toast({
-        title: "Horoscope Analysis Complete!",
-        description: "AI has provided detailed insights below.",
+        title: "Horoscope analysis complete",
+        description: "Review the generated astrological details below.",
       });
     } catch (err: any) {
       console.error("Error extracting horoscope details:", err);
@@ -279,7 +279,7 @@ export function ExtractHoroscopeDetailsForm() {
       {isLoading && (
         <div className="mt-6 text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">AI is analyzing the stars... please wait.</p>
+          <p className="text-muted-foreground">Analysing the information you provided...</p>
         </div>
       )}
 
@@ -295,9 +295,9 @@ export function ExtractHoroscopeDetailsForm() {
           <Card className="mt-8 shadow-md">
             <CardHeader>
               <CardTitle className="font-headline text-2xl text-primary flex items-center">
-                <Telescope className="mr-2 h-6 w-6" /> AI Astrological Insights
+                <Telescope className="mr-2 h-6 w-6" /> Astrological insights
               </CardTitle>
-              <CardDescription>Detailed analysis based on your provided information.</CardDescription>
+              <CardDescription>Generated from the birth details and document you provided.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
               <div><strong>Sun Sign:</strong> {analysisResult.sunSign}</div>
