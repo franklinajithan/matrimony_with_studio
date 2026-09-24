@@ -20,6 +20,8 @@ import { firstIncompleteOnboardingStep } from "@/lib/onboarding/readiness";
 import { safeInternalPath } from "@/lib/auth/safe-redirect";
 import { markLoginWelcomePending } from "@/lib/auth/welcome-toast";
 import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
+import { useI18n } from "@/components/i18n/I18nProvider";
+import { getMessages } from "@/components/i18n/messages";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Enter a valid email address." }),
@@ -34,6 +36,8 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 function LoginForm() {
   const { toast } = useToast();
+  const { language } = useI18n();
+  const t = getMessages(language).auth;
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -114,8 +118,8 @@ function LoginForm() {
   return (
     <Card className="w-full max-w-md shadow-2xl">
       <CardHeader className="text-center">
-        <CardTitle className="font-headline text-3xl text-primary">Welcome back</CardTitle>
-        <CardDescription>Log in to continue your CupidMatch profile.</CardDescription>
+        <CardTitle className="font-headline text-3xl text-primary">{t.loginTitle}</CardTitle>
+        <CardDescription>{t.loginDescription}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {linkError && ERROR_MESSAGES[linkError] && (
@@ -138,7 +142,7 @@ function LoginForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center"><Mail className="mr-2 h-4 w-4 text-muted-foreground" />Email</FormLabel>
+                  <FormLabel className="flex items-center"><Mail className="mr-2 h-4 w-4 text-muted-foreground" />{t.email}</FormLabel>
                   <FormControl>
                     <Input type="email" autoComplete="email" placeholder="you@example.com" {...field} disabled={isLoading} />
                   </FormControl>
@@ -151,7 +155,7 @@ function LoginForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center"><Lock className="mr-2 h-4 w-4 text-muted-foreground" />Password</FormLabel>
+                  <FormLabel className="flex items-center"><Lock className="mr-2 h-4 w-4 text-muted-foreground" />{t.password}</FormLabel>
                   <FormControl>
                     <Input type="password" autoComplete="current-password" placeholder="••••••••" {...field} disabled={isLoading} />
                   </FormControl>
@@ -161,19 +165,19 @@ function LoginForm() {
             />
             <Button type="submit" className="w-full min-h-11" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Log in
+              {t.login}
             </Button>
           </form>
         </Form>
       </CardContent>
       <CardFooter className="flex flex-col items-center space-y-2">
         <Link href="/forgot-password">
-          <Button variant="link" className="text-sm text-muted-foreground hover:text-primary">Forgot password?</Button>
+          <Button variant="link" className="text-sm text-muted-foreground hover:text-primary">{t.forgot}</Button>
         </Link>
         <p className="text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
+          {t.noAccount}{" "}
           <Link href="/signup" className="font-medium text-primary hover:underline">
-            Sign up
+            {t.signup}
           </Link>
         </p>
       </CardFooter>
