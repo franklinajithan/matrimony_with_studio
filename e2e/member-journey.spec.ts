@@ -102,7 +102,7 @@ test("member pages remain protected after logout", async ({ browser }) => {
   });
   await context.clearCookies();
   await page.goto("/messages");
-  await expect(page).toHaveURL(/\\/login/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/login/, { timeout: 15_000 });
   await context.close();
 });
 
