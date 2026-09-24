@@ -201,14 +201,14 @@ export function ExtractHoroscopeDetailsForm() {
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField
             control={form.control}
             name="dateOfBirth"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date of Birth</FormLabel>
-                <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
+              <FormItem className="space-y-2">
+                <FormLabel className="text-sm font-medium text-foreground">Date of Birth</FormLabel>
+                <FormControl><Input className="h-12 w-full text-base" type="date" {...field} value={field.value || ""} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -217,9 +217,9 @@ export function ExtractHoroscopeDetailsForm() {
             control={form.control}
             name="timeOfBirth"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Time of Birth (Local)</FormLabel>
-                <FormControl><Input type="text" placeholder="e.g., 12:00 PM or 14:30" {...field} value={field.value || ""} /></FormControl>
+              <FormItem className="space-y-2">
+                <FormLabel className="text-sm font-medium text-foreground">Time of Birth (Local)</FormLabel>
+                <FormControl><Input className="h-12 w-full text-base" type="text" placeholder="e.g., 12:00 PM or 14:30" {...field} value={field.value || ""} /></FormControl>
                  <FormDescription>Enter local time of birth (e.g., 02:30 PM or 14:30).</FormDescription>
                 <FormMessage />
               </FormItem>
@@ -229,9 +229,9 @@ export function ExtractHoroscopeDetailsForm() {
             control={form.control}
             name="placeOfBirth"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Place of Birth</FormLabel>
-                <FormControl><Input placeholder="e.g., City, Country" {...field} value={field.value || ""} /></FormControl>
+              <FormItem className="space-y-2">
+                <FormLabel className="text-sm font-medium text-foreground">Place of Birth</FormLabel>
+                <FormControl><Input className="h-12 w-full text-base" placeholder="e.g., City, Country" {...field} value={field.value || ""} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -240,8 +240,8 @@ export function ExtractHoroscopeDetailsForm() {
             control={form.control}
             name="horoscopeFile" 
             render={({ field: { onChange: rhfOnChange, onBlur, name, ref }}) => ( 
-              <FormItem>
-                <FormLabel className="flex items-center">
+              <FormItem className="space-y-2">
+                <FormLabel className="flex items-center text-sm font-medium text-foreground">
                   <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
                   Upload Horoscope File (PDF/Image - Optional)
                 </FormLabel>
@@ -256,7 +256,7 @@ export function ExtractHoroscopeDetailsForm() {
                     onBlur={onBlur}
                     name={name}
                     ref={ref}
-                    className="text-sm"
+                    className="h-12 w-full text-sm file:mr-3 file:h-full file:border-0 file:bg-transparent file:px-3"
                   />
                 </FormControl>
                 {selectedFileName && <FormDescription className="text-xs">Selected for this analysis: {selectedFileName}.</FormDescription>}
@@ -269,7 +269,7 @@ export function ExtractHoroscopeDetailsForm() {
               </FormItem>
             )}
           />
-          <Button type="submit" disabled={isLoading} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+          <Button type="submit" disabled={isLoading} className="h-12 w-full rounded-xl bg-primary text-primary-foreground hover:bg-primary/90">
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
             Analyze Horoscope
           </Button>
