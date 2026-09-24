@@ -12,8 +12,8 @@ async function userId(page: Page) {
       if (data?.id) return String(data.id);
     }
 
-    for (let i = 0; i < localStorage.length; i += 1) {
-      const key = localStorage.key(i) || "";
+    const supabaseKeys = Object.keys(localStorage).filter((key) => key.startsWith("sb-") && key.endsWith("-auth-token"));
+    for (const key of supabaseKeys) {
       const raw = localStorage.getItem(key);
       if (!raw) continue;
       try {
