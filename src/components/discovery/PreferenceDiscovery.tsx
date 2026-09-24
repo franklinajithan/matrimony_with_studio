@@ -20,6 +20,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { DIASPORA_COUNTRY_NAMES } from "@/data/diaspora-countries";
+import { useI18n } from "@/components/i18n/I18nProvider";
+import { getMessages } from "@/components/i18n/messages";
 
 type Person = Profile & { isShortlisted?: boolean };
 const empty: DiscoveryFilters = { query: "", countries: [], languages: [], religions: [], professions: [], smoking: [], drinking: [] };
@@ -33,6 +35,8 @@ export function PreferenceDiscovery() {
   const router = useRouter();
   const params = useSearchParams();
   const { toast } = useToast();
+  const { language } = useI18n();
+  const t = getMessages(language).discover;
   const [people, setPeople] = useState<Person[]>([]);
   const [preferences, setPreferences] = useState<PartnerPreferences | null>(null);
   const [filters, setFilters] = useState<DiscoveryFilters>(empty);
@@ -95,22 +99,22 @@ export function PreferenceDiscovery() {
 
   const FilterPanel = () => <div className="space-y-5 pb-8">
     <div className="rounded-2xl bg-violet-50 p-4 text-sm text-violet-950"><p className="font-semibold">Your Partner Preferences are the starting point</p><p className="mt-1 text-violet-700">Changes here are temporary. Reset returns to your saved preferences.</p></div>
-    <div><Label>Age range</Label><div className="mt-2 grid grid-cols-2 gap-2"><Input type="number" min={18} placeholder="Min" value={filters.ageMin || ""} onChange={(e) => setFilters((f) => ({ ...f, ageMin: e.target.value ? Number(e.target.value) : undefined }))}/><Input type="number" min={18} placeholder="Max" value={filters.ageMax || ""} onChange={(e) => setFilters((f) => ({ ...f, ageMax: e.target.value ? Number(e.target.value) : undefined }))}/></div></div>
-    <Choice label="Country" value={first(filters.countries)} values={options.countries} onChange={(v) => setFilters((f) => ({ ...f, countries: list(v) }))}/><Choice label="Language" value={first(filters.languages)} values={options.languages} onChange={(v) => setFilters((f) => ({ ...f, languages: list(v) }))}/><Choice label="Religion" value={first(filters.religions)} values={options.religions} onChange={(v) => setFilters((f) => ({ ...f, religions: list(v) }))}/>
-    <div><Label>Profession</Label><Input className="mt-2" placeholder="e.g. Engineer" value={filters.professions[0] || ""} onChange={(e) => setFilters((f) => ({ ...f, professions: e.target.value ? [e.target.value] : [] }))}/></div>
-    <Choice label="Smoking" value={first(filters.smoking)} values={["Never", "Occasionally", "Socially"]} onChange={(v) => setFilters((f) => ({ ...f, smoking: list(v) }))}/><Choice label="Drinking" value={first(filters.drinking)} values={["Never", "Occasionally", "Socially"]} onChange={(v) => setFilters((f) => ({ ...f, drinking: list(v) }))}/>
-    <div className="grid grid-cols-2 gap-2"><Button variant="outline" onClick={clear}><X className="mr-2 h-4 w-4"/>Clear</Button><Button onClick={() => { reset(); setSheet(false); }}><RotateCcw className="mr-2 h-4 w-4"/>Reset</Button></div>
+    <div><Label>{t.age}</Label><div className="mt-2 grid grid-cols-2 gap-2"><Input type="number" min={18} placeholder={t.min} value={filters.ageMin || ""} onChange={(e) => setFilters((f) => ({ ...f, ageMin: e.target.value ? Number(e.target.value) : undefined }))}/><Input type="number" min={18} placeholder={t.max} value={filters.ageMax || ""} onChange={(e) => setFilters((f) => ({ ...f, ageMax: e.target.value ? Number(e.target.value) : undefined }))}/></div></div>
+    <Choice label={t.country} value={first(filters.countries)} values={options.countries} onChange={(v) => setFilters((f) => ({ ...f, countries: list(v) }))}/><Choice label={t.language} value={first(filters.languages)} values={options.languages} onChange={(v) => setFilters((f) => ({ ...f, languages: list(v) }))}/><Choice label={t.religion} value={first(filters.religions)} values={options.religions} onChange={(v) => setFilters((f) => ({ ...f, religions: list(v) }))}/>
+    <div><Label>{t.profession}</Label><Input className="mt-2" placeholder="e.g. Engineer" value={filters.professions[0] || ""} onChange={(e) => setFilters((f) => ({ ...f, professions: e.target.value ? [e.target.value] : [] }))}/></div>
+    <Choice label={t.smoking} value={first(filters.smoking)} values={["Never", "Occasionally", "Socially"]} onChange={(v) => setFilters((f) => ({ ...f, smoking: list(v) }))}/><Choice label={t.drinking} value={first(filters.drinking)} values={["Never", "Occasionally", "Socially"]} onChange={(v) => setFilters((f) => ({ ...f, drinking: list(v) }))}/>
+    <div className="grid grid-cols-2 gap-2"><Button variant="outline" onClick={clear}><X className="mr-2 h-4 w-4"/>{t.clear}</Button><Button onClick={() => { reset(); setSheet(false); }}><RotateCcw className="mr-2 h-4 w-4"/>{t.reset}</Button></div>
   </div>;
 
   if (loading) return <PageFrame><Skeleton className="h-40 rounded-[30px]"/><Skeleton className="h-24"/><div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">{[1,2,3,4,5,6,7,8].map((n) => <Skeleton key={n} className="aspect-[3/5] rounded-2xl"/>)}</div></PageFrame>;
 
   return <PageFrame>
-    <PageHero eyebrow="Recommended for you" title="Find Matches" description="Compare real member details with your Partner Preferences and see why each person may suit what you're looking for."/>
-    <Card className="overflow-hidden border-violet-100"><CardContent className="p-4 sm:p-5"><div className="flex flex-col gap-3 lg:flex-row lg:items-center"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/><Input className="pl-10" placeholder="Search name, profession or location" value={filters.query} onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))}/></div><div className="flex gap-2"><Sheet open={sheet} onOpenChange={setSheet}><SheetTrigger asChild><Button variant="outline" className="flex-1 lg:flex-none"><SlidersHorizontal className="mr-2 h-4 w-4"/>Filters {activeCount ? `(${activeCount})` : ""}</Button></SheetTrigger><SheetContent className="w-[92vw] overflow-y-auto sm:max-w-md"><SheetHeader><SheetTitle>Match filters</SheetTitle></SheetHeader><div className="mt-5"><FilterPanel/></div></SheetContent></Sheet>{hasSaved && <Button variant="ghost" onClick={reset}><RotateCcw className="mr-2 h-4 w-4"/>My preferences</Button>}</div></div>
+    <PageHero eyebrow={t.eyebrow} title={t.title} description={t.description}/>
+    <Card className="overflow-hidden border-violet-100"><CardContent className="p-4 sm:p-5"><div className="flex flex-col gap-3 lg:flex-row lg:items-center"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/><Input className="pl-10" placeholder={t.search} value={filters.query} onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))}/></div><div className="flex gap-2"><Sheet open={sheet} onOpenChange={setSheet}><SheetTrigger asChild><Button variant="outline" className="flex-1 lg:flex-none"><SlidersHorizontal className="mr-2 h-4 w-4"/>{t.filters} {activeCount ? `(${activeCount})` : ""}</Button></SheetTrigger><SheetContent className="w-[92vw] overflow-y-auto sm:max-w-md"><SheetHeader><SheetTitle>{t.matchFilters}</SheetTitle></SheetHeader><div className="mt-5"><FilterPanel/></div></SheetContent></Sheet>{hasSaved && <Button variant="ghost" onClick={reset}><RotateCcw className="mr-2 h-4 w-4"/>{t.myPreferences}</Button>}</div></div>
       <div className={`mt-4 flex items-center gap-2 rounded-xl px-3 py-2 text-sm ${hasSaved ? "bg-[#fbf8ff] text-violet-800" : "bg-amber-50 text-amber-800"}`}><Sparkles className="h-4 w-4 shrink-0"/><span>{hasSaved ? <><strong>Preference match %</strong> compares each member with your saved Partner Preferences.</> : <><strong>Match % is waiting for your preferences.</strong> Set Partner Preferences to activate personalised scores.</>}</span>{!hasSaved && <Button size="sm" variant="outline" className="ml-auto" onClick={() => router.push(PREFERENCES_ROUTE)}>Set preferences</Button>}</div>
     </CardContent></Card>
-    <div className="flex items-center justify-between"><p className="text-sm text-muted-foreground"><strong className="text-foreground">{results.length}</strong> potential matches</p></div>
-    {!results.length ? <Card><CardContent className="py-14 text-center"><Heart className="mx-auto h-10 w-10 text-violet-300"/><h2 className="mt-3 text-lg font-semibold">No close matches yet</h2><p className="mt-1 text-sm text-muted-foreground">Broaden a filter if you want to see more people.</p><Button className="mt-4" variant="outline" onClick={clear}>Show all members</Button></CardContent></Card> :
+    <div className="flex items-center justify-between"><p className="text-sm text-muted-foreground"><strong className="text-foreground">{results.length}</strong> {t.potential}</p></div>
+    {!results.length ? <Card><CardContent className="py-14 text-center"><Heart className="mx-auto h-10 w-10 text-violet-300"/><h2 className="mt-3 text-lg font-semibold">{t.none}</h2><p className="mt-1 text-sm text-muted-foreground">{t.broaden}</p><Button className="mt-4" variant="outline" onClick={clear}>{t.showAll}</Button></CardContent></Card> :
     <div className="grid grid-cols-2 items-stretch gap-3 md:grid-cols-3 lg:gap-5 xl:grid-cols-4">
       {results.map((person) => {
       const score = preferences ? preferenceScore(person, preferences) : null;
@@ -134,7 +138,7 @@ export function PreferenceDiscovery() {
 
             {showScore ? (
               <div className="absolute left-2 top-2 rounded-full border border-white/80 bg-white/95 px-2.5 py-1 text-[11px] font-bold text-violet-700 shadow-sm">
-                {score!.percentage}% match
+                {score!.percentage}% {t.preferenceMatch}
               </div>
             ) : (
               <button
@@ -142,7 +146,7 @@ export function PreferenceDiscovery() {
                 onClick={() => router.push(PREFERENCES_ROUTE)}
                 className="absolute left-2 top-2 max-w-[calc(100%-3.25rem)] rounded-full border border-amber-200/80 bg-amber-50/95 px-2.5 py-1 text-left text-[10px] font-semibold leading-tight text-amber-800 shadow-sm hover:bg-amber-100 sm:text-[11px]"
               >
-                {hasSaved ? "Need more details" : "Set preferences"}
+                {hasSaved ? t.needDetails : t.setPreferences}
               </button>
             )}
 
@@ -185,7 +189,7 @@ export function PreferenceDiscovery() {
                 <div className="flex h-full flex-col justify-center rounded-xl bg-violet-50 px-2.5 py-2">
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate text-xs font-semibold text-violet-900">
-                      {score!.percentage}% preference match
+                      {score!.percentage}% {t.preferenceMatch}
                     </p>
                     <span className="shrink-0 text-[10px] text-violet-600">
                       {score!.matched}/{score!.total}
@@ -224,7 +228,7 @@ export function PreferenceDiscovery() {
               className="min-w-0 px-1.5"
               onClick={() => router.push(`/profile/${person.id}`)}
             >
-              View
+              {t.view}
             </Button>
             <ShareProfileButton profileId={person.id} displayName={person.displayName || "Member"} />
             <Button
@@ -236,9 +240,9 @@ export function PreferenceDiscovery() {
               {busy[`i-${person.id}`] ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : sent.has(person.id) ? (
-                "Sent"
+                t.sent
               ) : (
-                "Interest"
+                t.interest
               )}
             </Button>
           </CardFooter>
@@ -250,5 +254,6 @@ export function PreferenceDiscovery() {
 }
 
 function Choice({ label, value, values, onChange }: { label: string; value: string; values: string[]; onChange: (value: string) => void }) {
-  return <div><Label>{label}</Label><Select value={value} onValueChange={onChange}><SelectTrigger className="mt-2"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all">Any</SelectItem>{values.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>;
+  const { language } = useI18n(); const t = getMessages(language).discover;
+  return <div><Label>{label}</Label><Select value={value} onValueChange={onChange}><SelectTrigger className="mt-2"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all">{t.any}</SelectItem>{values.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>;
 }
