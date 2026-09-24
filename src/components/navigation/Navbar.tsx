@@ -103,7 +103,7 @@ export function Navbar() {
     }
   };
 
-  const [language, setLanguage] = useState<'en' | 'si' | 'ta'>('en');
+  const [language, setLanguage] = useState<'en' | 'si' | 'ta' | 'fr' | 'nl'>('en');
 
   const marketingLinkClass = (href: string) =>
     cn(
@@ -181,6 +181,8 @@ export function Navbar() {
                         {language === 'en' && 'English'}
                         {language === 'si' && 'සිංහල'}
                         {language === 'ta' && 'தமிழ்'}
+                        {language === 'fr' && 'Français'}
+                        {language === 'nl' && 'Nederlands'}
                       </span>
                       <ChevronDown className="h-3.5 w-3.5 opacity-70" />
                     </Button>
@@ -194,6 +196,12 @@ export function Navbar() {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setLanguage('ta')}>
                       தமிழ் (Tamil)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setLanguage('fr')}>
+                      Français (French)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setLanguage('nl')}>
+                      Nederlands (Dutch)
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -377,6 +385,20 @@ export function Navbar() {
                         onClick={() => setLanguage('ta')}
                       >
                         தமிழ் (Tamil)
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className={cn("w-full justify-start text-sm", language === 'fr' && "bg-accent")}
+                        onClick={() => setLanguage('fr')}
+                      >
+                        Français (French)
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className={cn("w-full justify-start text-sm", language === 'nl' && "bg-accent")}
+                        onClick={() => setLanguage('nl')}
+                      >
+                        Nederlands (Dutch)
                       </Button>
                     </div>
 
