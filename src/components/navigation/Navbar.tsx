@@ -30,6 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SearchAutocomplete } from "@/components/search/SearchAutocomplete";
+import { useI18n } from "@/components/i18n/I18nProvider";
 
 const mainAppNavLinks = [
   { href: "/dashboard", label: "Home", icon: <LayoutDashboard className="h-5 w-5" /> },
@@ -53,6 +54,7 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
+  const { language, setLanguage } = useI18n();
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -103,7 +105,6 @@ export function Navbar() {
     }
   };
 
-  const [language, setLanguage] = useState<'en' | 'si' | 'ta' | 'fr' | 'nl'>('en');
 
   const marketingLinkClass = (href: string) =>
     cn(
