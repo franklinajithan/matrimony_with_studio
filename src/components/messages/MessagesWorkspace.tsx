@@ -38,6 +38,7 @@ import { auth, onAuthStateChanged, type AuthUser } from "@/lib/supabase/auth";
 import { Timestamp } from "@/lib/supabase/timestamp";
 import { getProfile } from "@/lib/supabase/profiles";
 import {
+  createChatDocument,
   getChat,
   markMessagesRead,
   sendMessage,
@@ -45,6 +46,7 @@ import {
   subscribeToMessages,
 } from "@/lib/supabase/chats";
 import { resolveMediaUrl } from "@/lib/supabase/storage";
+import { areConnected } from "@/lib/supabase/connections";
 
 const QUICK_EMOJIS = ["😀", "😂", "🥰", "😊", "🙏", "👍", "❤️", "🎉", "🔥", "✨", "😢", "👏"];
 
@@ -259,7 +261,29 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
 
     void (async () => {
       try {
-        const chat = await getChat(selectedChatId);
+        let chat = await getChat(selectedChatId);
+
+        // Older/partially-created connections can exist without a chat row.
+        // Recover safely only when this URL represents the current user's
+        // composite chat with a real connection.
+        if (!chat) {
+          const candidateOtherUserId = selectedChatId
+            .split("_")
+            .find((id) => id !== userId);
+          const expectedChatId = candidateOtherUserId
+            ? [userId, candidateOtherUserId].sort().join("_")
+            : null;
+
+          if (
+            candidateOtherUserId &&
+            expectedChatId === selectedChatId &&
+            (await areConnected(userId, candidateOtherUserId))
+          ) {
+            await createChatDocument(userId, candidateOtherUserId);
+            chat = await getChat(selectedChatId);
+          }
+        }
+
         if (cancelled || !chat) return;
         const otherUserId = chat.participants.find((id) => id !== userId);
         if (!otherUserId) return;
