@@ -21,6 +21,10 @@ const optionalPath = z.string().max(1000).optional().or(z.literal(""));
 
 export const onboardingDraftSchema = z.object({
   displayName: z.string().max(80).optional().or(z.literal("")),
+  gender: z.enum(["male", "female"]).optional(),
+  hideName: z.boolean().optional(),
+  aliasName: z.string().max(80).optional().or(z.literal("")),
+  profilePhotoGrayscale: z.boolean().optional(),
   dob: z.string().max(32).optional().or(z.literal("")),
   // Kept for backwards compatibility with drafts saved before DOB became the sole age check.
   confirmedAdult: z.boolean().optional(),
@@ -64,7 +68,7 @@ export const onboardingDraftSchema = z.object({
 export type OnboardingDraft = z.infer<typeof onboardingDraftSchema>;
 
 export const EMPTY_ONBOARDING_DRAFT: OnboardingDraft = {
-  displayName: "", dob: "", confirmedAdult: false, height: "", profession: "", country: "", region: "", languages: [],
+  displayName: "", gender: undefined, hideName: false, aliasName: "", profilePhotoGrayscale: false, dob: "", confirmedAdult: false, height: "", profession: "", country: "", region: "", languages: [],
   lookingFor: "", relationshipTimeline: "", partnershipStyle: "", bio: "", educationLevel: "", smokingHabits: "",
   drinkingHabits: "", hobbies: "", faithImportance: "", familyImportance: "", religion: "", culturalBackground: "",
   familyInvolvement: "", festivalImportance: "", skippedCultural: false, currentCountry: "", preferredSettlement: [],
@@ -106,7 +110,7 @@ function sanitizeDraftInput(input: unknown): unknown {
   row.photoURL = clamp(row.photoURL, 4000);
   row.photoStoragePath = clamp(row.photoStoragePath, 1000);
   for (const key of Object.keys(row)) {
-    if (["displayName", "dob", "bio", "familyResponsibilities", "photoURL", "photoStoragePath", "languages", "preferredSettlement", "additionalPhotoUrls", "confirmedAdult", "skippedCultural", "photoPrivacy", "reviewConfirmed"].includes(key)) continue;
+    if (["displayName", "gender", "hideName", "aliasName", "profilePhotoGrayscale", "dob", "bio", "familyResponsibilities", "photoURL", "photoStoragePath", "languages", "preferredSettlement", "additionalPhotoUrls", "confirmedAdult", "skippedCultural", "photoPrivacy", "reviewConfirmed"].includes(key)) continue;
     if (typeof row[key] === "string") row[key] = clamp(row[key], 500);
   }
   if (Array.isArray(row.additionalPhotoUrls)) {
@@ -123,6 +127,7 @@ function sanitizeDraftInput(input: unknown): unknown {
 const stepSchemas: Record<number, z.ZodTypeAny> = {
   0: z.object({
     displayName: z.string().trim().min(2, "Please enter your name."),
+    gender: z.enum(["male", "female"], { errorMap: () => ({ message: "Please select Male or Female." }) }),
     dob: z.string().min(8, "Date of birth is required."),
   }).superRefine((value, ctx) => {
     if (!isAdult(value.dob)) {
