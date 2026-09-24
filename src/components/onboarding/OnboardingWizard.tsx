@@ -27,6 +27,8 @@ import {
 import { auth, onAuthStateChanged } from "@/lib/supabase/auth";
 import { mediaPathForUser, resolveMediaUrl, uploadMediaFile } from "@/lib/supabase/storage";
 import { ProfilePhotoEditor } from "@/components/profile/ProfilePhotoEditor";
+import { useI18n } from "@/components/i18n/I18nProvider";
+import { getMessages } from "@/components/i18n/messages";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -60,6 +62,8 @@ export function OnboardingWizard() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { language } = useI18n();
+  const t = getMessages(language).onboarding;
   useLoginWelcomeToast();
   const [draft, setDraft] = useState<OnboardingDraft>(EMPTY_ONBOARDING_DRAFT);
   const [step, setStep] = useState(0);
@@ -322,11 +326,11 @@ export function OnboardingWizard() {
   }
 
   const saveLabel = useMemo(() => {
-    if (saveState === "saving") return "Saving…";
-    if (saveState === "saved") return "Saved";
-    if (saveState === "error") return "Save failed";
-    return "Draft";
-  }, [saveState]);
+    if (saveState === "saving") return t.saving;
+    if (saveState === "saved") return t.saved;
+    if (saveState === "error") return t.failed;
+    return t.draft;
+  }, [saveState, t]);
 
   if (loading) {
     return (
@@ -358,7 +362,7 @@ export function OnboardingWizard() {
   return (
     <PageFrame>
       <PageHero
-        eyebrow={`Step ${step + 1} of ${ONBOARDING_STEPS.length}`}
+        eyebrow={`${t.step} ${step + 1} ${t.of} ${ONBOARDING_STEPS.length}`}
         title={current.title}
         description={current.description}
         actions={
@@ -402,7 +406,7 @@ export function OnboardingWizard() {
 
       {stepErrors.length > 0 && (
         <Alert variant="destructive">
-          <AlertTitle>Please check this step</AlertTitle>
+          <AlertTitle>{t.review}</AlertTitle>
           <AlertDescription>
             <ul className="list-disc pl-4">
               {stepErrors.map((error) => (
@@ -416,14 +420,14 @@ export function OnboardingWizard() {
       <section className="space-y-6 rounded-2xl border border-[#eadde7] bg-white p-4 shadow-sm sm:p-8">
           {step === 0 && (
             <div className="space-y-5">
-              <Field label="Display name" htmlFor="displayName">
+              <Field label={t.displayName} htmlFor="displayName">
                 <Input id="displayName" value={draft.displayName || ""} onChange={(e) => updateDraft({ displayName: e.target.value })} className="min-h-11" />
               </Field>
-              <Field label="Date of birth (kept private)" htmlFor="dob">
+              <Field label={t.dob} htmlFor="dob">
                 <Input id="dob" type="date" value={draft.dob || ""} onChange={(e) => updateDraft({ dob: e.target.value })} className="min-h-11" />
-                <p className="text-sm text-muted-foreground">We only show a derived age after you publish. Your date of birth is never shown on discovery.</p>
+                <p className="text-sm text-muted-foreground">{t.dobHelp}</p>
               </Field>
-              <Field label="Profession (optional)" htmlFor="profession">
+              <Field label={t.profession} htmlFor="profession">
                 <Input id="profession" value={draft.profession || ""} onChange={(e) => updateDraft({ profession: e.target.value })} className="min-h-11" />
               </Field>
               <label className="flex items-start gap-3 rounded-lg border p-4">
@@ -431,31 +435,31 @@ export function OnboardingWizard() {
                   checked={Boolean(draft.confirmedAdult)}
                   onCheckedChange={(checked) => updateDraft({ confirmedAdult: checked === true })}
                 />
-                <span className="text-sm leading-6">I confirm I am 18 or older and eligible to use CupidMatch.</span>
+                <span className="text-sm leading-6">{t.adult}</span>
               </label>
             </div>
           )}
 
           {step === 1 && (
             <div className="space-y-5">
-              <Field label="Country" htmlFor="country">
+              <Field label={t.country} htmlFor="country">
                 <select
                   id="country"
                   className="flex min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   value={draft.country || ""}
                   onChange={(e) => updateDraft({ country: e.target.value, currentCountry: e.target.value || draft.currentCountry })}
                 >
-                  <option value="">Select country</option>
+                  <option value="">{t.selectCountry}</option>
                   {COUNTRY_OPTIONS.map((country) => (
                     <option key={country} value={country}>{country}</option>
                   ))}
                 </select>
               </Field>
-              <Field label="City or region (not a street address)" htmlFor="region">
+              <Field label={t.region} htmlFor="region">
                 <Input id="region" value={draft.region || ""} onChange={(e) => updateDraft({ region: e.target.value })} className="min-h-11" placeholder="e.g. Colombo, Toronto, Chennai" />
               </Field>
               <fieldset>
-                <legend className="mb-3 text-sm font-medium">Languages</legend>
+                <legend className="mb-3 text-sm font-medium">{t.languages}</legend>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {LANGUAGE_OPTIONS.map((language) => {
                     const selected = draft.languages?.includes(language.label);
@@ -484,13 +488,13 @@ export function OnboardingWizard() {
           {step === 2 && (
             <div className="space-y-6">
               <ChoiceGroup
-                legend="What are you looking for?"
+                legend={t.looking}
                 value={draft.lookingFor || ""}
                 options={LOOKING_FOR}
                 onChange={(lookingFor) => updateDraft({ lookingFor })}
               />
               <ChoiceGroup
-                legend="Timeline"
+                legend={t.timeline}
                 value={draft.relationshipTimeline || ""}
                 options={TIMELINES}
                 onChange={(relationshipTimeline) => updateDraft({ relationshipTimeline })}
@@ -503,10 +507,10 @@ export function OnboardingWizard() {
 
           {step === 3 && (
             <div className="space-y-5">
-              <Field label="Introduction" htmlFor="bio">
+              <Field label={t.introduction} htmlFor="bio">
                 <Textarea id="bio" rows={5} value={draft.bio || ""} onChange={(e) => updateDraft({ bio: e.target.value })} placeholder="What matters to you in a relationship and in daily life?" />
               </Field>
-              <Field label="Education" htmlFor="educationLevel">
+              <Field label={t.education} htmlFor="educationLevel">
                 <select
                   id="educationLevel"
                   className="flex min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -518,20 +522,20 @@ export function OnboardingWizard() {
                 </select>
               </Field>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Smoking" htmlFor="smokingHabits">
+                <Field label={t.smoking} htmlFor="smokingHabits">
                   <select id="smokingHabits" className="flex min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={draft.smokingHabits || ""} onChange={(e) => updateDraft({ smokingHabits: e.target.value })}>
                     <option value="">Select</option>
                     {HABITS.map((item) => <option key={item} value={item}>{item}</option>)}
                   </select>
                 </Field>
-                <Field label="Drinking" htmlFor="drinkingHabits">
+                <Field label={t.drinking} htmlFor="drinkingHabits">
                   <select id="drinkingHabits" className="flex min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={draft.drinkingHabits || ""} onChange={(e) => updateDraft({ drinkingHabits: e.target.value })}>
                     <option value="">Select</option>
                     {HABITS.map((item) => <option key={item} value={item}>{item}</option>)}
                   </select>
                 </Field>
               </div>
-              <Field label="Hobbies and interests" htmlFor="hobbies">
+              <Field label={t.hobbies} htmlFor="hobbies">
                 <Input id="hobbies" value={draft.hobbies || ""} onChange={(e) => updateDraft({ hobbies: e.target.value })} className="min-h-11" />
               </Field>
               <Field label="How important is faith in daily life? (optional)" htmlFor="faithImportance">
@@ -636,20 +640,20 @@ export function OnboardingWizard() {
 
       <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Button variant="ghost" className="min-h-11" onClick={() => void handleExit()}>
-          Save and exit
+          {t.saveExit}
         </Button>
         <div className="flex gap-3">
           <Button variant="outline" className="min-h-11 flex-1 sm:flex-none" onClick={() => void goBack()} disabled={step === 0 || publishing}>
-            <ChevronLeft className="mr-1 h-4 w-4" /> Back
+            <ChevronLeft className="mr-1 h-4 w-4" /> {t.back}
           </Button>
           {step < 7 ? (
             <Button className="min-h-11 flex-1 sm:flex-none" onClick={() => void goNext()}>
-              Continue <ChevronRight className="ml-1 h-4 w-4" />
+              {t.continue} <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           ) : (
             <Button className="min-h-11 flex-1 sm:flex-none" onClick={() => void handlePublish()} disabled={publishing}>
               {publishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Publish profile
+              {t.publish}
             </Button>
           )}
         </div>
