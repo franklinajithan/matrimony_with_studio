@@ -16,6 +16,8 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth, createUserWithEmailAndPassword } from "@/lib/supabase/auth";
 import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
+import { useI18n } from "@/components/i18n/I18nProvider";
+import { getMessages } from "@/components/i18n/messages";
 
 const signupSchema = z
   .object({
@@ -32,6 +34,8 @@ const signupSchema = z
 
 export default function SignupPage() {
   const { toast } = useToast();
+  const { language } = useI18n();
+  const t = getMessages(language).auth;
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -98,8 +102,8 @@ export default function SignupPage() {
   return (
     <Card className="w-full max-w-md shadow-2xl">
       <CardHeader className="text-center">
-        <CardTitle className="font-headline text-3xl text-primary">Create your account</CardTitle>
-        <CardDescription>Join CupidMatch. You will confirm your email before publishing a profile.</CardDescription>
+        <CardTitle className="font-headline text-3xl text-primary">{t.signupTitle}</CardTitle>
+        <CardDescription>{t.signupDescription}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {formError && (
@@ -130,9 +134,9 @@ export default function SignupPage() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center"><User className="mr-2 h-4 w-4 text-muted-foreground" />Full name</FormLabel>
+                  <FormLabel className="flex items-center"><User className="mr-2 h-4 w-4 text-muted-foreground" />{t.fullName}</FormLabel>
                   <FormControl>
-                    <Input autoComplete="name" placeholder="Your name" {...field} disabled={isLoading} />
+                    <Input autoComplete="name" placeholder={t.yourName} {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -143,7 +147,7 @@ export default function SignupPage() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center"><Mail className="mr-2 h-4 w-4 text-muted-foreground" />Email</FormLabel>
+                  <FormLabel className="flex items-center"><Mail className="mr-2 h-4 w-4 text-muted-foreground" />{t.email}</FormLabel>
                   <FormControl>
                     <Input type="email" autoComplete="email" placeholder="you@example.com" {...field} disabled={isLoading} />
                   </FormControl>
@@ -156,7 +160,7 @@ export default function SignupPage() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center"><Lock className="mr-2 h-4 w-4 text-muted-foreground" />Password</FormLabel>
+                  <FormLabel className="flex items-center"><Lock className="mr-2 h-4 w-4 text-muted-foreground" />{t.password}</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
@@ -190,7 +194,7 @@ export default function SignupPage() {
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center"><Lock className="mr-2 h-4 w-4 text-muted-foreground" />Confirm password</FormLabel>
+                  <FormLabel className="flex items-center"><Lock className="mr-2 h-4 w-4 text-muted-foreground" />{t.confirmPassword}</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
@@ -238,16 +242,16 @@ export default function SignupPage() {
             />
             <Button type="submit" className="w-full min-h-11" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create account
+              {t.create}
             </Button>
           </form>
         </Form>
       </CardContent>
       <CardFooter className="flex justify-center">
         <p className="text-sm text-muted-foreground">
-          Already have an account?{" "}
+          {t.haveAccount}{" "}
           <Link href="/login" className="font-medium text-primary hover:underline">
-            Log in
+            {t.login}
           </Link>
         </p>
       </CardFooter>
