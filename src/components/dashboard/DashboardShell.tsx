@@ -36,6 +36,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useLoginWelcomeToast } from "@/hooks/use-login-welcome-toast";
 import { MemberAvatar } from "@/components/dashboard/MemberAvatar";
 import { DashboardChromeProvider } from "@/components/dashboard/chrome-context";
+import { useI18n } from "@/components/i18n/I18nProvider";
+import { getMessages } from "@/components/i18n/messages";
 import {
   dashboardAccountNav,
   dashboardMobileNav,
@@ -79,12 +81,14 @@ function NavList({
   onNavigate,
   compact = false,
   badges,
+  labels,
 }: {
   items: DashboardNavItem[];
   pathname: string;
   onNavigate?: () => void;
   compact?: boolean;
   badges: NavBadges;
+  labels: Record<string,string>;
 }) {
   return (
     <ul className="space-y-1">
@@ -112,7 +116,7 @@ function NavList({
                   <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-primary" aria-hidden />
                 ) : null}
               </span>
-              <span className="truncate">{item.label}</span>
+              <span className="truncate">{labels[item.href] || item.label}</span>
               <CountPill count={count} />
             </Link>
           </li>
@@ -127,11 +131,17 @@ function SidebarBody({
   onLogout,
   onNavigate,
   badges,
+  labels,
+  accountLabel,
+  logoutLabel,
 }: {
   pathname: string;
   onLogout: () => void;
   onNavigate?: () => void;
   badges: NavBadges;
+  labels: Record<string,string>;
+  accountLabel: string;
+  logoutLabel: string;
 }) {
   return (
     <div className="flex h-full flex-col">
@@ -139,11 +149,11 @@ function SidebarBody({
         <Logo href="/dashboard" size="md" className="ml-0" />
       </div>
       <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Dashboard">
-        <NavList items={dashboardPrimaryNav} pathname={pathname} onNavigate={onNavigate} badges={badges} />
+        <NavList items={dashboardPrimaryNav} pathname={pathname} onNavigate={onNavigate} badges={badges} labels={labels} />
         <p className="mb-2 mt-6 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Account
+          {accountLabel}
         </p>
-        <NavList items={dashboardAccountNav} pathname={pathname} onNavigate={onNavigate} badges={badges} />
+        <NavList items={dashboardAccountNav} pathname={pathname} onNavigate={onNavigate} badges={badges} labels={labels} />
       </nav>
       <div className="border-t border-border p-3">
         <Button
@@ -152,7 +162,7 @@ function SidebarBody({
           onClick={onLogout}
         >
           <LogOut className="mr-3 h-4 w-4" aria-hidden="true" />
-          Log out
+          {logoutLabel}
         </Button>
       </div>
     </div>
@@ -163,6 +173,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
+  const { language } = useI18n();
+  const dt = getMessages(language).dashboard;
+  const navLabels = useMemo(() => ({"/dashboard":dt.overview,"/discover":dt.findMatches,"/interests":dt.interests,"/connections":dt.connections,"/messages":dt.messages,"/dashboard/edit-profile":dt.myProfile,"/dashboard/edit-profile/match-details":dt.matchProfile,"/biodata":dt.biodata,"/dashboard/horoscope":dt.horoscope,"/dashboard/preferences":dt.preferences,"/dashboard/privacy":dt.privacy,"/pricing":dt.subscription}), [dt]);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [displayName, setDisplayName] = useState<string>("");
   const [photoURL, setPhotoURL] = useState<string>("");
@@ -286,7 +299,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     };
   }, [currentUser, refreshBadges, pathname]);
 
-  const title = useMemo(() => titleForDashboardPath(pathname), [pathname]);
+  const title = useMemo(() => navLabels[pathname] || (pathname === "/dashboard" ? dt.titleOverview : titleForDashboardPath(pathname)), [pathname, navLabels, dt.titleOverview]);
 
   const handleLogout = async () => {
     try {
@@ -330,7 +343,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             isMessagesRoute ? "h-full" : "h-screen"
           )}
         >
-          <SidebarBody pathname={pathname} onLogout={handleLogout} badges={badges} />
+          <SidebarBody pathname={pathname} onLogout={handleLogout} badges={badges} labels={navLabels} accountLabel={dt.account} logoutLabel={dt.logout} />
         </aside>
 
         <div
@@ -349,13 +362,16 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[280px] bg-card p-0">
                   <SheetHeader className="sr-only">
-                    <SheetTitle>Dashboard menu</SheetTitle>
+                    <SheetTitle>{dt.menu}</SheetTitle>
                   </SheetHeader>
                   <SidebarBody
                     pathname={pathname}
                     onLogout={handleLogout}
                     onNavigate={() => setDrawerOpen(false)}
                     badges={badges}
+                    labels={navLabels}
+                    accountLabel={dt.account}
+                    logoutLabel={dt.logout}
                   />
                 </SheetContent>
               </Sheet>
@@ -366,7 +382,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
               <div className="ml-auto flex items-center gap-2">
                 <div className="hidden md:block">
-                  <SearchAutocomplete className="w-[220px] lg:w-[280px]" placeholder="Search people" />
+                  <SearchAutocomplete className="w-[220px] lg:w-[280px]" placeholder={dt.search} />
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -389,31 +405,31 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-64">
-                    <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                    <DropdownMenuLabel>{dt.notifications}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link href="/interests" className="flex w-full items-center gap-2">
                         <Heart className="h-4 w-4 text-primary" aria-hidden />
-                        <span className="flex-1">Interests</span>
+                        <span className="flex-1">{dt.interests}</span>
                         <CountPill count={badges.interests} />
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/connections" className="flex w-full items-center gap-2">
                         <Users className="h-4 w-4 text-primary" aria-hidden />
-                        <span className="flex-1">Connections</span>
+                        <span className="flex-1">{dt.connections}</span>
                         <CountPill count={badges.connections} />
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/messages" className="flex w-full items-center gap-2">
                         <MessageCircle className="h-4 w-4 text-primary" aria-hidden />
-                        <span className="flex-1">Messages</span>
+                        <span className="flex-1">{dt.messages}</span>
                         <CountPill count={badges.messages} />
                       </Link>
                     </DropdownMenuItem>
                     {headerUnread === 0 ? (
-                      <p className="px-2 py-3 text-xs text-muted-foreground">You&apos;re all caught up.</p>
+                      <p className="px-2 py-3 text-xs text-muted-foreground">{dt.caughtUp}</p>
                     ) : null}
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -431,21 +447,21 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>My account</DropdownMenuLabel>
+                    <DropdownMenuLabel>{dt.myAccount}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href="/dashboard/edit-profile">My profile</Link>
+                      <Link href="/dashboard/edit-profile">{dt.myProfile}</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/dashboard/privacy">Privacy and safety</Link>
+                      <Link href="/dashboard/privacy">{dt.privacy}</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/pricing">Subscription</Link>
+                      <Link href="/pricing">{dt.subscription}</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
-                      Log out
+                      {dt.logout}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -514,7 +530,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                       </span>
                     ) : null}
                   </span>
-                  <span className="truncate">{item.label}</span>
+                  <span className="truncate">{item.href === "/dashboard" ? dt.overview : item.href === "/discover" ? dt.matches : item.href === "/interests" ? dt.interests : item.href === "/messages" ? dt.messages : dt.profile}</span>
                 </Link>
               </li>
             );
