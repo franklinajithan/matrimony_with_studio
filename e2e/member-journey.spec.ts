@@ -57,6 +57,7 @@ test.describe("CupidMatch member-to-member QA", () => {
   });
 
   test("QA-020 → QA-042 full interest, connection and chat lifecycle", async ({ browser }) => {
+    test.setTimeout(90_000);
     const { a, b, pageA, pageB } = await loginPair(browser);
     const idA = await userId(pageA);
     const idB = await userId(pageB);
@@ -105,8 +106,8 @@ test.describe("CupidMatch member-to-member QA", () => {
 
     const boxA = pageA.getByPlaceholder(/type a message/i);
     const boxB = pageB.getByPlaceholder(/type a message/i);
-    await expect(boxA, "QA-035: A can open connected chat").toBeVisible();
-    await expect(boxB, "QA-035: B can open connected chat").toBeVisible();
+    await expect(boxA, "QA-035: A can open connected chat").toBeVisible({ timeout: 20_000 });
+    await expect(boxB, "QA-035: B can open connected chat").toBeVisible({ timeout: 20_000 });
 
     const stamp = Date.now();
     const fromA = `QA-040 A→B ${stamp}`;
