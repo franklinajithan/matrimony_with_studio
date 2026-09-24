@@ -1,14 +1,12 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Heart, Shield, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HERO_IMAGE } from "@/components/landing/brand";
+import { useI18n } from "@/components/i18n/I18nProvider";
+import { getMessages } from "@/components/i18n/messages";
 
-const highlights = [
-  { icon: Users, lines: ["Verified", "Profiles"] },
-  { icon: Shield, lines: ["Safe &", "Secure"] },
-  { icon: Heart, lines: ["Find", "Compatibility"] },
-];
 
 function ScriptHeart({ className }: { className?: string }) {
   return (
@@ -24,18 +22,21 @@ function ScriptHeart({ className }: { className?: string }) {
 }
 
 export function LandingHero() {
+  const { language } = useI18n();
+  const t = getMessages(language).hero;
+  const highlights = [{ icon: Users, label: t.verified }, { icon: Shield, label: t.safe }, { icon: Heart, label: t.compatibility }];
   return (
     <section className="relative overflow-hidden bg-[#FBF8F4] pt-1 sm:pt-2">
       <div className="relative mx-auto grid max-w-[1240px] items-start gap-6 px-5 pb-8 sm:px-8 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] lg:items-stretch lg:gap-4 lg:px-10 lg:pb-10">
         <div className="relative z-10 flex max-w-xl flex-col pt-3 lg:pt-1">
           <p className="text-[11px] font-semibold uppercase leading-5 tracking-[0.26em] text-[#A078B0] sm:text-xs sm:leading-6">
-            Sri Lankan matchmaking
-            <span className="block">for a brighter tomorrow</span>
+            {t.eyebrow}
+            <span className="block">{t.eyebrow2}</span>
           </p>
           <h1 className="mt-5 font-serif text-[2.65rem] font-semibold leading-[1.08] tracking-tight text-[#2A1845] sm:text-5xl lg:text-[3.65rem] lg:leading-[1.05]">
-            Find Your
+            {t.title}
             <span className="mt-1 flex items-center gap-2 text-[#C026D3] sm:mt-1.5">
-              Perfect Match
+              {t.titleAccent}
               <Heart
                 className="h-7 w-7 shrink-0 stroke-[1.8] text-[#C026D3] sm:h-8 sm:w-8"
                 fill="none"
@@ -44,22 +45,17 @@ export function LandingHero() {
             </span>
           </h1>
           <p className="mt-5 max-w-[30rem] text-[15px] leading-7 text-[#5C4A66] sm:text-lg sm:leading-8">
-            A trusted matrimony platform for the Sri Lankan community in the UK, Canada, Australia
-            and beyond. Real people, serious intentions, meaningful connections.
+            {t.description}
           </p>
 
           <ul className="mt-9 flex gap-6 sm:gap-10">
             {highlights.map((item) => (
-              <li key={item.lines.join(" ")} className="flex w-[4.75rem] flex-col items-center text-center sm:w-24">
+              <li key={item.label} className="flex w-[4.75rem] flex-col items-center text-center sm:w-24">
                 <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#F3E8FF] text-[#8B5CF6]">
                   <item.icon className="h-6 w-6 stroke-[1.6]" aria-hidden="true" />
                 </span>
                 <span className="mt-2.5 text-[11px] font-semibold leading-[1.25] text-[#4C3A5C] sm:text-xs">
-                  {item.lines.map((line) => (
-                    <span key={line} className="block">
-                      {line}
-                    </span>
-                  ))}
+                  {item.label}
                 </span>
               </li>
             ))}
@@ -71,7 +67,7 @@ export function LandingHero() {
               className="h-12 rounded-full bg-[#7C3AED] px-7 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(124,58,237,0.28)] hover:bg-[#6D28D9]"
             >
               <Link href="/signup">
-                Create Your Profile
+                {t.create}
                 <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>
@@ -80,7 +76,7 @@ export function LandingHero() {
               variant="outline"
               className="h-12 rounded-full border-[#E4D4F5] bg-white px-7 text-sm font-semibold text-[#5B21B6] shadow-sm hover:bg-white hover:text-[#5B21B6]"
             >
-              <Link href="/discover">Explore Matches</Link>
+              <Link href="/discover">{t.explore}</Link>
             </Button>
           </div>
 
