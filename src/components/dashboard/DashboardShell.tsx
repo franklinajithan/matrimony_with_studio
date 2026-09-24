@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Bell,
+  Globe,
   Heart,
   LogOut,
   Menu,
@@ -38,6 +39,7 @@ import { MemberAvatar } from "@/components/dashboard/MemberAvatar";
 import { DashboardChromeProvider } from "@/components/dashboard/chrome-context";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { getMessages } from "@/components/i18n/messages";
+import { LANGUAGES, type LanguageCode } from "@/components/i18n/I18nProvider";
 import {
   dashboardAccountNav,
   dashboardMobileNav,
@@ -173,7 +175,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
-  const { language } = useI18n();
+  const { language, setLanguage } = useI18n();
   const dt = getMessages(language).dashboard;
   const navLabels = useMemo<Record<string, string>>(() => ({"/dashboard":dt.overview,"/discover":dt.findMatches,"/interests":dt.interests,"/connections":dt.connections,"/messages":dt.messages,"/dashboard/edit-profile":dt.myProfile,"/dashboard/edit-profile/match-details":dt.matchProfile,"/biodata":dt.biodata,"/dashboard/horoscope":dt.horoscope,"/dashboard/preferences":dt.preferences,"/dashboard/privacy":dt.privacy,"/pricing":dt.subscription}), [dt]);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
@@ -381,6 +383,21 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               </h1>
 
               <div className="ml-auto flex items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-11 gap-2 px-3" aria-label="Select language">
+                      <Globe className="h-4 w-4" aria-hidden="true" />
+                      <span className="hidden sm:inline">{LANGUAGES[language]}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {(Object.entries(LANGUAGES) as [LanguageCode, string][]).map(([code, name]) => (
+                      <DropdownMenuItem key={code} onClick={() => setLanguage(code)} className={language === code ? "font-semibold text-primary" : ""}>
+                        {name}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <div className="hidden md:block">
                   <SearchAutocomplete className="w-[220px] lg:w-[280px]" placeholder={dt.search} />
                 </div>
