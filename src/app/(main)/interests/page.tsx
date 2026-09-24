@@ -359,6 +359,7 @@ export default function InterestsPage() {
                         <Button
                           variant="outline"
                           size="sm"
+                          data-testid={`interest-${interest.senderUid}-decline`}
                           onClick={() => handleDecline(interest.id)}
                           disabled={processingAction[interest.id]}
                         >
@@ -370,6 +371,7 @@ export default function InterestsPage() {
                         </Button>
                         <Button
                           size="sm"
+                          data-testid={`interest-${interest.senderUid}-accept`}
                           onClick={() => handleAccept(interest.id, interest.senderUid)}
                           disabled={processingAction[interest.id]}
                           className="bg-violet-600 hover:bg-violet-700"
@@ -450,6 +452,7 @@ export default function InterestsPage() {
                             variant="ghost"
                             size="sm"
                             className="flex-1 sm:flex-none"
+                            data-testid={`interest-${interest.receiverUid}-withdraw`}
                             onClick={() => handleWithdraw(interest.id)}
                             disabled={processingAction[interest.id]}
                           >
