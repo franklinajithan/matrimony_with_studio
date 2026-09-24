@@ -31,9 +31,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SearchAutocomplete } from "@/components/search/SearchAutocomplete";
 import { useI18n } from "@/components/i18n/I18nProvider";
+import { getMessages } from "@/components/i18n/messages";
 
 const mainAppNavLinks = [
-  { href: "/dashboard", label: "Home", icon: <LayoutDashboard className="h-5 w-5" /> },
+  { href: "/dashboard", label: t.home, icon: <LayoutDashboard className="h-5 w-5" /> },
   { href: "/messages", label: "Messages", icon: <MessageCircle className="h-5 w-5" /> },
   { href: "/dashboard/edit-profile", label: "Profile", icon: <UserCircleIcon className="h-5 w-5" /> },
   { href: "/dashboard/preferences", label: "Settings", icon: <Settings className="h-5 w-5" /> },
@@ -41,11 +42,11 @@ const mainAppNavLinks = [
 
 const landingPageNavLinks = [
   { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
-  { href: "/success-stories", label: "Success Stories" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/safety", label: "Safety" },
-  { href: "/contact", label: "Help" },
+  { href: "/about", label: t.about },
+  { href: "/success-stories", label: t.stories },
+  { href: "/pricing", label: t.pricing },
+  { href: "/safety", label: t.safety },
+  { href: "/contact", label: t.help },
 ];
 
 const marketingPages = ["/", "/about", "/discover", "/safety", "/pricing", "/contact", "/success-stories", "/success-stories/submit"];
@@ -55,6 +56,7 @@ export function Navbar() {
   const router = useRouter();
   const { toast } = useToast();
   const { language, setLanguage } = useI18n();
+  const t = getMessages(language).nav;
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
