@@ -64,6 +64,7 @@ export function OnboardingWizard() {
   const { toast } = useToast();
   const { language } = useI18n();
   const t = getMessages(language).onboarding;
+  const choiceLabels = getOnboardingChoiceLabels(language);
   useLoginWelcomeToast();
   const [draft, setDraft] = useState<OnboardingDraft>(EMPTY_ONBOARDING_DRAFT);
   const [step, setStep] = useState(0);
@@ -490,13 +491,13 @@ export function OnboardingWizard() {
               <ChoiceGroup
                 legend={t.looking}
                 value={draft.lookingFor || ""}
-                options={LOOKING_FOR}
+                options={LOOKING_FOR.map((o) => ({ ...o, label: choiceLabels[o.id] || o.label }))}
                 onChange={(lookingFor) => updateDraft({ lookingFor })}
               />
               <ChoiceGroup
                 legend={t.timeline}
                 value={draft.relationshipTimeline || ""}
-                options={TIMELINES}
+                options={TIMELINES.map((o) => ({ ...o, label: choiceLabels[o.id] || o.label }))}
                 onChange={(relationshipTimeline) => updateDraft({ relationshipTimeline })}
               />
               <Field label="How you hope to build a partnership (optional)" htmlFor="partnershipStyle">
@@ -549,21 +550,21 @@ export function OnboardingWizard() {
 
           {step === 4 && (
             <div className="space-y-5">
-              <p className="text-sm text-muted-foreground">This step is optional. Skip it if you would rather discuss culture later.</p>
-              <Field label="Religion or worldview (optional)" htmlFor="religion">
+              <p className="text-sm text-muted-foreground">{t.cultureHelp}</p>
+              <Field label={t.religion} htmlFor="religion">
                 <Input id="religion" value={draft.religion || ""} onChange={(e) => updateDraft({ religion: e.target.value, skippedCultural: false })} className="min-h-11" />
               </Field>
-              <Field label="Cultural background (optional)" htmlFor="culturalBackground">
+              <Field label={t.culture} htmlFor="culturalBackground">
                 <Input id="culturalBackground" value={draft.culturalBackground || ""} onChange={(e) => updateDraft({ culturalBackground: e.target.value })} className="min-h-11" />
               </Field>
-              <Field label="Family involvement preference (optional)" htmlFor="familyInvolvement">
+              <Field label={t.familyInvolvement} htmlFor="familyInvolvement">
                 <Input id="familyInvolvement" value={draft.familyInvolvement || ""} onChange={(e) => updateDraft({ familyInvolvement: e.target.value })} className="min-h-11" />
               </Field>
-              <Field label="Festivals and traditions that matter (optional)" htmlFor="festivalImportance">
+              <Field label={t.traditions} htmlFor="festivalImportance">
                 <Textarea id="festivalImportance" rows={3} value={draft.festivalImportance || ""} onChange={(e) => updateDraft({ festivalImportance: e.target.value })} />
               </Field>
               <Button type="button" variant="outline" className="min-h-11" onClick={() => { updateDraft({ skippedCultural: true }); void goNext(); }}>
-                Skip cultural preferences
+                {t.skipCulture}
               </Button>
             </div>
           )}
@@ -571,12 +572,12 @@ export function OnboardingWizard() {
           {step === 5 && (
             <div className="space-y-6">
               <ChoiceGroup
-                legend="Relocation"
+                legend={t.relocation}
                 value={draft.relocationOpenness || ""}
-                options={RELOCATION}
+                options={RELOCATION.map((o) => ({ ...o, label: choiceLabels[o.id] || o.label }))}
                 onChange={(relocationOpenness) => updateDraft({ relocationOpenness })}
               />
-              <Field label="Preferred future countries (optional)" htmlFor="preferredSettlement">
+              <Field label={t.futureCountries} htmlFor="preferredSettlement">
                 <Input
                   id="preferredSettlement"
                   className="min-h-11"
@@ -585,10 +586,10 @@ export function OnboardingWizard() {
                   placeholder="Sri Lanka, Canada, UK"
                 />
               </Field>
-              <Field label="Long-distance comfort (optional)" htmlFor="longDistanceOk">
+              <Field label={t.longDistance} htmlFor="longDistanceOk">
                 <Input id="longDistanceOk" className="min-h-11" value={draft.longDistanceOk || ""} onChange={(e) => updateDraft({ longDistanceOk: e.target.value })} />
               </Field>
-              <Field label="Family responsibilities to consider (optional)" htmlFor="familyResponsibilities">
+              <Field label={t.familyResponsibilities} htmlFor="familyResponsibilities">
                 <Textarea id="familyResponsibilities" rows={3} value={draft.familyResponsibilities || ""} onChange={(e) => updateDraft({ familyResponsibilities: e.target.value })} />
               </Field>
             </div>
@@ -596,7 +597,7 @@ export function OnboardingWizard() {
 
           {step === 6 && (
             <div className="space-y-5">
-              <Field label="Profile photo (optional until you are ready)" htmlFor="photo">
+              <Field label={t.profilePhoto} htmlFor="photo">
                 <ProfilePhotoEditor
                   currentUrl={draft.photoURL ? resolveMediaUrl(draft.photoURL) : null}
                   displayName={draft.displayName}
@@ -604,34 +605,34 @@ export function OnboardingWizard() {
                   onCropped={(file) => void handlePhoto(file, "primary")}
                 />
               </Field>
-              <Field label="Additional photos (optional)" htmlFor="gallery">
+              <Field label={t.additionalPhotos} htmlFor="gallery">
                 <Input id="gallery" type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} onChange={(e) => void handlePhoto(e.target.files?.[0], "additional")} className="min-h-11" />
               </Field>
               <ChoiceGroup
-                legend="Photo privacy"
+                legend={t.photoPrivacy}
                 value={draft.photoPrivacy || "members"}
-                options={PHOTO_PRIVACY}
+                options={PHOTO_PRIVACY.map((o) => ({ ...o, label: choiceLabels[o.id] || o.label }))}
                 onChange={(photoPrivacy) => updateDraft({ photoPrivacy: photoPrivacy as OnboardingDraft["photoPrivacy"] })}
               />
-              {uploading && <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Uploading…</p>}
+              {uploading && <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> {t.uploading}</p>}
             </div>
           )}
 
           {step === 7 && (
             <div className="space-y-5">
-              <ReviewRow label="Name" value={draft.displayName} />
-              <ReviewRow label="Location" value={[draft.region, draft.country].filter(Boolean).join(", ")} />
-              <ReviewRow label="Languages" value={(draft.languages || []).join(", ")} />
-              <ReviewRow label="Looking for" value={LOOKING_FOR.find((item) => item.id === draft.lookingFor)?.label || draft.lookingFor} />
-              <ReviewRow label="Introduction" value={draft.bio} />
-              <p className="text-sm text-muted-foreground">Date of birth stays private. We will only show a derived age after you publish.</p>
+              <ReviewRow label={t.name} value={draft.displayName} emptyLabel={t.notAdded} />
+              <ReviewRow label={t.location} value={[draft.region, draft.country].filter(Boolean).join(", ")} emptyLabel={t.notAdded} />
+              <ReviewRow label={t.languages} value={(draft.languages || []).join(", ")} emptyLabel={t.notAdded} />
+              <ReviewRow label={t.looking} value={choiceLabels[draft.lookingFor || ""] || draft.lookingFor} emptyLabel={t.notAdded} />
+              <ReviewRow label={t.introduction} value={draft.bio} emptyLabel={t.notAdded} />
+              <p className="text-sm text-muted-foreground">{t.reviewDob}</p>
               <label className="flex items-start gap-3 rounded-lg border p-4">
                 <Checkbox
                   checked={Boolean(draft.reviewConfirmed)}
                   onCheckedChange={(checked) => updateDraft({ reviewConfirmed: checked === true })}
                 />
                 <span className="text-sm leading-6">
-                  I confirm these details are accurate and I want to publish my profile for other members to see. My profile will not be published until I confirm.
+                  {t.publishConfirm}
                 </span>
               </label>
             </div>
@@ -705,11 +706,21 @@ function ChoiceGroup({
   );
 }
 
-function ReviewRow({ label, value }: { label: string; value?: string }) {
+function ReviewRow({ label, value, emptyLabel = "Not added yet" }: { label: string; value?: string; emptyLabel?: string }) {
   return (
     <div className="border-b py-3 last:border-0">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-1 text-foreground">{value || "Not added yet"}</p>
+      <p className="mt-1 text-foreground">{value || emptyLabel}</p>
     </div>
   );
+}
+
+function getOnboardingChoiceLabels(language: string): Record<string,string> {
+ const labels: Record<string,Record<string,string>> = {
+  en:{marriage:"Marriage","long-term":"Long-term partnership",either:"Open to either",ready:"Ready when the right person is","1-2-years":"Within 1–2 years",exploring:"Exploring with care",open:"Open to relocating",partner:"Willing if my partner needs to stay",stay:"I need to stay where I am",unsure:"Not sure yet",members:"Visible to members after I publish",connections:"Visible to accepted connections only",hidden:"Keep photos hidden for now"},
+  ta:{marriage:"திருமணம்","long-term":"நீண்டகால துணை உறவு",either:"இரண்டிற்கும் திறந்த மனம்",ready:"சரியான நபர் கிடைத்தால் தயார்","1-2-years":"1–2 ஆண்டுகளுக்குள்",exploring:"கவனமாக ஆராய்கிறேன்",open:"இடமாற்றத்திற்கு தயாராக உள்ளேன்",partner:"துணை தங்க வேண்டுமெனில் தயாராக உள்ளேன்",stay:"நான் இருக்கும் இடத்திலேயே இருக்க வேண்டும்",unsure:"இன்னும் உறுதி இல்லை",members:"வெளியிட்ட பின் உறுப்பினர்களுக்கு தெரியும்",connections:"ஏற்றுக்கொண்ட தொடர்புகளுக்கு மட்டும்",hidden:"இப்போது புகைப்படங்களை மறைத்து வைக்கவும்"},
+  si:{marriage:"විවාහය","long-term":"දිගුකාලීන සම්බන්ධතාවය",either:"දෙකටම විවෘතයි",ready:"නිවැරදි පුද්ගලයා හමු වූ විට සූදානම්","1-2-years":"වසර 1–2 ඇතුළත",exploring:"සැලකිල්ලෙන් සොයමින්",open:"ස්ථානය මාරු කිරීමට විවෘතයි",partner:"සහකරුට රැඳී සිටීමට අවශ්‍ය නම් සලකා බලමි",stay:"මට මෙහිම සිටිය යුතුයි",unsure:"තවම තීරණය කර නැහැ",members:"ප්‍රකාශයට පත් කළ පසු සාමාජිකයින්ට පෙනේ",connections:"පිළිගත් සම්බන්ධතා සඳහා පමණයි",hidden:"දැනට ඡායාරූප සඟවා තබන්න"},
+  fr:{marriage:"Mariage","long-term":"Relation à long terme",either:"Ouvert aux deux",ready:"Prêt lorsque la bonne personne se présente","1-2-years":"Dans 1 à 2 ans",exploring:"J'explore avec attention",open:"Ouvert à déménager",partner:"Disposé si mon partenaire doit rester",stay:"Je dois rester où je suis",unsure:"Pas encore sûr",members:"Visible par les membres après publication",connections:"Visible uniquement par les connexions acceptées",hidden:"Masquer mes photos pour le moment"},
+  nl:{marriage:"Huwelijk","long-term":"Langdurige relatie",either:"Sta open voor beide",ready:"Klaar wanneer de juiste persoon er is","1-2-years":"Binnen 1–2 jaar",exploring:"Rustig aan het verkennen",open:"Sta open voor verhuizen",partner:"Bereid als mijn partner moet blijven",stay:"Ik moet blijven waar ik ben",unsure:"Nog niet zeker",members:"Zichtbaar voor leden na publicatie",connections:"Alleen zichtbaar voor geaccepteerde connecties",hidden:"Foto's voorlopig verborgen houden"}
+ }; return labels[language] || labels.en;
 }
