@@ -42,12 +42,17 @@ export function mapProfile(row: ProfileRow | null): Profile | null {
   if (!row) return null;
   const id = String(row.id);
   const dob = asString(row.dob);
+  const extra = (row.extra as Record<string, unknown>) || {};
   const ageYears = typeof row.age_years === "number" ? row.age_years : row.age_years != null ? Number(row.age_years) : undefined;
   return {
     id,
     uid: id,
     email: (row.email as string | null) ?? null,
     displayName: asString(row.display_name),
+    gender: extra.gender === "male" || extra.gender === "female" ? extra.gender : undefined,
+    nameIsAlias: Boolean(extra.nameIsAlias),
+    aliasName: asString(extra.aliasName),
+    profilePhotoGrayscale: Boolean(extra.profilePhotoGrayscale),
     bio: asString(row.bio),
     photoURL: resolveMediaUrl(asString(row.photo_url)),
     dataAiHint: asString(row.data_ai_hint),
