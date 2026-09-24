@@ -175,7 +175,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const { language } = useI18n();
   const dt = getMessages(language).dashboard;
-  const navLabels = useMemo(() => ({"/dashboard":dt.overview,"/discover":dt.findMatches,"/interests":dt.interests,"/connections":dt.connections,"/messages":dt.messages,"/dashboard/edit-profile":dt.myProfile,"/dashboard/edit-profile/match-details":dt.matchProfile,"/biodata":dt.biodata,"/dashboard/horoscope":dt.horoscope,"/dashboard/preferences":dt.preferences,"/dashboard/privacy":dt.privacy,"/pricing":dt.subscription}), [dt]);
+  const navLabels = useMemo<Record<string, string>>(() => ({"/dashboard":dt.overview,"/discover":dt.findMatches,"/interests":dt.interests,"/connections":dt.connections,"/messages":dt.messages,"/dashboard/edit-profile":dt.myProfile,"/dashboard/edit-profile/match-details":dt.matchProfile,"/biodata":dt.biodata,"/dashboard/horoscope":dt.horoscope,"/dashboard/preferences":dt.preferences,"/dashboard/privacy":dt.privacy,"/pricing":dt.subscription}), [dt]);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [displayName, setDisplayName] = useState<string>("");
   const [photoURL, setPhotoURL] = useState<string>("");
