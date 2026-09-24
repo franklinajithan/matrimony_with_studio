@@ -1,0 +1,33 @@
+name: End-to-end QA
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5 * * *"
+jobs:
+  member-journey:
+    if: ${{ vars.QA_BASE_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run member journey QA
+        run: npx playwright test --project=chromium
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ vars.QA_BASE_URL }}
+          QA_USER_A_EMAIL: ${{ secrets.QA_USER_A_EMAIL }}
+          QA_USER_A_PASSWORD: ${{ secrets.QA_USER_A_PASSWORD }}
+          QA_USER_B_EMAIL: ${{ secrets.QA_USER_B_EMAIL }}
+          QA_USER_B_PASSWORD: ${{ secrets.QA_USER_B_PASSWORD }}
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
