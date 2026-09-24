@@ -9,7 +9,7 @@ const I18nContext=createContext<I18nValue>({language:"en",setLanguage:()=>{}});
 export function I18nProvider({children}:{children:React.ReactNode}){
  const [language,setLanguageState]=useState<LanguageCode>("en");
  useEffect(()=>{const v=localStorage.getItem("cupidmatch-language") as LanguageCode|null;if(v&&v in LANGUAGES)setLanguageState(v)},[]);
- const setLanguage=(v:LanguageCode)=>{setLanguageState(v);localStorage.setItem("cupidmatch-language",v);document.documentElement.lang=v};
+ const setLanguage=(v:LanguageCode)=>{setLanguageState(v);localStorage.setItem("cupidmatch-language",v);document.cookie=`cupidmatch-language=${v}; Path=/; Max-Age=31536000; SameSite=Lax`;document.documentElement.lang=v};
  useEffect(()=>{document.documentElement.lang=language},[language]);
  return <I18nContext.Provider value={{language,setLanguage}}>{children}</I18nContext.Provider>;
 }
