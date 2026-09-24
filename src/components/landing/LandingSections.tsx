@@ -780,7 +780,7 @@ export function PricingTeaser() { const t=useHomeCopy();
   );
 }
 
-export function FaqSection() {
+export function FaqSection() { const t=useHomeCopy();
   const faqs = [
     {
       q: "Who is CupidMatch for?",
@@ -816,7 +816,7 @@ export function FaqSection() {
     <section id="faq" className="scroll-mt-24 bg-accent/10 px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="faq-heading">
       <div className="mx-auto max-w-3xl">
         <h2 id="faq-heading" className="text-3xl font-bold text-foreground sm:text-4xl">
-          Frequently asked questions
+          {t.faqTitle}
         </h2>
         <Accordion type="single" collapsible className="mt-10 space-y-4">
           {faqs.map((item, index) => (
