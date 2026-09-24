@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Lock, Loader2 } from "lucide-react";
-import React, { Suspense, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { auth, signInWithEmailAndPassword } from "@/lib/supabase/auth";
 import { getProfile } from "@/lib/supabase/profiles";
 import { draftFromProfile } from "@/lib/onboarding/persist";
@@ -35,6 +35,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 function LoginForm() {
   const { toast } = useToast();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -44,6 +45,16 @@ function LoginForm() {
     [searchParams]
   );
   const linkError = searchParams.get("error");
+
+  // Callback errors are one-time notices. Remove the stale error parameter
+  // after rendering it so refreshes/bookmarks do not keep showing the warning.
+  useEffect(() => {
+    if (!linkError) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("error");
+    const query = params.toString();
+    window.history.replaceState(null, "", query ? `${pathname}?${query}` : pathname);
+  }, [linkError, pathname, searchParams]);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
