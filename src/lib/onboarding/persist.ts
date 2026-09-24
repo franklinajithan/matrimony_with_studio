@@ -23,6 +23,10 @@ export function draftFromProfileRow(row: Record<string, unknown> | null): Onboar
     ...EMPTY_ONBOARDING_DRAFT,
     ...stored,
     displayName: stored.displayName || String(row?.display_name || ""),
+    gender: stored.gender || (asRecord(row?.extra).gender as OnboardingDraft["gender"]),
+    hideName: stored.hideName ?? Boolean(asRecord(row?.extra).nameIsAlias),
+    aliasName: stored.aliasName || String(asRecord(row?.extra).aliasName || ""),
+    profilePhotoGrayscale: stored.profilePhotoGrayscale ?? Boolean(asRecord(row?.extra).profilePhotoGrayscale),
     dob: stored.dob || String(row?.dob || ""),
     profession: stored.profession || String(row?.profession || ""),
     height: stored.height || String(row?.height || ""),
@@ -123,7 +127,7 @@ export function draftFromProfile(profile: {
 export function profilePatchFromDraft(draft: OnboardingDraft): Record<string, unknown> {
   const location = [draft.region, draft.country].filter(Boolean).join(", ");
   return omitEmptyDefaults({
-    display_name: draft.displayName,
+    display_name: draft.hideName && draft.aliasName ? draft.aliasName : draft.displayName,
     dob: draft.dob,
     profession: draft.profession,
     height: draft.height,
@@ -137,7 +141,7 @@ export function profilePatchFromDraft(draft: OnboardingDraft): Record<string, un
     drinking_habits: draft.drinkingHabits,
     hobbies: draft.hobbies,
     religion: draft.religion,
-    photo_url: draft.photoURL,
+    photo_url: draft.photoURL || (draft.gender === "female" ? "/profiles/demo-woman-01.jpg" : draft.gender === "male" ? "/profiles/demo-man-01.jpg" : ""),
     additional_photo_urls: draft.additionalPhotoUrls,
     photo_privacy: draft.photoPrivacy,
     language: draft.languages?.join(", "),
@@ -155,6 +159,12 @@ export function profilePatchFromDraft(draft: OnboardingDraft): Record<string, un
       familyInvolvement: draft.familyInvolvement,
       festivalImportance: draft.festivalImportance,
       skippedCultural: draft.skippedCultural,
+    }),
+    extra: omitEmptyDefaults({
+      gender: draft.gender,
+      nameIsAlias: Boolean(draft.hideName),
+      aliasName: draft.hideName ? draft.aliasName : "",
+      profilePhotoGrayscale: Boolean(draft.profilePhotoGrayscale),
     }),
     settlement: omitEmptyDefaults({
       currentCountry: draft.currentCountry,
