@@ -83,7 +83,12 @@ test.describe("CupidMatch member-to-member QA", () => {
       .catch(() => false);
     if (pendingVisible) {
       await accept.click();
-      await expect(pageB, "QA-030/035: accept opens their chat").toHaveURL(/\/messages\//, { timeout: 20_000 });
+      await Promise.race([
+        pageB.waitForURL(/\/messages\//, { timeout: 20_000 }),
+        pageB.getByText("Failed to accept interest.", { exact: true }).waitFor({ state: "visible", timeout: 20_000 }).then(() => {
+          throw new Error("QA-030: CupidMatch failed while creating the accepted connection/chat.");
+        }),
+      ]);
     }
 
     // QA-032/033: both members see the connection.
