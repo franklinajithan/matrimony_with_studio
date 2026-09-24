@@ -1,3 +1,4 @@
+"use client";
 import {
   ArrowRight,
   BadgeCheck,
@@ -30,13 +31,25 @@ import { Button } from "@/components/ui/button";
 import { focusRing } from "@/components/landing/brand";
 import { LotusOrnament } from "@/components/decorative";
 import { CountryCarousel } from "@/components/landing/CountryCarousel";
+import { useI18n } from "@/components/i18n/I18nProvider";
+
+
+const HOME_COPY: Record<string, Record<string,string>> = {
+ en:{members:"Members",world:"Sri Lanka • Worldwide",verified:"Verified & Authentic",serious:"Serious People • Real Intentions",story:"{t.story}",values:"Same Values.",future:"A Brighter Future.",join:"{t.join}",shared:"Shared Values",sharedSub:"More than surface compatibility",sharedDesc:"Match based on life goals, communication style, and what truly matters to you both.",goals:"Life Goals",goalsSub:"Plan your future together",goalsDesc:"Understand relocation openness, career flexibility, and where you both want to settle.",communication:"Communication Preferences",communicationSub:"How you connect matters",communicationDesc:"Discover how you both handle disagreements and build understanding.",family:"Family Expectations",familySub:"Respect and boundaries",familyDesc:"Define involvement levels, living arrangements, and responsibilities that work for you.",lifestyle:"Lifestyle",lifestyleSub:"Day-to-day compatibility",lifestyleDesc:"Explore daily routines, social preferences, and practical lifestyle alignment.",culture:"Cultural Preferences",cultureSub:"Optional and self-described",cultureDesc:"Language, traditions and festivals — share what is meaningful while staying flexible."},
+ ta:{members:"உறுப்பினர்கள்",world:"இலங்கை • உலகம் முழுவதும்",verified:"சரிபார்க்கப்பட்ட மற்றும் நம்பகமான",serious:"தீவிரமானவர்கள் • உண்மையான நோக்கங்கள்",story:"உங்கள் கதை முக்கியமானது",values:"ஒரே மதிப்புகள்.",future:"ஒளிமயமான எதிர்காலம்.",join:"CupidMatch மூலம் காதல், நட்பு மற்றும் வாழ்நாள் துணையை கண்டவர்களுடன் இணையுங்கள்.",shared:"பகிர்ந்த மதிப்புகள்",sharedSub:"வெளிப்புற பொருத்தத்தைத் தாண்டி",sharedDesc:"வாழ்க்கை இலக்குகள், தொடர்பு முறை மற்றும் இருவருக்கும் உண்மையில் முக்கியமானவற்றின் அடிப்படையில் பொருத்துங்கள்.",goals:"வாழ்க்கை இலக்குகள்",goalsSub:"உங்கள் எதிர்காலத்தை ஒன்றாக திட்டமிடுங்கள்",goalsDesc:"இடமாற்றம், தொழில் நெகிழ்வு மற்றும் எங்கு குடியேற விரும்புகிறீர்கள் என்பதை புரிந்துகொள்ளுங்கள்.",communication:"தொடர்பு விருப்பங்கள்",communicationSub:"நீங்கள் எவ்வாறு இணைகிறீர்கள் என்பது முக்கியம்",communicationDesc:"கருத்து வேறுபாடுகளை எவ்வாறு கையாளுகிறீர்கள் மற்றும் புரிதலை உருவாக்குகிறீர்கள் என்பதை அறியுங்கள்.",family:"குடும்ப எதிர்பார்ப்புகள்",familySub:"மரியாதையும் எல்லைகளும்",familyDesc:"குடும்ப ஈடுபாடு, வாழும் ஏற்பாடுகள் மற்றும் பொறுப்புகளை தெளிவுபடுத்துங்கள்.",lifestyle:"வாழ்க்கை முறை",lifestyleSub:"தினசரி பொருத்தம்",lifestyleDesc:"தினசரி பழக்கங்கள், சமூக விருப்பங்கள் மற்றும் வாழ்க்கைமுறை பொருத்தத்தை ஆராயுங்கள்.",culture:"கலாச்சார விருப்பங்கள்",cultureSub:"விருப்பமானதும் தனிப்பட்டதும்",cultureDesc:"மொழி, மரபுகள் மற்றும் விழாக்களில் உங்களுக்கு முக்கியமானவற்றைப் பகிருங்கள்."},
+ si:{members:"සාමාජිකයින්",world:"ශ්‍රී ලංකාව • ලොව පුරා",verified:"තහවුරු කළ සහ විශ්වාසදායක",serious:"ගැඹුරු අරමුණු ඇති අය",story:"ඔබගේ කතාව වැදගත්",values:"එකම වටිනාකම්.",future:"දීප්තිමත් අනාගතයක්.",join:"CupidMatch හරහා ආදරය, මිත්‍රත්වය සහ ජීවිත සහකරු සොයාගත් අය සමඟ එක්වන්න.",shared:"හවුල් වටිනාකම්",sharedSub:"පෙනුමට එහා ගිය ගැළපීම",sharedDesc:"ජීවිත ඉලක්ක, සන්නිවේදන රටාව සහ දෙදෙනාටම වැදගත් දේ අනුව ගැළපෙන්න.",goals:"ජීවිත ඉලක්ක",goalsSub:"අනාගතය එක්ව සැලසුම් කරන්න",goalsDesc:"ස්ථාන මාරුව, වෘත්තීය නම්‍යශීලීත්වය සහ පදිංචි වීමට කැමති ස්ථානය තේරුම් ගන්න.",communication:"සන්නිවේදන මනාප",communicationSub:"ඔබ සම්බන්ධ වන ආකාරය වැදගත්",communicationDesc:"මතභේද හසුරුවන සහ අවබෝධය ගොඩනගන ආකාරය දැනගන්න.",family:"පවුල් අපේක්ෂා",familySub:"ගෞරවය සහ සීමා",familyDesc:"පවුලේ සහභාගීත්වය, ජීවන සැලසුම් සහ වගකීම් පැහැදිලි කරන්න.",lifestyle:"ජීවන රටාව",lifestyleSub:"දෛනික ගැළපීම",lifestyleDesc:"දෛනික පුරුදු සහ ජීවන රටා ගැළපීම සොයන්න.",culture:"සංස්කෘතික මනාප",cultureSub:"විකල්ප සහ ස්වයං විස්තරිත",cultureDesc:"භාෂාව, සම්ප්‍රදායන් සහ උත්සව අතර ඔබට වැදගත් දේ බෙදාගන්න."},
+ fr:{members:"Membres",world:"Sri Lanka • Monde entier",verified:"Vérifiés et authentiques",serious:"Personnes sérieuses • Intentions réelles",story:"Votre histoire compte",values:"Mêmes valeurs.",future:"Un avenir plus lumineux.",join:"Rejoignez celles et ceux qui recherchent l'amour, l'amitié et un partenaire de vie sur CupidMatch.",shared:"Valeurs communes",sharedSub:"Au-delà de la compatibilité superficielle",sharedDesc:"Trouvez des profils selon vos objectifs de vie, votre communication et ce qui compte vraiment.",goals:"Objectifs de vie",goalsSub:"Planifiez votre avenir ensemble",goalsDesc:"Comprenez l'ouverture au déménagement, la flexibilité professionnelle et vos projets d'installation.",communication:"Préférences de communication",communicationSub:"La façon de communiquer compte",communicationDesc:"Découvrez comment vous gérez les désaccords et construisez la compréhension.",family:"Attentes familiales",familySub:"Respect et limites",familyDesc:"Définissez l'implication familiale, le mode de vie et les responsabilités.",lifestyle:"Mode de vie",lifestyleSub:"Compatibilité au quotidien",lifestyleDesc:"Explorez les habitudes quotidiennes, les préférences sociales et la compatibilité pratique.",culture:"Préférences culturelles",cultureSub:"Facultatives et personnelles",cultureDesc:"Langues, traditions et fêtes : partagez ce qui compte pour vous."},
+ nl:{members:"Leden",world:"Sri Lanka • Wereldwijd",verified:"Geverifieerd en authentiek",serious:"Serieuze mensen • Echte intenties",story:"Jouw verhaal telt",values:"Dezelfde waarden.",future:"Een mooiere toekomst.",join:"Sluit je aan bij mensen die via CupidMatch liefde, vriendschap en een levenspartner zoeken.",shared:"Gedeelde waarden",sharedSub:"Meer dan oppervlakkige compatibiliteit",sharedDesc:"Match op levensdoelen, communicatiestijl en wat voor jullie echt belangrijk is.",goals:"Levensdoelen",goalsSub:"Plan samen jullie toekomst",goalsDesc:"Begrijp verhuisbereidheid, carrièreflexibiliteit en waar jullie willen wonen.",communication:"Communicatievoorkeuren",communicationSub:"Hoe je contact maakt telt",communicationDesc:"Ontdek hoe jullie omgaan met meningsverschillen en begrip opbouwen.",family:"Familieverwachtingen",familySub:"Respect en grenzen",familyDesc:"Stem familiebetrokkenheid, wonen en verantwoordelijkheden op elkaar af.",lifestyle:"Leefstijl",lifestyleSub:"Compatibiliteit van dag tot dag",lifestyleDesc:"Vergelijk dagelijkse routines, sociale voorkeuren en praktische leefstijl.",culture:"Culturele voorkeuren",cultureSub:"Optioneel en zelf omschreven",cultureDesc:"Deel wat taal, tradities en feesten voor jou betekenen."}
+};
+function useHomeCopy(){const {language}=useI18n();return HOME_COPY[language]||HOME_COPY.en;}
 
 export function TrustStrip() {
+  const t=useHomeCopy();
   const items = [
-    { icon: Users, lines: ["10,000+", "Members"] },
-    { icon: Globe2, lines: ["UK • Canada • Australia", "Sri Lanka • Worldwide"] },
-    { icon: Shield, lines: ["Verified &", "Authentic"] },
-    { icon: Heart, lines: ["Serious People", "Real Intentions"] },
+    { icon: Users, lines: ["10,000+", t.members] },
+    { icon: Globe2, lines: ["UK • Canada • Australia", t.world] },
+    { icon: Shield, lines: [t.verified] },
+    { icon: Heart, lines: [t.serious] },
   ];
 
   return (
@@ -64,42 +77,43 @@ export function TrustStrip() {
 }
 
 export function WhyCupidMatch() {
+  const t=useHomeCopy();
   const features = [
     {
       image: "/images/values/shared.jpg?v=3",
-      title: "Shared Values",
-      subtitle: "More than surface compatibility",
-      description: "Match based on life goals, communication style, and what truly matters to you both.",
+      title: t.shared,
+      subtitle: t.sharedSub,
+      description: t.sharedDesc,
     },
     {
       image: "/images/values/goals.jpg?v=3",
-      title: "Life Goals",
-      subtitle: "Plan your future together",
-      description: "Understand relocation openness, career flexibility, and where you both want to settle.",
+      title: t.goals,
+      subtitle: t.goalsSub,
+      description: t.goalsDesc,
     },
     {
       image: "/images/values/communication.jpg?v=3",
-      title: "Communication Preferences",
-      subtitle: "How you connect matters",
-      description: "Discover how you both handle disagreements and build understanding.",
+      title: t.communication,
+      subtitle: t.communicationSub,
+      description: t.communicationDesc,
     },
     {
       image: "/images/values/family.jpg?v=3",
-      title: "Family Expectations",
-      subtitle: "Respect and boundaries",
-      description: "Define involvement levels, living arrangements, and responsibilities that work for you.",
+      title: t.family,
+      subtitle: t.familySub,
+      description: t.familyDesc,
     },
     {
       image: "/images/values/lifestyle.jpg?v=3",
-      title: "Lifestyle",
-      subtitle: "Day-to-day compatibility",
-      description: "Explore daily routines, social preferences, and practical lifestyle alignment.",
+      title: t.lifestyle,
+      subtitle: t.lifestyleSub,
+      description: t.lifestyleDesc,
     },
     {
       image: "/images/values/culture.jpg?v=3",
-      title: "Cultural Preferences",
-      subtitle: "Optional and self-described",
-      description: "Language, traditions, festivals — share what's meaningful while staying flexible.",
+      title: t.culture,
+      subtitle: t.cultureSub,
+      description: t.cultureDesc,
     },
   ];
 
@@ -113,7 +127,7 @@ export function WhyCupidMatch() {
             Your story matters
           </p>
           <h2 id="why-heading" className="mt-3 font-serif text-3xl font-semibold text-[#2A1845] sm:text-[2.5rem] sm:leading-tight">
-            Same Values. <span className="text-[#C026D3]">A Brighter Future.</span>
+            {t.values} <span className="text-[#C026D3]">{t.future}</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-base text-[#5C4A66] sm:text-lg">
             Join thousands who found love, friendship and lifelong partners on CupidMatch.
