@@ -191,16 +191,11 @@ export default function InterestsPage() {
 
     try {
       await acceptInterest(interestId);
-      try {
-        await createConnection(currentUser.id, senderId, interestId);
-      } catch (connectionError) {
-        console.warn("Interest accepted, but connection row was not created:", connectionError);
-      }
-      try {
-        await createChatDocument(currentUser.id, senderId);
-      } catch (chatError) {
-        console.warn("Interest accepted, but chat was not created:", chatError);
-      }
+      // Connection and chat creation are part of accepting an interest.
+      // Do not silently report success if either operation fails: that leaves
+      // members in an accepted-but-not-connected state.
+      await createConnection(currentUser.id, senderId, interestId);
+      await createChatDocument(currentUser.id, senderId);
 
       setReceivedInterests((prev) => {
         const next = prev.filter((i) => i.id !== interestId);
