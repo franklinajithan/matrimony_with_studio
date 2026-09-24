@@ -241,6 +241,8 @@ export default function ConnectionsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
+                          aria-label={`Remove connection with ${connection.profile?.displayName || "member"}`}
+                          data-testid={`connection-${connection.otherUserId}-remove`}
                           disabled={removingConnection === connection.id}
                         >
                           {removingConnection === connection.id ? (
