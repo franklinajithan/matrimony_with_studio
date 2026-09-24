@@ -128,7 +128,7 @@ export function PreferenceDiscovery() {
               <img
                 src={person.photoURL}
                 alt={person.displayName}
-                className="h-full w-full object-cover"
+                className={`h-full w-full object-cover ${person.profilePhotoGrayscale ? "grayscale" : ""}`}
               />
             ) : (
               <div className="flex h-full items-center justify-center text-4xl font-semibold text-violet-500">
@@ -169,6 +169,7 @@ export function PreferenceDiscovery() {
             <div className="min-w-0">
               <h2 className="truncate text-sm font-semibold leading-tight text-[#351532] sm:text-base">
                 {person.displayName}
+                {person.nameIsAlias ? <span className="ml-1 rounded-full bg-violet-50 px-1.5 py-0.5 text-[9px] font-medium text-violet-700 align-middle">CupidMatch alias</span> : null}
                 {person.ageYears ? (
                   <span className="font-normal text-muted-foreground">, {person.ageYears}</span>
                 ) : null}
