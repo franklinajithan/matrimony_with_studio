@@ -163,25 +163,25 @@ export function WhyCupidMatch() {
   );
 }
 
-export function HowItWorks() {
+export function HowItWorks() { const t=useHomeCopy();
   const steps = [
     {
       number: "1",
       icon: "📝",
-      title: "Tell us what matters",
-      description: "Build your profile with your values, lifestyle, future plans, and what you're looking for in a partner.",
+      title: t.step1,
+      description: t.step1d,
     },
     {
       number: "2",
       icon: "💡",
-      title: "Understand each introduction",
-      description: "See clear explanations for every match — why this person was suggested and what you have in common.",
+      title: t.step2,
+      description: t.step2d,
     },
     {
       number: "3",
       icon: "💬",
-      title: "Connect at your own pace",
-      description: "Send interest, start conversations, and take things forward when it feels right for both of you.",
+      title: t.step3,
+      description: t.step3d,
     },
   ];
 
@@ -190,10 +190,10 @@ export function HowItWorks() {
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">
-            Getting Started
+            {t.getting}
           </p>
           <h2 id="how-heading" className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
-            How it works
+            {t.how}
           </h2>
         </div>
 
@@ -223,43 +223,43 @@ export function HowItWorks() {
   );
 }
 
-export function FeatureGrid() {
+export function FeatureGrid() { const t=useHomeCopy();
   const features = [
     {
       icon: Wand2,
-      title: "AI Profile Studio",
-      description: "Get help crafting your biography and prompts. Translate approved text between languages.",
-      status: "Coming soon" as const,
+      title: t.ai,
+      description: t.aid,
+      status: t.coming as string,
     },
     {
       icon: Map,
-      title: "Future Map",
-      description: "Compare current location, future plans, relocation openness, and career flexibility.",
-      status: "Coming soon" as const,
+      title: t.futureMap,
+      description: t.futureMapd,
+      status: t.coming as string,
     },
     {
       icon: Sparkles,
-      title: "Culture Preferences",
-      description: "Express language, festivals, food, and traditions with granular importance levels.",
-      status: "Coming soon" as const,
+      title: t.culturePref,
+      description: t.culturePrefd,
+      status: t.coming as string,
     },
     {
       icon: Users,
-      title: "Family Circle",
-      description: "Invite family with member-controlled permissions. View, suggest, or comment with boundaries.",
-      status: "Coming soon" as const,
+      title: t.familyCircle,
+      description: t.familyCircled,
+      status: t.coming as string,
     },
     {
       icon: CheckCircle2,
-      title: "Verification",
-      description: "Optional identity and liveness checks. Know exactly what each badge means.",
-      status: "Coming soon" as const,
+      title: t.verification,
+      description: t.verificationd,
+      status: t.coming as string,
     },
     {
       icon: MessageCircle,
-      title: "Guided Conversations",
-      description: "Meaningful prompts and optional AI assistance to help start important conversations.",
-      status: "Available" as const,
+      title: t.guided,
+      description: t.guidedd,
+      status: t.available as string,
     },
   ];
 
@@ -268,13 +268,13 @@ export function FeatureGrid() {
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-[#7C3AED]">
-            Platform Features
+            {t.platform}
           </p>
           <h2 id="features-heading" className="mt-2 text-3xl font-bold text-[#2A1845] sm:text-4xl">
-            Built for meaningful connections
+            {t.built}
           </h2>
           <p className="mx-auto mt-4 max-w-3xl text-lg text-[#5C4A66]">
-            Tools designed to help you understand compatibility and build confidence in your decisions
+            {t.tools}
           </p>
         </div>
 
@@ -284,9 +284,9 @@ export function FeatureGrid() {
               key={feature.title}
               className="relative rounded-3xl border border-[#EDE4F5] bg-white p-8 shadow-sm"
             >
-              {feature.status === "Coming soon" && (
+              {feature.status === t.coming && (
                 <div className="absolute right-4 top-4 rounded-full bg-[#F3E8FF] px-3 py-1 text-xs font-medium text-[#6D28D9]">
-                  Coming soon
+                  {t.coming}
                 </div>
               )}
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#F3E8FF] text-[#7C3AED]">
@@ -417,14 +417,14 @@ export function ProductPreview() {
   );
 }
 
-export function PrivacySection() {
+export function PrivacySection() { const t=useHomeCopy();
   const points = [
-    "Choose who can view your personal details",
-    "Control photo and contact-information visibility",
-    "Understand verification signals clearly",
-    "Block or report inappropriate behavior",
-    "Chat securely before sharing contact information",
-    "Pause or delete your account anytime",
+    t.p1,
+    t.p2,
+    t.p3,
+    t.p4,
+    t.p5,
+    t.p6,
   ];
 
   return (
@@ -432,14 +432,13 @@ export function PrivacySection() {
       <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-2 lg:items-center">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">
-            Safety Centre
+            {t.safety}
           </p>
           <h2 id="privacy-heading" className="mt-3 text-3xl font-bold text-foreground sm:text-4xl">
-            Take your time. Stay in control.
+            {t.takeControl}
           </h2>
           <p className="mt-4 text-base leading-7 text-muted-foreground">
-            A matrimony profile contains personal information. CupidMatch is designed to help you
-            share thoughtfully, connect securely, and move forward at your own pace.
+            {t.safetyDesc}
           </p>
         </div>
         <ul className="space-y-3 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-7">
@@ -455,7 +454,7 @@ export function PrivacySection() {
   );
 }
 
-export function InternationalRelationships() {
+export function InternationalRelationships() { const t=useHomeCopy();
   return (
     <section
       className="overflow-x-hidden bg-[#FBF8F4] px-4 py-20 sm:px-6"
@@ -466,11 +465,10 @@ export function InternationalRelationships() {
           id="international-heading"
           className="font-serif text-3xl font-semibold text-[#2A1845] sm:text-4xl"
         >
-          Built for life between countries
+          {t.international}
         </h2>
         <p className="mx-auto mt-4 max-w-3xl text-base text-[#5C4A66] sm:text-lg">
-          Connect with Sri Lankans around the world. Discover people across the countries where Sri
-          Lankan communities live, work and build their future.
+          {t.intlDesc}
         </p>
 
         <div className="mt-14 text-left">
@@ -478,8 +476,7 @@ export function InternationalRelationships() {
         </div>
 
         <p className="mx-auto mt-10 max-w-2xl text-sm leading-6 text-[#6B5A78] sm:text-base">
-          From Colombo to London, Toronto to Melbourne — find meaningful connections wherever life
-          takes you.
+          {t.intlFoot}
         </p>
       </div>
     </section>
