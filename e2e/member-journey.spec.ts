@@ -97,13 +97,11 @@ test.describe("CupidMatch member-to-member QA", () => {
     await pageB.goto("/connections");
     await expect(pageB.getByTestId(`connection-${idA}-remove`), "QA-033: connection visible to B").toBeVisible({ timeout: 20_000 });
 
-    // QA-035/040/041/042/043: same chat, realtime two-way delivery, persistence.
-    await pageA.goto("/messages");
-    await pageB.goto("/messages");
-    const firstA = pageA.locator("button").filter({ has: pageA.locator("img") }).first();
-    const firstB = pageB.locator("button").filter({ has: pageB.locator("img") }).first();
-    if (await firstA.count()) await firstA.click();
-    if (await firstB.count()) await firstB.click();
+    // QA-035/040/041/042/043: open the exact A↔B chat. Never click the
+    // first conversation because either QA account can have older chats.
+    const chatId = [idA, idB].sort().join("_");
+    await pageA.goto(`/messages/${chatId}`);
+    await pageB.goto(`/messages/${chatId}`);
 
     const boxA = pageA.getByPlaceholder(/type a message/i);
     const boxB = pageB.getByPlaceholder(/type a message/i);
