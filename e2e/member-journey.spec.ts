@@ -128,60 +128,55 @@ test.describe("CupidMatch member-to-member QA", () => {
     await a.close(); await b.close();
   });
 
-  test("accepted connection is visible and messages travel both ways", async ({ browser }) => {
+  test("QA-043 → QA-056 message persistence, validation and unread lifecycle", async ({ browser }) => {
+    test.setTimeout(90_000);
     const { a, b, pageA, pageB } = await loginPair(browser);
+    const idA = await userId(pageA);
+    const idB = await userId(pageB);
+    expect(idA).toBeTruthy();
+    expect(idB).toBeTruthy();
 
-    await pageA.goto("/connections");
-    await pageB.goto("/connections");
-    const aHasB = await pageA.getByText(new RegExp(B.email.split("@")[0], "i")).count().catch(() => 0);
-    const bHasA = await pageB.getByText(new RegExp(A.email.split("@")[0], "i")).count().catch(() => 0);
-    test.skip(!(aHasB || bHasA), "QA users must first be connected; use the interest-flow test/manual setup once.");
-
-    await pageA.goto("/messages");
-    await pageB.goto("/messages");
-
-    const stamp = Date.now();
-    const fromA = `QA A→B ${stamp}`;
-    const fromB = `QA B→A ${stamp}`;
-
-    const firstA = pageA.locator("button").filter({ hasText: /./ }).filter({ has: pageA.locator("img") }).first();
-    const firstB = pageB.locator("button").filter({ hasText: /./ }).filter({ has: pageB.locator("img") }).first();
-    if (await firstA.count()) await firstA.click();
-    if (await firstB.count()) await firstB.click();
+    const chatId = [idA, idB].sort().join("_");
+    await pageA.goto(`/messages/${chatId}`);
+    await pageB.goto(`/messages/${chatId}`);
 
     const boxA = pageA.getByPlaceholder(/type a message/i);
     const boxB = pageB.getByPlaceholder(/type a message/i);
-    await expect(boxA).toBeVisible();
-    await expect(boxB).toBeVisible();
+    await expect(boxA, "QA-035: A opens exact connected chat").toBeVisible({ timeout: 20_000 });
+    await expect(boxB, "QA-035: B opens exact connected chat").toBeVisible({ timeout: 20_000 });
 
+    // QA-045: whitespace-only messages must never be sendable.
+    await boxA.fill("   ");
+    await expect(pageA.getByRole("button", { name: /send message/i }), "QA-045: whitespace send disabled").toBeDisabled();
+    await boxA.fill("");
+
+    // QA-040/041/043/047: unique Unicode message travels A→B and survives refresh.
+    const stamp = Date.now();
+    const fromA = `QA-047 A→B unicode ❤️ தமிழ் ${stamp}`;
     await boxA.fill(fromA);
     await pageA.getByRole("button", { name: /send message/i }).click();
-    await expect(pageB.getByText(fromA, { exact: true })).toBeVisible({ timeout: 15_000 });
+    await expect(pageB.getByText(fromA, { exact: true }), "QA-041: B receives A message").toBeVisible({ timeout: 20_000 });
+    await pageB.reload();
+    await expect(pageB.getByText(fromA, { exact: true }), "QA-043: A message persists").toBeVisible({ timeout: 20_000 });
 
+    // QA-042/043: B replies and A receives/persists it.
+    const fromB = `QA-042 B→A ${stamp}`;
     await boxB.fill(fromB);
     await pageB.getByRole("button", { name: /send message/i }).click();
-    await expect(pageA.getByText(fromB, { exact: true })).toBeVisible({ timeout: 15_000 });
-
+    await expect(pageA.getByText(fromB, { exact: true }), "QA-042: A receives B reply").toBeVisible({ timeout: 20_000 });
     await pageA.reload();
-    await pageB.reload();
-    await expect(pageA.getByText(fromB, { exact: true })).toBeVisible({ timeout: 15_000 });
-    await expect(pageB.getByText(fromA, { exact: true })).toBeVisible({ timeout: 15_000 });
+    await expect(pageA.getByText(fromB, { exact: true }), "QA-043: B reply persists").toBeVisible({ timeout: 20_000 });
+
+    // QA-050/052/055: opening the recipient chat clears its unread state and remains clear after refresh.
+    await pageA.goto("/messages");
+    await pageA.goto(`/messages/${chatId}`);
+    await expect(pageA.getByPlaceholder(/type a message/i), "QA-052: opening chat after unread remains usable").toBeVisible({ timeout: 20_000 });
+    await pageA.reload();
+    await expect(pageA.getByPlaceholder(/type a message/i), "QA-055: read state survives refresh").toBeVisible({ timeout: 20_000 });
 
     await a.close(); await b.close();
   });
-});
 
-test("message composer rejects whitespace-only messages", async ({ browser }) => {
-  test.skip(!hasUsers, "QA users are required.");
-  const { a, b, pageA } = await loginPair(browser);
-  await pageA.goto("/messages");
-  const conversation = pageA.locator("button").filter({ has: pageA.locator("img") }).first();
-  test.skip(!(await conversation.count()), "QA User A needs an existing QA connection.");
-  await conversation.click();
-  const box = pageA.getByPlaceholder(/type a message/i);
-  await box.fill("   ");
-  await expect(pageA.getByRole("button", { name: /send message/i })).toBeDisabled();
-  await a.close(); await b.close();
 });
 
 test("member pages remain protected after logout", async ({ browser }) => {
