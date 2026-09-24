@@ -742,142 +742,31 @@ export function FeaturesOverview() {
 }
 
 export function PricingTeaser() {
-  const plans = [
-    {
-      name: "Free",
-      price: "LKR 0",
-      period: "per month",
-      description: "Join and start looking for your match",
-      features: [
-        "Create your profile",
-        "Unlimited messaging",
-        "100,000+ profiles",
-        "Organize",
-      ],
-      cta: "Get started",
-      highlighted: false,
-    },
-    {
-      name: "Plus",
-      price: "LKR 1,200",
-      period: "per month",
-      description: "Get noticed faster",
-      features: [
-        "Unlimited messaging",
-        "1-on-1 video call",
-        "See who's visited you",
-        "Organize",
-      ],
-      cta: "Choose Plus",
-      highlighted: true,
-    },
-    {
-      name: "Elite",
-      price: "LKR 2,400",
-      period: "per month",
-      description: "Make the most of your search",
-      features: [
-        "Unlimited messaging",
-        "Get top positioning",
-        "1-on-1 video call",
-        "See who's viewed you",
-        "Organize",
-      ],
-      cta: "Choose Elite",
-      highlighted: false,
-    },
-  ];
-
   return (
     <section className="bg-background px-4 py-20 sm:px-6" aria-labelledby="pricing-heading">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-16 text-center">
-          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
-            Pricing
-          </p>
-          <h2 id="pricing-heading" className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
-            Start free. Upgrade when you need more.
-          </h2>
-          <p className="mx-auto mt-4 max-w-3xl text-lg text-muted-foreground">
-            Create your profile free. Then upgrade to unlock additional features when you're ready.
-          </p>
-        </div>
-
-        <div className="grid gap-8 lg:grid-cols-3">
-          {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={`rounded-3xl border-2 p-8 transition-all ${
-                plan.highlighted
-                  ? "scale-105 border-primary bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-xl"
-                  : "border-border bg-card hover:shadow-md"
-              }`}
-            >
-              {plan.highlighted && (
-                <div className="mb-4 inline-block rounded-full bg-card px-4 py-1 text-xs font-bold text-primary">
-                  MOST POPULAR
-                </div>
-              )}
-              <h3
-                className={`text-2xl font-bold ${
-                  plan.highlighted ? "text-primary-foreground" : "text-foreground"
-                }`}
-              >
-                {plan.name}
-              </h3>
-              <div className="mt-4">
-                <span
-                  className={`text-5xl font-bold ${
-                    plan.highlighted ? "text-primary-foreground" : "text-foreground"
-                  }`}
-                >
-                  {plan.price}
-                </span>
-                <span
-                  className={`ml-2 text-sm ${
-                    plan.highlighted ? "text-primary-foreground/80" : "text-muted-foreground"
-                  }`}
-                >
-                  {plan.period}
-                </span>
-              </div>
-              <p
-                className={`mt-2 text-sm ${
-                  plan.highlighted ? "text-primary-foreground/80" : "text-muted-foreground"
-                }`}
-              >
-                {plan.description}
-              </p>
-              <ul className="mt-8 space-y-3">
-                {plan.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className={`flex items-center gap-2 ${
-                      plan.highlighted ? "text-primary-foreground" : "text-foreground"
-                    }`}
-                  >
-                    <BadgeCheck
-                      className={`h-5 w-5 ${
-                        plan.highlighted ? "text-primary-foreground" : "text-primary"
-                      }`}
-                    />
-                    <span className="text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button
-                asChild
-                className={`mt-8 w-full rounded-full py-6 text-base font-semibold transition-all ${
-                  plan.highlighted
-                    ? "bg-card text-primary hover:bg-card/90"
-                    : "bg-primary text-primary-foreground hover:bg-primary/90"
-                }`}
-              >
-                <Link href="/pricing">{plan.cta}</Link>
-              </Button>
+      <div className="mx-auto max-w-5xl text-center">
+        <p className="text-sm font-semibold uppercase tracking-wider text-primary">Pricing</p>
+        <h2 id="pricing-heading" className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
+          Start free. Upgrade when you need more.
+        </h2>
+        <p className="mx-auto mt-4 max-w-3xl text-lg text-muted-foreground">
+          CupidMatch uses one membership catalogue. Prices are shown for your selected country and currency on the pricing page.
+        </p>
+        <div className="mx-auto mt-8 grid max-w-3xl gap-3 sm:grid-cols-3">
+          {[
+            ["Free", "Create your profile and start matching"],
+            ["Premium", "Deeper compatibility and discovery"],
+            ["Premium+", "More privacy, visibility and priority tools"],
+          ].map(([name, description]) => (
+            <div key={name} className="rounded-2xl border bg-card p-5 text-left shadow-sm">
+              <p className="font-semibold text-foreground">{name}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{description}</p>
             </div>
           ))}
         </div>
+        <Button asChild className="mt-8 rounded-full px-8">
+          <Link href="/pricing">View plans & local pricing</Link>
+        </Button>
       </div>
     </section>
   );
