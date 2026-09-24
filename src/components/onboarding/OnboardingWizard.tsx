@@ -52,6 +52,16 @@ const RELOCATION = [
   { id: "stay", label: "I need to stay where I am" },
   { id: "unsure", label: "Not sure yet" },
 ];
+const ALIAS_NAMES = {
+  male: ["Arun", "Kavin", "Nilan", "Dilan", "Ravi", "Ajan"],
+  female: ["Nila", "Maya", "Anu", "Kavi", "Thara", "Isha"],
+} as const;
+
+function makeAlias(gender: "male" | "female") {
+  const names = ALIAS_NAMES[gender];
+  return names[Math.floor(Math.random() * names.length)];
+}
+
 const PHOTO_PRIVACY = [
   { id: "members", label: "Visible to members after I publish" },
   { id: "connections", label: "Visible to accepted connections only" },
@@ -421,9 +431,39 @@ export function OnboardingWizard() {
       <section className="space-y-6 rounded-2xl border border-[#eadde7] bg-white p-4 shadow-sm sm:p-8">
           {step === 0 && (
             <div className="space-y-5">
+              <ChoiceGroup
+                legend="I am"
+                value={draft.gender || ""}
+                options={[{ id: "male", label: "Male" }, { id: "female", label: "Female" }]}
+                onChange={(value) => {
+                  const gender = value as "male" | "female";
+                  updateDraft({
+                    gender,
+                    aliasName: draft.hideName ? makeAlias(gender) : draft.aliasName,
+                  });
+                }}
+              />
               <Field label={t.displayName} htmlFor="displayName">
                 <Input id="displayName" value={draft.displayName || ""} onChange={(e) => updateDraft({ displayName: e.target.value })} className="min-h-11" />
               </Field>
+              <label className="flex items-start gap-3 rounded-lg border p-4">
+                <Checkbox
+                  checked={Boolean(draft.hideName)}
+                  onCheckedChange={(checked) => {
+                    const hideName = checked === true;
+                    updateDraft({
+                      hideName,
+                      aliasName: hideName && draft.gender ? (draft.aliasName || makeAlias(draft.gender)) : draft.aliasName,
+                    });
+                  }}
+                />
+                <span className="text-sm leading-6">
+                  <strong>Hide my real name</strong><br />
+                  <span className="text-muted-foreground">
+                    {draft.hideName && draft.aliasName ? `People will see “${draft.aliasName}” with a CupidMatch alias label.` : "CupidMatch will assign a gender-matched alias."}
+                  </span>
+                </span>
+              </label>
               <Field label={t.dob} htmlFor="dob">
                 <Input id="dob" type="date" value={draft.dob || ""} onChange={(e) => updateDraft({ dob: e.target.value })} className="min-h-11" />
                 <p className="text-sm text-muted-foreground">{t.dobHelp}</p>
@@ -597,6 +637,11 @@ export function OnboardingWizard() {
 
           {step === 6 && (
             <div className="space-y-5">
+              {!draft.photoURL && draft.gender && (
+                <div className="rounded-xl border bg-muted/30 p-4 text-sm">
+                  No photo yet — your {draft.gender === "female" ? "female" : "male"} default profile picture will be used.
+                </div>
+              )}
               <Field label={t.profilePhoto} htmlFor="photo">
                 <ProfilePhotoEditor
                   currentUrl={draft.photoURL ? resolveMediaUrl(draft.photoURL) : null}
@@ -608,6 +653,13 @@ export function OnboardingWizard() {
               <Field label={t.additionalPhotos} htmlFor="gallery">
                 <Input id="gallery" type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} onChange={(e) => void handlePhoto(e.target.files?.[0], "additional")} className="min-h-11" />
               </Field>
+              <label className="flex items-start gap-3 rounded-lg border p-4">
+                <Checkbox
+                  checked={Boolean(draft.profilePhotoGrayscale)}
+                  onCheckedChange={(checked) => updateDraft({ profilePhotoGrayscale: checked === true })}
+                />
+                <span className="text-sm leading-6"><strong>Show my profile photo in black & white</strong><br /><span className="text-muted-foreground">Your original colour photo is kept unchanged.</span></span>
+              </label>
               <ChoiceGroup
                 legend={t.photoPrivacy}
                 value={draft.photoPrivacy || "members"}
