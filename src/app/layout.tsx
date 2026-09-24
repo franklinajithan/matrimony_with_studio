@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import { I18nProvider } from "@/components/i18n/I18nProvider";
 
 const productionHost =
   process.env.NEXT_PUBLIC_SITE_URL ||
@@ -53,7 +54,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        {children}
+        <I18nProvider>{children}</I18nProvider>
         <Toaster />
       </body>
     </html>
