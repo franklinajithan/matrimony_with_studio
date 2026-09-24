@@ -14,6 +14,10 @@ export type Profile = {
   uid: string;
   email: string | null;
   displayName: string;
+  gender?: "male" | "female";
+  nameIsAlias?: boolean;
+  aliasName?: string;
+  profilePhotoGrayscale?: boolean;
   bio: string;
   photoURL: string;
   dataAiHint: string;
