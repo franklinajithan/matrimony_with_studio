@@ -1,9 +1,9 @@
 name: End-to-end QA
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
+  repository_dispatch:
+    types:
+      - vercel.deployment.success
   schedule:
     - cron: "17 5 * * *"
 jobs:
@@ -19,28 +19,10 @@ jobs:
           cache: npm
       - run: npm install --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
-      - name: Wait for production deployment
-        if: ${{ github.event_name == 'push' }}
-        env:
-          QA_URL: ${{ vars.QA_BASE_URL }}
-          EXPECTED_SHA: ${{ github.sha }}
-        run: |
-          echo "Waiting for Vercel production deployment of $EXPECTED_SHA"
-          for attempt in {1..40}; do
-            body="$(curl -fsSL "$QA_URL" || true)"
-            # Vercel may briefly serve the previous deployment while the new one builds.
-            # The app remains reachable; give Git integration time to promote the new build.
-            if [ -n "$body" ]; then
-              echo "Production is reachable (attempt $attempt)."
-            fi
-            sleep 15
-          done
-          echo "Deployment wait window complete."
-
       - name: Run member journey QA
         run: npx playwright test --project=chromium
         env:
-          PLAYWRIGHT_BASE_URL: ${{ vars.QA_BASE_URL }}
+          PLAYWRIGHT_BASE_URL: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.url || vars.QA_BASE_URL }}
           QA_USER_A_EMAIL: ${{ secrets.QA_USER_A_EMAIL }}
           QA_USER_A_PASSWORD: ${{ secrets.QA_USER_A_PASSWORD }}
           QA_USER_B_EMAIL: ${{ secrets.QA_USER_B_EMAIL }}
