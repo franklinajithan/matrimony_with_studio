@@ -77,6 +77,35 @@ test.describe("CupidMatch member-to-member QA", () => {
   });
 });
 
+test("message composer rejects whitespace-only messages", async ({ browser }) => {
+  test.skip(!hasUsers, "QA users are required.");
+  const { a, b, pageA } = await loginPair(browser);
+  await pageA.goto("/messages");
+  const conversation = pageA.locator("button").filter({ has: pageA.locator("img") }).first();
+  test.skip(!(await conversation.count()), "QA User A needs an existing QA connection.");
+  await conversation.click();
+  const box = pageA.getByPlaceholder(/type a message/i);
+  await box.fill("   ");
+  await expect(pageA.getByRole("button", { name: /send message/i })).toBeDisabled();
+  await a.close(); await b.close();
+});
+
+test("member pages remain protected after logout", async ({ browser }) => {
+  test.skip(!hasUsers, "QA users are required.");
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await login(page, A);
+  await page.goto("/dashboard");
+  await page.evaluate(async () => {
+    const key = Object.keys(localStorage).find(k => k.includes("auth-token"));
+    if (key) localStorage.removeItem(key);
+  });
+  await context.clearCookies();
+  await page.goto("/messages");
+  await expect(page).toHaveURL(/\\/login/, { timeout: 15_000 });
+  await context.close();
+});
+
 test("protected member pages redirect anonymous visitors to login", async ({ page }) => {
   for (const path of ["/dashboard", "/interests", "/connections", "/messages"]) {
     await page.goto(path);
