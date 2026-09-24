@@ -182,6 +182,7 @@ export function Navbar() {
                         {language === 'ta' && 'தமிழ்'}
                         {language === 'fr' && 'Français'}
                         {language === 'nl' && 'Nederlands'}
+                        {language === 'de' && 'Deutsch'}
                       </span>
                       <ChevronDown className="h-3.5 w-3.5 opacity-70" />
                     </Button>
@@ -201,6 +202,9 @@ export function Navbar() {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setLanguage('nl')}>
                       Nederlands (Dutch)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setLanguage('de')}>
+                      Deutsch (German)
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
