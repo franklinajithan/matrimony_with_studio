@@ -75,8 +75,13 @@ test.describe("CupidMatch member-to-member QA", () => {
     // QA-022/030: B receives and accepts A's request.
     await pageB.goto("/interests");
     const accept = pageB.getByTestId(`interest-${idA}-accept`);
-    if (await accept.count()) {
-      await expect(accept, "QA-022: B sees A's pending interest").toBeVisible();
+    // The interests page loads auth + requests asynchronously. locator.count() is
+    // immediate and previously let the test race past a real pending request.
+    const pendingVisible = await accept
+      .waitFor({ state: "visible", timeout: 15_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (pendingVisible) {
       await accept.click();
       await expect(pageB, "QA-030/035: accept opens their chat").toHaveURL(/\/messages\//, { timeout: 20_000 });
     }
