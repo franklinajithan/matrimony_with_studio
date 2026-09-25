@@ -539,86 +539,43 @@ export function CommunitySection() {
 }
 
 export function DiscoveryPreview() { const t=useHomeCopy();
-  const demoProfiles = [
-    {
-      name: "Sample Profile A",
-      location: "London",
-      image: "👩🏽",
-      interests: ["Travel", "Reading", "Yoga"],
-    },
-    {
-      name: "Sample Profile B",
-      location: "Toronto",
-      image: "👨🏾",
-      interests: ["Photography", "Hiking", "Cooking"],
-    },
-    {
-      name: "Sample Profile C",
-      location: "Melbourne",
-      image: "👩🏻",
-      interests: ["Fitness", "Tech", "Food"],
-    },
+  const profiles = [
+    { name: "Nila, 27", location: "London, UK", image: "/images/values/culture.jpg?v=3" },
+    { name: "Tharshini, 27", location: "London, UK", image: "/images/values/shared.jpg?v=3" },
+    { name: "Kavya, 28", location: "Toronto, Canada", image: "/images/values/goals.jpg?v=3" },
   ];
-
   return (
-    <section className="bg-background px-4 py-20 sm:px-6" aria-labelledby="discovery-heading">
-      <div className="mx-auto max-w-7xl">
-        <ScrollReveal className="mb-12 text-center">
-          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
-            {t.discovery}
-          </p>
-          <h2 id="discovery-heading" className="mt-2 font-serif text-3xl font-semibold text-foreground sm:text-4xl">
-            {t.findMatches}
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-            {t.samples}
-          </p>
+    <section className="overflow-hidden bg-[#FFFDFB] px-4 py-16 sm:px-6 sm:py-24" aria-labelledby="discovery-heading">
+      <div className="mx-auto max-w-4xl text-center">
+        <ScrollReveal>
+          <p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#A078B0]">{t.discovery}</p>
+          <h2 id="discovery-heading" className="mx-auto mt-3 max-w-sm font-serif text-[2.15rem] font-semibold leading-[1.05] text-[#2A1845] sm:max-w-xl sm:text-5xl">Discover<br/><span className="text-[#C026D3]">Compatible Matches</span></h2>
+          <p className="mx-auto mt-4 max-w-sm text-sm leading-6 text-[#6B5A78]">Meet people who share your values, culture and life goals.</p>
         </ScrollReveal>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {demoProfiles.map((profile, index) => (
-            <ScrollReveal key={index} delay={index * 120} distance={38} className={index === 1 ? "sm:-translate-y-4" : ""}>
-            <div
-              className="group overflow-hidden rounded-[2rem] border border-[#E9D5FF] bg-card shadow-[0_16px_45px_rgba(76,29,149,0.09)] transition-transform duration-500 hover:-translate-y-1"
-            >
-              {/* Demo Label */}
-              <div className="border-b border-border bg-accent/50 px-4 py-2">
-                <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                  <Eye className="h-3 w-3" aria-hidden="true" />
-                  {t.samplePreview}
-                </p>
-              </div>
-
-              <div className="relative h-48 bg-gradient-to-br from-accent/30 to-accent/10">
-                <div className="flex h-full items-center justify-center text-7xl">{profile.image}</div>
-              </div>
-              
-              <div className="p-6">
-                <div className="mb-3">
-                  <h3 className="text-lg font-bold text-foreground">{profile.name}</h3>
-                  <p className="text-sm text-muted-foreground">{profile.location}</p>
+        <div className="relative mx-auto mt-10 h-[430px] max-w-[390px]">
+          {profiles.map((profile,index) => {
+            const side=index!==1;
+            const position=index===0?"left-[-42px] top-10 -rotate-[5deg]":index===2?"right-[-42px] top-10 rotate-[5deg]":"left-1/2 top-0 z-20 -translate-x-1/2";
+            return <ScrollReveal key={profile.name} delay={index*100} distance={42} className={`absolute ${position}`}>
+              <article className={`overflow-hidden rounded-[2rem] border-[5px] border-white bg-white shadow-[0_22px_55px_rgba(76,29,149,.16)] ${side?"w-[190px] scale-[.88] opacity-75":"w-[235px]"}`}>
+                <div className={`relative ${side?"h-[250px]":"h-[300px]"}`}><Image src={profile.image} alt="" fill sizes="240px" className="object-cover"/></div>
+                <div className="relative px-4 pb-4 pt-3 text-left">
+                  {!side && <span className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white/95 px-3 py-1 text-[11px] font-bold text-[#C026D3] shadow-md">92% Match</span>}
+                  <h3 className="font-serif text-lg font-semibold text-[#2A1845]">{profile.name}</h3>
+                  <p className="mt-0.5 text-xs text-[#6B5A78]">{profile.location}</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {profile.interests.map((interest) => (
-                    <span
-                      key={interest}
-                      className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground"
-                    >
-                      {interest}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+              </article>
             </ScrollReveal>
-          ))}
+          })}
         </div>
 
-        <ScrollReveal delay={260}>
-          <p className="mt-10 text-center text-sm text-muted-foreground">
-            {t.sampleNote}
-          </p>
-        </ScrollReveal>
+        <div className="mx-auto -mt-2 flex max-w-[260px] items-center justify-between">
+          <button aria-label="Previous profile" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E9D5FF] bg-white text-[#7C3AED] shadow-sm">‹</button>
+          <div className="flex gap-1.5"><span className="h-1.5 w-5 rounded-full bg-[#7C3AED]"/><span className="h-1.5 w-1.5 rounded-full bg-[#DDD0E8]"/><span className="h-1.5 w-1.5 rounded-full bg-[#DDD0E8]"/><span className="h-1.5 w-1.5 rounded-full bg-[#DDD0E8]"/></div>
+          <button aria-label="Next profile" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E9D5FF] bg-white text-[#7C3AED] shadow-sm">›</button>
+        </div>
+        <p className="mx-auto mt-7 max-w-sm text-[11px] leading-5 text-[#8A7893]">{t.sampleNote}</p>
       </div>
     </section>
   );
