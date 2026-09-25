@@ -545,7 +545,7 @@ export function DiscoveryPreview() { const t=useHomeCopy();
     { name: "Kavya, 28", location: "Toronto, Canada", image: "/images/values/goals.jpg?v=3" },
   ];
   return (
-    <section className="overflow-hidden bg-[#FFFDFB] px-4 py-16 sm:px-6 sm:py-24" aria-labelledby="discovery-heading">
+    <section className="overflow-hidden bg-[#FFFDFB] px-4 pb-14 pt-10 sm:px-6 sm:py-24" aria-labelledby="discovery-heading">
       <div className="mx-auto max-w-4xl text-center">
         <ScrollReveal>
           <p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#A078B0]">{t.discovery}</p>
@@ -553,7 +553,7 @@ export function DiscoveryPreview() { const t=useHomeCopy();
           <p className="mx-auto mt-4 max-w-sm text-sm leading-6 text-[#6B5A78]">Meet people who share your values, culture and life goals.</p>
         </ScrollReveal>
 
-        <div className="relative mx-auto mt-10 h-[430px] max-w-[390px]">
+        <div className="relative mx-auto mt-8 h-[420px] max-w-[390px]">
           {profiles.map((profile,index) => {
             const side=index!==1;
             const position=index===0?"left-[-42px] top-10 -rotate-[5deg]":index===2?"right-[-42px] top-10 rotate-[5deg]":"left-1/2 top-0 z-20 -translate-x-1/2";
@@ -575,7 +575,7 @@ export function DiscoveryPreview() { const t=useHomeCopy();
           <div className="flex gap-1.5"><span className="h-1.5 w-5 rounded-full bg-[#7C3AED]"/><span className="h-1.5 w-1.5 rounded-full bg-[#DDD0E8]"/><span className="h-1.5 w-1.5 rounded-full bg-[#DDD0E8]"/><span className="h-1.5 w-1.5 rounded-full bg-[#DDD0E8]"/></div>
           <button aria-label="Next profile" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E9D5FF] bg-white text-[#7C3AED] shadow-sm">›</button>
         </div>
-        <p className="mx-auto mt-7 max-w-sm text-[11px] leading-5 text-[#8A7893]">{t.sampleNote}</p>
+        <p className="mx-auto mt-5 max-w-sm text-[11px] leading-5 text-[#8A7893]">{t.sampleNote}</p>
       </div>
     </section>
   );
