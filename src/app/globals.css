@@ -116,20 +116,13 @@
      Proximity snapping keeps normal scrolling available while giving each scene
      a stable resting position after a swipe. */
   .homepage-card-flow {
-    scroll-snap-type: y proximity;
+    scroll-snap-type: y mandatory;
   }
   .homepage-card-flow > section {
     scroll-snap-align: start;
     scroll-snap-stop: always;
   }
-  /* Desktop stays fluid; card-like snapping is reserved for touch/mobile. */
-  @media (min-width: 1024px) {
-    .homepage-card-flow { scroll-snap-type: none; }
-    .homepage-card-flow > section {
-      scroll-snap-align: none;
-      scroll-snap-stop: normal;
-    }
-  }
+  /* Every viewport gets the same card-stop behaviour. */
   @media (max-width: 767px) {
     .homepage-card-flow > section {
       min-height: calc(100svh - 4.25rem);
@@ -146,19 +139,45 @@
   .homepage-story-card .story-copy,
   .homepage-story-card .story-media,
   .homepage-story-card .story-item {
-    animation: cupid-card-content-in .42s cubic-bezier(.2,.8,.2,1) both;
+    animation: cupid-card-content-in .34s cubic-bezier(.2,.8,.2,1) both;
   }
   .homepage-story-card .story-media { animation-delay: 70ms; }
   @keyframes cupid-card-content-in {
     from { opacity: .01; transform: translateY(18px); }
     to { opacity: 1; transform: translateY(0); }
   }
+  .homepage-story-card .story-line {
+    stroke-dasharray: 900;
+    stroke-dashoffset: 900;
+    animation: cupid-story-draw .75s .12s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+  .homepage-story-card .story-profile {
+    animation: cupid-profile-rise .42s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .homepage-story-card .story-portrait {
+    animation: cupid-portrait-in .42s .08s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .homepage-story-card .story-portrait-delay { animation-delay: .16s; }
+  .homepage-story-card .story-heart { animation: cupid-heart-in .38s .2s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes cupid-story-draw { to { stroke-dashoffset: 0; } }
+  @keyframes cupid-profile-rise {
+    from { opacity: 0; margin-top: 24px; }
+    to { opacity: 1; margin-top: 0; }
+  }
+  @keyframes cupid-portrait-in {
+    from { opacity: 0; scale: .92; }
+    to { opacity: 1; scale: 1; }
+  }
+  @keyframes cupid-heart-in {
+    from { opacity: 0; scale: .75; }
+    to { opacity: 1; scale: 1; }
+  }
   @media (min-width: 1024px) {
-    html { scroll-snap-type: y proximity; scroll-padding-top: 7rem; }
+    html { scroll-snap-type: y mandatory; scroll-padding-top: 7rem; }
     .homepage-story-card { min-height: calc(100svh - 7rem); }
   }
   @media (max-width: 1023px) {
-    html { scroll-snap-type: y proximity; scroll-padding-top: 4.25rem; }
+    html { scroll-snap-type: y mandatory; scroll-padding-top: 4.25rem; }
     .homepage-story-card { min-height: calc(100svh - 4.25rem); }
   }
 
