@@ -39,7 +39,7 @@ function useSectionProgress() {
 
 export function CompatibilityStory() {
   const { ref, progress } = useSectionProgress();
-  const reveal = clamp(progress / 0.55);
+  const reveal = clamp((progress - 0.08) / 0.84);
   const score = Math.round(64 + reveal * 28);
   const items = [
     [Sparkles, "Values"], [BriefcaseBusiness, "Lifestyle"], [GraduationCap, "Education"],
@@ -47,7 +47,7 @@ export function CompatibilityStory() {
   ] as const;
 
   return (
-    <section ref={ref} className="relative h-[180svh] bg-[#FFFDFB]">
+    <section ref={ref} className="relative h-[240svh] bg-[#FFFDFB]">
       <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-5 py-5">
         <div className="mx-auto w-full max-w-xl text-center">
           <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#A078B0]">Built on what matters</p>
