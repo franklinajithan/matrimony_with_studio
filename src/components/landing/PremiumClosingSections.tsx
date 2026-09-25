@@ -37,12 +37,15 @@ export function GlobalCommunityStory(){
     <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[#6B5A78] lg:max-w-xl lg:text-base">Sri Lankans around the world, finding meaningful connections.</p>
     <div className="relative mx-auto mt-5 h-[430px] max-w-[390px] lg:mt-8 lg:h-[500px] lg:max-w-[900px]">
      <svg className="absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 900 500" fill="none" aria-hidden="true">
-      <g fill="#E9D5FF" opacity=".62">
-       <path d="M62 139l48-42 76-8 62 28 54-9 45 29-18 42-72 15-42 46-79-11-48-39-26-51z"/>
-       <path d="M330 83l49-39 68 17 24 45-18 41 42 25-28 49-50-7-23 55-42-22-5-58-42-31 25-75z"/>
-       <path d="M489 126l83-46 92 15 35 37 83 7 53 39-35 38-75-7-43 31-65-18-41 26-58-24-36-43 7-55z"/>
-       <path d="M688 285l60-24 63 25 35 48-29 44-70 9-50-30-9-72z"/>
-       <path d="M246 303l65-29 63 22 17 52-42 43-72-10-48-37 17-41z"/>
+      <g fill="#E9D5FF" opacity=".56">
+       <path d="M55 132l24-28 35-10 25 8 17-12 25 9 13 19 31 4 18 17-7 18-27 9-12 24-24 10-17-9-17 14-27-6-13-19-29-10-17-28z"/>
+       <path d="M217 111l20-15 22 5 11 18-8 16-18 4-12-10-15-18z"/>
+       <path d="M245 184l20 7 18 26-3 31-14 26-8 37-17 35-18-11-5-33-13-25 8-33-10-30 18-23 24-7z"/>
+       <path d="M365 101l29-23 47-4 31 14 42-8 38 14 30-4 32 15 45 3 35 20-12 21-42 9-21 20-35-6-24 14-32-5-28 19-30-13-18 9-22-16-36 3-26-19-27-8-15-23 18-22 41-10z"/>
+       <path d="M548 184l22 15 11 27-9 22-18-8-7-28 1-28z"/>
+       <path d="M652 244l18 7 8 20-13 18-18-9-4-21 9-15z"/>
+       <path d="M731 310l31-16 37 5 25 24-5 30-31 18-37-7-25-25 5-29z"/>
+       <path d="M824 333l17 5 10 16-9 12-17-6-6-15 5-12z"/>
       </g>
       <g fill="#8B5CF6">{dots.map(([x,y],i)=><circle key={i} cx={x*9} cy={y*5} r={i%4===0?4:2.8} opacity={.35+(i%5)*.1}/>)}</g>
       <g stroke="#A855F7" strokeWidth="2" strokeLinecap="round" opacity={.72}>
