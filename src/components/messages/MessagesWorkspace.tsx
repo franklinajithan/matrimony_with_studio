@@ -477,6 +477,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
               <Input
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                data-testid="messages-search"
                 placeholder="Search or start a new chat"
                 className="h-10 rounded-full border-0 bg-muted/70 pl-9 pr-4 shadow-none focus-visible:ring-2 focus-visible:ring-primary/30"
               />
@@ -511,6 +512,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                   <button
                     key={convo.id}
                     type="button"
+                    data-testid={`chat-${convo.id}`}
                     onClick={() => openChat(convo.id)}
                     className={cn(
                       "relative flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted/60",
@@ -795,6 +797,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                   <div className="relative min-w-0 flex-1">
                     <Textarea
                       ref={textareaRef}
+                      data-testid="message-composer"
                       value={draft}
                       onChange={(e) => setDraft(e.target.value)}
                       onKeyDown={onComposerKeyDown}
@@ -811,6 +814,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                       className="mb-0.5 h-11 w-11 shrink-0 rounded-full bg-primary hover:bg-primary/90"
                       onClick={() => void handleSend()}
                       disabled={isSending}
+                      data-testid="message-send"
                       aria-label="Send message"
                     >
                       {isSending ? (
