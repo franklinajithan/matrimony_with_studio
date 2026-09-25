@@ -110,8 +110,8 @@ test.describe("CupidMatch member-to-member QA", () => {
     await pageA.goto(`/messages/${chatId}`);
     await pageB.goto(`/messages/${chatId}`);
 
-    const boxA = pageA.getByPlaceholder(/type a message/i);
-    const boxB = pageB.getByPlaceholder(/type a message/i);
+    const boxA = pageA.getByTestId("message-composer");
+    const boxB = pageB.getByTestId("message-composer");
     await expect(boxA, "QA-035: A can open connected chat").toBeVisible({ timeout: 20_000 });
     await expect(boxB, "QA-035: B can open connected chat").toBeVisible({ timeout: 20_000 });
 
@@ -119,11 +119,11 @@ test.describe("CupidMatch member-to-member QA", () => {
     const fromA = `QA-040 A→B ${stamp}`;
     const fromB = `QA-042 B→A ${stamp}`;
     await boxA.fill(fromA);
-    await pageA.getByRole("button", { name: /send message/i }).click();
+    await pageA.getByTestId("message-send").click();
     await expect(pageB.getByText(fromA, { exact: true }), "QA-041: B receives A message").toBeVisible({ timeout: 20_000 });
 
     await boxB.fill(fromB);
-    await pageB.getByRole("button", { name: /send message/i }).click();
+    await pageB.getByTestId("message-send").click();
     await expect(pageA.getByText(fromB, { exact: true }), "QA-042: A receives B reply").toBeVisible({ timeout: 20_000 });
 
     await pageA.reload();
@@ -146,21 +146,21 @@ test.describe("CupidMatch member-to-member QA", () => {
     await pageA.goto(`/messages/${chatId}`);
     await pageB.goto(`/messages/${chatId}`);
 
-    const boxA = pageA.getByPlaceholder(/type a message/i);
-    const boxB = pageB.getByPlaceholder(/type a message/i);
+    const boxA = pageA.getByTestId("message-composer");
+    const boxB = pageB.getByTestId("message-composer");
     await expect(boxA, "QA-035: A opens exact connected chat").toBeVisible({ timeout: 20_000 });
     await expect(boxB, "QA-035: B opens exact connected chat").toBeVisible({ timeout: 20_000 });
 
     // QA-045: whitespace-only messages must never be sendable.
     await boxA.fill("   ");
-    await expect(pageA.getByRole("button", { name: /send message/i }), "QA-045: whitespace send disabled").toBeDisabled();
+    await expect(pageA.getByTestId("message-send"), "QA-045: whitespace send disabled").toBeDisabled();
     await boxA.fill("");
 
     // QA-040/041/043/047: unique Unicode message travels A→B and survives refresh.
     const stamp = Date.now();
     const fromA = `QA-047 A→B unicode ❤️ தமிழ் ${stamp}`;
     await boxA.fill(fromA);
-    await pageA.getByRole("button", { name: /send message/i }).click();
+    await pageA.getByTestId("message-send").click();
     await expect(pageB.getByText(fromA, { exact: true }), "QA-041: B receives A message").toBeVisible({ timeout: 20_000 });
     await pageB.reload();
     await expect(pageB.getByText(fromA, { exact: true }), "QA-043: A message persists").toBeVisible({ timeout: 20_000 });
@@ -168,7 +168,7 @@ test.describe("CupidMatch member-to-member QA", () => {
     // QA-042/043: B replies and A receives/persists it.
     const fromB = `QA-042 B→A ${stamp}`;
     await boxB.fill(fromB);
-    await pageB.getByRole("button", { name: /send message/i }).click();
+    await pageB.getByTestId("message-send").click();
     await expect(pageA.getByText(fromB, { exact: true }), "QA-042: A receives B reply").toBeVisible({ timeout: 20_000 });
     await pageA.reload();
     await expect(pageA.getByText(fromB, { exact: true }), "QA-043: B reply persists").toBeVisible({ timeout: 20_000 });
@@ -176,9 +176,9 @@ test.describe("CupidMatch member-to-member QA", () => {
     // QA-050/052/055: opening the recipient chat clears its unread state and remains clear after refresh.
     await pageA.goto("/messages");
     await pageA.goto(`/messages/${chatId}`);
-    await expect(pageA.getByPlaceholder(/type a message/i), "QA-052: opening chat after unread remains usable").toBeVisible({ timeout: 20_000 });
+    await expect(pageA.getByTestId("message-composer"), "QA-052: opening chat after unread remains usable").toBeVisible({ timeout: 20_000 });
     await pageA.reload();
-    await expect(pageA.getByPlaceholder(/type a message/i), "QA-055: read state survives refresh").toBeVisible({ timeout: 20_000 });
+    await expect(pageA.getByTestId("message-composer"), "QA-055: read state survives refresh").toBeVisible({ timeout: 20_000 });
 
     await a.close(); await b.close();
   });
