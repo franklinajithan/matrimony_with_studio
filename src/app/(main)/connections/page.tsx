@@ -269,8 +269,9 @@ export default function ConnectionsPage() {
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
+                          className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
                           aria-label={`Remove connection with ${connection.profile?.displayName || "member"}`}
                           data-testid={`connection-${connection.otherUserId}-remove`}
                           disabled={removingConnection === connection.id}
@@ -278,7 +279,10 @@ export default function ConnectionsPage() {
                           {removingConnection === connection.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
-                            <Trash2 className="h-4 w-4 text-red-600" />
+                            <>
+                              <Trash2 className="mr-1 h-4 w-4" />
+                              Remove
+                            </>
                           )}
                         </Button>
                       </AlertDialogTrigger>
