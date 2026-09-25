@@ -136,6 +136,32 @@
     }
   }
 
+  /* Story cards scroll as real pages. The card itself never fades; only its contents animate. */
+  .homepage-story-card {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    position: relative;
+    isolation: isolate;
+  }
+  .homepage-story-card .story-copy,
+  .homepage-story-card .story-media,
+  .homepage-story-card .story-item {
+    animation: cupid-card-content-in .42s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .homepage-story-card .story-media { animation-delay: 70ms; }
+  @keyframes cupid-card-content-in {
+    from { opacity: .01; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @media (min-width: 1024px) {
+    html { scroll-snap-type: y proximity; scroll-padding-top: 7rem; }
+    .homepage-story-card { min-height: calc(100svh - 7rem); }
+  }
+  @media (max-width: 1023px) {
+    html { scroll-snap-type: y proximity; scroll-padding-top: 4.25rem; }
+    .homepage-story-card { min-height: calc(100svh - 4.25rem); }
+  }
+
   @keyframes cupid-route-travel { to { stroke-dashoffset: -280; } }
   @keyframes cupid-scroll-hint {
     0%, 100% { transform: translateY(0); opacity: 0.55; }
