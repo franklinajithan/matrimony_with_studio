@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Heart, MessageCircle, Sparkles } from "lucide-react";
+import { Heart } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const clamp = (value: number) => Math.min(1, Math.max(0, value));
@@ -43,20 +43,17 @@ export function ConnectionScrollStory() {
 
   const arrival = clamp(progress / 0.3);
   const connection = clamp((progress - 0.2) / 0.34);
-  const compatibility = clamp((progress - 0.48) / 0.28);
-  const conversation = clamp((progress - 0.72) / 0.22);
-  const score = Math.round(72 + compatibility * 20);
 
   return (
-    <section ref={sectionRef} className="relative h-[250svh] bg-[#FBF8F4]" aria-label="How a CupidMatch connection grows">
-      <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-4 py-8 sm:px-6">
+    <section ref={sectionRef} className="relative h-[230svh] bg-[#FFFDFB]" aria-label="How a CupidMatch connection grows">
+      <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-4 py-5 sm:px-6">
         <div className="pointer-events-none absolute inset-0 opacity-70" aria-hidden="true">
           <div className="absolute left-[-15%] top-[12%] h-72 w-72 rounded-full bg-[#F3E8FF] blur-3xl" />
           <div className="absolute bottom-[8%] right-[-18%] h-80 w-80 rounded-full bg-[#FCE7F3] blur-3xl" />
         </div>
 
         <div className="relative mx-auto w-full max-w-5xl">
-          <div className="mx-auto mb-8 max-w-xl text-center">
+          <div className="mx-auto mb-5 max-w-xl text-center">
             <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#A078B0]">A meaningful introduction</p>
             <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight text-[#2A1845] sm:text-5xl">
               A Meaningful<br/><span className="text-[#C026D3]">Connection Begins</span>
@@ -66,7 +63,7 @@ export function ConnectionScrollStory() {
             </p>
           </div>
 
-          <div className="relative mx-auto h-[455px] max-w-[430px] sm:h-[470px]">
+          <div className="relative mx-auto h-[440px] max-w-[430px] sm:h-[470px]">
             <div
               className="absolute left-1/2 top-[44%] h-[2px] w-[8%] -translate-x-1/2 overflow-hidden rounded-full bg-[#E9D5FF]"
               aria-hidden="true"
@@ -105,25 +102,6 @@ export function ConnectionScrollStory() {
               <Heart className="h-6 w-6" fill="currentColor" aria-hidden="true" />
             </div>
 
-            <div
-              className="hidden absolute left-1/2 top-[68%] w-[230px] -translate-x-1/2 rounded-[1.5rem] border border-[#E9D5FF] bg-white/95 p-4 text-center shadow-[0_18px_45px_rgba(76,29,149,0.12)] backdrop-blur will-change-transform sm:w-[270px]"
-              style={{ opacity: compatibility, transform: `translate3d(-50%,${(1-compatibility)*28}px,0) scale(${0.94+compatibility*0.06})` }}
-            >
-              <div className="flex items-center justify-center gap-2 text-[#7C3AED]">
-                <Sparkles className="h-4 w-4" aria-hidden="true" />
-                <span className="text-xs font-bold uppercase tracking-[0.18em]">Compatibility</span>
-              </div>
-              <div className="mt-1 font-serif text-4xl font-semibold text-[#2A1845]">{score}%</div>
-              <p className="mt-1 text-xs text-[#6B5A78]">Values • future plans • lifestyle</p>
-            </div>
-
-            <div
-              className="hidden absolute bottom-0 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-[#2A1845] px-5 py-3 text-sm font-semibold text-white shadow-lg will-change-transform"
-              style={{ opacity: conversation, transform: `translate3d(-50%,${(1-conversation)*18}px,0)` }}
-            >
-              <MessageCircle className="h-4 w-4" aria-hidden="true" />
-              A conversation begins
-            </div>
           </div>
 
           <div className="mx-auto mt-1 grid max-w-[280px] gap-2 text-left text-[12px] font-medium text-[#5C4A66]">
