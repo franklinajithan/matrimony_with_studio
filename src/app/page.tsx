@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { LandingHero } from "@/components/landing/LandingHero";
 import { ConnectionScrollStory } from "@/components/landing/ConnectionScrollStory";
+import { TaglineReveal } from "@/components/landing/TaglineReveal";
 import { CompatibilityStory, StickyHowItWorks } from "@/components/landing/PremiumScrollSections";
 import { GlobalCommunityStory, PremiumStories, PremiumFinalCta } from "@/components/landing/PremiumClosingSections";
 import {
@@ -30,13 +31,14 @@ export default async function HomePage() {
       <main className="flex-grow">
         <LandingHero />
         <TrustStrip />
+        <TaglineReveal />
+        <DiscoveryPreview />
         <ConnectionScrollStory />
         <CompatibilityStory />
         <StickyHowItWorks />
         <WhyCupidMatch />
         <GlobalCommunityStory />
         <FeatureGrid />
-        <DiscoveryPreview />
         <PrivacySection />
         <FamilyCirclePreview />
         <PremiumStories />
