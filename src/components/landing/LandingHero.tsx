@@ -133,11 +133,17 @@ export function LandingHero() {
 
         <div className="relative mx-auto w-full max-w-[560px] will-change-transform transition-[opacity,transform] delay-150 duration-1000 ease-out lg:max-w-none lg:pt-1" style={{ opacity: (heroEntered ? 1 : 0) * (1-scrollProgress*.32), transform: `translate3d(0,${heroEntered ? scrollProgress * 30 : 28}px,0) scale(${heroEntered ? 1-scrollProgress*0.065 : .97})` }}>
           <figure className="relative overflow-hidden rounded-[1.75rem] shadow-[0_22px_50px_rgba(74,32,110,0.18)] lg:rounded-[2rem] motion-safe:[animation:heroBreath_7s_ease-in-out_infinite]">
+            <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
+              <Heart className="hero-particle hero-particle-a absolute left-[7%] top-[76%] h-6 w-6 fill-pink-400/65 text-pink-400/65" />
+              <Heart className="hero-particle hero-particle-b absolute left-[30%] top-[88%] h-4 w-4 fill-fuchsia-400/55 text-fuchsia-400/55" />
+              <Heart className="hero-particle hero-particle-c absolute right-[8%] top-[72%] h-7 w-7 fill-pink-300/60 text-pink-300/60" />
+              <Sparkles className="hero-sparkle absolute right-[20%] top-[12%] h-7 w-7 text-white drop-shadow-[0_0_10px_rgba(255,255,255,.95)]" />
+            </div>
             <div className="pointer-events-none absolute -right-10 -top-12 z-20 h-32 w-32 rounded-full bg-fuchsia-300/20 blur-2xl motion-safe:animate-pulse" />
             <div className="pointer-events-none absolute left-[8%] top-[12%] z-20 h-2 w-2 rounded-full bg-white/90 shadow-[0_0_18px_5px_rgba(255,255,255,.7)] motion-safe:animate-pulse" />
-            <div className="pointer-events-none absolute left-[-8%] top-[58%] z-20 w-[116%] opacity-0 transition-all delay-700 duration-[1400ms] ease-out motion-safe:opacity-100">
+            <div className="pointer-events-none absolute left-[-8%] top-[48%] z-40 w-[116%] opacity-100">
               <svg viewBox="0 0 800 120" className="h-auto w-full overflow-visible">
-                <path d="M8 80 C150 12 250 104 390 54 S620 24 782 64" fill="none" stroke="rgba(217,70,239,.68)" strokeWidth="2.4" strokeLinecap="round" strokeDasharray="7 10" className="motion-safe:[animation:cupidDash_8s_linear_infinite]" />
+                <path d="M8 80 C150 12 250 104 390 54 S620 24 782 64" fill="none" stroke="rgba(217,70,239,.92)" strokeWidth="3.2" strokeLinecap="round" strokeDasharray="7 10" className="motion-safe:[animation:cupidDash_8s_linear_infinite]" />
                 <g className="motion-safe:[animation:cupidFly_8s_ease-in-out_infinite]">
                   <circle cx="10" cy="80" r="13" fill="rgba(255,255,255,.9)" />
                   <path d="M4 79c4-7 10-3 10 2 0 5-10 10-10 10S-6 86-6 81c0-5 6-9 10-2Z" fill="#d946ef" transform="translate(6 -6) scale(.55)" />
@@ -166,6 +172,12 @@ export function LandingHero() {
         @keyframes cupidMarkFloat { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-4px) rotate(2deg); } }
         @keyframes cupidDash { to { stroke-dashoffset: -136; } }
         @keyframes cupidFly { 0% { transform: translate(0,0); opacity:.2; } 18% { opacity:1; } 50% { transform: translate(390px,-26px); opacity:1; } 82% { opacity:1; } 100% { transform: translate(770px,-16px); opacity:.15; } }
+        @keyframes heartRise { 0% { transform: translate3d(0,24px,0) scale(.7) rotate(-8deg); opacity:0; } 20% { opacity:.8; } 75% { opacity:.55; } 100% { transform: translate3d(26px,-240px,0) scale(1.2) rotate(12deg); opacity:0; } }
+        @keyframes sparkleGlow { 0%,100% { transform:scale(.7) rotate(0deg); opacity:.35; } 50% { transform:scale(1.15) rotate(18deg); opacity:1; } }
+        .hero-particle { animation: heartRise 7s ease-in-out infinite; }
+        .hero-particle-b { animation-delay: -2.3s; animation-duration: 8.5s; }
+        .hero-particle-c { animation-delay: -4.4s; animation-duration: 9.5s; }
+        .hero-sparkle { animation: sparkleGlow 2.8s ease-in-out infinite; }
       `}</style>
     </section>
   );
