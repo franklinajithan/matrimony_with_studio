@@ -94,61 +94,36 @@ function HeroCarousel({
 }
 
 export function PremiumOpeningStory(){
- const {ref,p}=useProgress();
- const heroOut=phase(p,.035,.105), tagline=phase(p,.07,.18), cards=phase(p,.15,.30), connect=phase(p,.27,.46);
  const profiles=[
   {name:"Nila, 27",place:"London, UK",src:"/images/values/culture.jpg?v=3"},
   {name:"Tharshini, 27",place:"London, UK",src:HERO_SLIDES[0]},
   {name:"Kavya, 28",place:"Toronto, Canada",src:"/images/values/goals.jpg?v=3"},
  ];
- return <section ref={ref} className="relative h-[500svh] lg:h-[285svh] bg-[#FFFDFB] [scroll-snap-align:start] [scroll-snap-stop:always]">
-  <div className="sticky top-0 h-[100svh] overflow-hidden">
-   <div className="pointer-events-none absolute -left-32 top-24 h-80 w-80 rounded-full bg-fuchsia-100/70 blur-3xl"/><div className="pointer-events-none absolute -right-32 bottom-24 h-80 w-80 rounded-full bg-violet-100/80 blur-3xl"/>
-
-   <div className="absolute inset-0 flex flex-col px-5 pb-5 pt-5 will-change-transform lg:grid lg:grid-cols-[minmax(460px,0.92fr)_minmax(560px,1.08fr)] lg:items-center lg:gap-20 lg:px-[max(5vw,64px)] lg:py-12 xl:mx-auto xl:max-w-[1500px]" style={{opacity:1-heroOut,transform:`translate3d(0,${-heroOut*70}px,0) scale(${1-heroOut*.055})`,pointerEvents:heroOut>.75?"none":"auto"}}>
-    <div className="lg:max-w-[620px]"><p className="text-[10px] font-bold uppercase leading-5 tracking-[.27em] text-[#A078B0] lg:text-xs">Sri Lankan matchmaking<br/>for a brighter tomorrow</p>
-    <h1 className="mt-3 font-serif text-[2.7rem] font-semibold leading-[.98] lg:mt-5 lg:text-[5.25rem] xl:text-[5.8rem] text-[#2A1845]">Find Your<br/><span className="text-[#C026D3]">Perfect Match ♡</span></h1>
-    <p className="mt-3 max-w-sm text-[12px] leading-5 lg:mt-6 lg:max-w-lg lg:text-base lg:leading-7 text-[#65546F]">A trusted matrimony platform for the Sri Lankan community in the UK, Canada, Australia and beyond.</p>
-    <div className="mt-4 flex justify-between px-2 lg:mt-8 lg:max-w-lg lg:px-0 lg:justify-start lg:gap-12">{[[Users,"Verified\nProfiles"],[Shield,"Safe & Secure"],[Heart,"Find\nCompatibility"]].map(([Icon,label]:any,i)=><div key={i} className="w-24 text-center" style={{opacity:phase(p,.005+i*.012,.06+i*.012),transform:`translateY(${(1-phase(p,.005+i*.012,.06+i*.012))*12}px)`}}><span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#F3E8FF] text-[#7C3AED]"><Icon className="h-5 w-5"/></span><span className="mt-2 block whitespace-pre-line text-[10px] font-semibold leading-3 text-[#4C3A5C]">{label}</span></div>)}</div>
-    <div className="mt-4 grid gap-2 lg:mt-9 lg:max-w-lg lg:grid-cols-2 lg:gap-3"><Link href="/signup" className="flex h-11 items-center justify-center rounded-full bg-[#7C3AED] text-sm font-semibold text-white shadow-lg">Create Your Profile <ArrowRight className="ml-1 h-4 w-4"/></Link><Link href="/discover" className="flex h-11 items-center justify-center rounded-full border border-violet-200 bg-white text-sm font-semibold text-violet-700">Explore Matches</Link></div></div>
-    <div className="relative mt-4 min-h-0 flex-1 lg:mt-0 lg:h-[76vh] lg:min-h-[580px] lg:flex-none" style={{transform:`translate3d(0,${heroOut*38}px,0) scale(${1-heroOut*.08})`}}>
-      <HeroCarousel
-        className="h-full min-h-[280px] rounded-t-[2rem] shadow-[0_18px_45px_rgba(76,29,149,.16)] lg:rounded-[2.75rem] lg:border lg:border-white"
-        priority
-        sizes="(min-width:1024px) 55vw, 100vw"
-      />
-    </div>
-
+ return <section className="bg-[#FFFDFB]">
+  <article className="homepage-story-card grid min-h-[calc(100svh-7rem)] items-center gap-8 overflow-hidden px-5 py-6 lg:grid-cols-[minmax(440px,.9fr)_minmax(560px,1.1fr)] lg:gap-16 lg:px-[max(5vw,64px)] lg:py-8 xl:mx-auto xl:max-w-[1500px]">
+   <div className="story-copy lg:max-w-[620px]">
+    <p className="text-[10px] font-bold uppercase leading-5 tracking-[.27em] text-[#A078B0] lg:text-xs">Sri Lankan matchmaking<br/>for a brighter tomorrow</p>
+    <h1 className="mt-3 font-serif text-[2.7rem] font-semibold leading-[1.02] text-[#2A1845] lg:mt-4 lg:text-[5.1rem] xl:text-[5.65rem]">Find Your<br/><span className="text-[#C026D3]">Perfect Match ♡</span></h1>
+    <p className="mt-4 max-w-lg text-[12px] leading-5 text-[#65546F] lg:mt-5 lg:text-base lg:leading-7">A trusted matrimony platform for the Sri Lankan community in the UK, Canada, Australia and beyond.</p>
+    <div className="mt-5 flex justify-between lg:mt-7 lg:max-w-lg lg:justify-start lg:gap-12">{[[Users,"Verified\nProfiles"],[Shield,"Safe & Secure"],[Heart,"Find\nCompatibility"]].map(([Icon,label]:any,i)=><div key={i} className="story-item w-24 text-center" style={{animationDelay:`${i*70}ms`}}><span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#F3E8FF] text-[#7C3AED]"><Icon className="h-5 w-5"/></span><span className="mt-2 block whitespace-pre-line text-[10px] font-semibold leading-3 text-[#4C3A5C]">{label}</span></div>)}</div>
+    <div className="mt-5 grid gap-2 lg:mt-7 lg:max-w-lg lg:grid-cols-2 lg:gap-3"><Link href="/signup" className="flex h-11 items-center justify-center rounded-full bg-[#7C3AED] text-sm font-semibold text-white shadow-lg">Create Your Profile <ArrowRight className="ml-1 h-4 w-4"/></Link><Link href="/discover" className="flex h-11 items-center justify-center rounded-full border border-violet-200 bg-white text-sm font-semibold text-violet-700">Explore Matches</Link></div>
    </div>
+   <HeroCarousel className="story-media h-[44svh] min-h-[310px] rounded-[2.25rem] shadow-[0_18px_45px_rgba(76,29,149,.16)] lg:h-[68vh] lg:min-h-[540px] lg:max-h-[720px] lg:rounded-[2.75rem]" priority sizes="(min-width:1024px) 55vw,100vw"/>
+  </article>
 
-   <div className="absolute inset-0 flex items-center justify-center px-5" style={{opacity:Math.min(1,tagline*1.7)*(1-phase(p,.18,.25)),transform:`translate3d(0,${(1-tagline)*28-phase(p,.18,.25)*-12}px,0)`}}>
-    <div className="relative h-[82svh] w-full max-w-[390px] lg:h-[76vh] lg:max-w-6xl">
-     <div className="absolute left-2 top-12 z-10 font-script text-[3.1rem] lg:left-10 lg:top-[26%] lg:text-[6rem] leading-[.9] text-[#C026D3]">Good people<span className="ml-8 block">Brighter futures</span></div>
-     <svg className="absolute left-2 top-36 z-10 h-32 w-[95%]" viewBox="0 0 340 120" fill="none"><path d="M8 35 C72 98 120 10 181 53 C235 91 275 31 328 63" pathLength="1" stroke="#D946EF" strokeWidth="2.5" strokeLinecap="round" style={{strokeDasharray:1,strokeDashoffset:1-tagline}}/><path d="M307 57c-10-14-27 2 0 23 27-21 10-37 0-23Z" fill="#D946EF"/></svg>
-     <div className="absolute bottom-0 right-0 h-[62svh] w-[88%] lg:h-[74vh] lg:w-[52%] overflow-hidden rounded-t-[7rem] rounded-b-[2.4rem] shadow-2xl" style={{transform:`translateY(${(1-tagline)*50}px) scale(${.94+tagline*.06})`}}>
-       <Image src={HERO_SLIDES[1]} alt="Engaged couple celebrating their connection" fill quality={100} sizes="(min-width:1024px) 48vw, 390px" className="object-cover object-center"/>
-     </div>
+  <article className="homepage-story-card relative grid min-h-[calc(100svh-7rem)] items-center gap-8 overflow-hidden px-5 py-8 lg:grid-cols-[.9fr_1.1fr] lg:px-[max(7vw,80px)]">
+   <div className="story-copy relative z-10 text-center lg:text-left"><p className="font-script text-[3.25rem] leading-[.9] text-[#C026D3] lg:text-[6rem]">Good people<span className="block lg:ml-16">Brighter futures</span></p><p className="mx-auto mt-6 max-w-md text-sm leading-6 text-[#6B5A78] lg:mx-0 lg:text-lg">Meaningful introductions begin with shared values, genuine intentions and room to grow together.</p></div>
+   <div className="story-media relative mx-auto h-[58svh] min-h-[420px] w-full max-w-[620px] overflow-hidden rounded-[3rem] shadow-2xl lg:h-[72vh] lg:max-h-[720px]"><Image src={HERO_SLIDES[1]} alt="Engaged couple celebrating their connection" fill quality={100} sizes="(min-width:1024px) 48vw,100vw" className="object-cover object-center"/><svg className="pointer-events-none absolute inset-x-8 top-10 h-28" viewBox="0 0 500 100" fill="none"><path d="M8 60 C110 5 175 95 270 45 C355 0 410 75 492 35" stroke="#D946EF" strokeWidth="3" strokeLinecap="round"/><path d="M458 30c-10-14-27 2 0 23 27-21 10-37 0-23Z" fill="#D946EF"/></svg></div>
+  </article>
 
-    </div>
-   </div>
+  <article className="homepage-story-card flex min-h-[calc(100svh-7rem)] flex-col items-center justify-center overflow-hidden px-4 py-8 lg:px-[7vw]">
+   <div className="story-copy text-center"><h2 className="font-serif text-[2.35rem] font-semibold leading-[1.04] text-[#2A1845] lg:text-[4.25rem]">Discover<br/><span className="text-[#C026D3]">Compatible Matches</span></h2><p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-[#6B5A78] lg:text-base">Meet people who share your values, culture and life goals.</p></div>
+   <div className="relative mt-8 h-[390px] w-full max-w-[390px] lg:mt-10 lg:h-[500px] lg:max-w-[900px]">{profiles.map((x,i)=>{const side=i-1;return <div key={x.name} className={`story-item absolute left-1/2 top-0 w-[220px] overflow-hidden rounded-[2rem] border-[5px] border-white bg-white shadow-[0_24px_60px_rgba(76,29,149,.16)] lg:w-[270px] ${i===1?"z-10":"z-0"}`} style={{transform:`translateX(calc(-50% + ${side*230}px)) rotate(${side*6}deg) scale(${i===1?1:.86})`,animationDelay:`${i*90}ms`}}><div className="relative h-[275px] lg:h-[335px]"><Image src={x.src} alt="" fill sizes="270px" className="object-cover"/>{i===1&&<span className="absolute bottom-3 right-3 rounded-full bg-white px-3 py-1 text-xs font-bold text-[#C026D3] shadow">92% Match</span>}</div><div className="p-4"><p className="font-serif text-xl font-semibold text-[#2A1845]">{x.name}</p><p className="mt-1 text-xs text-[#75647F]">{x.place}</p></div></div>})}</div>
+  </article>
 
-   <div className="absolute inset-0 flex flex-col items-center justify-center px-4 lg:px-[7vw]" style={{opacity:Math.min(1,cards*1.7)*(1-phase(p,.30,.38)),transform:`translateY(${(1-cards)*32}px)`}}>
-    <div className="text-center"><h2 className="font-serif text-[2.35rem] lg:text-[4.25rem] font-semibold leading-[1.02] text-[#2A1845]">Discover<br/><span className="text-[#C026D3]">Compatible Matches</span></h2><p className="mx-auto mt-4 max-w-sm text-sm leading-6 lg:max-w-xl lg:text-base text-[#6B5A78]">Meet people who share your values, culture and life goals.</p></div>
-    <div className="relative mt-8 h-[390px] w-full max-w-[390px] lg:mt-12 lg:h-[500px] lg:max-w-[900px]">
-     {profiles.map((x,i)=>{const side=i-1;const xPos=side*145;const y=Math.abs(side)*38;const rot=side*7;const sc=i===1?1:.82;return <div key={x.name} className="absolute left-1/2 top-0 w-[220px] lg:w-[270px] overflow-hidden rounded-[2rem] border-[5px] border-white bg-white shadow-[0_24px_60px_rgba(76,29,149,.16)] will-change-transform" style={{zIndex:i===1?3:1,opacity:cards,transform:`translate3d(calc(-50% + ${xPos*cards}px + ${(i-1)*100*cards}px),${(1-cards)*90+y}px,0) rotate(${rot*cards}deg) scale(${.8+(sc-.8)*cards})`}}><div className="relative h-[275px] lg:h-[335px]"><Image src={x.src} alt="" fill sizes="(min-width:1024px) 270px, 220px" className="object-cover"/>{i===1&&<span className="absolute bottom-3 right-3 rounded-full bg-white px-3 py-1 text-xs font-bold text-[#C026D3] shadow">92% Match</span>}</div><div className="p-4"><p className="font-serif text-xl font-semibold text-[#2A1845]">{x.name}</p><p className="mt-1 text-xs text-[#75647F]">{x.place}</p></div></div>})}
-    </div>
-   </div>
-
-   <div className="absolute inset-0 flex flex-col items-center justify-center px-5 lg:grid lg:grid-cols-[0.9fr_1.1fr] lg:gap-24 lg:px-[max(7vw,80px)] xl:mx-auto xl:max-w-[1500px]" style={{opacity:Math.min(1,connect*1.8),transform:`translateY(${(1-connect)*32}px)`}}>
-    <div className="text-center lg:text-left"><p className="mb-4 hidden text-xs font-bold uppercase tracking-[.28em] text-[#A078B0] lg:block">Built around real compatibility</p><h2 className="font-serif text-[2.25rem] lg:text-[4.8rem] font-semibold leading-[1.02] text-[#2A1845]">A Meaningful<br/><span className="text-[#C026D3]">Connection Begins</span></h2><p className="mt-3 text-sm lg:max-w-lg lg:text-lg lg:leading-8 text-[#6B5A78]">When shared values bring two people together.</p></div><div className="lg:relative">
-    <div className="relative mt-5 h-[430px] w-full max-w-[360px] lg:h-[560px] lg:max-w-[520px]">
-      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 360 430" fill="none"><path d="M180 102 C78 130 95 225 180 218 C265 212 278 307 180 337" pathLength="1" stroke="#D946EF" strokeWidth="2.5" strokeLinecap="round" style={{strokeDasharray:1,strokeDashoffset:1-connect}}/></svg>
-      <div className="absolute left-1/2 top-3 h-32 w-32 overflow-hidden rounded-full border-[6px] border-white shadow-xl" style={{transform:`translate3d(calc(-50% + ${(1-connect)*-105}px),${(1-connect)*-40}px,0) scale(${.82+connect*.18})`}}><Image src="/images/values/goals.jpg?v=3" alt="" fill sizes="128px" className="object-cover"/></div>
-      <div className="absolute bottom-3 left-1/2 h-32 w-32 overflow-hidden rounded-full border-[6px] border-white shadow-xl" style={{transform:`translate3d(calc(-50% + ${(1-connect)*105}px),${(1-connect)*40}px,0) scale(${.82+connect*.18})`}}><Image src="/images/values/culture.jpg?v=3" alt="" fill sizes="128px" className="object-cover"/></div>
-      <div className="absolute left-1/2 top-[46%] flex h-14 w-14 -translate-x-1/2 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-500 text-white shadow-xl" style={{transform:`translateX(-50%) scale(${.4+connect*.6})`}}><Heart className="h-7 w-7" fill="currentColor"/></div>
-    </div>
-    <div className="grid w-full max-w-[280px] lg:absolute lg:bottom-6 lg:left-0 gap-2 text-xs font-medium text-[#5C4A66]">{["Shared values","Similar goals","Cultural alignment","Real conversations"].map((x,i)=><div key={x} className="flex items-center gap-2" style={{opacity:phase(connect,.35+i*.1,.6+i*.1),transform:`translateX(${(1-phase(connect,.35+i*.1,.6+i*.1))*18}px)`}}><span className="flex h-5 w-5 items-center justify-center rounded-full bg-violet-100 text-[#7C3AED]">✓</span>{x}</div>)}</div></div>
-   </div>
-  </div>
+  <article className="homepage-story-card grid min-h-[calc(100svh-7rem)] items-center gap-8 overflow-hidden px-5 py-8 lg:grid-cols-[.9fr_1.1fr] lg:gap-20 lg:px-[max(7vw,80px)] xl:mx-auto xl:max-w-[1500px]">
+   <div className="story-copy text-center lg:text-left"><p className="mb-4 hidden text-xs font-bold uppercase tracking-[.28em] text-[#A078B0] lg:block">Built around real compatibility</p><h2 className="font-serif text-[2.25rem] font-semibold leading-[1.04] text-[#2A1845] lg:text-[4.6rem]">A Meaningful<br/><span className="text-[#C026D3]">Connection Begins</span></h2><p className="mt-3 text-sm text-[#6B5A78] lg:max-w-lg lg:text-lg lg:leading-8">When shared values bring two people together.</p><div className="mt-7 hidden max-w-[300px] gap-3 text-sm font-medium text-[#5C4A66] lg:grid">{["Shared values","Similar goals","Cultural alignment","Real conversations"].map((x,i)=><div key={x} className="story-item flex items-center gap-2" style={{animationDelay:`${i*70}ms`}}><span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-[#7C3AED]">✓</span>{x}</div>)}</div></div>
+   <div className="story-media relative mx-auto h-[430px] w-full max-w-[430px] lg:h-[590px] lg:max-w-[570px]"><svg className="absolute inset-0 h-full w-full" viewBox="0 0 430 520" fill="none"><path d="M215 92 C72 130 105 245 215 240 C325 235 350 370 215 420" stroke="#D946EF" strokeWidth="3" strokeLinecap="round"/></svg><div className="absolute left-1/2 top-3 h-36 w-36 -translate-x-1/2 overflow-hidden rounded-full border-[6px] border-white shadow-xl lg:h-44 lg:w-44"><Image src="/images/values/goals.jpg?v=3" alt="" fill sizes="176px" className="object-cover"/></div><div className="absolute bottom-3 left-1/2 h-36 w-36 -translate-x-1/2 overflow-hidden rounded-full border-[6px] border-white shadow-xl lg:h-44 lg:w-44"><Image src="/images/values/culture.jpg?v=3" alt="" fill sizes="176px" className="object-cover"/></div><div className="absolute left-1/2 top-[46%] flex h-16 w-16 -translate-x-1/2 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-500 text-white shadow-xl"><Heart className="h-8 w-8" fill="currentColor"/></div></div>
+  </article>
  </section>
 }
