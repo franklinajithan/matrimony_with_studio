@@ -19,10 +19,16 @@ jobs:
           cache: npm
       - run: npm install --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
+      - name: Verify QA target
+        run: |
+          echo "Testing $PLAYWRIGHT_BASE_URL"
+          curl --fail --location --retry 3 --retry-delay 2 "$PLAYWRIGHT_BASE_URL/login" > /dev/null
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ vars.QA_BASE_URL }}
       - name: Run member journey QA
         run: npx playwright test --project=chromium
         env:
-          PLAYWRIGHT_BASE_URL: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.url || vars.QA_BASE_URL }}
+          PLAYWRIGHT_BASE_URL: ${{ vars.QA_BASE_URL }}
           QA_USER_A_EMAIL: ${{ secrets.QA_USER_A_EMAIL }}
           QA_USER_A_PASSWORD: ${{ secrets.QA_USER_A_PASSWORD }}
           QA_USER_B_EMAIL: ${{ secrets.QA_USER_B_EMAIL }}
