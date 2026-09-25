@@ -140,9 +140,9 @@ export function Navbar() {
   return (
     <TooltipProvider delayDuration={0}>
       <header className="sticky top-0 z-50 w-full border-b border-[#F0E8F4] bg-[#FBF8F4]/95 backdrop-blur supports-[backdrop-filter]:bg-[#FBF8F4]/90">
-        <div className="container mx-auto flex h-[4.5rem] items-center gap-3 px-4 lg:h-20 lg:px-6">
+        <div className="container mx-auto flex h-[4.25rem] items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:h-20 lg:px-6">
           <div className="flex shrink-0 flex-col justify-center">
-            <Logo size="sm" className="w-[10.25rem] sm:w-[11rem]" />
+            <Logo size="sm" className="w-[7.8rem] sm:w-[10rem] lg:w-[11rem]" />
             {isMarketingPage ? (
               <p className="hidden -mt-0.5 pl-[2.55rem] text-[10px] font-medium tracking-[0.01em] text-[#9B7AA8] sm:block">
                 Real People. Meaningful Connections.
@@ -313,13 +313,13 @@ export function Navbar() {
           )}
 
           {isMarketingPage ? (
-            <div className="ml-auto flex items-center gap-2 lg:hidden">
+            <div className="ml-auto flex min-w-0 items-center gap-1 lg:hidden">
               {!currentUser && !isLoadingAuth && (
                 <>
-                  <Button asChild size="sm" variant="ghost" className="h-9">
+                  <Button asChild size="sm" variant="ghost" className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm">
                     <Link href="/login">Log in</Link>
                   </Button>
-                  <Button asChild size="sm" className={cn("h-9", signUpButtonClass)}>
+                  <Button asChild size="sm" className={cn("h-8 px-3 text-xs sm:h-9 sm:px-4 sm:text-sm", signUpButtonClass)}>
                     <Link href="/signup">Join</Link>
                   </Button>
                 </>
@@ -329,6 +329,7 @@ export function Navbar() {
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="h-9 w-9 shrink-0"
                     aria-label="Open menu"
                   >
                     <Menu className="h-6 w-6" />
