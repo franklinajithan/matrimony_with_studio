@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Heart, Shield, Users } from "lucide-react";
+import { ArrowRight, Heart, Shield, Sparkles, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { HERO_SLIDES } from "@/components/landing/brand";
 
@@ -76,7 +76,22 @@ function HeroCarousel({
           />
         </div>
       ))}
-      <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2" role="tablist" aria-label="Hero photos">
+      <div className="pointer-events-none absolute inset-0 z-20">
+        <div className="absolute inset-[5%] rounded-[2.4rem] border border-fuchsia-300/35 shadow-[inset_0_0_35px_rgba(217,70,239,.12)]" />
+        <div className="cupid-flyer absolute left-[5%] top-[64%] flex h-14 w-14 items-center justify-center rounded-full border-2 border-white/90 bg-white/95 shadow-[0_10px_35px_rgba(192,38,211,.45)]">
+          <Heart className="h-7 w-7 fill-fuchsia-500 text-fuchsia-500" />
+          <ArrowRight className="absolute -right-4 h-6 w-6 text-violet-700" strokeWidth={2.8}/>
+        </div>
+        <Heart className="hero-heart hero-heart-1 absolute bottom-[8%] left-[12%] h-7 w-7 fill-pink-400 text-pink-400" />
+        <Heart className="hero-heart hero-heart-2 absolute bottom-[5%] left-[42%] h-5 w-5 fill-fuchsia-300 text-fuchsia-300" />
+        <Heart className="hero-heart hero-heart-3 absolute bottom-[10%] right-[12%] h-8 w-8 fill-pink-300 text-pink-300" />
+        <Sparkles className="hero-spark absolute right-[12%] top-[10%] h-9 w-9 text-white drop-shadow-[0_0_12px_rgba(255,255,255,1)]" />
+        <svg viewBox="0 0 700 130" className="absolute left-[3%] top-[45%] h-[130px] w-[94%] overflow-visible">
+          <path d="M8 88 C120 5 230 125 350 60 S570 18 692 76" fill="none" stroke="rgba(255,255,255,.9)" strokeWidth="8" strokeLinecap="round"/>
+          <path className="cupid-trail" d="M8 88 C120 5 230 125 350 60 S570 18 692 76" fill="none" stroke="#D946EF" strokeWidth="4" strokeLinecap="round" strokeDasharray="12 14"/>
+        </svg>
+      </div>
+      <div className="absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 gap-2" role="tablist" aria-label="Hero photos">
         {HERO_SLIDES.map((_, i) => (
           <button
             key={i}
@@ -89,6 +104,37 @@ function HeroCarousel({
           />
         ))}
       </div>
+      <style jsx>{`
+        @keyframes cupidFly {
+          0%,100% { transform:translate3d(0,0,0) rotate(-8deg); }
+          25% { transform:translate3d(390px,-190px,0) rotate(5deg); }
+          50% { transform:translate3d(440px,90px,0) rotate(10deg); }
+          75% { transform:translate3d(80px,130px,0) rotate(-4deg); }
+        }
+        @keyframes trailMove { to { stroke-dashoffset:-260; } }
+        @keyframes heartFloat {
+          0% { transform:translateY(20px) scale(.75); opacity:0; }
+          20% { opacity:.9; }
+          100% { transform:translateY(-250px) translateX(35px) scale(1.25); opacity:0; }
+        }
+        @keyframes sparkle { 0%,100%{transform:scale(.7) rotate(0);opacity:.35} 50%{transform:scale(1.25) rotate(25deg);opacity:1} }
+        .cupid-flyer{animation:cupidFly 7s ease-in-out infinite}
+        .cupid-trail{animation:trailMove 3s linear infinite}
+        .hero-heart{animation:heartFloat 6s ease-in-out infinite}
+        .hero-heart-2{animation-delay:-2s;animation-duration:7.5s}
+        .hero-heart-3{animation-delay:-4s;animation-duration:8.5s}
+        .hero-spark{animation:sparkle 2.4s ease-in-out infinite}
+        @media(max-width:767px){
+          @keyframes cupidFly {
+            0%,100% { transform:translate3d(0,0,0) rotate(-8deg); }
+            25% { transform:translate3d(230px,-80px,0) rotate(5deg); }
+            50% { transform:translate3d(250px,45px,0) rotate(10deg); }
+            75% { transform:translate3d(45px,70px,0) rotate(-4deg); }
+          }
+          .cupid-flyer{height:2.75rem;width:2.75rem}
+        }
+        @media(prefers-reduced-motion:reduce){.cupid-flyer,.cupid-trail,.hero-heart,.hero-spark{animation:none}}
+      `}</style>
     </div>
   );
 }
