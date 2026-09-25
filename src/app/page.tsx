@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { LandingHero } from "@/components/landing/LandingHero";
+import { ConnectionScrollStory } from "@/components/landing/ConnectionScrollStory";
 import {
   TrustStrip,
   WhyCupidMatch,
@@ -31,6 +32,7 @@ export default async function HomePage() {
       <main className="flex-grow">
         <LandingHero />
         <TrustStrip />
+        <ConnectionScrollStory />
         <WhyCupidMatch />
         <InternationalRelationships />
         <FeatureGrid />
