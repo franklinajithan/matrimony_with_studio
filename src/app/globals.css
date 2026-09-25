@@ -112,6 +112,22 @@
 }
 
 @layer utilities {
+  /* Homepage behaves as a sequence of full-screen story cards on touch devices.
+     Proximity snapping keeps normal scrolling available while giving each scene
+     a stable resting position after a swipe. */
+  .homepage-card-flow {
+    scroll-snap-type: y proximity;
+  }
+  .homepage-card-flow > section {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+  @media (max-width: 767px) {
+    .homepage-card-flow > section {
+      min-height: calc(100svh - 4.25rem);
+    }
+  }
+
   @keyframes cupid-route-travel { to { stroke-dashoffset: -280; } }
   @keyframes cupid-scroll-hint {
     0%, 100% { transform: translateY(0); opacity: 0.55; }
