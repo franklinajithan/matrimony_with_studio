@@ -41,9 +41,15 @@ export function LandingHero() {
   const heroRef = useRef<HTMLElement>(null);
   const frameRef = useRef<number | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [heroEntered, setHeroEntered] = useState(false);
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) {
+      setHeroEntered(true);
+      return;
+    }
+    const entranceTimer = window.setTimeout(() => setHeroEntered(true), 80);
     const update = () => {
       frameRef.current = null;
       const hero = heroRef.current;
@@ -58,6 +64,7 @@ export function LandingHero() {
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
+      window.clearTimeout(entranceTimer);
       window.removeEventListener("scroll", onScroll);
       if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
     };
@@ -66,7 +73,7 @@ export function LandingHero() {
   return (
     <section ref={heroRef} className="relative min-h-[calc(100svh-4.25rem)] overflow-hidden bg-[#FBF8F4] pt-0 sm:pt-2">
       <div className="relative mx-auto grid max-w-[1240px] items-start gap-4 px-5 pb-0 sm:px-8 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] lg:items-stretch lg:gap-4 lg:px-10 lg:pb-10">
-        <div className="relative z-10 flex max-w-xl flex-col pt-4 will-change-transform lg:pt-1" style={{ opacity: 1 - scrollProgress * 0.72, transform: `translate3d(0,${scrollProgress * -46}px,0) scale(${1-scrollProgress*0.045})` }}>
+        <div className="relative z-10 flex max-w-xl flex-col pt-4 will-change-transform transition-[opacity,transform] duration-1000 ease-out lg:pt-1" style={{ opacity: (heroEntered ? 1 : 0) * (1 - scrollProgress * 0.72), transform: `translate3d(0,${heroEntered ? scrollProgress * -46 : 24}px,0) scale(${heroEntered ? 1-scrollProgress*0.045 : .98})` }}>
           <p className="text-[11px] font-semibold uppercase leading-5 tracking-[0.26em] text-[#A078B0] sm:text-xs sm:leading-6">
             {t.eyebrow}
             <span className="block">{t.eyebrow2}</span>
@@ -124,10 +131,15 @@ export function LandingHero() {
           </p>
         </div>
 
-        <div className="relative mx-auto w-full max-w-[560px] will-change-transform lg:max-w-none lg:pt-1" style={{ opacity: 1-scrollProgress*.32, transform: `translate3d(0,${scrollProgress * 30}px,0) scale(${1-scrollProgress*0.065})` }}>
+        <div className="relative mx-auto w-full max-w-[560px] will-change-transform transition-[opacity,transform] delay-150 duration-1000 ease-out lg:max-w-none lg:pt-1" style={{ opacity: (heroEntered ? 1 : 0) * (1-scrollProgress*.32), transform: `translate3d(0,${heroEntered ? scrollProgress * 30 : 28}px,0) scale(${heroEntered ? 1-scrollProgress*0.065 : .97})` }}>
           <figure className="relative overflow-hidden rounded-[1.75rem] shadow-[0_22px_50px_rgba(74,32,110,0.18)] lg:rounded-[2rem]">
             <div className="pointer-events-none absolute -right-10 -top-12 z-20 h-32 w-32 rounded-full bg-fuchsia-300/20 blur-2xl motion-safe:animate-pulse" />
             <div className="pointer-events-none absolute left-[8%] top-[12%] z-20 h-2 w-2 rounded-full bg-white/90 shadow-[0_0_18px_5px_rgba(255,255,255,.7)] motion-safe:animate-pulse" />
+            <div className="pointer-events-none absolute left-[-8%] top-[58%] z-20 w-[116%] opacity-0 transition-all delay-700 duration-[1400ms] ease-out motion-safe:opacity-100">
+              <svg viewBox="0 0 800 120" className="h-auto w-full overflow-visible">
+                <path d="M8 80 C150 12 250 104 390 54 S620 24 782 64" fill="none" stroke="rgba(217,70,239,.62)" strokeWidth="2.2" strokeLinecap="round" strokeDasharray="7 10" className="motion-safe:[animation:dash_9s_linear_infinite]" />
+              </svg>
+            </div>
             <div className="pointer-events-none absolute right-[14%] top-[20%] z-20 h-1.5 w-1.5 rounded-full bg-fuchsia-200 shadow-[0_0_16px_4px_rgba(244,114,182,.5)] motion-safe:animate-pulse" />
             <div className="relative h-[42svh] min-h-[330px] w-full sm:h-auto sm:aspect-[3/4] lg:aspect-auto lg:min-h-[700px] lg:h-[min(74vh,760px)]">
               <Image
