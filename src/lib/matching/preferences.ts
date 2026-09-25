@@ -9,7 +9,17 @@ export type PreferenceScore = { matched: number; total: number; percentage: numb
 
 const strings = (value: unknown): string[] => Array.isArray(value) ? value.filter((v): v is string => typeof v === "string" && Boolean(v.trim())) : typeof value === "string" && value.trim() ? [value.trim()] : [];
 const number = (value: unknown): number | undefined => { const parsed = Number(String(value ?? "").replace(/\D/g, "")); return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined; };
-const same = (a?: string, b?: string) => Boolean(a && b && a.trim().toLowerCase() === b.trim().toLowerCase());
+const canonical = (value?: string) => {
+  const normalized = String(value || "").trim().toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, " ");
+  const aliases: Record<string, string> = {
+    hindu: "hinduism", buddhist: "buddhism", catholic: "christianity", christian: "christianity",
+    muslim: "islam", islamic: "islam", sikh: "sikhism", jain: "jainism",
+    male: "man", female: "woman",
+    bachelors: "bachelor's", bachelor: "bachelor's", masters: "master's", master: "master's",
+  };
+  return aliases[normalized] || normalized;
+};
+const same = (a?: string, b?: string) => Boolean(a && b && canonical(a) === canonical(b));
 const neutral = (value?: string) => !value || ["no preference", "doesn't matter", "does not matter", "any", "prefer not to say"].some((v) => same(value, v));
 const includes = (values: string[], value?: string) => !values.length || Boolean(value && values.some((v) => same(v, value)));
 const record = (value: unknown): Record<string, any> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, any> : {};
@@ -43,7 +53,18 @@ export function profileMatchesFilters(profile: Profile, filters: DiscoveryFilter
   if (!includes(filters.countries, c.country)) return false; if (filters.languages.length && !filters.languages.some((language) => c.languages.some((v) => same(v, language)))) return false;
   if (!includes(filters.religions, profile.religion)) return false;
   if (filters.professions.length && !filters.professions.some((wanted) => profile.profession?.toLowerCase().includes(wanted.toLowerCase()))) return false;
-  if (!includes(filters.smoking, c.smoking)) return false; if (!includes(filters.drinking, c.drinking)) return false; return true;
+  if (!includes(filters.smoking, c.smoking)) return false; if (!includes(filters.drinking, c.drinking)) return false;
+  if (filters.gender && !neutral(filters.gender) && !same(filters.gender, c.gender)) return false;
+  if (filters.maritalStatuses?.length && !filters.maritalStatuses.some((v) => neutral(v) || same(v, c.maritalStatus))) return false;
+  const minH = number(filters.heightMin), maxH = number(filters.heightMax);
+  if (minH && (!c.height || c.height < minH)) return false;
+  if (maxH && (!c.height || c.height > maxH)) return false;
+  if (filters.education?.length && !filters.education.some((v) => c.education && (same(v, c.education) || canonical(c.education).includes(canonical(v))))) return false;
+  if (filters.wantsChildren && !neutral(filters.wantsChildren) && !same(filters.wantsChildren, c.wantsChildren)) return false;
+  if (filters.relocation && !neutral(filters.relocation) && !same(filters.relocation, c.relocation)) return false;
+  if (filters.familyInvolvement && !neutral(filters.familyInvolvement) && !same(filters.familyInvolvement, c.familyInvolvement)) return false;
+  if (filters.marriageTimeline && !neutral(filters.marriageTimeline) && !same(filters.marriageTimeline, c.marriageTimeline)) return false;
+  return true;
 }
 
 export function preferenceScore(profile: Profile, prefs: PartnerPreferences): PreferenceScore {
