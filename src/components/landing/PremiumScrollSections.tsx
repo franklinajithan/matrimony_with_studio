@@ -103,11 +103,11 @@ export function CompatibilityStory() {
 }
 
 const steps = [
-  ["Create your profile", "Share your details and preferences.", Home],
-  ["Set your preferences", "Tell CupidMatch what matters to you.", SlidersHorizontal],
-  ["Discover matches", "See compatible introductions.", Sparkles],
-  ["Send an interest", "Connect when it feels right.", Heart],
-  ["Connect and chat", "Start a meaningful conversation.", MessageCircle],
+  ["Create your profile", "Share your details and preferences.", Home, "/images/values/culture.jpg?v=3"],
+  ["Set your preferences", "Tell CupidMatch what matters to you.", SlidersHorizontal, "/images/values/goals.jpg?v=3"],
+  ["Discover matches", "See compatible introductions.", Sparkles, "/images/values/shared.jpg?v=3"],
+  ["Send an interest", "Connect when it feels right.", Heart, "/images/values/culture.jpg?v=3"],
+  ["Connect and chat", "Start a meaningful conversation.", MessageCircle, "/images/values/goals.jpg?v=3"],
 ] as const;
 
 export function StickyHowItWorks() {
@@ -127,7 +127,7 @@ export function StickyHowItWorks() {
               <div className="mx-auto mb-2 h-4 w-24 rounded-b-2xl bg-[#24152F]" />
               <div className="overflow-hidden rounded-[1.9rem] bg-[#FFF9FD]">
                 <div className="relative h-44 sm:h-52">
-                  <Image src="/images/values/shared.jpg?v=3" alt="" fill sizes="300px" className="object-cover" />
+                  <Image key={steps[active][3]} src={steps[active][3]} alt="" fill sizes="(min-width: 1024px) 430px, 300px" className="object-cover transition-[opacity,transform] duration-300 ease-out motion-safe:animate-[fadeIn_.3s_ease-out]" priority={active === 0} />
                   <div className="absolute inset-x-3 bottom-3 rounded-2xl bg-white/95 p-3 shadow-lg backdrop-blur">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-[#A078B0]">{active+1} / 5</p>
                     <p className="mt-1 font-serif text-lg font-semibold text-[#2A1845]">{steps[active][0]}</p>
