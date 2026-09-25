@@ -24,21 +24,39 @@ const countries=[
 
 export function GlobalCommunityStory(){
  const {ref,p}=useCardProgress(); const enter=clamp(p/.32);
+ const dots=[
+  [18,28],[22,32],[27,30],[31,36],[35,42],[41,31],[45,35],[49,40],[54,33],[58,37],[62,31],[67,35],[72,39],[76,31],[81,35],
+  [24,48],[29,52],[35,49],[42,53],[48,47],[55,51],[61,47],[68,52],[74,48],[80,52],[34,61],[42,64],[51,60],[60,64],[69,61]
+ ];
  return <section ref={ref} className="relative h-[190svh] bg-[#FFFDFB] [scroll-snap-align:start] [scroll-snap-stop:always]">
   <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-5 py-5">
-   <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_58%,rgba(216,180,254,.28),transparent_44%),radial-gradient(circle_at_12%_72%,rgba(244,114,182,.10),transparent_28%)]"/>
-   <svg className="pointer-events-none absolute left-1/2 top-[55%] h-[48%] w-[115%] -translate-x-1/2 -translate-y-1/2 text-[#C4B5FD] opacity-[.16]" viewBox="0 0 900 430" fill="currentColor" aria-hidden="true"><path d="M65 129l42-34 57 3 31 22 45-13 35 24-18 31-51 9-23 27-53-8-31-29-34-32zm234-42 38-35 53 10 23 34-13 31 31 21-21 37-39-2-18 41-31-15-2-44-32-26 11-52zm167 37 62-34 72 12 25 29 64 6 40 30-27 29-60-7-34 22-52-13-29 19-47-17-25-34 11-42zm179 116 47-17 49 18 28 38-22 35-53 6-38-22-11-58zM232 280l54-23 48 17 12 43-31 33-57-8-37-29 11-33z"/></svg>
-   <div className="relative mx-auto w-full max-w-xl text-center" style={{opacity:.55+enter*.45,transform:`translateY(${(1-enter)*28}px)`}}>
+   <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_58%,rgba(216,180,254,.25),transparent_45%),radial-gradient(circle_at_12%_72%,rgba(244,114,182,.10),transparent_28%)]"/>
+   <div className="relative mx-auto w-full max-w-xl text-center lg:max-w-6xl" style={{opacity:.55+enter*.45,transform:`translateY(${(1-enter)*28}px)`}}>
     <p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#A078B0]">Across borders, close to home</p>
-    <h2 className="mx-auto mt-3 font-serif text-[2.25rem] font-semibold leading-[1.05] text-[#2A1845]">A Global Community<br/><span className="text-[#C026D3]">Connected by Culture</span></h2>
-    <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[#6B5A78]">Sri Lankans around the world, finding meaningful connections.</p>
-    <div className="relative mx-auto mt-5 h-[430px] max-w-[390px]">
-     <div className="absolute left-1/2 top-1/2 h-[260px] w-[340px] -translate-x-1/2 -translate-y-1/2 rounded-[48%] border border-[#E9D5FF]/80"/>
-     <svg className="absolute inset-0 h-full w-full" viewBox="0 0 390 430" fill="none"><path d="M72 80 C140 120 135 185 195 215 C255 180 250 120 322 100 M70 335 C135 300 145 250 195 215 C255 260 260 315 325 340" pathLength="1" stroke="#C084FC" strokeWidth="2" strokeDasharray="6 8" style={{strokeDashoffset:(1-enter)*120}}/></svg>
-     {countries.map(([name,img],i)=>{const pos=["left-0 top-5","right-0 top-12","left-1 bottom-8","right-0 bottom-2"][i];const delay=i*.12;const x=clamp((enter-delay)/(1-delay));return <div key={name} className={`absolute ${pos} w-[120px] overflow-hidden rounded-[1.35rem] border-4 border-white bg-white shadow-[0_18px_45px_rgba(76,29,149,.14)]`} style={{opacity:x,transform:`translateY(${(1-x)*(i<2?-28:28)}px) scale(${.9+x*.1})`}}><div className="relative aspect-[4/3]"><Image src={img} alt={name} fill sizes="120px" className="object-cover"/></div><div className="flex items-center justify-center gap-1 py-2 text-xs font-bold text-[#2A1845]"><MapPin className="h-3.5 w-3.5 text-[#7C3AED]"/>{name}</div></div>})}
-     <div className="absolute left-1/2 top-1/2 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5EDFF]/95 px-4 py-5 shadow-lg backdrop-blur"><Heart className="mx-auto h-7 w-7 fill-[#D946EF] text-[#D946EF]"/><p className="mt-2 font-serif text-lg font-semibold text-[#2A1845]">CupidMatch</p><p className="mt-1 text-[10px] leading-4 text-[#6B5A78]">Culture connects us wherever life takes us.</p></div>
+    <h2 className="mx-auto mt-3 font-serif text-[2.25rem] font-semibold leading-[1.05] text-[#2A1845] lg:text-[4rem]">A Global Community<br/><span className="text-[#C026D3]">Connected by Culture</span></h2>
+    <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[#6B5A78] lg:max-w-xl lg:text-base">Sri Lankans around the world, finding meaningful connections.</p>
+    <div className="relative mx-auto mt-5 h-[430px] max-w-[390px] lg:mt-8 lg:h-[500px] lg:max-w-[900px]">
+     <svg className="absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 900 500" fill="none" aria-hidden="true">
+      <g fill="#E9D5FF" opacity=".62">
+       <path d="M62 139l48-42 76-8 62 28 54-9 45 29-18 42-72 15-42 46-79-11-48-39-26-51z"/>
+       <path d="M330 83l49-39 68 17 24 45-18 41 42 25-28 49-50-7-23 55-42-22-5-58-42-31 25-75z"/>
+       <path d="M489 126l83-46 92 15 35 37 83 7 53 39-35 38-75-7-43 31-65-18-41 26-58-24-36-43 7-55z"/>
+       <path d="M688 285l60-24 63 25 35 48-29 44-70 9-50-30-9-72z"/>
+       <path d="M246 303l65-29 63 22 17 52-42 43-72-10-48-37 17-41z"/>
+      </g>
+      <g fill="#8B5CF6">{dots.map(([x,y],i)=><circle key={i} cx={x*9} cy={y*5} r={i%4===0?4:2.8} opacity={.35+(i%5)*.1}/>)}</g>
+      <g stroke="#A855F7" strokeWidth="2" strokeLinecap="round" opacity={.72}>
+       <path d="M470 245 C385 178 292 155 205 146" strokeDasharray="3 9"/>
+       <path d="M470 245 C575 170 646 159 728 164" strokeDasharray="3 9"/>
+       <path d="M470 245 C383 317 304 354 226 363" strokeDasharray="3 9"/>
+       <path d="M470 245 C570 320 650 350 738 365" strokeDasharray="3 9"/>
+      </g>
+      {[ [205,146],[728,164],[226,363],[738,365] ].map(([x,y],i)=><g key={i}><circle cx={x} cy={y} r="11" fill="white" stroke="#7C3AED" strokeWidth="3"/><circle cx={x} cy={y} r="4" fill="#D946EF"/></g>)}
+     </svg>
+     {countries.map(([name,img],i)=>{const pos=["left-0 top-5","right-0 top-12","left-1 bottom-8","right-0 bottom-2"][i];const desktop=["lg:left-[8%] lg:top-[7%]","lg:right-[7%] lg:top-[11%]","lg:left-[10%] lg:bottom-[3%]","lg:right-[8%] lg:bottom-[1%]"][i];const delay=i*.12;const x=clamp((enter-delay)/(1-delay));return <div key={name} className={`absolute ${pos} ${desktop} w-[120px] overflow-hidden rounded-[1.35rem] border-4 border-white bg-white shadow-[0_18px_45px_rgba(76,29,149,.14)] lg:w-[155px]`} style={{opacity:x,transform:`translateY(${(1-x)*(i<2?-28:28)}px) scale(${.9+x*.1})`}}><div className="relative aspect-[4/3]"><Image src={img} alt={name} fill sizes="(min-width:1024px) 155px,120px" className="object-cover"/></div><div className="flex items-center justify-center gap-1 py-2 text-xs font-bold text-[#2A1845] lg:text-sm"><MapPin className="h-3.5 w-3.5 text-[#7C3AED]"/>{name}</div></div>})}
+     <div className="absolute left-1/2 top-1/2 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5EDFF]/95 px-4 py-5 shadow-lg backdrop-blur lg:w-44 lg:py-7"><Heart className="mx-auto h-7 w-7 fill-[#D946EF] text-[#D946EF]"/><p className="mt-2 font-serif text-lg font-semibold text-[#2A1845] lg:text-2xl">CupidMatch</p><p className="mt-1 text-[10px] leading-4 text-[#6B5A78] lg:text-xs">Culture connects us wherever life takes us.</p></div>
     </div>
-    <div className="mx-auto grid max-w-sm grid-cols-3 divide-x divide-[#E9D5FF]"><div><strong className="block text-xl text-[#7C3AED]">15+</strong><span className="text-[10px] text-[#6B5A78]">Countries</span></div><div><strong className="block text-lg text-[#7C3AED]">Worldwide</strong><span className="text-[10px] text-[#6B5A78]">Community</span></div><div><strong className="block text-xl text-[#7C3AED]">Real</strong><span className="text-[10px] text-[#6B5A78]">Connections</span></div></div>
+    <div className="mx-auto grid max-w-sm grid-cols-3 divide-x divide-[#E9D5FF] lg:max-w-xl"><div><strong className="block text-xl text-[#7C3AED] lg:text-3xl">15+</strong><span className="text-[10px] text-[#6B5A78] lg:text-xs">Countries</span></div><div><strong className="block text-lg text-[#7C3AED] lg:text-2xl">Worldwide</strong><span className="text-[10px] text-[#6B5A78] lg:text-xs">Community</span></div><div><strong className="block text-xl text-[#7C3AED] lg:text-3xl">Real</strong><span className="text-[10px] text-[#6B5A78] lg:text-xs">Connections</span></div></div>
    </div>
   </div>
  </section>
