@@ -58,27 +58,38 @@ export function CompatibilityStory() {
             Our smart matching helps you find people who share your important preferences.
           </p><div className="mx-auto mt-8 hidden max-w-sm items-center gap-3 rounded-2xl border border-[#EEE4F5] bg-white p-4 text-left shadow-sm lg:flex"><Heart className="h-6 w-6 shrink-0 text-[#7C3AED]"/><p className="text-sm leading-6 text-[#5C4A66]"><strong className="block text-[#2A1845]">More than just a profile.</strong>A better match for your future.</p></div></div>
 
-          <div className="relative mx-auto mt-5 h-[300px] w-[300px] max-w-full sm:mt-8 sm:h-[330px] sm:w-[330px] lg:mt-0 lg:h-[540px] lg:w-[540px]">
-            <div
-              className="absolute left-1/2 top-1/2 h-[178px] w-[178px] lg:h-[285px] lg:w-[285px] -translate-x-1/2 -translate-y-1/2 rounded-full p-[11px] shadow-[0_18px_50px_rgba(124,58,237,.12)]"
-              style={{ background: `conic-gradient(#7C3AED 0deg, #D946EF ${reveal*331}deg, #F1E8F8 ${reveal*331}deg 360deg)` }}
-            >
-              <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-white">
-                <span className="font-serif text-5xl font-semibold text-[#2A1845]">{score}%</span>
-                <span className="mt-1 text-xs font-semibold text-[#6B5A78]">Compatibility</span>
+          <div className="story-media relative mx-auto mt-5 h-[320px] w-full max-w-[340px] sm:mt-8 sm:h-[350px] lg:mt-0 lg:h-[570px] lg:max-w-[620px]">
+            <div className="absolute inset-[8%] rounded-[3rem] bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 shadow-[0_30px_80px_rgba(124,58,237,.12)] ring-1 ring-violet-100 lg:inset-[5%] lg:rounded-[4rem]" />
+            <div className="absolute left-1/2 top-1/2 z-10 w-[210px] -translate-x-1/2 -translate-y-1/2 rounded-[2rem] bg-white p-5 text-center shadow-[0_22px_60px_rgba(76,29,149,.15)] ring-1 ring-violet-100 lg:w-[300px] lg:rounded-[2.5rem] lg:p-8">
+              <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#A078B0] lg:text-xs">Your match</p>
+              <div className="mx-auto mt-3 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-500 p-[5px] shadow-lg lg:h-36 lg:w-36">
+                <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-white">
+                  <span className="font-serif text-4xl font-semibold text-[#2A1845] lg:text-5xl">{score}%</span>
+                  <span className="text-[10px] font-semibold text-[#6B5A78] lg:text-xs">compatible</span>
+                </div>
               </div>
+              <p className="mt-3 font-serif text-lg font-semibold text-[#2A1845] lg:text-2xl">Strong foundations</p>
+              <p className="mt-1 text-[10px] leading-4 text-[#75647F] lg:text-xs">Built from the preferences that matter to you.</p>
             </div>
             {items.map(([Icon,label],i) => {
-              const angle = (-90 + i*60) * Math.PI/180;
-              const radius = typeof window !== "undefined" && window.innerWidth >= 1024 ? 215 : 139;
+              const desktop = [
+                "lg:left-[2%] lg:top-[10%]", "lg:right-[2%] lg:top-[10%]", "lg:right-[-2%] lg:top-[42%]",
+                "lg:right-[6%] lg:bottom-[7%]", "lg:left-[6%] lg:bottom-[7%]", "lg:left-[-2%] lg:top-[42%]",
+              ][i];
+              const mobile = [
+                "left-[1%] top-[5%]", "right-[1%] top-[5%]", "right-[-2%] top-[42%]",
+                "right-[4%] bottom-[3%]", "left-[4%] bottom-[3%]", "left-[-2%] top-[42%]",
+              ][i];
               return (
-                <div key={label} className="absolute flex w-20 flex-col items-center gap-1 text-[10px] font-semibold lg:w-28 lg:gap-2 lg:text-sm text-[#5C4A66] transition-all duration-200"
-                  style={{ left: `calc(50% + ${Math.cos(angle)*radius}px - ${typeof window !== "undefined" && window.innerWidth >= 1024 ? 56 : 40}px)`, top: `calc(50% + ${Math.sin(angle)*radius}px - ${typeof window !== "undefined" && window.innerWidth >= 1024 ? 36 : 24}px)`, opacity: clamp((reveal-i*.08)*1.8) }}>
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-50 ring-1 ring-violet-100 lg:h-14 lg:w-14 lg:shadow-[0_10px_25px_rgba(124,58,237,.10)]"><Icon className="h-5 w-5 text-[#7C3AED] lg:h-8 lg:w-8" strokeWidth={1.7} /></span>
-                  {label}
+                <div key={label} className={`story-item absolute z-20 ${mobile} ${desktop} flex min-w-[88px] items-center gap-2 rounded-2xl border border-violet-100 bg-white px-2.5 py-2 shadow-[0_12px_30px_rgba(76,29,149,.10)] lg:min-w-[142px] lg:gap-3 lg:rounded-3xl lg:px-4 lg:py-3`} style={{opacity:clamp((reveal-i*.06)*2),animationDelay:`${i*55}ms`}}>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-[#7C3AED] lg:h-11 lg:w-11 lg:rounded-2xl"><Icon className="h-4 w-4 lg:h-6 lg:w-6" strokeWidth={1.8}/></span>
+                  <span className="text-[10px] font-semibold text-[#4F3D5D] lg:text-sm">{label}</span>
                 </div>
               );
             })}
+            <svg className="pointer-events-none absolute inset-[12%] h-[76%] w-[76%] text-fuchsia-300/70" viewBox="0 0 400 400" fill="none" aria-hidden="true">
+              <path d="M200 60C120 60 60 120 60 200s60 140 140 140 140-60 140-140S280 60 200 60Z" stroke="currentColor" strokeWidth="1.5" strokeDasharray="5 10"/>
+            </svg>
           </div>
 
           <div className="mx-auto mt-1 flex max-w-[330px] lg:hidden items-center gap-3 rounded-[1.4rem] border border-[#EEE4F5] bg-white/90 p-3.5 text-left shadow-[0_12px_35px_rgba(76,29,149,.08)]">
