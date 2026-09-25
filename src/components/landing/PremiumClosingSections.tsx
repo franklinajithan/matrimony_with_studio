@@ -36,21 +36,29 @@ export function GlobalCommunityStory(){
     <h2 className="mx-auto mt-3 font-serif text-[2.25rem] font-semibold leading-[1.05] text-[#2A1845] lg:text-[4rem]">A Global Community<br/><span className="text-[#C026D3]">Connected by Culture</span></h2>
     <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[#6B5A78] lg:max-w-xl lg:text-base">Sri Lankans around the world, finding meaningful connections.</p>
     <div className="relative mx-auto mt-5 h-[430px] max-w-[390px] lg:mt-8 lg:h-[500px] lg:max-w-[900px]">
-     <div className="absolute left-1/2 top-1/2 h-[310px] w-[310px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#E9D5FF]/70 bg-white/35 shadow-[0_0_80px_rgba(168,85,247,.12)] lg:h-[410px] lg:w-[410px]">
-      <div className="absolute inset-[12%] rounded-full border border-dashed border-[#C4B5FD]/80"/>
-      <div className="absolute inset-[27%] rounded-full border border-[#E9D5FF] bg-[#FAF5FF]/75"/>
-      {Array.from({length:18}).map((_,i)=>{const angle=(i/18)*Math.PI*2;const radius=43;const left=50+Math.cos(angle)*radius;const top=50+Math.sin(angle)*radius;return <span key={i} className="absolute h-1.5 w-1.5 rounded-full bg-[#A855F7]/45" style={{left:`${left}%`,top:`${top}%`}}/>})}
-     </div>
      <svg className="absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 900 500" fill="none" aria-hidden="true">
-      <g stroke="#A855F7" strokeWidth="2.2" strokeLinecap="round" opacity=".65">
-       <path d="M450 250 C360 174 270 148 180 142" strokeDasharray="2 11"/>
-       <path d="M450 250 C558 172 652 154 758 164" strokeDasharray="2 11"/>
-       <path d="M450 250 C355 326 270 358 184 370" strokeDasharray="2 11"/>
-       <path d="M450 250 C566 326 658 356 760 370" strokeDasharray="2 11"/>
+      <defs>
+       <pattern id="cmMapDots" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="2.2" cy="2.2" r="1.75" fill="#A78BFA"/></pattern>
+       <filter id="cmMapGlow" x="-20%" y="-30%" width="140%" height="160%"><feGaussianBlur stdDeviation="18"/></filter>
+      </defs>
+      <ellipse cx="450" cy="250" rx="340" ry="145" fill="#C084FC" opacity=".10" filter="url(#cmMapGlow)"/>
+      <g fill="url(#cmMapDots)" opacity=".78">
+       <path d="M72 127l30-26 40-14 38 7 24-15 42 10 25 23 39 5 23 20-9 24-31 12-13 27-34 9-22-10-20 18-34-7-18-21-35-8-27-25-20-17 22-32z"/>
+       <path d="M245 177l27 8 23 31-2 38-17 29-9 44-22 48-21-14-8-37-15-31 10-39-10-35 19-28 25-14z"/>
+       <path d="M359 103l36-25 54-7 40 16 46-10 43 16 38-6 35 18 49 2 43 18 37 2 30 20-15 24-43 8-27 22-40-7-28 20-40-5-31 23-36-11-25 12-29-17-40 5-33-22-35-8-23-27 18-25 46-13z"/>
+       <path d="M497 194l33 12 23 29-5 35-20 34-12 48-28 55-26-18-6-44-17-31 9-43-13-35 20-29 42-13z"/>
+       <path d="M671 226l20 8 13 20-7 18-19-4-11-22 4-20z"/>
+       <path d="M714 256l17 5 8 18-9 16-16-6-6-18 6-15z"/>
+       <path d="M743 322l35-18 44 5 31 28-6 35-35 21-44-8-30-30 5-33z"/>
+       <path d="M845 352l18 6 10 18-10 13-18-7-6-17 6-13z"/>
       </g>
-      <g fill="#C026D3">
-       <circle cx="180" cy="142" r="5"/><circle cx="758" cy="164" r="5"/><circle cx="184" cy="370" r="5"/><circle cx="760" cy="370" r="5"/>
+      <g stroke="#9333EA" strokeWidth="2" strokeLinecap="round" opacity=".58">
+       <path d="M450 250 C360 177 273 151 183 145" strokeDasharray="2 10"/>
+       <path d="M450 250 C560 176 651 160 756 167" strokeDasharray="2 10"/>
+       <path d="M450 250 C360 322 276 355 190 368" strokeDasharray="2 10"/>
+       <path d="M450 250 C563 323 660 354 756 368" strokeDasharray="2 10"/>
       </g>
+      {[ [183,145],[756,167],[190,368],[756,368] ].map(([x,y],i)=><g key={i}><circle cx={x} cy={y} r="8" fill="#FFFDFB" stroke="#7C3AED" strokeWidth="2"/><circle cx={x} cy={y} r="3" fill="#D946EF"/></g>)}
      </svg>
      {countries.map(([name,img],i)=>{const pos=["left-0 top-5","right-0 top-12","left-1 bottom-8","right-0 bottom-2"][i];const desktop=["lg:left-[8%] lg:top-[7%]","lg:right-[7%] lg:top-[11%]","lg:left-[10%] lg:bottom-[3%]","lg:right-[8%] lg:bottom-[1%]"][i];const delay=i*.12;const x=clamp((enter-delay)/(1-delay));return <div key={name} className={`absolute ${pos} ${desktop} w-[120px] overflow-hidden rounded-[1.35rem] border-4 border-white bg-white shadow-[0_18px_45px_rgba(76,29,149,.14)] lg:w-[155px]`} style={{opacity:x,transform:`translateY(${(1-x)*(i<2?-28:28)}px) scale(${.9+x*.1})`}}><div className="relative aspect-[4/3]"><Image src={img} alt={name} fill sizes="(min-width:1024px) 155px,120px" className="object-cover"/></div><div className="flex items-center justify-center gap-1 py-2 text-xs font-bold text-[#2A1845] lg:text-sm"><MapPin className="h-3.5 w-3.5 text-[#7C3AED]"/>{name}</div></div>})}
      <div className="absolute left-1/2 top-1/2 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5EDFF]/95 px-4 py-5 shadow-lg backdrop-blur lg:w-44 lg:py-7"><Heart className="mx-auto h-7 w-7 fill-[#D946EF] text-[#D946EF]"/><p className="mt-2 font-serif text-lg font-semibold text-[#2A1845] lg:text-2xl">CupidMatch</p><p className="mt-1 text-[10px] leading-4 text-[#6B5A78] lg:text-xs">Culture connects us wherever life takes us.</p></div>
