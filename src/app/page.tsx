@@ -13,7 +13,7 @@ export default async function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#FBF8F4]">
       <Navbar />
-      <main className="flex-grow">
+      <main className="flex-grow homepage-card-flow">
         <PremiumOpeningStory />
         <CompatibilityStory />
         <StickyHowItWorks />
