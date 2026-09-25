@@ -14,7 +14,13 @@ export const brand = {
   border: "#EADFD6",
 } as const;
 
-export const HERO_IMAGE = "/images/hero-welcome.png?v=3";
+export const HERO_SLIDES = [
+  "/images/hero-slide-1.png?v=1",
+  "/images/hero-slide-2.png?v=1",
+] as const;
+
+/** @deprecated Prefer HERO_SLIDES — kept for any remaining single-image usages */
+export const HERO_IMAGE = HERO_SLIDES[0];
 
 export const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4B164C] focus-visible:ring-offset-2";

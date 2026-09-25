@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Heart, Shield, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { HERO_SLIDES } from "@/components/landing/brand";
 
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 const ease=(n:number)=>{const x=clamp(n);return x*x*(3-2*x)};
@@ -27,12 +28,77 @@ function useProgress(){
 }
 const phase=(p:number,a:number,b:number)=>ease((p-a)/(b-a));
 
+function HeroCarousel({
+  className,
+  priority,
+  sizes,
+}: {
+  className?: string;
+  priority?: boolean;
+  sizes: string;
+}) {
+  const [slide, setSlide] = useState(0);
+  const paused = useRef(false);
+
+  useEffect(() => {
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) return;
+    const id = window.setInterval(() => {
+      if (paused.current) return;
+      setSlide((s) => (s + 1) % HERO_SLIDES.length);
+    }, 5200);
+    return () => window.clearInterval(id);
+  }, []);
+
+  return (
+    <div
+      className={`relative overflow-hidden ${className ?? ""}`}
+      onMouseEnter={() => { paused.current = true; }}
+      onMouseLeave={() => { paused.current = false; }}
+      onFocus={() => { paused.current = true; }}
+      onBlur={() => { paused.current = false; }}
+    >
+      {HERO_SLIDES.map((src, i) => (
+        <div
+          key={src}
+          className="absolute inset-0 transition-opacity duration-700 ease-out"
+          style={{ opacity: i === slide ? 1 : 0 }}
+          aria-hidden={i !== slide}
+        >
+          <Image
+            src={src}
+            alt={i === 0 ? "Happy couple sharing a warm moment" : "Engaged couple celebrating their connection"}
+            fill
+            priority={priority && i === 0}
+            quality={100}
+            sizes={sizes}
+            className="object-cover object-center"
+          />
+        </div>
+      ))}
+      <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2" role="tablist" aria-label="Hero photos">
+        {HERO_SLIDES.map((_, i) => (
+          <button
+            key={i}
+            type="button"
+            role="tab"
+            aria-selected={i === slide}
+            aria-label={`Show photo ${i + 1}`}
+            onClick={() => setSlide(i)}
+            className={`h-2 rounded-full transition-all ${i === slide ? "w-6 bg-white" : "w-2 bg-white/55 hover:bg-white/80"}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function PremiumOpeningStory(){
  const {ref,p}=useProgress();
  const heroOut=phase(p,.035,.105), tagline=phase(p,.07,.18), cards=phase(p,.15,.30), connect=phase(p,.27,.46);
  const profiles=[
   {name:"Nila, 27",place:"London, UK",src:"/images/values/culture.jpg?v=3"},
-  {name:"Tharshini, 27",place:"London, UK",src:"/images/values/shared.jpg?v=3"},
+  {name:"Tharshini, 27",place:"London, UK",src:HERO_SLIDES[0]},
   {name:"Kavya, 28",place:"Toronto, Canada",src:"/images/values/goals.jpg?v=3"},
  ];
  return <section ref={ref} className="relative h-[500svh] lg:h-[285svh] bg-[#FFFDFB] [scroll-snap-align:start] [scroll-snap-stop:always]">
@@ -45,14 +111,24 @@ export function PremiumOpeningStory(){
     <p className="mt-3 max-w-sm text-[12px] leading-5 lg:mt-6 lg:max-w-lg lg:text-base lg:leading-7 text-[#65546F]">A trusted matrimony platform for the Sri Lankan community in the UK, Canada, Australia and beyond.</p>
     <div className="mt-4 flex justify-between px-2 lg:mt-8 lg:max-w-lg lg:px-0 lg:justify-start lg:gap-12">{[[Users,"Verified\nProfiles"],[Shield,"Safe & Secure"],[Heart,"Find\nCompatibility"]].map(([Icon,label]:any,i)=><div key={i} className="w-24 text-center" style={{opacity:phase(p,.005+i*.012,.06+i*.012),transform:`translateY(${(1-phase(p,.005+i*.012,.06+i*.012))*12}px)`}}><span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#F3E8FF] text-[#7C3AED]"><Icon className="h-5 w-5"/></span><span className="mt-2 block whitespace-pre-line text-[10px] font-semibold leading-3 text-[#4C3A5C]">{label}</span></div>)}</div>
     <div className="mt-4 grid gap-2 lg:mt-9 lg:max-w-lg lg:grid-cols-2 lg:gap-3"><Link href="/signup" className="flex h-11 items-center justify-center rounded-full bg-[#7C3AED] text-sm font-semibold text-white shadow-lg">Create Your Profile <ArrowRight className="ml-1 h-4 w-4"/></Link><Link href="/discover" className="flex h-11 items-center justify-center rounded-full border border-violet-200 bg-white text-sm font-semibold text-violet-700">Explore Matches</Link></div></div>
-    <div className="relative mt-4 min-h-0 flex-1 overflow-hidden rounded-t-[2rem] shadow-[0_18px_45px_rgba(76,29,149,.16)] lg:mt-0 lg:h-[76vh] lg:min-h-[580px] lg:flex-none lg:rounded-[2.75rem] lg:border lg:border-white" style={{transform:`translate3d(0,${heroOut*38}px,0) scale(${1-heroOut*.08})`}}><Image src="/images/values/shared.jpg?v=3" alt="" fill priority sizes="(min-width:1024px) 48vw, 430px" className="object-cover object-center lg:scale-[1.02]"/></div>
+    <div className="relative mt-4 min-h-0 flex-1 lg:mt-0 lg:h-[76vh] lg:min-h-[580px] lg:flex-none" style={{transform:`translate3d(0,${heroOut*38}px,0) scale(${1-heroOut*.08})`}}>
+      <HeroCarousel
+        className="h-full min-h-[280px] rounded-t-[2rem] shadow-[0_18px_45px_rgba(76,29,149,.16)] lg:rounded-[2.75rem] lg:border lg:border-white"
+        priority
+        sizes="(min-width:1024px) 55vw, 100vw"
+      />
+    </div>
+
    </div>
 
    <div className="absolute inset-0 flex items-center justify-center px-5" style={{opacity:Math.min(1,tagline*1.7)*(1-phase(p,.18,.25)),transform:`translate3d(0,${(1-tagline)*28-phase(p,.18,.25)*-12}px,0)`}}>
     <div className="relative h-[82svh] w-full max-w-[390px] lg:h-[76vh] lg:max-w-6xl">
      <div className="absolute left-2 top-12 z-10 font-script text-[3.1rem] lg:left-10 lg:top-[26%] lg:text-[6rem] leading-[.9] text-[#C026D3]">Good people<span className="ml-8 block">Brighter futures</span></div>
      <svg className="absolute left-2 top-36 z-10 h-32 w-[95%]" viewBox="0 0 340 120" fill="none"><path d="M8 35 C72 98 120 10 181 53 C235 91 275 31 328 63" pathLength="1" stroke="#D946EF" strokeWidth="2.5" strokeLinecap="round" style={{strokeDasharray:1,strokeDashoffset:1-tagline}}/><path d="M307 57c-10-14-27 2 0 23 27-21 10-37 0-23Z" fill="#D946EF"/></svg>
-     <div className="absolute bottom-0 right-0 h-[62svh] w-[88%] lg:h-[74vh] lg:w-[52%] overflow-hidden rounded-t-[7rem] rounded-b-[2.4rem] shadow-2xl" style={{transform:`translateY(${(1-tagline)*50}px) scale(${.94+tagline*.06})`}}><Image src="/images/values/culture.jpg?v=3" alt="" fill sizes="390px" className="object-cover"/></div>
+     <div className="absolute bottom-0 right-0 h-[62svh] w-[88%] lg:h-[74vh] lg:w-[52%] overflow-hidden rounded-t-[7rem] rounded-b-[2.4rem] shadow-2xl" style={{transform:`translateY(${(1-tagline)*50}px) scale(${.94+tagline*.06})`}}>
+       <Image src={HERO_SLIDES[1]} alt="Engaged couple celebrating their connection" fill quality={100} sizes="(min-width:1024px) 48vw, 390px" className="object-cover object-center"/>
+     </div>
+
     </div>
    </div>
 

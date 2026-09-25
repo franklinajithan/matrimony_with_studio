@@ -105,7 +105,7 @@ export function ModernHero() {
                   alt="Welcome portrait — woman in traditional attire greeting with namaste"
                   fill
                   priority
-                  quality={95}
+                  quality={100}
                   sizes="(max-width: 1024px) 90vw, 800px"
                   className="object-cover object-[center_20%]"
                 />
