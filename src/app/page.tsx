@@ -2,18 +2,16 @@ import { redirect } from "next/navigation";
 import { LandingHero } from "@/components/landing/LandingHero";
 import { ConnectionScrollStory } from "@/components/landing/ConnectionScrollStory";
 import { CompatibilityStory, StickyHowItWorks } from "@/components/landing/PremiumScrollSections";
+import { GlobalCommunityStory, PremiumStories, PremiumFinalCta } from "@/components/landing/PremiumClosingSections";
 import {
   TrustStrip,
   WhyCupidMatch,
-  InternationalRelationships,
   FeatureGrid,
   DiscoveryPreview,
   PrivacySection,
   FamilyCirclePreview,
-  SuccessStoriesPreview,
   PricingTeaser,
   FaqSection,
-  FinalCta,
 } from "@/components/landing/LandingSections";
 import { Navbar } from "@/components/navigation/Navbar";
 import { Footer } from "@/components/navigation/Footer";
@@ -36,15 +34,15 @@ export default async function HomePage() {
         <CompatibilityStory />
         <StickyHowItWorks />
         <WhyCupidMatch />
-        <InternationalRelationships />
+        <GlobalCommunityStory />
         <FeatureGrid />
         <DiscoveryPreview />
         <PrivacySection />
         <FamilyCirclePreview />
-        <SuccessStoriesPreview />
+        <PremiumStories />
         <PricingTeaser />
         <FaqSection />
-        <FinalCta />
+        <PremiumFinalCta />
       </main>
       <Footer />
     </div>
