@@ -29,13 +29,13 @@ const phase=(p:number,a:number,b:number)=>ease((p-a)/(b-a));
 
 export function PremiumOpeningStory(){
  const {ref,p}=useProgress();
- const heroOut=phase(p,.06,.16), tagline=phase(p,.18,.30), cards=phase(p,.39,.53), connect=phase(p,.64,.78);
+ const heroOut=phase(p,.035,.11), tagline=phase(p,.13,.22), cards=phase(p,.31,.41), connect=phase(p,.53,.64);
  const profiles=[
   {name:"Nila, 27",place:"London, UK",src:"/images/values/culture.jpg?v=3"},
   {name:"Tharshini, 27",place:"London, UK",src:"/images/values/shared.jpg?v=3"},
   {name:"Kavya, 28",place:"Toronto, Canada",src:"/images/values/goals.jpg?v=3"},
  ];
- return <section ref={ref} className="relative h-[500svh] lg:h-[380svh] bg-[#FFFDFB] [scroll-snap-align:start] [scroll-snap-stop:always]">
+ return <section ref={ref} className="relative h-[500svh] lg:h-[285svh] bg-[#FFFDFB] [scroll-snap-align:start] [scroll-snap-stop:always]">
   <div className="sticky top-0 h-[100svh] overflow-hidden">
    <div className="pointer-events-none absolute -left-32 top-24 h-80 w-80 rounded-full bg-fuchsia-100/70 blur-3xl"/><div className="pointer-events-none absolute -right-32 bottom-24 h-80 w-80 rounded-full bg-violet-100/80 blur-3xl"/>
 
