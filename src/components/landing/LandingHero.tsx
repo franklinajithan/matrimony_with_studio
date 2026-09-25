@@ -134,6 +134,18 @@ export function LandingHero() {
         <div className="relative mx-auto w-full max-w-[560px] will-change-transform transition-[opacity,transform] delay-150 duration-1000 ease-out lg:max-w-none lg:pt-1" style={{ opacity: (heroEntered ? 1 : 0) * (1-scrollProgress*.32), transform: `translate3d(0,${heroEntered ? scrollProgress * 30 : 28}px,0) scale(${heroEntered ? 1-scrollProgress*0.065 : .97})` }}>
           <figure className="relative overflow-hidden rounded-[1.75rem] shadow-[0_22px_50px_rgba(74,32,110,0.18)] lg:rounded-[2rem] motion-safe:[animation:heroBreath_7s_ease-in-out_infinite]">
             <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
+              <div className="cupid-orbit absolute inset-[5%] rounded-[2.4rem]">
+                <span className="cupid-flyer absolute left-0 top-1/2 flex h-12 w-12 items-center justify-center rounded-full border border-fuchsia-200 bg-white/90 shadow-[0_8px_24px_rgba(192,38,211,.28)]">
+                  <Heart className="h-6 w-6 fill-fuchsia-500 text-fuchsia-500" />
+                  <ArrowRight className="absolute -right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-violet-600" strokeWidth={2.4}/>
+                </span>
+              </div>
+              <div className="cupid-ribbon absolute left-[5%] right-[5%] top-[47%] h-[90px]">
+                <svg viewBox="0 0 700 90" className="h-full w-full overflow-visible">
+                  <path d="M5 60 C120 5 220 84 340 42 S555 8 695 50" fill="none" stroke="rgba(255,255,255,.92)" strokeWidth="7" strokeLinecap="round"/>
+                  <path d="M5 60 C120 5 220 84 340 42 S555 8 695 50" fill="none" stroke="#d946ef" strokeWidth="3" strokeLinecap="round" strokeDasharray="10 12"/>
+                </svg>
+              </div>
               <Heart className="hero-particle hero-particle-a absolute left-[7%] top-[76%] h-6 w-6 fill-pink-400/65 text-pink-400/65" />
               <Heart className="hero-particle hero-particle-b absolute left-[30%] top-[88%] h-4 w-4 fill-fuchsia-400/55 text-fuchsia-400/55" />
               <Heart className="hero-particle hero-particle-c absolute right-[8%] top-[72%] h-7 w-7 fill-pink-300/60 text-pink-300/60" />
@@ -141,7 +153,7 @@ export function LandingHero() {
             </div>
             <div className="pointer-events-none absolute -right-10 -top-12 z-20 h-32 w-32 rounded-full bg-fuchsia-300/20 blur-2xl motion-safe:animate-pulse" />
             <div className="pointer-events-none absolute left-[8%] top-[12%] z-20 h-2 w-2 rounded-full bg-white/90 shadow-[0_0_18px_5px_rgba(255,255,255,.7)] motion-safe:animate-pulse" />
-            <div className="pointer-events-none absolute left-[-8%] top-[48%] z-40 w-[116%] opacity-100">
+            <div className="hidden pointer-events-none absolute left-[-8%] top-[48%] z-40 w-[116%] opacity-100">
               <svg viewBox="0 0 800 120" className="h-auto w-full overflow-visible">
                 <path d="M8 80 C150 12 250 104 390 54 S620 24 782 64" fill="none" stroke="rgba(217,70,239,.92)" strokeWidth="3.2" strokeLinecap="round" strokeDasharray="7 10" className="motion-safe:[animation:cupidDash_8s_linear_infinite]" />
                 <g className="motion-safe:[animation:cupidFly_8s_ease-in-out_infinite]">
@@ -168,6 +180,26 @@ export function LandingHero() {
         </div>
       </div>
       <style jsx>{`
+        @keyframes cupidOrbit {
+          0% { transform: translate(0,0) rotate(-8deg); }
+          25% { transform: translate(470px,-180px) rotate(5deg); }
+          50% { transform: translate(520px,170px) rotate(12deg); }
+          75% { transform: translate(100px,210px) rotate(-5deg); }
+          100% { transform: translate(0,0) rotate(-8deg); }
+        }
+        @keyframes cupidRibbon { to { stroke-dashoffset: -220; } }
+        .cupid-flyer { animation: cupidOrbit 8s cubic-bezier(.45,.05,.55,.95) infinite; }
+        .cupid-ribbon path:last-child { animation: cupidRibbon 4s linear infinite; }
+        @media (max-width: 767px) {
+          @keyframes cupidOrbit {
+            0% { transform: translate(0,0) rotate(-8deg); }
+            25% { transform: translate(250px,-80px) rotate(5deg); }
+            50% { transform: translate(270px,115px) rotate(12deg); }
+            75% { transform: translate(45px,145px) rotate(-5deg); }
+            100% { transform: translate(0,0) rotate(-8deg); }
+          }
+          .cupid-flyer { width: 2.5rem; height: 2.5rem; }
+        }
         @keyframes heroBreath { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-5px) scale(1.006); } }
         @keyframes cupidMarkFloat { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-4px) rotate(2deg); } }
         @keyframes cupidDash { to { stroke-dashoffset: -136; } }
