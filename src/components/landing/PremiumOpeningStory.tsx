@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Heart, Shield, Sparkles, Users } from "lucide-react";
+import { ArrowRight, Heart, Shield, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { HERO_SLIDES } from "@/components/landing/brand";
 
@@ -76,21 +76,6 @@ function HeroCarousel({
           />
         </div>
       ))}
-      <div className="pointer-events-none absolute inset-0 z-20">
-        <div className="absolute inset-[5%] rounded-[2.4rem] border border-fuchsia-300/35 shadow-[inset_0_0_35px_rgba(217,70,239,.12)]" />
-        <div className="cupid-flyer absolute left-[5%] top-[64%] flex h-14 w-14 items-center justify-center rounded-full border-2 border-white/90 bg-white/95 shadow-[0_10px_35px_rgba(192,38,211,.45)]">
-          <Heart className="h-7 w-7 fill-fuchsia-500 text-fuchsia-500" />
-          <ArrowRight className="absolute -right-4 h-6 w-6 text-violet-700" strokeWidth={2.8}/>
-        </div>
-        <Heart className="hero-heart hero-heart-1 absolute bottom-[8%] left-[12%] h-7 w-7 fill-pink-400 text-pink-400" />
-        <Heart className="hero-heart hero-heart-2 absolute bottom-[5%] left-[42%] h-5 w-5 fill-fuchsia-300 text-fuchsia-300" />
-        <Heart className="hero-heart hero-heart-3 absolute bottom-[10%] right-[12%] h-8 w-8 fill-pink-300 text-pink-300" />
-        <Sparkles className="hero-spark absolute right-[12%] top-[10%] h-9 w-9 text-white drop-shadow-[0_0_12px_rgba(255,255,255,1)]" />
-        <svg viewBox="0 0 700 130" className="absolute left-[3%] top-[45%] h-[130px] w-[94%] overflow-visible">
-          <path d="M8 88 C120 5 230 125 350 60 S570 18 692 76" fill="none" stroke="rgba(255,255,255,.9)" strokeWidth="8" strokeLinecap="round"/>
-          <path className="cupid-trail" d="M8 88 C120 5 230 125 350 60 S570 18 692 76" fill="none" stroke="#D946EF" strokeWidth="4" strokeLinecap="round" strokeDasharray="12 14"/>
-        </svg>
-      </div>
       <div className="absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 gap-2" role="tablist" aria-label="Hero photos">
         {HERO_SLIDES.map((_, i) => (
           <button
@@ -105,35 +90,17 @@ function HeroCarousel({
         ))}
       </div>
       <style jsx>{`
-        @keyframes cupidFly {
-          0%,100% { transform:translate3d(0,0,0) rotate(-8deg); }
-          25% { transform:translate3d(390px,-190px,0) rotate(5deg); }
-          50% { transform:translate3d(440px,90px,0) rotate(10deg); }
-          75% { transform:translate3d(80px,130px,0) rotate(-4deg); }
-        }
-        @keyframes trailMove { to { stroke-dashoffset:-260; } }
-        @keyframes heartFloat {
-          0% { transform:translateY(20px) scale(.75); opacity:0; }
-          20% { opacity:.9; }
-          100% { transform:translateY(-250px) translateX(35px) scale(1.25); opacity:0; }
-        }
-        @keyframes sparkle { 0%,100%{transform:scale(.7) rotate(0);opacity:.35} 50%{transform:scale(1.25) rotate(25deg);opacity:1} }
-        .cupid-flyer{animation:cupidFly 7s ease-in-out infinite}
-        .cupid-trail{animation:trailMove 3s linear infinite}
-        .hero-heart{animation:heartFloat 6s ease-in-out infinite}
-        .hero-heart-2{animation-delay:-2s;animation-duration:7.5s}
-        .hero-heart-3{animation-delay:-4s;animation-duration:8.5s}
-        .hero-spark{animation:sparkle 2.4s ease-in-out infinite}
-        @media(max-width:767px){
-          @keyframes cupidFly {
-            0%,100% { transform:translate3d(0,0,0) rotate(-8deg); }
-            25% { transform:translate3d(230px,-80px,0) rotate(5deg); }
-            50% { transform:translate3d(250px,45px,0) rotate(10deg); }
-            75% { transform:translate3d(45px,70px,0) rotate(-4deg); }
-          }
-          .cupid-flyer{height:2.75rem;width:2.75rem}
-        }
-        @media(prefers-reduced-motion:reduce){.cupid-flyer,.cupid-trail,.hero-heart,.hero-spark{animation:none}}
+        @keyframes bowDraw { 0%,12% { stroke-dasharray:180; stroke-dashoffset:180; opacity:.35 } 32%,100% { stroke-dasharray:180; stroke-dashoffset:0; opacity:1 } }
+        @keyframes stringDraw { 0%,22% { stroke-dasharray:100; stroke-dashoffset:100 } 40%,100% { stroke-dasharray:100; stroke-dashoffset:0 } }
+        @keyframes arrowShoot { 0%,42% { transform:translateX(-30px); opacity:0 } 55% { transform:translateX(7px); opacity:1 } 62%,88% { transform:translateX(0); opacity:1 } 100% { transform:translateX(18px); opacity:0 } }
+        @keyframes heartPop { 0%,48% { transform:scale(0) rotate(-18deg); opacity:0 } 62% { transform:scale(1.25) rotate(5deg); opacity:1 } 72%,90% { transform:scale(1); opacity:1 } 100% { transform:scale(.85); opacity:0 } }
+        @keyframes signatureFloat { 0%,100% { transform:translateY(1px) rotate(-2deg) } 50% { transform:translateY(-5px) rotate(2deg) } }
+        .cupid-signature{animation:signatureFloat 4s ease-in-out infinite}
+        .cupid-bow{animation:bowDraw 5.2s ease-in-out infinite}
+        .cupid-string{animation:stringDraw 5.2s ease-in-out infinite}
+        .cupid-arrow{transform-origin:center;animation:arrowShoot 5.2s cubic-bezier(.2,.8,.2,1) infinite}
+        .cupid-heart-pop{transform-origin:72px 27px;animation:heartPop 5.2s ease-out infinite}
+        @media(prefers-reduced-motion:reduce){.cupid-signature,.cupid-bow,.cupid-string,.cupid-arrow,.cupid-heart-pop{animation:none}}
       `}</style>
     </div>
   );
@@ -150,7 +117,7 @@ export function PremiumOpeningStory(){
   <article className="homepage-story-card grid min-h-[calc(100svh-7rem)] items-center gap-8 overflow-hidden px-5 py-6 lg:grid-cols-[minmax(440px,.9fr)_minmax(560px,1.1fr)] lg:gap-16 lg:px-[max(5vw,64px)] lg:py-8 xl:mx-auto xl:max-w-[1500px]">
    <div className="story-copy lg:max-w-[620px]">
     <p className="text-[10px] font-bold uppercase leading-5 tracking-[.27em] text-[#A078B0] lg:text-xs">Sri Lankan matchmaking<br/>for a brighter tomorrow</p>
-    <h1 className="mt-3 font-serif text-[2.7rem] font-semibold leading-[1.02] text-[#2A1845] lg:mt-4 lg:text-[5.1rem] xl:text-[5.65rem]">Find Your<br/><span className="text-[#C026D3]">Perfect Match ♡</span></h1>
+    <h1 className="mt-3 font-serif text-[2.7rem] font-semibold leading-[1.02] text-[#2A1845] lg:mt-4 lg:text-[5.1rem] xl:text-[5.65rem]">Find Your<br/><span className="flex items-center gap-4 text-[#C026D3]">Perfect Match <span className="cupid-signature relative inline-flex h-[.82em] w-[1.18em] shrink-0 items-center justify-center" aria-hidden="true"><svg viewBox="0 0 120 86" className="h-full w-full overflow-visible"><path className="cupid-bow" d="M18 10 C57 16 60 70 18 76 C35 55 35 31 18 10Z" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round"/><path className="cupid-string" d="M18 10 L48 43 L18 76" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/><g className="cupid-arrow"><path d="M35 43 H105" stroke="currentColor" strokeWidth="5" strokeLinecap="round"/><path d="M92 31 L108 43 L92 55" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/><path d="M37 43 l-13 -9 m13 9 -13 9" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/></g><path className="cupid-heart-pop" d="M72 19c-8-10-23 1 0 18 23-17 8-28 0-18Z" fill="currentColor"/></svg></span></span></h1>
     <p className="mt-4 max-w-lg text-[12px] leading-5 text-[#65546F] lg:mt-5 lg:text-base lg:leading-7">A trusted matrimony platform for the Sri Lankan community in the UK, Canada, Australia and beyond.</p>
     <div className="mt-5 flex justify-between lg:mt-7 lg:max-w-lg lg:justify-start lg:gap-12">{[[Users,"Verified\nProfiles"],[Shield,"Safe & Secure"],[Heart,"Find\nCompatibility"]].map(([Icon,label]:any,i)=><div key={i} className="story-item w-24 text-center" style={{animationDelay:`${i*70}ms`}}><span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#F3E8FF] text-[#7C3AED]"><Icon className="h-5 w-5"/></span><span className="mt-2 block whitespace-pre-line text-[10px] font-semibold leading-3 text-[#4C3A5C]">{label}</span></div>)}</div>
     <div className="mt-5 grid gap-2 lg:mt-7 lg:max-w-lg lg:grid-cols-2 lg:gap-3"><Link href="/signup" className="flex h-11 items-center justify-center rounded-full bg-[#7C3AED] text-sm font-semibold text-white shadow-lg">Create Your Profile <ArrowRight className="ml-1 h-4 w-4"/></Link><Link href="/discover" className="flex h-11 items-center justify-center rounded-full border border-violet-200 bg-white text-sm font-semibold text-violet-700">Explore Matches</Link></div>
