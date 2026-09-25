@@ -290,5 +290,5 @@ export function PreferenceDiscovery() {
 
 function Choice({ label, value, values, onChange, testId }: { label: string; value: string; values: readonly string[]; onChange: (value: string) => void; testId?: string }) {
   const { language } = useI18n(); const t = getMessages(language).discover;
-  return <div><Label>{label}</Label><Select value={value} onValueChange={onChange}><span data-testid={testId} className="hidden" /><SelectTrigger className="mt-2"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all">{t.any}</SelectItem>{values.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>;
+  return <div><Label>{label}</Label><Select value={value} onValueChange={onChange}><SelectTrigger data-testid={testId} className="mt-2"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all">{t.any}</SelectItem>{values.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>;
 }
