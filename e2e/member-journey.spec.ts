@@ -28,9 +28,11 @@ async function userId(page: Page) {
 
 async function login(page: Page, user: typeof A) {
   await page.goto("/login");
-  await page.getByLabel(/email/i).fill(user.email);
-  await page.getByLabel(/^password/i).fill(user.password);
-  await page.getByRole("button", { name: /log in|login|anmelden|connexion/i }).click();
+  // Use stable HTML semantics rather than translated labels. The login UI is
+  // multilingual, so label text is not a reliable E2E selector.
+  await page.locator('input[name="email"][type="email"]').fill(user.email);
+  await page.locator('input[name="password"][type="password"]').fill(user.password);
+  await page.locator('button[type="submit"]').click();
   await expect(page).not.toHaveURL(/\/login(?:\?|$)/, { timeout: 20_000 });
 }
 
