@@ -116,11 +116,12 @@
      Proximity snapping keeps normal scrolling available while giving each scene
      a stable resting position after a swipe. */
   .homepage-card-flow {
-    scroll-snap-type: y mandatory;
+    /* Use proximity snapping so long cards and the footer remain fully reachable. */
+    scroll-snap-type: y proximity;
   }
   .homepage-card-flow > section {
     scroll-snap-align: start;
-    scroll-snap-stop: always;
+    scroll-snap-stop: normal;
   }
   /* Every viewport gets the same card-stop behaviour. */
   @media (max-width: 767px) {
@@ -132,7 +133,7 @@
   /* Story cards scroll as real pages. The card itself never fades; only its contents animate. */
   .homepage-story-card {
     scroll-snap-align: start;
-    scroll-snap-stop: always;
+    scroll-snap-stop: normal;
     position: relative;
     isolation: isolate;
   }
@@ -173,11 +174,11 @@
     to { opacity: 1; scale: 1; }
   }
   @media (min-width: 1024px) {
-    html { scroll-snap-type: y mandatory; scroll-padding-top: 7rem; }
+    html { scroll-snap-type: y proximity; scroll-padding-top: 7rem; }
     .homepage-story-card { min-height: calc(100svh - 7rem); }
   }
   @media (max-width: 1023px) {
-    html { scroll-snap-type: y mandatory; scroll-padding-top: 4.25rem; }
+    html { scroll-snap-type: y proximity; scroll-padding-top: 4.25rem; }
     .homepage-story-card { min-height: calc(100svh - 4.25rem); }
   }
 
