@@ -106,7 +106,7 @@ export function Navbar() {
 
   const marketingLinkClass = (href: string) =>
     cn(
-      "relative h-10 rounded-none bg-transparent px-2.5 text-sm font-medium text-[#5C4A66] shadow-none hover:bg-transparent hover:text-[#2A1845]",
+      "relative h-11 rounded-none bg-transparent px-3.5 text-[15px] font-medium text-[#5C4A66] shadow-none hover:bg-transparent hover:text-[#2A1845]",
       pathname === href && "text-[#2A1845] after:absolute after:inset-x-1 after:-bottom-0.5 after:h-[3px] after:rounded-full after:bg-[#7C3AED]"
     );
 
@@ -140,9 +140,9 @@ export function Navbar() {
   return (
     <TooltipProvider delayDuration={0}>
       <header className="sticky top-0 z-50 w-full border-b border-[#F0E8F4] bg-[#FBF8F4]/95 backdrop-blur supports-[backdrop-filter]:bg-[#FBF8F4]/90">
-        <div className="container mx-auto flex h-[4.25rem] items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:h-20 lg:px-6">
+        <div className="mx-auto flex h-[4.25rem] w-full max-w-[1500px] items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:h-24 lg:px-10 xl:px-14">
           <div className="flex shrink-0 flex-col justify-center">
-            <Logo size="sm" className="w-[7.8rem] sm:w-[10rem] lg:w-[11rem]" />
+            <Logo size="sm" className="w-[7.8rem] sm:w-[10rem] lg:w-[12.5rem]" />
             {isMarketingPage ? (
               <p className="hidden -mt-0.5 pl-[2.55rem] text-[10px] font-medium tracking-[0.01em] text-[#9B7AA8] sm:block">
                 Real People. Meaningful Connections.
@@ -152,7 +152,7 @@ export function Navbar() {
 
           {isMarketingPage ? (
             <>
-              <nav className="hidden flex-1 items-center justify-center gap-0.5 lg:flex" aria-label="Primary">
+              <nav className="hidden flex-1 items-center justify-center gap-2 lg:flex" aria-label="Primary">
                 {landingPageNavLinks.map((link) => (
                   <Button 
                     key={link.label}
