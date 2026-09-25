@@ -294,6 +294,7 @@ export default function ConnectionsPage() {
                           <AlertDialogAction
                             onClick={() => handleRemoveConnection(connection.id, connection.otherUserId)}
                             className="bg-red-600 hover:bg-red-700"
+                            data-testid="confirm-remove-connection"
                           >
                             Remove
                           </AlertDialogAction>
