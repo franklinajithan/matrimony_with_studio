@@ -117,7 +117,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
-  const [fallbackConversation, setFallbackConversation] = useState<Conversation | null>(null);
+  const [fallbackConversation, setFallbackConversation] = useState<Conversation | null>(null);\n  const [authorizedChatId, setAuthorizedChatId] = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -344,6 +344,28 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
   }, [selectedChatId, userId]);
 
   useEffect(() => {
+    let cancelled = false;
+    setAuthorizedChatId(null);
+    if (!selectedChatId || !userId) return () => { cancelled = true; };
+
+    const candidateOtherUserId = selectedChatId.split("_").find((id) => id !== userId);
+    const expectedChatId = candidateOtherUserId
+      ? [userId, candidateOtherUserId].sort().join("_")
+      : null;
+    if (!candidateOtherUserId || expectedChatId !== selectedChatId) {
+      return () => { cancelled = true; };
+    }
+
+    void areConnected(userId, candidateOtherUserId)
+      .then((connected) => {
+        if (!cancelled && connected) setAuthorizedChatId(selectedChatId);
+      })
+      .catch(() => undefined);
+
+    return () => { cancelled = true; };
+  }, [selectedChatId, userId]);
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, selectedChatId]);
 
@@ -355,12 +377,12 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
   }, [draft]);
 
   const selectedConversation = useMemo(() => {
-    if (!selectedChatId) return null;
+    if (!selectedChatId || authorizedChatId !== selectedChatId) return null;
     return (
       conversations.find((c) => c.id === selectedChatId) ||
       (fallbackConversation?.id === selectedChatId ? fallbackConversation : null)
     );
-  }, [conversations, fallbackConversation, selectedChatId]);
+  }, [authorizedChatId, conversations, fallbackConversation, selectedChatId]);
 
   const filteredConversations = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
