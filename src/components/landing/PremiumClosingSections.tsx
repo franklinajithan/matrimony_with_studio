@@ -5,6 +5,9 @@ import Link from "next/link";
 import { Check, ChevronLeft, ChevronRight, Heart, MapPin, Quote } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+const clamp=(n:number)=>Math.max(0,Math.min(1,n));
+function useCardProgress(){const ref=useRef<HTMLElement>(null);const [p,setP]=useState(0);useEffect(()=>{let raf=0;const update=()=>{raf=0;const n=ref.current;if(!n)return;const r=n.getBoundingClientRect();setP(clamp(-r.top/Math.max(1,r.height-innerHeight)))};const onScroll=()=>{if(!raf)raf=requestAnimationFrame(update)};update();addEventListener("scroll",onScroll,{passive:true});return()=>{removeEventListener("scroll",onScroll);if(raf)cancelAnimationFrame(raf)}},[]);return{ref,p}}
+
 function useReveal() {
   const ref=useRef<HTMLElement>(null); const [on,setOn]=useState(false);
   useEffect(()=>{const n=ref.current;if(!n)return;if(matchMedia("(prefers-reduced-motion: reduce)").matches){setOn(true);return}
@@ -20,67 +23,37 @@ const countries=[
 ] as const;
 
 export function GlobalCommunityStory(){
- const {ref,on}=useReveal();
- return <section ref={ref} className="relative overflow-hidden bg-[#FFFDFB] px-5 py-16 scroll-mt-20 [scroll-snap-align:start] sm:py-28">
-  <div className="mx-auto max-w-5xl text-center">
-   <p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#A078B0]">Across borders, close to home</p>
-   <h2 className="mx-auto mt-3 max-w-xl font-serif text-3xl font-semibold leading-tight text-[#2A1845] sm:text-5xl">A Global Community<br/><span className="text-[#C026D3]">Connected by Culture</span></h2>
-   <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-[#6B5A78]">Sri Lankans around the world, finding meaningful connections.</p>
-   <div className="relative mx-auto mt-8 h-[410px] max-w-[390px] sm:mt-12 sm:h-[500px] sm:max-w-[620px]">
-    <div className="pointer-events-none absolute left-1/2 top-1/2 h-[245px] w-[330px] -translate-x-1/2 -translate-y-1/2 rounded-[48%] border border-[#E9D5FF] bg-[radial-gradient(circle_at_30%_35%,#F3E8FF_0_3px,transparent_4px),radial-gradient(circle_at_65%_58%,#FCE7F3_0_3px,transparent_4px)] opacity-70 sm:h-[310px] sm:w-[430px]"/><svg className="absolute inset-0 h-full w-full" viewBox="0 0 620 500" fill="none" aria-hidden="true">
-      <path d="M75 95 C190 40 230 185 310 220 C390 255 430 90 545 110 M80 385 C190 430 230 300 310 250 C400 190 455 370 545 390" stroke="#D8B4FE" strokeWidth="2" strokeDasharray="7 8" style={{strokeDashoffset:on?0:180,transition:"stroke-dashoffset 1600ms ease"}}/>
-      <circle cx="310" cy="245" r="9" fill="#7C3AED"/><circle cx="310" cy="245" r="18" stroke="#C4B5FD" opacity=".55"/>
-    </svg>
-    {countries.map(([name,img],i)=>{
-      const pos=["left-0 top-3","right-0 top-10","left-1 bottom-9","right-0 bottom-2"][i];
-      return <div key={name} className={`absolute ${pos} w-[118px] overflow-hidden rounded-[1.35rem] border-4 border-white bg-white shadow-[0_18px_45px_rgba(76,29,149,.14)] transition-all duration-700 sm:w-[160px]`} style={{opacity:on?1:0,transform:on?"translate3d(0,0,0) scale(1)":`translate3d(0,${i<2?-24:24}px,0) scale(.92)`,transitionDelay:`${i*110}ms`}}>
-       <div className="relative aspect-[4/3]"><Image src={img} alt={name} fill sizes="160px" className="object-cover"/></div>
-       <div className="flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-[#2A1845]"><MapPin className="h-3.5 w-3.5 text-[#7C3AED]"/>{name}</div>
-      </div>
-    })}
-    <div className="absolute left-1/2 top-1/2 w-36 sm:w-44 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5EDFF]/90 px-4 py-5 sm:px-5 sm:py-6 shadow-sm backdrop-blur">
-      <Heart className="mx-auto h-7 w-7 fill-[#D946EF] text-[#D946EF]"/><p className="mt-2 font-serif text-lg font-semibold text-[#2A1845]">CupidMatch</p><p className="mt-1 text-[10px] leading-4 text-[#6B5A78]">Culture connects us wherever life takes us.</p>
+ const {ref,p}=useCardProgress(); const enter=clamp(p/.32);
+ return <section ref={ref} className="relative h-[190svh] bg-[#FFFDFB] [scroll-snap-align:start] [scroll-snap-stop:always]">
+  <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-5 py-5">
+   <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_58%,rgba(216,180,254,.28),transparent_44%),radial-gradient(circle_at_12%_72%,rgba(244,114,182,.10),transparent_28%)]"/>
+   <svg className="pointer-events-none absolute left-1/2 top-[55%] h-[48%] w-[115%] -translate-x-1/2 -translate-y-1/2 text-[#C4B5FD] opacity-[.16]" viewBox="0 0 900 430" fill="currentColor" aria-hidden="true"><path d="M65 129l42-34 57 3 31 22 45-13 35 24-18 31-51 9-23 27-53-8-31-29-34-32zm234-42 38-35 53 10 23 34-13 31 31 21-21 37-39-2-18 41-31-15-2-44-32-26 11-52zm167 37 62-34 72 12 25 29 64 6 40 30-27 29-60-7-34 22-52-13-29 19-47-17-25-34 11-42zm179 116 47-17 49 18 28 38-22 35-53 6-38-22-11-58zM232 280l54-23 48 17 12 43-31 33-57-8-37-29 11-33z"/></svg>
+   <div className="relative mx-auto w-full max-w-xl text-center" style={{opacity:.55+enter*.45,transform:`translateY(${(1-enter)*28}px)`}}>
+    <p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#A078B0]">Across borders, close to home</p>
+    <h2 className="mx-auto mt-3 font-serif text-[2.25rem] font-semibold leading-[1.05] text-[#2A1845]">A Global Community<br/><span className="text-[#C026D3]">Connected by Culture</span></h2>
+    <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[#6B5A78]">Sri Lankans around the world, finding meaningful connections.</p>
+    <div className="relative mx-auto mt-5 h-[430px] max-w-[390px]">
+     <div className="absolute left-1/2 top-1/2 h-[260px] w-[340px] -translate-x-1/2 -translate-y-1/2 rounded-[48%] border border-[#E9D5FF]/80"/>
+     <svg className="absolute inset-0 h-full w-full" viewBox="0 0 390 430" fill="none"><path d="M72 80 C140 120 135 185 195 215 C255 180 250 120 322 100 M70 335 C135 300 145 250 195 215 C255 260 260 315 325 340" pathLength="1" stroke="#C084FC" strokeWidth="2" strokeDasharray="6 8" style={{strokeDashoffset:(1-enter)*120}}/></svg>
+     {countries.map(([name,img],i)=>{const pos=["left-0 top-5","right-0 top-12","left-1 bottom-8","right-0 bottom-2"][i];const delay=i*.12;const x=clamp((enter-delay)/(1-delay));return <div key={name} className={`absolute ${pos} w-[120px] overflow-hidden rounded-[1.35rem] border-4 border-white bg-white shadow-[0_18px_45px_rgba(76,29,149,.14)]`} style={{opacity:x,transform:`translateY(${(1-x)*(i<2?-28:28)}px) scale(${.9+x*.1})`}}><div className="relative aspect-[4/3]"><Image src={img} alt={name} fill sizes="120px" className="object-cover"/></div><div className="flex items-center justify-center gap-1 py-2 text-xs font-bold text-[#2A1845]"><MapPin className="h-3.5 w-3.5 text-[#7C3AED]"/>{name}</div></div>})}
+     <div className="absolute left-1/2 top-1/2 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5EDFF]/95 px-4 py-5 shadow-lg backdrop-blur"><Heart className="mx-auto h-7 w-7 fill-[#D946EF] text-[#D946EF]"/><p className="mt-2 font-serif text-lg font-semibold text-[#2A1845]">CupidMatch</p><p className="mt-1 text-[10px] leading-4 text-[#6B5A78]">Culture connects us wherever life takes us.</p></div>
     </div>
-   </div>
-   <div className="mx-auto grid max-w-lg grid-cols-3 divide-x divide-[#E9D5FF]">
-    <div><strong className="block text-xl text-[#7C3AED]">15+</strong><span className="text-[10px] text-[#6B5A78]">Countries</span></div>
-    <div><strong className="block text-xl text-[#7C3AED]">Worldwide</strong><span className="text-[10px] text-[#6B5A78]">Community</span></div>
-    <div><strong className="block text-xl text-[#7C3AED]">Real</strong><span className="text-[10px] text-[#6B5A78]">Connections</span></div>
+    <div className="mx-auto grid max-w-sm grid-cols-3 divide-x divide-[#E9D5FF]"><div><strong className="block text-xl text-[#7C3AED]">15+</strong><span className="text-[10px] text-[#6B5A78]">Countries</span></div><div><strong className="block text-lg text-[#7C3AED]">Worldwide</strong><span className="text-[10px] text-[#6B5A78]">Community</span></div><div><strong className="block text-xl text-[#7C3AED]">Real</strong><span className="text-[10px] text-[#6B5A78]">Connections</span></div></div>
    </div>
   </div>
  </section>
 }
 
 export function PremiumStories(){
- const {ref,on}=useReveal();
- return <section ref={ref} className="overflow-hidden bg-[#FBF8F4] px-5 py-16 scroll-mt-20 [scroll-snap-align:start] sm:py-28">
-  <div className="mx-auto max-w-5xl text-center">
-   <p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#A078B0]">Stories shared with care</p>
-   <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight text-[#2A1845] sm:text-5xl">Real People<br/><span className="text-[#C026D3]">Real Stories</span></h2>
-   <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-[#6B5A78]">Meaningful introductions. Genuine conversations. Journeys shared with care.</p>
-   <article className="mx-auto mt-8 max-w-[390px] overflow-hidden rounded-[2.2rem] border border-[#EEE4F5] bg-white text-left shadow-[0_24px_60px_rgba(76,29,149,.12)] transition-all duration-700 sm:max-w-3xl sm:grid sm:grid-cols-2" style={{opacity:on?1:0,transform:on?"translate3d(0,0,0) scale(1)":"translate3d(0,32px,0) scale(.96)"}}>
-    <div className="relative h-[285px] sm:h-full sm:min-h-[360px]"><Image src="/images/values/shared.jpg?v=3" alt="" fill sizes="(max-width:640px) 390px, 380px" className="object-cover"/><div className="absolute inset-0 bg-gradient-to-t from-[#2A1845]/25 via-transparent to-transparent"/></div>
-    <div className="flex flex-col justify-center p-6 sm:p-9"><Quote className="h-8 w-8 fill-[#D946EF] text-[#D946EF]"/><p className="mt-4 font-serif text-[1.45rem] font-semibold leading-snug text-[#2A1845]">“We started with shared values and a simple conversation.”</p><p className="mt-3 text-sm leading-6 text-[#6B5A78]">CupidMatch gave us the space to understand what mattered to each other and move forward at our own pace.</p><p className="mt-5 text-[10px] font-bold uppercase tracking-[.18em] text-[#A078B0]">CupidMatch community story</p></div>
-   </article>
-   <div className="mx-auto mt-6 flex max-w-[210px] items-center justify-between">
-    <button aria-label="Previous story" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E9D5FF] bg-white text-[#7C3AED] shadow-sm"><ChevronLeft className="h-4 w-4"/></button>
-    <div className="flex items-center gap-1.5"><span className="h-1.5 w-5 rounded-full bg-[#7C3AED]"/><span className="h-1.5 w-1.5 rounded-full bg-[#D8CCE2]"/><span className="h-1.5 w-1.5 rounded-full bg-[#D8CCE2]"/></div>
-    <button aria-label="Next story" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E9D5FF] bg-white text-[#7C3AED] shadow-sm"><ChevronRight className="h-4 w-4"/></button>
-   </div>
-  </div>
- </section>
+ const {ref,p}=useCardProgress();const enter=clamp(p/.3);
+ return <section ref={ref} className="relative h-[175svh] bg-[#FBF8F4] [scroll-snap-align:start] [scroll-snap-stop:always]"><div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-5 py-5"><div className="mx-auto w-full max-w-5xl text-center" style={{opacity:.5+enter*.5,transform:`translateY(${(1-enter)*30}px)`}}>
+   <p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#A078B0]">Stories shared with care</p><h2 className="mt-2 font-serif text-[2.3rem] font-semibold leading-tight text-[#2A1845]">Real People<br/><span className="text-[#C026D3]">Real Stories</span></h2><p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[#6B5A78]">Meaningful introductions. Genuine conversations. Journeys shared with care.</p>
+   <article className="mx-auto mt-5 max-w-[390px] overflow-hidden rounded-[2rem] border border-[#EEE4F5] bg-white text-left shadow-[0_24px_60px_rgba(76,29,149,.12)]" style={{transform:`scale(${.94+enter*.06})`}}><div className="relative h-[270px]"><Image src="/images/values/shared.jpg?v=3" alt="" fill sizes="390px" className="object-cover" style={{transform:`scale(${1.08-enter*.08})`}}/></div><div className="p-5"><Quote className="h-7 w-7 fill-[#D946EF] text-[#D946EF]"/><p className="mt-3 font-serif text-[1.35rem] font-semibold leading-snug text-[#2A1845]">“We started with shared values and a simple conversation.”</p><p className="mt-2 text-xs leading-5 text-[#6B5A78]">CupidMatch gave us the space to understand what mattered to each other and move forward at our own pace.</p></div></article>
+   <div className="mx-auto mt-4 flex max-w-[190px] items-center justify-between"><button aria-label="Previous story" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E9D5FF] bg-white text-[#7C3AED]"><ChevronLeft className="h-4 w-4"/></button><div className="flex gap-1.5"><span className="h-1.5 w-5 rounded-full bg-[#7C3AED]"/><span className="h-1.5 w-1.5 rounded-full bg-[#D8CCE2]"/><span className="h-1.5 w-1.5 rounded-full bg-[#D8CCE2]"/></div><button aria-label="Next story" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E9D5FF] bg-white text-[#7C3AED]"><ChevronRight className="h-4 w-4"/></button></div>
+  </div></div></section>
 }
 
 export function PremiumFinalCta(){
- const {ref,on}=useReveal();
- return <section ref={ref} className="relative flex min-h-[100svh] items-center overflow-hidden scroll-mt-20 [scroll-snap-align:start] bg-gradient-to-b from-[#7C3AED] via-[#6D28D9] to-[#5B21B6] px-5 py-20 text-white sm:min-h-0 sm:py-32">
-  <div className="pointer-events-none absolute inset-0 opacity-20" aria-hidden="true"><Heart className="absolute left-[8%] top-[18%] h-12 w-12"/><Heart className="absolute bottom-[18%] right-[9%] h-16 w-16"/><div className="absolute -bottom-20 left-1/2 h-56 w-[130%] -translate-x-1/2 rounded-[50%] border-[18px] border-white/10"/></div>
-  <div className="relative mx-auto max-w-xl text-center transition-all duration-700" style={{opacity:on?1:0,transform:on?"translate3d(0,0,0) scale(1)":"translate3d(0,28px,0) scale(.96)"}}>
-   <Heart className="mx-auto h-9 w-9" strokeWidth={1.5}/>
-   <h2 className="mt-6 font-serif text-[2.7rem] font-semibold leading-[1.05] sm:text-6xl">Ready to Find<br/>Your Perfect Match?</h2>
-   <p className="mx-auto mt-5 max-w-sm text-sm leading-6 text-white/85">Create your profile and start your journey toward a meaningful connection.</p>
-   <div className="mx-auto mt-7 w-fit space-y-2 text-left text-sm">{["Verified profiles","Safe & secure","Meaningful connections"].map(x=><p key={x} className="flex items-center gap-2"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-[#7C3AED]"><Check className="h-3.5 w-3.5"/></span>{x}</p>)}</div>
-   <div className="mx-auto mt-9 flex max-w-[330px] flex-col gap-3"><Link href="/signup" className="rounded-full bg-white px-6 py-3.5 text-sm font-bold text-[#6D28D9] shadow-xl">Create Your Profile →</Link><Link href="/discover" className="rounded-full border border-white/60 px-6 py-3.5 text-sm font-semibold text-white">Explore Matches</Link></div>
-  </div>
- </section>
+ const {ref,p}=useCardProgress();const enter=clamp(p/.3);
+ return <section ref={ref} className="relative h-[175svh] bg-[#5B21B6] [scroll-snap-align:start] [scroll-snap-stop:always]"><div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-5 py-8 text-white"><div className="absolute inset-0 bg-gradient-to-b from-[#8B3DFF] via-[#7027E8] to-[#541CB5]" style={{opacity:.65+enter*.35}}/><div className="pointer-events-none absolute inset-0 opacity-20"><Heart className="absolute left-[8%] top-[18%] h-12 w-12"/><Heart className="absolute bottom-[18%] right-[9%] h-16 w-16"/><div className="absolute -bottom-20 left-1/2 h-56 w-[130%] -translate-x-1/2 rounded-[50%] border-[18px] border-white/10"/></div><div className="relative mx-auto max-w-xl text-center" style={{opacity:.4+enter*.6,transform:`translateY(${(1-enter)*38}px) scale(${.95+enter*.05})`}}><Heart className="mx-auto h-9 w-9"/><h2 className="mt-6 font-serif text-[2.65rem] font-semibold leading-[1.05]">Ready to Find<br/>Your Perfect Match?</h2><p className="mx-auto mt-5 max-w-sm text-sm leading-6 text-white/85">Create your profile and start your journey toward a meaningful connection.</p><div className="mx-auto mt-7 w-fit space-y-2 text-left text-sm">{["Verified profiles","Safe & secure","Meaningful connections"].map((x,i)=><p key={x} className="flex items-center gap-2" style={{opacity:clamp((enter-i*.12)*1.8)}}><span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-[#7C3AED]"><Check className="h-3.5 w-3.5"/></span>{x}</p>)}</div><div className="mx-auto mt-9 flex max-w-[330px] flex-col gap-3"><Link href="/signup" className="rounded-full bg-white px-6 py-3.5 text-sm font-bold text-[#6D28D9] shadow-xl">Create Your Profile →</Link><Link href="/discover" className="rounded-full border border-white/60 px-6 py-3.5 text-sm font-semibold text-white">Explore Matches</Link></div></div></div></section>
 }
