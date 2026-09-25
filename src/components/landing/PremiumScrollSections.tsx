@@ -110,6 +110,26 @@ const steps = [
   ["Connect and chat", "Start a meaningful conversation.", MessageCircle, "/images/values/goals.jpg?v=3"],
 ] as const;
 
+function DeviceFrame({active}:{active:number}) {
+  return <div className="mx-auto w-full max-w-[360px] md:max-w-[390px] lg:max-w-[720px]">
+    <div className="relative overflow-hidden rounded-[3rem] border-[7px] border-[#24152F] bg-[#24152F] p-[7px] shadow-[0_28px_80px_rgba(42,24,69,.22)] lg:rounded-[2rem] lg:border-[9px] lg:p-[9px]">
+      <div className="absolute left-1/2 top-0 z-20 h-6 w-28 -translate-x-1/2 rounded-b-[1.2rem] bg-[#24152F] md:w-32 lg:hidden" />
+      <div className="hidden lg:absolute lg:left-1/2 lg:top-0 lg:z-20 lg:block lg:h-3 lg:w-20 lg:-translate-x-1/2 lg:rounded-b-xl lg:bg-[#24152F]" />
+      <div className="relative overflow-hidden rounded-[2.35rem] bg-[#FFF9FD] lg:rounded-[1.25rem]">
+        <div className="relative h-[390px] sm:h-[450px] lg:h-[455px]">
+          <Image key={steps[active][3]} src={steps[active][3]} alt="" fill sizes="(min-width:1024px) 720px, 390px" className="object-cover transition-[opacity,transform] duration-300 ease-out motion-safe:animate-[fadeIn_.3s_ease-out]" priority={active===0}/>
+          <div className="absolute inset-x-4 bottom-4 rounded-[1.5rem] bg-white/95 p-4 shadow-lg backdrop-blur lg:inset-x-6 lg:bottom-6 lg:max-w-[410px] lg:p-5">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[#A078B0] lg:text-xs">{active+1} / 5</p>
+            <p className="mt-1 font-serif text-[1.45rem] font-semibold text-[#2A1845] lg:text-3xl">{steps[active][0]}</p>
+            <p className="mt-1 text-xs leading-5 text-[#6B5A78] lg:text-sm">{steps[active][1]}</p>
+          </div>
+        </div>
+      </div>
+      <div className="hidden h-4 items-center justify-center lg:flex"><span className="h-1.5 w-1.5 rounded-full bg-white/40"/></div>
+    </div>
+  </div>;
+}
+
 export function StickyHowItWorks() {
   const { ref, progress } = useSectionProgress();
   const active = Math.min(4, Math.floor(progress * 5));
@@ -122,20 +142,8 @@ export function StickyHowItWorks() {
             <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#A078B0]">How CupidMatch works</p>
             <h2 className="mt-2 font-serif text-[1.9rem] font-semibold leading-tight text-[#2A1845] sm:text-5xl lg:text-[4.2rem]">Simple Steps to<br/>Find Your Match</h2><p className="mx-auto mt-5 max-w-md text-sm leading-6 text-[#6B5A78] md:mx-0 lg:text-lg lg:leading-8">Your profile and preferences guide each introduction, so every step feels intentional.</p><ol className="mt-8 hidden space-y-3 lg:block">{steps.map(([title,description,Icon],i)=><li key={title} className={`flex items-center gap-4 rounded-2xl border px-5 py-4 transition-all duration-500 ${i===active?"translate-x-2 border-violet-200 bg-white shadow-[0_14px_35px_rgba(76,29,149,.10)]":"border-transparent bg-transparent opacity-50"}`}><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${i===active?"bg-[#7C3AED] text-white":"bg-[#EFE7F7] text-[#7C3AED]"}`}>{i+1}</span><Icon className="h-5 w-5 shrink-0 text-[#7C3AED]"/><span><strong className="block text-sm text-[#2A1845]">{title}</strong><span className="text-xs text-[#75647F]">{description}</span></span></li>)}</ol></div>
 
-          <div className="mx-auto w-full max-w-[300px] sm:max-w-[315px] lg:max-w-[430px]">
-            <div className="relative overflow-hidden rounded-[2.25rem] border-[6px] border-[#24152F] bg-white p-2 shadow-[0_24px_70px_rgba(42,24,69,.2)]">
-              <div className="mx-auto mb-2 h-4 w-24 rounded-b-2xl bg-[#24152F]" />
-              <div className="overflow-hidden rounded-[1.9rem] bg-[#FFF9FD]">
-                <div className="relative h-44 sm:h-52">
-                  <Image key={steps[active][3]} src={steps[active][3]} alt="" fill sizes="(min-width: 1024px) 430px, 300px" className="object-cover transition-[opacity,transform] duration-300 ease-out motion-safe:animate-[fadeIn_.3s_ease-out]" priority={active === 0} />
-                  <div className="absolute inset-x-3 bottom-3 rounded-2xl bg-white/95 p-3 shadow-lg backdrop-blur">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#A078B0]">{active+1} / 5</p>
-                    <p className="mt-1 font-serif text-lg font-semibold text-[#2A1845]">{steps[active][0]}</p>
-                    <p className="mt-1 text-[11px] leading-4 text-[#6B5A78]">{steps[active][1]}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="mx-auto w-full">
+            <DeviceFrame active={active}/>
 
             <ol className="mt-3 space-y-0.5 sm:mt-5 sm:space-y-2 lg:hidden">
               {steps.map(([title,,Icon], i) => (
