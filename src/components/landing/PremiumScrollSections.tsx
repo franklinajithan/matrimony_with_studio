@@ -47,7 +47,7 @@ export function CompatibilityStory() {
   ] as const;
 
   return (
-    <section ref={ref} className="relative h-[180svh] bg-[#FFFDFB] scroll-mt-20 [scroll-snap-align:start]">
+    <section ref={ref} className="relative h-[180svh] lg:h-[145svh] bg-[#FFFDFB] scroll-mt-20 [scroll-snap-align:start]">
       <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-5 py-5">
         <div className="mx-auto w-full max-w-xl text-center lg:grid lg:max-w-6xl lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-28 lg:text-left">
           <div><p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#A078B0]">Built on what matters</p>
@@ -72,7 +72,7 @@ export function CompatibilityStory() {
               const angle = (-90 + i*60) * Math.PI/180;
               const radius = typeof window !== "undefined" && window.innerWidth >= 1024 ? 215 : 139;
               return (
-                <div key={label} className="absolute flex w-20 flex-col items-center gap-1 text-[10px] font-semibold lg:w-28 lg:gap-2 lg:text-sm text-[#5C4A66] transition-opacity duration-500"
+                <div key={label} className="absolute flex w-20 flex-col items-center gap-1 text-[10px] font-semibold lg:w-28 lg:gap-2 lg:text-sm text-[#5C4A66] transition-all duration-300"
                   style={{ left: `calc(50% + ${Math.cos(angle)*radius}px - ${typeof window !== "undefined" && window.innerWidth >= 1024 ? 56 : 40}px)`, top: `calc(50% + ${Math.sin(angle)*radius}px - ${typeof window !== "undefined" && window.innerWidth >= 1024 ? 36 : 24}px)`, opacity: clamp((reveal-i*.08)*1.8) }}>
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-50 ring-1 ring-violet-100 lg:h-14 lg:w-14 lg:shadow-[0_10px_25px_rgba(124,58,237,.10)]"><Icon className="h-5 w-5 text-[#7C3AED] lg:h-8 lg:w-8" strokeWidth={1.7} /></span>
                   {label}
@@ -104,7 +104,7 @@ export function StickyHowItWorks() {
   const active = Math.min(4, Math.floor(progress * 5));
 
   return (
-    <section ref={ref} className="relative h-[240svh] bg-[#FBF8F4] scroll-mt-20 [scroll-snap-align:start]">
+    <section ref={ref} className="relative h-[240svh] lg:h-[185svh] bg-[#FBF8F4] scroll-mt-20 [scroll-snap-align:start]">
       <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-5 py-4">
         <div className="mx-auto grid w-full max-w-6xl items-center gap-3 sm:gap-7 md:grid-cols-2 lg:gap-24">
           <div className="text-center md:text-left lg:max-w-xl">
