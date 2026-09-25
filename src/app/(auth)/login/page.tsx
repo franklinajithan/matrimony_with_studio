@@ -144,7 +144,7 @@ function LoginForm() {
                 <FormItem>
                   <FormLabel className="flex items-center"><Mail className="mr-2 h-4 w-4 text-muted-foreground" />{t.email}</FormLabel>
                   <FormControl>
-                    <Input type="email" autoComplete="email" placeholder="you@example.com" {...field} disabled={isLoading} />
+                    <Input data-testid="login-email" type="email" autoComplete="email" placeholder="you@example.com" {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -157,13 +157,13 @@ function LoginForm() {
                 <FormItem>
                   <FormLabel className="flex items-center"><Lock className="mr-2 h-4 w-4 text-muted-foreground" />{t.password}</FormLabel>
                   <FormControl>
-                    <Input type="password" autoComplete="current-password" placeholder="••••••••" {...field} disabled={isLoading} />
+                    <Input data-testid="login-password" type="password" autoComplete="current-password" placeholder="••••••••" {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full min-h-11" disabled={isLoading}>
+            <Button data-testid="login-submit" type="submit" className="w-full min-h-11" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {t.login}
             </Button>
