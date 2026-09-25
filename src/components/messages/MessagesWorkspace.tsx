@@ -46,7 +46,7 @@ import {
   subscribeToMessages,
 } from "@/lib/supabase/chats";
 import { resolveMediaUrl } from "@/lib/supabase/storage";
-import { areConnected } from "@/lib/supabase/connections";
+import { areConnected, listConnections } from "@/lib/supabase/connections";
 
 const QUICK_EMOJIS = ["😀", "😂", "🥰", "😊", "🙏", "👍", "❤️", "🎉", "🔥", "✨", "😢", "👏"];
 
@@ -144,6 +144,24 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
   useEffect(() => {
     if (!userId) return;
     setIsLoadingChats(true);
+
+    // A mutual connection is a conversation. Reconcile legacy/partial
+    // connections before subscribing so the Messages list always mirrors
+    // the Connections list.
+    void (async () => {
+      try {
+        const connections = await listConnections(userId);
+        await Promise.all(
+          connections.map(async (connection) => {
+            const otherUserId =
+              connection.memberAId === userId ? connection.memberBId : connection.memberAId;
+            if (otherUserId) await createChatDocument(userId, otherUserId);
+          })
+        );
+      } catch (error) {
+        console.error("Could not reconcile connected chats:", error);
+      }
+    })();
 
     const unsubscribe = subscribeToChats(
       userId,
