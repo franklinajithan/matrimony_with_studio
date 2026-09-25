@@ -26,19 +26,19 @@ export function GlobalCommunityStory(){
    <p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#A078B0]">Across borders, close to home</p>
    <h2 className="mx-auto mt-3 max-w-xl font-serif text-3xl font-semibold leading-tight text-[#2A1845] sm:text-5xl">A Global Community<br/><span className="text-[#C026D3]">Connected by Culture</span></h2>
    <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-[#6B5A78]">Sri Lankans around the world, finding meaningful connections.</p>
-   <div className="relative mx-auto mt-8 h-[430px] max-w-[560px] sm:mt-12 sm:h-[500px] sm:max-w-[620px]">
-    <svg className="absolute inset-0 h-full w-full" viewBox="0 0 620 500" fill="none" aria-hidden="true">
+   <div className="relative mx-auto mt-8 h-[410px] max-w-[390px] sm:mt-12 sm:h-[500px] sm:max-w-[620px]">
+    <div className="pointer-events-none absolute left-1/2 top-1/2 h-[245px] w-[330px] -translate-x-1/2 -translate-y-1/2 rounded-[48%] border border-[#E9D5FF] bg-[radial-gradient(circle_at_30%_35%,#F3E8FF_0_3px,transparent_4px),radial-gradient(circle_at_65%_58%,#FCE7F3_0_3px,transparent_4px)] opacity-70 sm:h-[310px] sm:w-[430px]"/><svg className="absolute inset-0 h-full w-full" viewBox="0 0 620 500" fill="none" aria-hidden="true">
       <path d="M75 95 C190 40 230 185 310 220 C390 255 430 90 545 110 M80 385 C190 430 230 300 310 250 C400 190 455 370 545 390" stroke="#D8B4FE" strokeWidth="2" strokeDasharray="7 8" style={{strokeDashoffset:on?0:180,transition:"stroke-dashoffset 1600ms ease"}}/>
       <circle cx="310" cy="245" r="9" fill="#7C3AED"/><circle cx="310" cy="245" r="18" stroke="#C4B5FD" opacity=".55"/>
     </svg>
     {countries.map(([name,img],i)=>{
-      const pos=["left-0 top-5","right-0 top-12","left-3 bottom-8","right-2 bottom-3"][i];
-      return <div key={name} className={`absolute ${pos} w-[132px] overflow-hidden rounded-[1.35rem] border-4 border-white bg-white shadow-[0_18px_45px_rgba(76,29,149,.14)] transition-all duration-700 sm:w-[160px]`} style={{opacity:on?1:0,transform:on?"translate3d(0,0,0) scale(1)":`translate3d(0,${i<2?-24:24}px,0) scale(.92)`,transitionDelay:`${i*110}ms`}}>
+      const pos=["left-0 top-3","right-0 top-10","left-1 bottom-9","right-0 bottom-2"][i];
+      return <div key={name} className={`absolute ${pos} w-[118px] overflow-hidden rounded-[1.35rem] border-4 border-white bg-white shadow-[0_18px_45px_rgba(76,29,149,.14)] transition-all duration-700 sm:w-[160px]`} style={{opacity:on?1:0,transform:on?"translate3d(0,0,0) scale(1)":`translate3d(0,${i<2?-24:24}px,0) scale(.92)`,transitionDelay:`${i*110}ms`}}>
        <div className="relative aspect-[4/3]"><Image src={img} alt={name} fill sizes="160px" className="object-cover"/></div>
        <div className="flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-[#2A1845]"><MapPin className="h-3.5 w-3.5 text-[#7C3AED]"/>{name}</div>
       </div>
     })}
-    <div className="absolute left-1/2 top-1/2 w-44 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5EDFF]/90 px-5 py-6 shadow-sm backdrop-blur">
+    <div className="absolute left-1/2 top-1/2 w-36 sm:w-44 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5EDFF]/90 px-4 py-5 sm:px-5 sm:py-6 shadow-sm backdrop-blur">
       <Heart className="mx-auto h-7 w-7 fill-[#D946EF] text-[#D946EF]"/><p className="mt-2 font-serif text-lg font-semibold text-[#2A1845]">CupidMatch</p><p className="mt-1 text-[10px] leading-4 text-[#6B5A78]">Culture connects us wherever life takes us.</p>
     </div>
    </div>
