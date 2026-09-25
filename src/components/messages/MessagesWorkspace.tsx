@@ -117,7 +117,8 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
-  const [fallbackConversation, setFallbackConversation] = useState<Conversation | null>(null);\n  const [authorizedChatId, setAuthorizedChatId] = useState<string | null>(null);
+  const [fallbackConversation, setFallbackConversation] = useState<Conversation | null>(null);
+  const [authorizedChatId, setAuthorizedChatId] = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
