@@ -51,14 +51,14 @@ export function LandingHero() {
   }, []);
   const highlights = [{ icon: Users, label: t.verified }, { icon: Shield, label: t.safe }, { icon: Heart, label: t.compatibility }];
   return (
-    <section ref={heroRef} className="relative min-h-[calc(100svh-4rem)] overflow-hidden bg-[#FBF8F4] pt-1 sm:pt-2">
-      <div className="relative mx-auto grid max-w-[1240px] items-start gap-5 px-5 pb-5 sm:px-8 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] lg:items-stretch lg:gap-4 lg:px-10 lg:pb-10">
-        <div className="relative z-10 flex max-w-xl flex-col pt-3 will-change-transform lg:pt-1" style={{ opacity: 1 - scrollProgress * 0.42, transform: `translate3d(0,${scrollProgress * -28}px,0) scale(${1-scrollProgress*0.025})` }}>
+    <section ref={heroRef} className="relative min-h-[calc(100svh-4.25rem)] overflow-hidden bg-[#FBF8F4] pt-0 sm:pt-2">
+      <div className="relative mx-auto grid max-w-[1240px] items-start gap-4 px-5 pb-0 sm:px-8 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] lg:items-stretch lg:gap-4 lg:px-10 lg:pb-10">
+        <div className="relative z-10 flex max-w-xl flex-col pt-4 will-change-transform lg:pt-1" style={{ opacity: 1 - scrollProgress * 0.72, transform: `translate3d(0,${scrollProgress * -46}px,0) scale(${1-scrollProgress*0.045})` }}>
           <p className="text-[11px] font-semibold uppercase leading-5 tracking-[0.26em] text-[#A078B0] sm:text-xs sm:leading-6">
             {t.eyebrow}
             <span className="block">{t.eyebrow2}</span>
           </p>
-          <h1 className="mt-4 font-serif text-[2.55rem] font-semibold leading-[1.08] tracking-tight text-[#2A1845] sm:text-5xl lg:text-[3.65rem] lg:leading-[1.05]">
+          <h1 className="mt-3 font-serif text-[2.45rem] font-semibold leading-[1.08] tracking-tight text-[#2A1845] sm:text-5xl lg:text-[3.65rem] lg:leading-[1.05]">
             {t.title}
             <span className="mt-1 flex items-center gap-2 text-[#C026D3] sm:mt-1.5">
               {t.titleAccent}
@@ -69,11 +69,11 @@ export function LandingHero() {
               />
             </span>
           </h1>
-          <p className="mt-4 max-w-[30rem] text-[14px] leading-7 text-[#5C4A66] sm:text-lg sm:leading-8">
+          <p className="mt-3 max-w-[30rem] text-[13px] leading-7 text-[#5C4A66] sm:text-lg sm:leading-8">
             {t.description}
           </p>
 
-          <ul className="mt-6 flex justify-between gap-3 sm:gap-10">
+          <ul className="mt-5 flex justify-between gap-3 sm:gap-10">
             {highlights.map((item) => (
               <li key={item.label} className="flex w-[4.75rem] flex-col items-center text-center sm:w-24">
                 <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#F3E8FF] text-[#8B5CF6]">
@@ -86,10 +86,10 @@ export function LandingHero() {
             ))}
           </ul>
 
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:items-center">
             <Button
               asChild
-              className="h-12 rounded-full bg-[#7C3AED] px-7 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(124,58,237,0.28)] hover:bg-[#6D28D9]"
+              className="h-11 rounded-full bg-[#7C3AED] px-7 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(124,58,237,0.28)] hover:bg-[#6D28D9]"
             >
               <Link href="/signup">
                 {t.create}
@@ -99,7 +99,7 @@ export function LandingHero() {
             <Button
               asChild
               variant="outline"
-              className="h-12 rounded-full border-[#E4D4F5] bg-white px-7 text-sm font-semibold text-[#5B21B6] shadow-sm hover:bg-white hover:text-[#5B21B6]"
+              className="h-11 rounded-full border-[#E4D4F5] bg-white px-7 text-sm font-semibold text-[#5B21B6] shadow-sm hover:bg-white hover:text-[#5B21B6]"
             >
               <Link href="/discover">{t.explore}</Link>
             </Button>
@@ -115,9 +115,9 @@ export function LandingHero() {
           </p>
         </div>
 
-        <div className="relative mx-auto w-full max-w-[560px] will-change-transform lg:max-w-none lg:pt-1" style={{ transform: `translate3d(0,${scrollProgress * 18}px,0) scale(${1-scrollProgress*0.035})` }}>
+        <div className="relative mx-auto w-full max-w-[560px] will-change-transform lg:max-w-none lg:pt-1" style={{ opacity: 1-scrollProgress*.32, transform: `translate3d(0,${scrollProgress * 30}px,0) scale(${1-scrollProgress*0.065})` }}>
           <figure className="relative overflow-hidden rounded-[1.75rem] shadow-[0_22px_50px_rgba(74,32,110,0.18)] lg:rounded-[2rem]">
-            <div className="relative aspect-[3/4] w-full lg:aspect-auto lg:min-h-[700px] lg:h-[min(74vh,760px)]">
+            <div className="relative h-[42svh] min-h-[330px] w-full sm:h-auto sm:aspect-[3/4] lg:aspect-auto lg:min-h-[700px] lg:h-[min(74vh,760px)]">
               <Image
                 src={HERO_IMAGE}
                 alt="A woman in a purple sari welcoming you with a namaste"
