@@ -324,7 +324,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         "bg-background",
         isMessagesRoute
           ? "flex h-[100svh] h-[100dvh] flex-col overflow-hidden"
-          : "min-h-screen"
+          : "min-h-[100svh] overscroll-none"
       )}
     >
       <a
@@ -511,7 +511,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
       <nav
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 border-t border-violet-700/20 bg-violet-600 pb-[env(safe-area-inset-bottom)] shadow-lg lg:hidden",
+          "fixed inset-x-0 bottom-0 z-50 isolate border-t border-violet-700/20 bg-violet-600 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(73,32,140,0.14)] [backface-visibility:hidden] [transform:translateZ(0)] lg:hidden",
           drawerOpen && "hidden"
         )}
         aria-label="Primary"
