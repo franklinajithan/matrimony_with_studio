@@ -6,7 +6,8 @@ import {
 } from "@/lib/onboarding/readiness";
 import type { OnboardingDraft } from "@/lib/onboarding/schema";
 import { countReceivedLikes, listReceivedLikes } from "./likes";
-import { countAcceptedConnections, listAcceptedConnections, listPendingRequests, listSentInterestReceiverIds } from "./matches";
+import { listAcceptedConnections, listPendingRequests, listSentInterestReceiverIds } from "./matches";
+import { listConnections } from "./connections";
 import { listChatsForUser, unreadMessageCount } from "./chats";
 import { getProfile, listProfiles, listProfilesByIds } from "./profiles";
 import type { Profile } from "./types";
@@ -84,7 +85,8 @@ export async function loadDashboardOverview(userId: string): Promise<DashboardOv
   const readiness = computeProfileReadiness(draft, Boolean(profile.isPublished));
 
   const likesTask = countReceivedLikes(userId);
-  const connectionsTask = countAcceptedConnections(userId);
+  // Use the canonical connections table: accepted requests can remain after a connection is removed.
+  const connectionsTask = listConnections(userId).then((rows) => rows.length);
   const chatsTask = listChatsForUser(userId);
   const pendingTask = listPendingRequests(userId);
   const sentInterestIdsTask = listSentInterestReceiverIds(userId);
