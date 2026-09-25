@@ -6,12 +6,13 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { listConnections, removeConnection } from "@/lib/supabase/connections";
+import { createChatDocument } from "@/lib/supabase/chats";
 import { getProfile } from "@/lib/supabase/profiles";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Users, Trash2 } from "lucide-react";
+import { Loader2, Users, Trash2, MessageCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import {
   AlertDialog,
@@ -46,6 +47,7 @@ export default function ConnectionsPage() {
   const [loading, setLoading] = useState(true);
   const [connections, setConnections] = useState<ConnectionWithProfile[]>([]);
   const [removingConnection, setRemovingConnection] = useState<string | null>(null);
+  const [openingChat, setOpeningChat] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -134,6 +136,24 @@ export default function ConnectionsPage() {
 
     fetchConnections();
   }, [currentUser, toast]);
+
+  const handleOpenChat = async (otherUserId: string) => {
+    if (!currentUser || openingChat) return;
+    setOpeningChat(otherUserId);
+    try {
+      const chatId = await createChatDocument(currentUser.id, otherUserId);
+      router.push(`/messages/${encodeURIComponent(chatId)}`);
+    } catch (error) {
+      console.error("Error opening chat:", error);
+      toast({
+        title: "Could not open chat",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setOpeningChat(null);
+    }
+  };
 
   const handleRemoveConnection = async (connectionId: string, otherUserId: string) => {
     if (!currentUser) return;
@@ -226,6 +246,16 @@ export default function ConnectionsPage() {
                     </div>
                   </div>
                   <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      className="rounded-xl"
+                      onClick={() => void handleOpenChat(connection.otherUserId)}
+                      disabled={openingChat === connection.otherUserId}
+                      data-testid={`connection-${connection.otherUserId}-message`}
+                    >
+                      {openingChat === connection.otherUserId ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <MessageCircle className="mr-1 h-4 w-4" />}
+                      Message
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
