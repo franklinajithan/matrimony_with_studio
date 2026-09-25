@@ -218,19 +218,19 @@ export default function ConnectionsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4 overflow-x-hidden">
             {connections.map((connection) => (
-              <Card key={connection.id} className="rounded-2xl border-[#eadde7] shadow-sm">
-                <CardContent className="flex items-center justify-between p-6">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-16 w-16">
+              <Card key={connection.id} className="min-w-0 overflow-hidden rounded-2xl border-[#eadde7] shadow-sm">
+                <CardContent className="flex min-w-0 flex-col gap-4 p-4 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+                    <Avatar className="h-14 w-14 shrink-0 sm:h-16 sm:w-16">
                       <AvatarImage src={connection.profile?.photoURL || ""} />
                       <AvatarFallback className="bg-[#f5eafa] text-[#713c78]">
                         {connection.profile?.displayName.charAt(0).toUpperCase() || "U"}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <h3 className="font-semibold text-[#351532]">
+                    <div className="min-w-0">
+                      <h3 className="break-words font-semibold text-[#351532]">
                         {connection.profile?.displayName || "User"}
                         {connection.profile?.ageYears && `, ${connection.profile.ageYears}`}
                       </h3>
@@ -245,10 +245,10 @@ export default function ConnectionsPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="grid w-full min-w-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap lg:justify-end">
                     <Button
                       size="sm"
-                      className="rounded-xl"
+                      className="min-w-0 rounded-xl"
                       onClick={() => void handleOpenChat(connection.otherUserId)}
                       disabled={openingChat === connection.otherUserId}
                       data-testid={`connection-${connection.otherUserId}-message`}
@@ -259,7 +259,7 @@ export default function ConnectionsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="rounded-xl border-[#dcc9d8]"
+                      className="min-w-0 rounded-xl border-[#dcc9d8]"
                       asChild
                     >
                       <Link href={`/profile/${connection.otherUserId}`}>
@@ -271,7 +271,7 @@ export default function ConnectionsPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                          className="col-span-2 min-w-0 rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 sm:col-span-1"
                           aria-label={`Remove connection with ${connection.profile?.displayName || "member"}`}
                           data-testid={`connection-${connection.otherUserId}-remove`}
                           disabled={removingConnection === connection.id}
