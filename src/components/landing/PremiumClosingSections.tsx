@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Check, Heart, MapPin, Quote } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Heart, MapPin, Quote } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 function useReveal() {
@@ -57,12 +57,15 @@ export function PremiumStories(){
   <div className="mx-auto max-w-5xl text-center">
    <p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#A078B0]">Stories shared with care</p>
    <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight text-[#2A1845] sm:text-5xl">Real People<br/><span className="text-[#C026D3]">Real Stories</span></h2>
-   <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-[#6B5A78]">A place for couples to share the journeys that began with an introduction.</p>
-   <div className="mt-8 flex snap-x gap-4 overflow-x-auto px-[12%] pb-5 [scrollbar-width:none] sm:justify-center sm:overflow-visible sm:px-0">
-    {["shared","family","communication"].map((name,i)=><article key={name} className="w-[76vw] max-w-[300px] shrink-0 snap-center overflow-hidden rounded-[2rem] border border-[#EEE4F5] bg-white text-left shadow-[0_18px_45px_rgba(76,29,149,.1)] transition-all duration-700" style={{opacity:on?1:0,transform:on?"translate3d(0,0,0)":"translate3d(34px,0,0)",transitionDelay:`${i*120}ms`}}>
-      <div className="relative aspect-[4/3]"><Image src={`/images/values/${name}.jpg?v=3`} alt="" fill sizes="300px" className="object-cover"/></div>
-      <div className="p-5"><Quote className="h-6 w-6 fill-[#D946EF] text-[#D946EF]"/><p className="mt-3 font-serif text-lg font-semibold text-[#2A1845]">{i===0?"A thoughtful introduction":i===1?"Shared values first":"A conversation worth having"}</p><p className="mt-2 text-xs leading-5 text-[#6B5A78]">CupidMatch is designed to help people understand compatibility and move forward at their own pace.</p><p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-[#A078B0]">CupidMatch community</p></div>
-    </article>)}
+   <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-[#6B5A78]">Meaningful introductions. Genuine conversations. Journeys shared with care.</p>
+   <article className="mx-auto mt-8 max-w-[390px] overflow-hidden rounded-[2.2rem] border border-[#EEE4F5] bg-white text-left shadow-[0_24px_60px_rgba(76,29,149,.12)] transition-all duration-700 sm:max-w-3xl sm:grid sm:grid-cols-2" style={{opacity:on?1:0,transform:on?"translate3d(0,0,0) scale(1)":"translate3d(0,32px,0) scale(.96)"}}>
+    <div className="relative h-[285px] sm:h-full sm:min-h-[360px]"><Image src="/images/values/shared.jpg?v=3" alt="" fill sizes="(max-width:640px) 390px, 380px" className="object-cover"/><div className="absolute inset-0 bg-gradient-to-t from-[#2A1845]/25 via-transparent to-transparent"/></div>
+    <div className="flex flex-col justify-center p-6 sm:p-9"><Quote className="h-8 w-8 fill-[#D946EF] text-[#D946EF]"/><p className="mt-4 font-serif text-[1.45rem] font-semibold leading-snug text-[#2A1845]">“We started with shared values and a simple conversation.”</p><p className="mt-3 text-sm leading-6 text-[#6B5A78]">CupidMatch gave us the space to understand what mattered to each other and move forward at our own pace.</p><p className="mt-5 text-[10px] font-bold uppercase tracking-[.18em] text-[#A078B0]">CupidMatch community story</p></div>
+   </article>
+   <div className="mx-auto mt-6 flex max-w-[210px] items-center justify-between">
+    <button aria-label="Previous story" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E9D5FF] bg-white text-[#7C3AED] shadow-sm"><ChevronLeft className="h-4 w-4"/></button>
+    <div className="flex items-center gap-1.5"><span className="h-1.5 w-5 rounded-full bg-[#7C3AED]"/><span className="h-1.5 w-1.5 rounded-full bg-[#D8CCE2]"/><span className="h-1.5 w-1.5 rounded-full bg-[#D8CCE2]"/></div>
+    <button aria-label="Next story" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E9D5FF] bg-white text-[#7C3AED] shadow-sm"><ChevronRight className="h-4 w-4"/></button>
    </div>
   </div>
  </section>
@@ -70,14 +73,14 @@ export function PremiumStories(){
 
 export function PremiumFinalCta(){
  const {ref,on}=useReveal();
- return <section ref={ref} className="relative flex min-h-[88svh] items-center overflow-hidden bg-gradient-to-b from-[#7C3AED] via-[#6D28D9] to-[#5B21B6] px-5 py-20 text-white sm:min-h-0 sm:py-32">
+ return <section ref={ref} className="relative flex min-h-[100svh] items-center overflow-hidden bg-gradient-to-b from-[#7C3AED] via-[#6D28D9] to-[#5B21B6] px-5 py-20 text-white sm:min-h-0 sm:py-32">
   <div className="pointer-events-none absolute inset-0 opacity-20" aria-hidden="true"><Heart className="absolute left-[8%] top-[18%] h-12 w-12"/><Heart className="absolute bottom-[18%] right-[9%] h-16 w-16"/><div className="absolute -bottom-20 left-1/2 h-56 w-[130%] -translate-x-1/2 rounded-[50%] border-[18px] border-white/10"/></div>
   <div className="relative mx-auto max-w-xl text-center transition-all duration-700" style={{opacity:on?1:0,transform:on?"translate3d(0,0,0) scale(1)":"translate3d(0,28px,0) scale(.96)"}}>
    <Heart className="mx-auto h-9 w-9" strokeWidth={1.5}/>
-   <h2 className="mt-5 font-serif text-4xl font-semibold leading-[1.05] sm:text-6xl">Ready to Find<br/>Your Perfect Match?</h2>
+   <h2 className="mt-6 font-serif text-[2.7rem] font-semibold leading-[1.05] sm:text-6xl">Ready to Find<br/>Your Perfect Match?</h2>
    <p className="mx-auto mt-5 max-w-sm text-sm leading-6 text-white/85">Create your profile and start your journey toward a meaningful connection.</p>
    <div className="mx-auto mt-7 w-fit space-y-2 text-left text-sm">{["Verified profiles","Safe & secure","Meaningful connections"].map(x=><p key={x} className="flex items-center gap-2"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-[#7C3AED]"><Check className="h-3.5 w-3.5"/></span>{x}</p>)}</div>
-   <div className="mx-auto mt-8 flex max-w-sm flex-col gap-3"><Link href="/signup" className="rounded-full bg-white px-6 py-3.5 text-sm font-bold text-[#6D28D9] shadow-xl">Create Your Profile →</Link><Link href="/discover" className="rounded-full border border-white/60 px-6 py-3.5 text-sm font-semibold text-white">Explore Matches</Link></div>
+   <div className="mx-auto mt-9 flex max-w-[330px] flex-col gap-3"><Link href="/signup" className="rounded-full bg-white px-6 py-3.5 text-sm font-bold text-[#6D28D9] shadow-xl">Create Your Profile →</Link><Link href="/discover" className="rounded-full border border-white/60 px-6 py-3.5 text-sm font-semibold text-white">Explore Matches</Link></div>
   </div>
  </section>
 }
