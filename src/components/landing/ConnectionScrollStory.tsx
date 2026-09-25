@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Heart } from "lucide-react";
+import { Heart, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const clamp = (value: number) => Math.min(1, Math.max(0, value));
