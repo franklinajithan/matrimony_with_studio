@@ -9,7 +9,7 @@ const productionHost =
   process.env.VERCEL_URL ||
   'matrimony-with-studio.vercel.app';
 const siteUrl = productionHost.startsWith('http') ? productionHost : `https://${productionHost}`;
-const SHARE_CARD_VERSION = '2';
+const SHARE_CARD_VERSION = '3';
 const shareCardImage = `/opengraph-image?v=${SHARE_CARD_VERSION}`;
 
 export const metadata: Metadata = {
