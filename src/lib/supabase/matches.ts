@@ -152,16 +152,45 @@ export async function listSentRequests(senderId: string): Promise<MatchRequestRo
   return (data || []).map((row) => mapRequest(row)!);
 }
 
-/** Receiver IDs the member has already sent an interest to (any status). */
+/** Receiver IDs whose interest action should be disabled in discovery.
+ *
+ * Pending requests are always active. Accepted requests are only active while
+ * the corresponding connection still exists. Declined/withdrawn requests and
+ * accepted requests whose connection was removed must be sendable again.
+ */
 export async function listSentInterestReceiverIds(senderId: string): Promise<string[]> {
   const { data, error } = await supabase
     .from("match_requests")
-    .select("receiver_id")
+    .select("receiver_id, status")
     .eq("sender_id", senderId);
   if (error) throw error;
-  return (data || [])
-    .map((row) => String((row as { receiver_id?: string }).receiver_id || ""))
+
+  const rows = (data || []) as Array<{ receiver_id?: string; status?: string }>;
+  const pendingIds = rows
+    .filter((row) => row.status === "pending")
+    .map((row) => String(row.receiver_id || ""))
     .filter(Boolean);
+
+  const acceptedIds = rows
+    .filter((row) => row.status === "accepted")
+    .map((row) => String(row.receiver_id || ""))
+    .filter(Boolean);
+
+  if (!acceptedIds.length) return pendingIds;
+
+  const { data: connections, error: connectionError } = await supabase
+    .from("connections")
+    .select("member_a_id, member_b_id")
+    .or(`member_a_id.eq.${senderId},member_b_id.eq.${senderId}`);
+  if (connectionError) throw connectionError;
+
+  const connectedIds = new Set(
+    (connections || []).map((row) =>
+      String(row.member_a_id) === senderId ? String(row.member_b_id) : String(row.member_a_id)
+    )
+  );
+
+  return [...new Set([...pendingIds, ...acceptedIds.filter((id) => connectedIds.has(id))])];
 }
 
 export async function deleteMatchRequest(id: string) {
