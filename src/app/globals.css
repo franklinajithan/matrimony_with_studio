@@ -92,8 +92,18 @@
   * {
     @apply border-border;
   }
+  html {
+    background: hsl(var(--background));
+    overscroll-behavior-y: none;
+  }
   body {
     @apply bg-background text-foreground;
+    min-height: 100svh;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  @supports (height: 100dvh) {
+    body { min-height: 100dvh; }
   }
   :where(a, button, input, select, textarea, [tabindex]):focus-visible {
     outline: 3px solid hsl(var(--ring));
