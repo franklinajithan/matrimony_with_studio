@@ -21,7 +21,7 @@ const countries=[
 
 export function GlobalCommunityStory(){
  const {ref,on}=useReveal();
- return <section ref={ref} className="relative overflow-hidden bg-[#FFFDFB] px-5 py-16 sm:py-28">
+ return <section ref={ref} className="relative overflow-hidden bg-[#FFFDFB] px-5 py-16 scroll-mt-20 [scroll-snap-align:start] sm:py-28">
   <div className="mx-auto max-w-5xl text-center">
    <p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#A078B0]">Across borders, close to home</p>
    <h2 className="mx-auto mt-3 max-w-xl font-serif text-3xl font-semibold leading-tight text-[#2A1845] sm:text-5xl">A Global Community<br/><span className="text-[#C026D3]">Connected by Culture</span></h2>
@@ -53,7 +53,7 @@ export function GlobalCommunityStory(){
 
 export function PremiumStories(){
  const {ref,on}=useReveal();
- return <section ref={ref} className="overflow-hidden bg-[#FBF8F4] px-5 py-16 sm:py-28">
+ return <section ref={ref} className="overflow-hidden bg-[#FBF8F4] px-5 py-16 scroll-mt-20 [scroll-snap-align:start] sm:py-28">
   <div className="mx-auto max-w-5xl text-center">
    <p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#A078B0]">Stories shared with care</p>
    <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight text-[#2A1845] sm:text-5xl">Real People<br/><span className="text-[#C026D3]">Real Stories</span></h2>
@@ -73,7 +73,7 @@ export function PremiumStories(){
 
 export function PremiumFinalCta(){
  const {ref,on}=useReveal();
- return <section ref={ref} className="relative flex min-h-[100svh] items-center overflow-hidden bg-gradient-to-b from-[#7C3AED] via-[#6D28D9] to-[#5B21B6] px-5 py-20 text-white sm:min-h-0 sm:py-32">
+ return <section ref={ref} className="relative flex min-h-[100svh] items-center overflow-hidden scroll-mt-20 [scroll-snap-align:start] bg-gradient-to-b from-[#7C3AED] via-[#6D28D9] to-[#5B21B6] px-5 py-20 text-white sm:min-h-0 sm:py-32">
   <div className="pointer-events-none absolute inset-0 opacity-20" aria-hidden="true"><Heart className="absolute left-[8%] top-[18%] h-12 w-12"/><Heart className="absolute bottom-[18%] right-[9%] h-16 w-16"/><div className="absolute -bottom-20 left-1/2 h-56 w-[130%] -translate-x-1/2 rounded-[50%] border-[18px] border-white/10"/></div>
   <div className="relative mx-auto max-w-xl text-center transition-all duration-700" style={{opacity:on?1:0,transform:on?"translate3d(0,0,0) scale(1)":"translate3d(0,28px,0) scale(.96)"}}>
    <Heart className="mx-auto h-9 w-9" strokeWidth={1.5}/>
