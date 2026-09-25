@@ -70,11 +70,11 @@ export function CompatibilityStory() {
             </div>
             {items.map(([Icon,label],i) => {
               const angle = (-90 + i*60) * Math.PI/180;
-              const radius = 139;
+              const radius = typeof window !== "undefined" && window.innerWidth >= 1024 ? 215 : 139;
               return (
-                <div key={label} className="absolute flex w-20 flex-col items-center gap-1 text-[10px] font-semibold text-[#5C4A66] transition-opacity duration-500"
-                  style={{ left: `calc(50% + ${Math.cos(angle)*radius}px - 40px)`, top: `calc(50% + ${Math.sin(angle)*radius}px - 24px)`, opacity: clamp((reveal-i*.08)*1.8) }}>
-                  <Icon className="h-5 w-5 text-[#7C3AED]" strokeWidth={1.7} />
+                <div key={label} className="absolute flex w-20 flex-col items-center gap-1 text-[10px] font-semibold lg:w-28 lg:gap-2 lg:text-sm text-[#5C4A66] transition-opacity duration-500"
+                  style={{ left: `calc(50% + ${Math.cos(angle)*radius}px - ${typeof window !== "undefined" && window.innerWidth >= 1024 ? 56 : 40}px)`, top: `calc(50% + ${Math.sin(angle)*radius}px - ${typeof window !== "undefined" && window.innerWidth >= 1024 ? 36 : 24}px)`, opacity: clamp((reveal-i*.08)*1.8) }}>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-50 ring-1 ring-violet-100 lg:h-14 lg:w-14 lg:shadow-[0_10px_25px_rgba(124,58,237,.10)]"><Icon className="h-5 w-5 text-[#7C3AED] lg:h-8 lg:w-8" strokeWidth={1.7} /></span>
                   {label}
                 </div>
               );
