@@ -807,34 +807,27 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                     />
                   </div>
 
-                  {draft.trim() ? (
-                    <Button
-                      type="button"
-                      size="icon"
-                      className="mb-0.5 h-11 w-11 shrink-0 rounded-full bg-primary hover:bg-primary/90"
-                      onClick={() => void handleSend()}
-                      disabled={isSending}
-                      data-testid="message-send"
-                      aria-label="Send message"
-                    >
-                      {isSending ? (
-                        <Loader2 className="h-5 w-5 animate-spin text-white" />
-                      ) : (
-                        <SendHorizonal className="h-5 w-5 text-white" />
-                      )}
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="mb-0.5 h-11 w-11 shrink-0 rounded-full"
-                      disabled
-                      title="Quick reactions coming soon"
-                    >
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant={draft.trim() ? "default" : "ghost"}
+                    className={cn(
+                      "mb-0.5 h-11 w-11 shrink-0 rounded-full",
+                      draft.trim() && "bg-primary hover:bg-primary/90"
+                    )}
+                    onClick={() => void handleSend()}
+                    disabled={!draft.trim() || isSending}
+                    data-testid="message-send"
+                    aria-label="Send message"
+                  >
+                    {isSending ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-white" />
+                    ) : draft.trim() ? (
+                      <SendHorizonal className="h-5 w-5 text-white" />
+                    ) : (
                       <ThumbsUp className="h-5 w-5 text-primary" />
-                    </Button>
-                  )}
+                    )}
+                  </Button>
                 </div>
               </footer>
             </>
