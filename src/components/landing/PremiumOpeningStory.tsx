@@ -95,9 +95,10 @@ function HeroCarousel({
 
 export function PremiumOpeningStory(){
  const profiles=[
-  {name:"Nila, 27",place:"London, UK",src:"/images/values/culture.jpg?v=3"},
-  {name:"Tharshini, 27",place:"London, UK",src:HERO_SLIDES[0]},
-  {name:"Kavya, 28",place:"Toronto, Canada",src:"/images/values/goals.jpg?v=3"},
+  {name:"Nila, 27",place:"London, UK",src:"/images/profiles/nila.jpg?v=1"},
+  {name:"Tharshini, 27",place:"London, UK",src:"/images/profiles/tharshini.jpg?v=1"},
+  {name:"Kavya, 28",place:"London, UK",src:"/images/profiles/kavya.jpg?v=1"},
+  {name:"Vishal, 29",place:"London, UK",src:"/images/profiles/vishal.jpg?v=1"},
  ];
  return <section className="bg-[#FFFDFB]">
   <article className="homepage-story-card grid min-h-[calc(100svh-7rem)] items-center gap-8 overflow-hidden px-5 py-6 lg:grid-cols-[minmax(440px,.9fr)_minmax(560px,1.1fr)] lg:gap-16 lg:px-[max(5vw,64px)] lg:py-8 xl:mx-auto xl:max-w-[1500px]">
@@ -118,7 +119,7 @@ export function PremiumOpeningStory(){
 
   <article className="homepage-story-card grid items-center gap-8 overflow-hidden px-5 py-8 lg:grid-cols-[.72fr_1.28fr] lg:gap-14 lg:px-[max(6vw,72px)]">
    <div className="story-copy text-center lg:text-left"><p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#A078B0] lg:text-xs">People who fit your future</p><h2 className="mt-3 font-serif text-[2.35rem] font-semibold leading-[1.06] text-[#2A1845] lg:text-[4.5rem]">Discover<br/><span className="text-[#C026D3]">Compatible Matches</span></h2><p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-[#6B5A78] lg:mx-0 lg:max-w-md lg:text-lg lg:leading-8">Meet people who share your values, culture and life goals.</p><div className="mt-7 hidden flex-wrap gap-2 lg:flex">{["Shared values","Life goals","Culture","Family"].map(x=><span key={x} className="rounded-full border border-violet-100 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-700">{x}</span>)}</div></div>
-   <div className="relative mx-auto h-[410px] w-full max-w-[390px] lg:h-[590px] lg:max-w-[820px]">{profiles.map((x,i)=>{const pos=["lg:left-[4%] lg:top-[15%] lg:-rotate-6","lg:left-[36%] lg:top-[3%] lg:rotate-0","lg:left-[68%] lg:top-[18%] lg:rotate-6"][i];const mobile=["left-[2%] top-[12%] -rotate-6","left-1/2 top-0 -translate-x-1/2","right-[2%] top-[12%] rotate-6"][i];return <div key={x.name} className={`story-profile story-item absolute ${mobile} ${pos} w-[175px] overflow-hidden rounded-[1.75rem] border-4 border-white bg-white shadow-[0_24px_60px_rgba(76,29,149,.18)] lg:w-[245px]`} style={{animationDelay:`${80+i*100}ms`}}><div className="relative h-[225px] lg:h-[325px]"><Image src={x.src} alt="" fill sizes="245px" className="object-cover"/>{i===1&&<span className="absolute bottom-3 right-3 rounded-full bg-white px-3 py-1 text-xs font-bold text-[#C026D3] shadow">92% Match</span>}</div><div className="p-4"><p className="font-serif text-lg font-semibold text-[#2A1845] lg:text-xl">{x.name}</p><p className="mt-1 text-xs text-[#75647F]">{x.place}</p></div></div>})}</div>
+   <div className="relative mx-auto h-[480px] w-full max-w-[420px] lg:h-[590px] lg:max-w-[980px]">{profiles.map((x,i)=>{const pos=["lg:left-[0%] lg:top-[16%] lg:-rotate-6","lg:left-[26%] lg:top-[3%] lg:-rotate-1","lg:left-[51%] lg:top-[2%] lg:rotate-1","lg:left-[76%] lg:top-[15%] lg:rotate-6"][i];const mobile=["left-[2%] top-[2%] -rotate-6","right-[2%] top-[2%] rotate-6","left-[2%] bottom-[2%] -rotate-3","right-[2%] bottom-[6%] rotate-3"][i];return <div key={x.name} className={`story-profile story-item absolute ${mobile} ${pos} w-[165px] overflow-hidden rounded-[1.75rem] border-4 border-white bg-white shadow-[0_24px_60px_rgba(76,29,149,.18)] lg:w-[220px]`} style={{animationDelay:`${80+i*100}ms`,zIndex:i===1?5:i+1}}><div className="relative h-[210px] lg:h-[295px]"><Image src={x.src} alt={x.name} fill sizes="220px" quality={90} className="object-cover object-[center_15%]"/>{i===1&&<span className="absolute bottom-3 right-3 rounded-full bg-white px-3 py-1 text-xs font-bold text-[#C026D3] shadow">92% Match</span>}</div><div className="p-3 lg:p-4"><p className="font-serif text-base font-semibold text-[#2A1845] lg:text-xl">{x.name}</p><p className="mt-1 text-xs text-[#75647F]">{x.place}</p></div></div>})}</div>
   </article>
 
   <article className="homepage-story-card grid items-center gap-8 overflow-hidden px-5 py-8 lg:grid-cols-[.82fr_1.18fr] lg:gap-16 lg:px-[max(6vw,72px)] xl:mx-auto xl:max-w-[1500px]">

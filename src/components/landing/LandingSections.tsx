@@ -540,9 +540,10 @@ export function CommunitySection() {
 
 export function DiscoveryPreview() { const t=useHomeCopy();
   const profiles = [
-    { name: "Nila, 27", location: "London, UK", image: "/images/values/culture.jpg?v=3", position: "72% center" },
-    { name: "Tharshini, 27", location: "London, UK", image: "/images/values/shared.jpg?v=3", position: "72% center" },
-    { name: "Kavya, 28", location: "Toronto, Canada", image: "/images/values/goals.jpg?v=3", position: "72% center" },
+    { name: "Nila, 27", location: "London, UK", image: "/images/profiles/nila.jpg?v=1", position: "center" },
+    { name: "Tharshini, 27", location: "London, UK", image: "/images/profiles/tharshini.jpg?v=1", position: "center" },
+    { name: "Kavya, 28", location: "London, UK", image: "/images/profiles/kavya.jpg?v=1", position: "center" },
+    { name: "Vishal, 29", location: "London, UK", image: "/images/profiles/vishal.jpg?v=1", position: "center" },
   ];
   return (
     <section className="overflow-hidden bg-[#FFFDFB] px-4 pb-14 pt-10 sm:px-6 sm:py-24" aria-labelledby="discovery-heading">
@@ -553,15 +554,20 @@ export function DiscoveryPreview() { const t=useHomeCopy();
           <p className="mx-auto mt-4 max-w-sm text-sm leading-6 text-[#6B5A78]">Meet people who share your values, culture and life goals.</p>
         </ScrollReveal>
 
-        <div className="relative mx-auto mt-8 h-[420px] max-w-[390px]">
+        <div className="relative mx-auto mt-8 h-[480px] max-w-[420px] sm:max-w-[520px]">
           {profiles.map((profile,index) => {
-            const side=index!==1;
-            const position=index===0?"left-[-42px] top-10 -rotate-[5deg]":index===2?"right-[-42px] top-10 rotate-[5deg]":"left-1/2 top-0 z-20 -translate-x-1/2";
+            const featured=index===1;
+            const position=[
+              "left-[-8px] top-6 -rotate-[5deg]",
+              "left-1/2 top-0 z-20 -translate-x-1/2",
+              "right-[-8px] top-8 rotate-[5deg]",
+              "left-1/2 bottom-0 z-10 -translate-x-1/2 rotate-[2deg]",
+            ][index];
             return <ScrollReveal key={profile.name} delay={index*100} distance={42} className={`absolute ${position}`}>
-              <article className={`overflow-hidden rounded-[2rem] border-[5px] border-white bg-white shadow-[0_22px_55px_rgba(76,29,149,.16)] ${side?"w-[190px] scale-[.88] opacity-75":"w-[235px]"}`}>
-                <div className={`relative ${side?"h-[250px]":"h-[300px]"}`}><Image src={profile.image} alt="" fill sizes="240px" className="object-cover scale-[1.35]" style={{ objectPosition: profile.position }}/></div>
+              <article className={`overflow-hidden rounded-[2rem] border-[5px] border-white bg-white shadow-[0_22px_55px_rgba(76,29,149,.16)] ${featured?"w-[220px]":"w-[170px] scale-[.92] opacity-90"}`}>
+                <div className={`relative ${featured?"h-[280px]":"h-[220px]"}`}><Image src={profile.image} alt={profile.name} fill sizes="240px" className="object-cover object-[center_15%]"/></div>
                 <div className="relative px-4 pb-4 pt-3 text-left">
-                  {!side && <span className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white/95 px-3 py-1 text-[11px] font-bold text-[#C026D3] shadow-md">92% Match</span>}
+                  {featured && <span className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white/95 px-3 py-1 text-[11px] font-bold text-[#C026D3] shadow-md">92% Match</span>}
                   <h3 className="font-serif text-lg font-semibold text-[#2A1845]">{profile.name}</h3>
                   <p className="mt-0.5 text-xs text-[#6B5A78]">{profile.location}</p>
                 </div>
