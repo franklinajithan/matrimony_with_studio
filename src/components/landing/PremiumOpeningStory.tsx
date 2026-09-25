@@ -112,6 +112,8 @@ function HeroCarousel({
 }
 
 export function PremiumOpeningStory(){
+ const {ref:openingRef,p:openingP}=useProgress();
+ const heroExit=phase(openingP,.03,.22);
  const profiles=[
   {name:"Nila, 27",place:"London, UK",src:"/images/profiles/nila.jpg?v=1"},
   {name:"Tharshini, 27",place:"London, UK",src:"/images/profiles/tharshini.jpg?v=1"},
@@ -119,15 +121,18 @@ export function PremiumOpeningStory(){
   {name:"Vishal, 29",place:"London, UK",src:"/images/profiles/vishal.jpg?v=1"},
  ];
  return <section className="bg-[#FFFDFB]">
-  <article className="homepage-story-card grid min-h-[calc(100svh-7rem)] items-center gap-8 overflow-hidden px-5 py-6 lg:grid-cols-[minmax(440px,.9fr)_minmax(560px,1.1fr)] lg:gap-16 lg:px-[max(5vw,64px)] lg:py-8 xl:mx-auto xl:max-w-[1500px]">
-   <div className="story-copy lg:max-w-[620px]">
+  <article ref={openingRef} className="homepage-story-card relative grid min-h-[calc(100svh-7rem)] items-center gap-8 overflow-hidden px-5 py-6 lg:grid-cols-[minmax(440px,.9fr)_minmax(560px,1.1fr)] lg:gap-16 lg:px-[max(5vw,64px)] lg:py-8 xl:mx-auto xl:max-w-[1500px]">
+   <div className="story-copy lg:max-w-[620px]" style={{transform:`translate3d(${-heroExit*72}px,${-heroExit*20}px,0)`,opacity:1-heroExit*.88,filter:`blur(${heroExit*3}px)`}}>
     <p className="text-[10px] font-bold uppercase leading-5 tracking-[.27em] text-[#A078B0] lg:text-xs">Sri Lankan matchmaking<br/>for a brighter tomorrow</p>
     <h1 className="mt-3 font-serif text-[2.7rem] font-semibold leading-[1.02] text-[#2A1845] lg:mt-4 lg:text-[5.1rem] xl:text-[5.65rem]">Find Your<br/><span className="flex items-center gap-4 text-[#C026D3]">Perfect Match <span className="cupid-signature relative inline-flex h-[.82em] w-[1.18em] shrink-0 items-center justify-center" aria-hidden="true"><svg viewBox="0 0 120 86" className="h-full w-full overflow-visible"><path className="cupid-bow" d="M18 10 C57 16 60 70 18 76 C35 55 35 31 18 10Z" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round"/><path className="cupid-string" d="M18 10 L48 43 L18 76" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/><g className="cupid-arrow"><path d="M35 43 H105" stroke="currentColor" strokeWidth="5" strokeLinecap="round"/><path d="M92 31 L108 43 L92 55" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/><path d="M37 43 l-13 -9 m13 9 -13 9" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/></g><path className="cupid-heart-pop" d="M72 19c-8-10-23 1 0 18 23-17 8-28 0-18Z" fill="currentColor"/></svg></span></span></h1>
     <p className="mt-4 max-w-lg text-[12px] leading-5 text-[#65546F] lg:mt-5 lg:text-base lg:leading-7">A trusted matrimony platform for the Sri Lankan community in the UK, Canada, Australia and beyond.</p>
     <div className="mt-5 flex justify-between lg:mt-7 lg:max-w-lg lg:justify-start lg:gap-12">{[[Users,"Verified\nProfiles"],[Shield,"Safe & Secure"],[Heart,"Find\nCompatibility"]].map(([Icon,label]:any,i)=><div key={i} className="story-item w-24 text-center" style={{animationDelay:`${i*70}ms`}}><span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#F3E8FF] text-[#7C3AED]"><Icon className="h-5 w-5"/></span><span className="mt-2 block whitespace-pre-line text-[10px] font-semibold leading-3 text-[#4C3A5C]">{label}</span></div>)}</div>
     <div className="mt-5 grid gap-2 lg:mt-7 lg:max-w-lg lg:grid-cols-2 lg:gap-3"><Link href="/signup" className="flex h-11 items-center justify-center rounded-full bg-[#7C3AED] text-sm font-semibold text-white shadow-lg">Create Your Profile <ArrowRight className="ml-1 h-4 w-4"/></Link><Link href="/discover" className="flex h-11 items-center justify-center rounded-full border border-violet-200 bg-white text-sm font-semibold text-violet-700">Explore Matches</Link></div>
    </div>
-   <HeroCarousel className="story-media h-[44svh] min-h-[310px] rounded-[2.25rem] shadow-[0_18px_45px_rgba(76,29,149,.16)] lg:h-[68vh] lg:min-h-[540px] lg:max-h-[720px] lg:rounded-[2.75rem]" priority sizes="(min-width:1024px) 55vw,100vw"/>
+   <div className="story-media relative" style={{transform:`translate3d(${heroExit*-5}%,${heroExit*18}px,0) scale(${1+heroExit*.075})`,transformOrigin:"center center"}}>
+    <HeroCarousel className="h-[44svh] min-h-[310px] rounded-[2.25rem] shadow-[0_18px_45px_rgba(76,29,149,.16)] lg:h-[68vh] lg:min-h-[540px] lg:max-h-[720px] lg:rounded-[2.75rem]" priority sizes="(min-width:1024px) 55vw,100vw"/>
+    <div className="pointer-events-none absolute -bottom-3 left-1/2 h-px w-[70%] -translate-x-1/2 bg-gradient-to-r from-transparent via-fuchsia-300 to-transparent" style={{transform:`translateX(-50%) scaleX(${.35+heroExit*.65})`,opacity:.25+heroExit*.65}}/>
+   </div>
   </article>
 
   <article className="homepage-story-card relative grid items-center gap-8 overflow-hidden px-5 py-8 lg:grid-cols-[.82fr_1.18fr] lg:gap-16 lg:px-[max(6vw,72px)]">
