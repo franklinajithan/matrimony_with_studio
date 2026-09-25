@@ -87,6 +87,46 @@ test.describe("CupidMatch member-to-member QA", () => {
     await context.close();
   });
 
+  test("QA-015 → QA-019 extended partner preference controls filter Discover", async ({ browser }) => {
+    test.setTimeout(90_000);
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await login(page, A);
+
+    const priyaId = "01a0a652-f9c1-70ff-9eef-ad297f2281b0";
+    const rajeshId = "01a0a652-f929-76ac-bbce-9b3f2c188d5a";
+    const dineshId = "01a0a652-f963-7793-a4da-78dff528095e";
+    const roshiniId = "01a0a652-fa40-7ce7-836a-e84608163af4";
+
+    await page.goto("/discover");
+    await page.getByTestId("discover-filters-open").click();
+
+    const choose = async (testId: string, label: string) => {
+      await page.getByTestId(testId).click();
+      await page.getByRole("option", { name: label, exact: true }).click();
+    };
+
+    await choose("discover-filter-gender", "Woman");
+    await choose("discover-filter-marital-status", "Never married");
+    await page.getByTestId("discover-filter-height-min").fill("159");
+    await page.getByTestId("discover-filter-height-max").fill("165");
+    await choose("discover-filter-education", "Bachelor's");
+    await choose("discover-filter-children", "Wants children");
+    await choose("discover-filter-relocation", "Open to relocating");
+    await choose("discover-filter-family", "Close family involvement");
+    await choose("discover-filter-marriage-timeline", "Within 1–2 years");
+
+    await expect(page.getByTestId(`discover-profile-${priyaId}`), "QA-015: full preference match remains visible").toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId(`discover-profile-${rajeshId}`), "QA-016: gender mismatch excluded").toHaveCount(0);
+    await expect(page.getByTestId(`discover-profile-${dineshId}`), "QA-017: marital/height/education/future mismatch excluded").toHaveCount(0);
+    await expect(page.getByTestId(`discover-profile-${roshiniId}`), "QA-018: children/relocation/family/timeline mismatch excluded").toHaveCount(0);
+
+    await page.getByTestId("discover-filter-clear").click();
+    await expect(page.getByTestId(`discover-profile-${rajeshId}`), "QA-019: clearing extended filters restores excluded profiles").toBeVisible({ timeout: 20_000 });
+
+    await context.close();
+  });
+
   test("QA-020 → QA-042 full interest, connection and chat lifecycle", async ({ browser }) => {
     test.setTimeout(90_000);
     const { a, b, pageA, pageB } = await loginPair(browser);
