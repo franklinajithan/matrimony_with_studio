@@ -32,6 +32,7 @@ import { focusRing } from "@/components/landing/brand";
 import { LotusOrnament } from "@/components/decorative";
 import { CountryCarousel } from "@/components/landing/CountryCarousel";
 import { useI18n } from "@/components/i18n/I18nProvider";
+import { ScrollReveal } from "@/components/landing/ScrollReveal";
 
 
 const HOME_COPY: Record<string, Record<string,string>> = {
@@ -562,23 +563,23 @@ export function DiscoveryPreview() { const t=useHomeCopy();
   return (
     <section className="bg-background px-4 py-20 sm:px-6" aria-labelledby="discovery-heading">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-12 text-center">
+        <ScrollReveal className="mb-12 text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">
             {t.discovery}
           </p>
-          <h2 id="discovery-heading" className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
+          <h2 id="discovery-heading" className="mt-2 font-serif text-3xl font-semibold text-foreground sm:text-4xl">
             {t.findMatches}
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
             {t.samples}
           </p>
-        </div>
+        </ScrollReveal>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {demoProfiles.map((profile, index) => (
+            <ScrollReveal key={index} delay={index * 120} distance={38} className={index === 1 ? "sm:-translate-y-4" : ""}>
             <div
-              key={index}
-              className="group overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all hover:shadow-md"
+              className="group overflow-hidden rounded-[2rem] border border-[#E9D5FF] bg-card shadow-[0_16px_45px_rgba(76,29,149,0.09)] transition-transform duration-500 hover:-translate-y-1"
             >
               {/* Demo Label */}
               <div className="border-b border-border bg-accent/50 px-4 py-2">
@@ -609,12 +610,15 @@ export function DiscoveryPreview() { const t=useHomeCopy();
                 </div>
               </div>
             </div>
+            </ScrollReveal>
           ))}
         </div>
 
-        <p className="mt-10 text-center text-sm text-muted-foreground">
-          {t.sampleNote}
-        </p>
+        <ScrollReveal delay={260}>
+          <p className="mt-10 text-center text-sm text-muted-foreground">
+            {t.sampleNote}
+          </p>
+        </ScrollReveal>
       </div>
     </section>
   );
