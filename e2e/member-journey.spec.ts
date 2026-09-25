@@ -62,6 +62,31 @@ test.describe("CupidMatch member-to-member QA", () => {
     await a.close(); await b.close();
   });
 
+  test("QA-010 → QA-019 partner preferences filter Discover profiles", async ({ browser }) => {
+    test.setTimeout(60_000);
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await login(page, A);
+
+    const priyaId = "01a0a652-f9c1-70ff-9eef-ad297f2281b0";
+    const rajeshId = "01a0a652-f929-76ac-bbce-9b3f2c188d5a";
+    const dineshId = "01a0a652-f963-7793-a4da-78dff528095e";
+
+    // A controlled cohort differs by country, language, faith and age.
+    // Hindu/Hinduism intentionally verifies normalization of legacy profile data.
+    await page.goto("/discover?country=Sri%20Lanka&language=Tamil&religion=Hinduism&ageMax=34");
+
+    await expect(page.getByTestId(`discover-profile-${priyaId}`), "QA-010: matching profile is included").toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId(`discover-profile-${rajeshId}`), "QA-011: religion mismatch is excluded").toHaveCount(0);
+    await expect(page.getByTestId(`discover-profile-${dineshId}`), "QA-012: country/language/age mismatch is excluded").toHaveCount(0);
+
+    await page.goto("/discover?country=Canada&religion=Christianity&ageMin=35");
+    await expect(page.getByTestId(`discover-profile-${dineshId}`), "QA-013: Catholic profile matches Christianity preference").toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId(`discover-profile-${priyaId}`), "QA-014: Sri Lanka/Hindu profile is excluded from Canada/Christianity").toHaveCount(0);
+
+    await context.close();
+  });
+
   test("QA-020 → QA-042 full interest, connection and chat lifecycle", async ({ browser }) => {
     test.setTimeout(90_000);
     const { a, b, pageA, pageB } = await loginPair(browser);
