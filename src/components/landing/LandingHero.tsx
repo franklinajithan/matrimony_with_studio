@@ -1,13 +1,26 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Heart, Shield, Users } from "lucide-react";
+import { ArrowRight, Heart, Shield, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HERO_IMAGE } from "@/components/landing/brand";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { getMessages } from "@/components/i18n/messages";
 import { useEffect, useRef, useState } from "react";
 
+
+function CupidMark() {
+  return (
+    <span className="relative ml-2 inline-flex h-12 w-16 shrink-0 items-center justify-center sm:h-14 sm:w-20" aria-hidden="true">
+      <svg viewBox="0 0 86 56" className="absolute inset-0 h-full w-full overflow-visible">
+        <path d="M6 43C23 25 39 27 51 31c11 4 18 1 28-12" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" className="text-fuchsia-400"/>
+        <path d="M69 12l11 7-12 5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="text-violet-500"/>
+      </svg>
+      <Heart className="relative h-7 w-7 -translate-y-1 fill-fuchsia-500 text-fuchsia-500 drop-shadow-[0_5px_12px_rgba(217,70,239,.25)] sm:h-8 sm:w-8" strokeWidth={1.5}/>
+      <Sparkles className="absolute right-0 top-0 h-4 w-4 text-violet-500 motion-safe:animate-pulse" strokeWidth={1.8}/>
+    </span>
+  );
+}
 
 function ScriptHeart({ className }: { className?: string }) {
   return (
@@ -62,11 +75,7 @@ export function LandingHero() {
             {t.title}
             <span className="mt-1 flex items-center gap-2 text-[#C026D3] sm:mt-1.5">
               {t.titleAccent}
-              <Heart
-                className="h-7 w-7 shrink-0 stroke-[1.8] text-[#C026D3] sm:h-8 sm:w-8"
-                fill="none"
-                aria-hidden="true"
-              />
+              <CupidMark />
             </span>
           </h1>
           <p className="mt-3 max-w-[30rem] text-[13px] leading-7 text-[#5C4A66] sm:text-lg sm:leading-8">
@@ -117,6 +126,9 @@ export function LandingHero() {
 
         <div className="relative mx-auto w-full max-w-[560px] will-change-transform lg:max-w-none lg:pt-1" style={{ opacity: 1-scrollProgress*.32, transform: `translate3d(0,${scrollProgress * 30}px,0) scale(${1-scrollProgress*0.065})` }}>
           <figure className="relative overflow-hidden rounded-[1.75rem] shadow-[0_22px_50px_rgba(74,32,110,0.18)] lg:rounded-[2rem]">
+            <div className="pointer-events-none absolute -right-10 -top-12 z-20 h-32 w-32 rounded-full bg-fuchsia-300/20 blur-2xl motion-safe:animate-pulse" />
+            <div className="pointer-events-none absolute left-[8%] top-[12%] z-20 h-2 w-2 rounded-full bg-white/90 shadow-[0_0_18px_5px_rgba(255,255,255,.7)] motion-safe:animate-pulse" />
+            <div className="pointer-events-none absolute right-[14%] top-[20%] z-20 h-1.5 w-1.5 rounded-full bg-fuchsia-200 shadow-[0_0_16px_4px_rgba(244,114,182,.5)] motion-safe:animate-pulse" />
             <div className="relative h-[42svh] min-h-[330px] w-full sm:h-auto sm:aspect-[3/4] lg:aspect-auto lg:min-h-[700px] lg:h-[min(74vh,760px)]">
               <Image
                 src={HERO_IMAGE}
