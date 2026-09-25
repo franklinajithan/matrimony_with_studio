@@ -51,14 +51,14 @@ export function LandingHero() {
   }, []);
   const highlights = [{ icon: Users, label: t.verified }, { icon: Shield, label: t.safe }, { icon: Heart, label: t.compatibility }];
   return (
-    <section ref={heroRef} className="relative overflow-hidden bg-[#FBF8F4] pt-1 sm:pt-2">
-      <div className="relative mx-auto grid max-w-[1240px] items-start gap-6 px-5 pb-8 sm:px-8 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] lg:items-stretch lg:gap-4 lg:px-10 lg:pb-10">
+    <section ref={heroRef} className="relative min-h-[calc(100svh-4rem)] overflow-hidden bg-[#FBF8F4] pt-1 sm:pt-2">
+      <div className="relative mx-auto grid max-w-[1240px] items-start gap-5 px-5 pb-5 sm:px-8 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] lg:items-stretch lg:gap-4 lg:px-10 lg:pb-10">
         <div className="relative z-10 flex max-w-xl flex-col pt-3 will-change-transform lg:pt-1" style={{ opacity: 1 - scrollProgress * 0.42, transform: `translate3d(0,${scrollProgress * -28}px,0) scale(${1-scrollProgress*0.025})` }}>
           <p className="text-[11px] font-semibold uppercase leading-5 tracking-[0.26em] text-[#A078B0] sm:text-xs sm:leading-6">
             {t.eyebrow}
             <span className="block">{t.eyebrow2}</span>
           </p>
-          <h1 className="mt-5 font-serif text-[2.65rem] font-semibold leading-[1.08] tracking-tight text-[#2A1845] sm:text-5xl lg:text-[3.65rem] lg:leading-[1.05]">
+          <h1 className="mt-4 font-serif text-[2.55rem] font-semibold leading-[1.08] tracking-tight text-[#2A1845] sm:text-5xl lg:text-[3.65rem] lg:leading-[1.05]">
             {t.title}
             <span className="mt-1 flex items-center gap-2 text-[#C026D3] sm:mt-1.5">
               {t.titleAccent}
@@ -69,11 +69,11 @@ export function LandingHero() {
               />
             </span>
           </h1>
-          <p className="mt-5 max-w-[30rem] text-[15px] leading-7 text-[#5C4A66] sm:text-lg sm:leading-8">
+          <p className="mt-4 max-w-[30rem] text-[14px] leading-7 text-[#5C4A66] sm:text-lg sm:leading-8">
             {t.description}
           </p>
 
-          <ul className="mt-9 flex gap-6 sm:gap-10">
+          <ul className="mt-6 flex justify-between gap-3 sm:gap-10">
             {highlights.map((item) => (
               <li key={item.label} className="flex w-[4.75rem] flex-col items-center text-center sm:w-24">
                 <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#F3E8FF] text-[#8B5CF6]">
@@ -86,7 +86,7 @@ export function LandingHero() {
             ))}
           </ul>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Button
               asChild
               className="h-12 rounded-full bg-[#7C3AED] px-7 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(124,58,237,0.28)] hover:bg-[#6D28D9]"
@@ -106,7 +106,7 @@ export function LandingHero() {
           </div>
 
           <p
-            className="pt-5 mt-10 font-script text-[1.85rem] leading-[1.15] text-[#D946EF] sm:mt-12 sm:text-[2.15rem] lg:mt-auto lg:mb-24"
+            className="hidden pt-5 mt-10 font-script text-[1.85rem] leading-[1.15] text-[#D946EF] sm:mt-12 sm:text-[2.15rem] lg:mt-auto lg:mb-24"
             aria-hidden="true"
           >
             Good people
