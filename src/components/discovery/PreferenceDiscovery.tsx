@@ -120,7 +120,7 @@ export function PreferenceDiscovery() {
       const score = preferences ? preferenceScore(person, preferences) : null;
       const showScore = Boolean(hasSaved && score && score.total > 0);
       return (
-        <Card key={person.id} className="flex h-full flex-col overflow-hidden rounded-2xl border-[#eadde7] shadow-sm">
+        <Card key={person.id} data-testid={`discover-profile-${person.id}`} className="flex h-full flex-col overflow-hidden rounded-2xl border-[#eadde7] shadow-sm">
           {/* Fixed photo height so every card aligns */}
           <div className="relative h-44 w-full shrink-0 overflow-hidden bg-violet-50 sm:h-52 md:h-56">
             {person.photoURL ? (
