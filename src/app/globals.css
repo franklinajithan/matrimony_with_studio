@@ -122,6 +122,14 @@
     scroll-snap-align: start;
     scroll-snap-stop: always;
   }
+  /* Desktop stays fluid; card-like snapping is reserved for touch/mobile. */
+  @media (min-width: 1024px) {
+    .homepage-card-flow { scroll-snap-type: none; }
+    .homepage-card-flow > section {
+      scroll-snap-align: none;
+      scroll-snap-stop: normal;
+    }
+  }
   @media (max-width: 767px) {
     .homepage-card-flow > section {
       min-height: calc(100svh - 4.25rem);
