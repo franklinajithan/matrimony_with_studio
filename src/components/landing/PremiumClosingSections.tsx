@@ -37,24 +37,28 @@ export function GlobalCommunityStory(){
     <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[#6B5A78] lg:max-w-xl lg:text-base">Sri Lankans around the world, finding meaningful connections.</p>
     <div className="relative mx-auto mt-5 h-[430px] max-w-[390px] lg:mt-8 lg:h-[500px] lg:max-w-[900px]">
      <svg className="absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 900 500" fill="none" aria-hidden="true">
-      <g fill="#E9D5FF" opacity=".56">
-       <path d="M55 132l24-28 35-10 25 8 17-12 25 9 13 19 31 4 18 17-7 18-27 9-12 24-24 10-17-9-17 14-27-6-13-19-29-10-17-28z"/>
-       <path d="M217 111l20-15 22 5 11 18-8 16-18 4-12-10-15-18z"/>
-       <path d="M245 184l20 7 18 26-3 31-14 26-8 37-17 35-18-11-5-33-13-25 8-33-10-30 18-23 24-7z"/>
-       <path d="M365 101l29-23 47-4 31 14 42-8 38 14 30-4 32 15 45 3 35 20-12 21-42 9-21 20-35-6-24 14-32-5-28 19-30-13-18 9-22-16-36 3-26-19-27-8-15-23 18-22 41-10z"/>
-       <path d="M548 184l22 15 11 27-9 22-18-8-7-28 1-28z"/>
-       <path d="M652 244l18 7 8 20-13 18-18-9-4-21 9-15z"/>
-       <path d="M731 310l31-16 37 5 25 24-5 30-31 18-37-7-25-25 5-29z"/>
-       <path d="M824 333l17 5 10 16-9 12-17-6-6-15 5-12z"/>
+      <defs>
+       <pattern id="worldDots" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="2.4" cy="2.4" r="2.1" fill="#B794F6"/></pattern>
+       <filter id="mapGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="10"/></filter>
+      </defs>
+      <g opacity=".16" filter="url(#mapGlow)" fill="#A855F7"><ellipse cx="450" cy="250" rx="350" ry="150"/></g>
+      <g fill="url(#worldDots)" opacity=".72">
+       <path d="M58 122l28-25 39-14 38 5 25-13 42 9 22 23 38 4 24 20-8 24-31 12-14 27-32 8-22-9-19 18-33-5-17-21-35-7-26-25-21-16 20-34z"/>
+       <path d="M236 171l27 7 23 31-1 37-17 29-8 43-21 48-21-13-8-37-15-30 9-39-10-34 18-28 24-14z"/>
+       <path d="M356 100l36-25 53-7 39 16 45-10 43 16 37-6 34 17 49 2 42 18 36 2 29 19-15 24-42 7-26 22-40-6-27 19-39-5-30 23-36-11-24 12-28-17-39 5-32-22-35-8-22-27 17-25 45-12z"/>
+       <path d="M493 190l32 12 22 28-4 34-20 33-12 48-27 54-25-18-6-43-17-30 8-42-13-34 20-29 42-13z"/>
+       <path d="M664 222l19 8 13 19-7 17-18-4-11-21 4-19z"/>
+       <path d="M708 251l16 5 8 17-9 16-15-6-6-18 6-14z"/>
+       <path d="M738 318l34-18 43 5 30 27-6 35-34 20-43-8-29-29 5-32z"/>
+       <path d="M838 347l17 6 10 17-10 13-17-7-6-16 6-13z"/>
       </g>
-      <g fill="#8B5CF6">{dots.map(([x,y],i)=><circle key={i} cx={x*9} cy={y*5} r={i%4===0?4:2.8} opacity={.35+(i%5)*.1}/>)}</g>
-      <g stroke="#A855F7" strokeWidth="2" strokeLinecap="round" opacity={.72}>
-       <path d="M470 245 C385 178 292 155 205 146" strokeDasharray="3 9"/>
-       <path d="M470 245 C575 170 646 159 728 164" strokeDasharray="3 9"/>
-       <path d="M470 245 C383 317 304 354 226 363" strokeDasharray="3 9"/>
-       <path d="M470 245 C570 320 650 350 738 365" strokeDasharray="3 9"/>
+      <g stroke="#A855F7" strokeWidth="2" strokeLinecap="round" opacity=".6">
+       <path d="M450 250 C365 180 278 150 185 142" strokeDasharray="3 10"/>
+       <path d="M450 250 C558 174 650 158 752 166" strokeDasharray="3 10"/>
+       <path d="M450 250 C360 321 280 355 190 369" strokeDasharray="3 10"/>
+       <path d="M450 250 C560 323 660 355 755 369" strokeDasharray="3 10"/>
       </g>
-      {[ [205,146],[728,164],[226,363],[738,365] ].map(([x,y],i)=><g key={i}><circle cx={x} cy={y} r="11" fill="white" stroke="#7C3AED" strokeWidth="3"/><circle cx={x} cy={y} r="4" fill="#D946EF"/></g>)}
+      {[ [185,142],[752,166],[190,369],[755,369] ].map(([x,y],i)=><g key={i}><circle cx={x} cy={y} r="9" fill="#FFFDFB" stroke="#7C3AED" strokeWidth="2.5"/><circle cx={x} cy={y} r="3.5" fill="#D946EF"/></g>)}
      </svg>
      {countries.map(([name,img],i)=>{const pos=["left-0 top-5","right-0 top-12","left-1 bottom-8","right-0 bottom-2"][i];const desktop=["lg:left-[8%] lg:top-[7%]","lg:right-[7%] lg:top-[11%]","lg:left-[10%] lg:bottom-[3%]","lg:right-[8%] lg:bottom-[1%]"][i];const delay=i*.12;const x=clamp((enter-delay)/(1-delay));return <div key={name} className={`absolute ${pos} ${desktop} w-[120px] overflow-hidden rounded-[1.35rem] border-4 border-white bg-white shadow-[0_18px_45px_rgba(76,29,149,.14)] lg:w-[155px]`} style={{opacity:x,transform:`translateY(${(1-x)*(i<2?-28:28)}px) scale(${.9+x*.1})`}}><div className="relative aspect-[4/3]"><Image src={img} alt={name} fill sizes="(min-width:1024px) 155px,120px" className="object-cover"/></div><div className="flex items-center justify-center gap-1 py-2 text-xs font-bold text-[#2A1845] lg:text-sm"><MapPin className="h-3.5 w-3.5 text-[#7C3AED]"/>{name}</div></div>})}
      <div className="absolute left-1/2 top-1/2 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5EDFF]/95 px-4 py-5 shadow-lg backdrop-blur lg:w-44 lg:py-7"><Heart className="mx-auto h-7 w-7 fill-[#D946EF] text-[#D946EF]"/><p className="mt-2 font-serif text-lg font-semibold text-[#2A1845] lg:text-2xl">CupidMatch</p><p className="mt-1 text-[10px] leading-4 text-[#6B5A78] lg:text-xs">Culture connects us wherever life takes us.</p></div>
