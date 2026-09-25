@@ -25,7 +25,20 @@ import { getMessages } from "@/components/i18n/messages";
 
 type Person = Profile & { isShortlisted?: boolean };
 const empty: DiscoveryFilters = { query: "", countries: [], languages: [], religions: [], professions: [], smoking: [], drinking: [] };
-const options = { countries: DIASPORA_COUNTRY_NAMES, languages: ["Tamil", "English", "Sinhala"], religions: ["Hinduism", "Christianity", "Islam", "Buddhism", "Sikhism", "Jainism", "Other"] };
+const options = {
+  countries: DIASPORA_COUNTRY_NAMES,
+  languages: ["Tamil", "English", "Sinhala"],
+  religions: ["Hinduism", "Christianity", "Islam", "Buddhism", "Sikhism", "Jainism", "Other"],
+  genders: ["Woman", "Man", "Non-binary", "No preference"],
+  maritalStatuses: ["Never married", "Divorced", "Widowed", "Separated", "No preference"],
+  education: ["High school", "Diploma", "Bachelor's", "Master's", "Doctorate"],
+  future: {
+    children: ["Doesn't matter", "Wants children", "Does not want children", "Open to discussing"],
+    relocation: ["Doesn't matter", "Open to relocating", "Would relocate for the right person", "Prefer someone settled where I am"],
+    family: ["Doesn't matter", "Close family involvement", "Some family involvement", "Prefer independent decisions"],
+    timeline: ["Doesn't matter", "Ready when it feels right", "Within 1–2 years", "Still exploring"],
+  },
+};
 const first = (values: string[]) => values[0] || "all";
 const list = (value: string) => value === "all" ? [] : [value];
 const hasPreferences = (p: PartnerPreferences) => Boolean(p.ageMin || p.ageMax || p.countries.length || p.languages.length || p.religions.length || p.professions.length || p.smoking.length || p.drinking.length || (p.gender && p.gender !== "No preference") || p.maritalStatuses?.length || p.education?.length || p.heightMin || p.heightMax || p.relocation || p.wantsChildren || p.familyInvolvement || p.marriageTimeline);
@@ -74,7 +87,16 @@ export function PreferenceDiscovery() {
   const results = useMemo(() => people.filter((p) => profileMatchesFilters(p, filters)).sort((a, b) => preferences ? preferenceScore(b, preferences).percentage - preferenceScore(a, preferences).percentage : 0), [people, filters, preferences]);
   const reset = () => preferences && setFilters(filtersFromPreferences(preferences));
   const clear = () => setFilters(empty);
-  const activeCount = [filters.ageMin, filters.ageMax, filters.countries.length, filters.languages.length, filters.religions.length, filters.professions.length, filters.smoking.length, filters.drinking.length].filter(Boolean).length;
+  const activeCount = [
+    filters.ageMin, filters.ageMax, filters.countries.length, filters.languages.length,
+    filters.religions.length, filters.professions.length, filters.smoking.length, filters.drinking.length,
+    filters.gender && filters.gender !== "No preference" ? 1 : 0, filters.maritalStatuses?.length,
+    filters.heightMin, filters.heightMax, filters.education?.length,
+    filters.wantsChildren && filters.wantsChildren !== "Doesn't matter" ? 1 : 0,
+    filters.relocation && filters.relocation !== "Doesn't matter" ? 1 : 0,
+    filters.familyInvolvement && filters.familyInvolvement !== "Doesn't matter" ? 1 : 0,
+    filters.marriageTimeline && filters.marriageTimeline !== "Doesn't matter" ? 1 : 0,
+  ].filter(Boolean).length;
 
   useEffect(() => {
     if (loading) return;
@@ -103,14 +125,24 @@ export function PreferenceDiscovery() {
     <Choice label={t.country} value={first(filters.countries)} values={options.countries} onChange={(v) => setFilters((f) => ({ ...f, countries: list(v) }))}/><Choice label={t.language} value={first(filters.languages)} values={options.languages} onChange={(v) => setFilters((f) => ({ ...f, languages: list(v) }))}/><Choice label={t.religion} value={first(filters.religions)} values={options.religions} onChange={(v) => setFilters((f) => ({ ...f, religions: list(v) }))}/>
     <div><Label>{t.profession}</Label><Input className="mt-2" placeholder="e.g. Engineer" value={filters.professions[0] || ""} onChange={(e) => setFilters((f) => ({ ...f, professions: e.target.value ? [e.target.value] : [] }))}/></div>
     <Choice label={t.smoking} value={first(filters.smoking)} values={["Never", "Occasionally", "Socially"]} onChange={(v) => setFilters((f) => ({ ...f, smoking: list(v) }))}/><Choice label={t.drinking} value={first(filters.drinking)} values={["Never", "Occasionally", "Socially"]} onChange={(v) => setFilters((f) => ({ ...f, drinking: list(v) }))}/>
-    <div className="grid grid-cols-2 gap-2"><Button variant="outline" onClick={clear}><X className="mr-2 h-4 w-4"/>{t.clear}</Button><Button onClick={() => { reset(); setSheet(false); }}><RotateCcw className="mr-2 h-4 w-4"/>{t.reset}</Button></div>
+    <div className="border-t border-violet-100 pt-4"><p className="mb-3 text-sm font-semibold text-violet-950">More partner preferences</p><div className="space-y-4">
+      <Choice testId="discover-filter-gender" label="Gender" value={filters.gender || "all"} values={options.genders} onChange={(v) => setFilters((f) => ({ ...f, gender: v === "all" ? undefined : v }))}/>
+      <Choice testId="discover-filter-marital-status" label="Marital status" value={first(filters.maritalStatuses || [])} values={options.maritalStatuses} onChange={(v) => setFilters((f) => ({ ...f, maritalStatuses: list(v) }))}/>
+      <div><Label>Height (cm)</Label><div className="mt-2 grid grid-cols-2 gap-2"><Input data-testid="discover-filter-height-min" inputMode="numeric" placeholder="Min" value={filters.heightMin || ""} onChange={(e) => setFilters((f) => ({ ...f, heightMin: e.target.value }))}/><Input data-testid="discover-filter-height-max" inputMode="numeric" placeholder="Max" value={filters.heightMax || ""} onChange={(e) => setFilters((f) => ({ ...f, heightMax: e.target.value }))}/></div></div>
+      <Choice testId="discover-filter-education" label="Education" value={first(filters.education || [])} values={options.education} onChange={(v) => setFilters((f) => ({ ...f, education: list(v) }))}/>
+      <Choice testId="discover-filter-children" label="Children" value={filters.wantsChildren || "all"} values={options.future.children} onChange={(v) => setFilters((f) => ({ ...f, wantsChildren: v === "all" ? undefined : v }))}/>
+      <Choice testId="discover-filter-relocation" label="Relocation" value={filters.relocation || "all"} values={options.future.relocation} onChange={(v) => setFilters((f) => ({ ...f, relocation: v === "all" ? undefined : v }))}/>
+      <Choice testId="discover-filter-family" label="Family involvement" value={filters.familyInvolvement || "all"} values={options.future.family} onChange={(v) => setFilters((f) => ({ ...f, familyInvolvement: v === "all" ? undefined : v }))}/>
+      <Choice testId="discover-filter-marriage-timeline" label="Marriage timeline" value={filters.marriageTimeline || "all"} values={options.future.timeline} onChange={(v) => setFilters((f) => ({ ...f, marriageTimeline: v === "all" ? undefined : v }))}/>
+    </div></div>
+    <div className="grid grid-cols-2 gap-2"><Button data-testid="discover-filter-clear" variant="outline" onClick={clear}><X className="mr-2 h-4 w-4"/>{t.clear}</Button><Button data-testid="discover-filter-reset" onClick={() => { reset(); setSheet(false); }}><RotateCcw className="mr-2 h-4 w-4"/>{t.reset}</Button></div>
   </div>;
 
   if (loading) return <PageFrame><Skeleton className="h-40 rounded-[30px]"/><Skeleton className="h-24"/><div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">{[1,2,3,4,5,6,7,8].map((n) => <Skeleton key={n} className="aspect-[3/5] rounded-2xl"/>)}</div></PageFrame>;
 
   return <PageFrame>
     <PageHero eyebrow={t.eyebrow} title={t.title} description={t.description}/>
-    <Card className="overflow-hidden border-violet-100"><CardContent className="p-4 sm:p-5"><div className="flex flex-col gap-3 lg:flex-row lg:items-center"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/><Input className="pl-10" placeholder={t.search} value={filters.query} onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))}/></div><div className="flex gap-2"><Sheet open={sheet} onOpenChange={setSheet}><SheetTrigger asChild><Button variant="outline" className="flex-1 lg:flex-none"><SlidersHorizontal className="mr-2 h-4 w-4"/>{t.filters} {activeCount ? `(${activeCount})` : ""}</Button></SheetTrigger><SheetContent className="w-[92vw] overflow-y-auto sm:max-w-md"><SheetHeader><SheetTitle>{t.matchFilters}</SheetTitle></SheetHeader><div className="mt-5"><FilterPanel/></div></SheetContent></Sheet>{hasSaved && <Button variant="ghost" onClick={reset}><RotateCcw className="mr-2 h-4 w-4"/>{t.myPreferences}</Button>}</div></div>
+    <Card className="overflow-hidden border-violet-100"><CardContent className="p-4 sm:p-5"><div className="flex flex-col gap-3 lg:flex-row lg:items-center"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/><Input className="pl-10" placeholder={t.search} value={filters.query} onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))}/></div><div className="flex gap-2"><Sheet open={sheet} onOpenChange={setSheet}><SheetTrigger asChild><Button data-testid="discover-filters-open" variant="outline" className="flex-1 lg:flex-none"><SlidersHorizontal className="mr-2 h-4 w-4"/>{t.filters} {activeCount ? `(${activeCount})` : ""}</Button></SheetTrigger><SheetContent className="w-[92vw] overflow-y-auto sm:max-w-md"><SheetHeader><SheetTitle>{t.matchFilters}</SheetTitle></SheetHeader><div className="mt-5"><FilterPanel/></div></SheetContent></Sheet>{hasSaved && <Button variant="ghost" onClick={reset}><RotateCcw className="mr-2 h-4 w-4"/>{t.myPreferences}</Button>}</div></div>
       <div className={`mt-4 flex items-center gap-2 rounded-xl px-3 py-2 text-sm ${hasSaved ? "bg-[#fbf8ff] text-violet-800" : "bg-amber-50 text-amber-800"}`}><Sparkles className="h-4 w-4 shrink-0"/><span>{hasSaved ? <><strong>Preference match %</strong> compares each member with your saved Partner Preferences.</> : <><strong>Match % is waiting for your preferences.</strong> Set Partner Preferences to activate personalised scores.</>}</span>{!hasSaved && <Button size="sm" variant="outline" className="ml-auto" onClick={() => router.push(PREFERENCES_ROUTE)}>Set preferences</Button>}</div>
     </CardContent></Card>
     <div className="flex items-center justify-between"><p className="text-sm text-muted-foreground"><strong className="text-foreground">{results.length}</strong> {t.potential}</p></div>
@@ -256,7 +288,7 @@ export function PreferenceDiscovery() {
   </PageFrame>;
 }
 
-function Choice({ label, value, values, onChange }: { label: string; value: string; values: string[]; onChange: (value: string) => void }) {
+function Choice({ label, value, values, onChange, testId }: { label: string; value: string; values: readonly string[]; onChange: (value: string) => void; testId?: string }) {
   const { language } = useI18n(); const t = getMessages(language).discover;
-  return <div><Label>{label}</Label><Select value={value} onValueChange={onChange}><SelectTrigger className="mt-2"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all">{t.any}</SelectItem>{values.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>;
+  return <div><Label>{label}</Label><Select value={value} onValueChange={onChange}><span data-testid={testId} className="hidden" /><SelectTrigger className="mt-2"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all">{t.any}</SelectItem>{values.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>;
 }
