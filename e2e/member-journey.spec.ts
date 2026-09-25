@@ -120,16 +120,16 @@ test.describe("CupidMatch member-to-member QA", () => {
     const fromB = `QA-042 B→A ${stamp}`;
     await boxA.fill(fromA);
     await pageA.getByTestId("message-send").click();
-    await expect(pageB.getByText(fromA, { exact: true }), "QA-041: B receives A message").toBeVisible({ timeout: 20_000 });
+    await expect(pageB.locator("section").getByText(fromA, { exact: true }), "QA-041: B receives A message").toBeVisible({ timeout: 20_000 });
 
     await boxB.fill(fromB);
     await pageB.getByTestId("message-send").click();
-    await expect(pageA.getByText(fromB, { exact: true }), "QA-042: A receives B reply").toBeVisible({ timeout: 20_000 });
+    await expect(pageA.locator("section").getByText(fromB, { exact: true }), "QA-042: A receives B reply").toBeVisible({ timeout: 20_000 });
 
     await pageA.reload();
     await pageB.reload();
-    await expect(pageA.getByText(fromB, { exact: true }), "QA-043: reply persists after refresh").toBeVisible({ timeout: 20_000 });
-    await expect(pageB.getByText(fromA, { exact: true }), "QA-043: message persists after refresh").toBeVisible({ timeout: 20_000 });
+    await expect(pageA.locator("section").getByText(fromB, { exact: true }), "QA-043: reply persists after refresh").toBeVisible({ timeout: 20_000 });
+    await expect(pageB.locator("section").getByText(fromA, { exact: true }), "QA-043: message persists after refresh").toBeVisible({ timeout: 20_000 });
 
     await a.close(); await b.close();
   });
@@ -161,17 +161,17 @@ test.describe("CupidMatch member-to-member QA", () => {
     const fromA = `QA-047 A→B unicode ❤️ தமிழ் ${stamp}`;
     await boxA.fill(fromA);
     await pageA.getByTestId("message-send").click();
-    await expect(pageB.getByText(fromA, { exact: true }), "QA-041: B receives A message").toBeVisible({ timeout: 20_000 });
+    await expect(pageB.locator("section").getByText(fromA, { exact: true }), "QA-041: B receives A message").toBeVisible({ timeout: 20_000 });
     await pageB.reload();
-    await expect(pageB.getByText(fromA, { exact: true }), "QA-043: A message persists").toBeVisible({ timeout: 20_000 });
+    await expect(pageB.locator("section").getByText(fromA, { exact: true }), "QA-043: A message persists").toBeVisible({ timeout: 20_000 });
 
     // QA-042/043: B replies and A receives/persists it.
     const fromB = `QA-042 B→A ${stamp}`;
     await boxB.fill(fromB);
     await pageB.getByTestId("message-send").click();
-    await expect(pageA.getByText(fromB, { exact: true }), "QA-042: A receives B reply").toBeVisible({ timeout: 20_000 });
+    await expect(pageA.locator("section").getByText(fromB, { exact: true }), "QA-042: A receives B reply").toBeVisible({ timeout: 20_000 });
     await pageA.reload();
-    await expect(pageA.getByText(fromB, { exact: true }), "QA-043: B reply persists").toBeVisible({ timeout: 20_000 });
+    await expect(pageA.locator("section").getByText(fromB, { exact: true }), "QA-043: B reply persists").toBeVisible({ timeout: 20_000 });
 
     // QA-050/052/055: opening the recipient chat clears its unread state and remains clear after refresh.
     await pageA.goto("/messages");
