@@ -6,7 +6,6 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { listPendingRequests, listSentRequests, acceptInterest, declineInterest, withdrawInterest } from "@/lib/supabase/matches";
-import { createConnection } from "@/lib/supabase/connections";
 import { createChatDocument } from "@/lib/supabase/chats";
 import { getProfile } from "@/lib/supabase/profiles";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -190,11 +189,9 @@ export default function InterestsPage() {
     setProcessingAction(prev => ({ ...prev, [interestId]: true }));
 
     try {
+      // acceptInterest atomically accepts the request and creates the canonical
+      // connection. Chat creation remains idempotent and can safely follow it.
       await acceptInterest(interestId);
-      // Connection and chat creation are part of accepting an interest.
-      // Do not silently report success if either operation fails: that leaves
-      // members in an accepted-but-not-connected state.
-      await createConnection(currentUser.id, senderId, interestId);
       await createChatDocument(currentUser.id, senderId);
 
       setReceivedInterests((prev) => {
