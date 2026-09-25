@@ -49,18 +49,18 @@ export function CompatibilityStory() {
   return (
     <section ref={ref} className="relative h-[180svh] bg-[#FFFDFB] scroll-mt-20 [scroll-snap-align:start]">
       <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-5 py-5">
-        <div className="mx-auto w-full max-w-xl text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#A078B0]">Built on what matters</p>
+        <div className="mx-auto w-full max-w-xl text-center lg:grid lg:max-w-6xl lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:gap-20 lg:text-left">
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#A078B0]">Built on what matters</p>
           <h2 className="mx-auto mt-3 max-w-sm font-serif text-[2rem] font-semibold leading-[1.05] text-[#2A1845] sm:text-5xl">
             High Compatibility Matches
           </h2>
           <p className="mx-auto mt-4 max-w-sm text-sm leading-6 text-[#6B5A78]">
             Our smart matching helps you find people who share your important preferences.
-          </p>
+          </p><div className="mx-auto mt-8 hidden max-w-sm items-center gap-3 rounded-2xl border border-[#EEE4F5] bg-white p-4 text-left shadow-sm lg:flex"><Heart className="h-6 w-6 shrink-0 text-[#7C3AED]"/><p className="text-sm leading-6 text-[#5C4A66]"><strong className="block text-[#2A1845]">More than just a profile.</strong>A better match for your future.</p></div></div>
 
-          <div className="relative mx-auto mt-5 h-[300px] w-[300px] max-w-full sm:mt-8 sm:h-[330px] sm:w-[330px]">
+          <div className="relative mx-auto mt-5 h-[300px] w-[300px] max-w-full sm:mt-8 sm:h-[330px] sm:w-[330px] lg:mt-0 lg:h-[480px] lg:w-[480px]">
             <div
-              className="absolute left-1/2 top-1/2 h-[178px] w-[178px] -translate-x-1/2 -translate-y-1/2 rounded-full p-[11px] shadow-[0_18px_50px_rgba(124,58,237,.12)]"
+              className="absolute left-1/2 top-1/2 h-[178px] w-[178px] lg:h-[250px] lg:w-[250px] -translate-x-1/2 -translate-y-1/2 rounded-full p-[11px] shadow-[0_18px_50px_rgba(124,58,237,.12)]"
               style={{ background: `conic-gradient(#7C3AED 0deg, #D946EF ${reveal*331}deg, #F1E8F8 ${reveal*331}deg 360deg)` }}
             >
               <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-white">
@@ -70,7 +70,7 @@ export function CompatibilityStory() {
             </div>
             {items.map(([Icon,label],i) => {
               const angle = (-90 + i*60) * Math.PI/180;
-              const radius = 139;
+              const radius = typeof window !== "undefined" && window.innerWidth >= 1024 ? 205 : 139;
               return (
                 <div key={label} className="absolute flex w-20 flex-col items-center gap-1 text-[10px] font-semibold text-[#5C4A66] transition-opacity duration-500"
                   style={{ left: `calc(50% + ${Math.cos(angle)*radius}px - 40px)`, top: `calc(50% + ${Math.sin(angle)*radius}px - 24px)`, opacity: clamp((reveal-i*.08)*1.8) }}>
@@ -81,7 +81,7 @@ export function CompatibilityStory() {
             })}
           </div>
 
-          <div className="mx-auto mt-1 flex max-w-[330px] items-center gap-3 rounded-[1.4rem] border border-[#EEE4F5] bg-white/90 p-3.5 text-left shadow-[0_12px_35px_rgba(76,29,149,.08)]">
+          <div className="mx-auto mt-1 flex max-w-[330px] lg:hidden items-center gap-3 rounded-[1.4rem] border border-[#EEE4F5] bg-white/90 p-3.5 text-left shadow-[0_12px_35px_rgba(76,29,149,.08)]">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#7C3AED]"><Heart className="h-5 w-5" /></div>
             <p className="text-xs leading-5 text-[#5C4A66]"><strong className="block text-[#2A1845]">More than just a profile.</strong>A better match for your future.</p>
           </div>
@@ -106,13 +106,13 @@ export function StickyHowItWorks() {
   return (
     <section ref={ref} className="relative h-[240svh] bg-[#FBF8F4] scroll-mt-20 [scroll-snap-align:start]">
       <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-5 py-4">
-        <div className="mx-auto grid w-full max-w-4xl items-center gap-3 sm:gap-7 md:grid-cols-2">
-          <div className="text-center md:text-left">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-3 sm:gap-7 md:grid-cols-2 lg:gap-24">
+          <div className="text-center md:text-left lg:max-w-lg">
             <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#A078B0]">How CupidMatch works</p>
-            <h2 className="mt-2 font-serif text-[1.9rem] font-semibold leading-tight text-[#2A1845] sm:text-5xl">Simple Steps to<br/>Find Your Match</h2>
+            <h2 className="mt-2 font-serif text-[1.9rem] font-semibold leading-tight text-[#2A1845] sm:text-5xl lg:text-[4.2rem]">Simple Steps to<br/>Find Your Match</h2>
           </div>
 
-          <div className="mx-auto w-full max-w-[300px] sm:max-w-[315px]">
+          <div className="mx-auto w-full max-w-[300px] sm:max-w-[315px] lg:max-w-[390px]">
             <div className="relative overflow-hidden rounded-[2.25rem] border-[6px] border-[#24152F] bg-white p-2 shadow-[0_24px_70px_rgba(42,24,69,.2)]">
               <div className="mx-auto mb-2 h-4 w-24 rounded-b-2xl bg-[#24152F]" />
               <div className="overflow-hidden rounded-[1.9rem] bg-[#FFF9FD]">
