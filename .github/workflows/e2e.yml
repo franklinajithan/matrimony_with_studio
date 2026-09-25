@@ -6,6 +6,10 @@ on:
       - vercel.deployment.success
   schedule:
     - cron: "17 5 * * *"
+concurrency:
+  group: cupidmatch-e2e-production
+  cancel-in-progress: false
+
 jobs:
   member-journey:
     if: ${{ vars.QA_BASE_URL != '' }}
