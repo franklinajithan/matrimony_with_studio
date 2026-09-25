@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { HERO_IMAGE } from "@/components/landing/brand";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { getMessages } from "@/components/i18n/messages";
+import { useEffect, useRef, useState } from "react";
 
 
 function ScriptHeart({ className }: { className?: string }) {
@@ -24,11 +25,35 @@ function ScriptHeart({ className }: { className?: string }) {
 export function LandingHero() {
   const { language } = useI18n();
   const t = getMessages(language).hero;
+  const heroRef = useRef<HTMLElement>(null);
+  const frameRef = useRef<number | null>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const update = () => {
+      frameRef.current = null;
+      const hero = heroRef.current;
+      if (!hero) return;
+      const rect = hero.getBoundingClientRect();
+      const range = Math.max(1, Math.min(window.innerHeight, rect.height));
+      setScrollProgress(Math.min(1, Math.max(0, -rect.top / range)));
+    };
+    const onScroll = () => {
+      if (frameRef.current === null) frameRef.current = window.requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
+    };
+  }, []);
   const highlights = [{ icon: Users, label: t.verified }, { icon: Shield, label: t.safe }, { icon: Heart, label: t.compatibility }];
   return (
-    <section className="relative overflow-hidden bg-[#FBF8F4] pt-1 sm:pt-2">
+    <section ref={heroRef} className="relative overflow-hidden bg-[#FBF8F4] pt-1 sm:pt-2">
       <div className="relative mx-auto grid max-w-[1240px] items-start gap-6 px-5 pb-8 sm:px-8 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] lg:items-stretch lg:gap-4 lg:px-10 lg:pb-10">
-        <div className="relative z-10 flex max-w-xl flex-col pt-3 lg:pt-1">
+        <div className="relative z-10 flex max-w-xl flex-col pt-3 will-change-transform lg:pt-1" style={{ opacity: 1 - scrollProgress * 0.42, transform: `translate3d(0,${scrollProgress * -28}px,0) scale(${1-scrollProgress*0.025})` }}>
           <p className="text-[11px] font-semibold uppercase leading-5 tracking-[0.26em] text-[#A078B0] sm:text-xs sm:leading-6">
             {t.eyebrow}
             <span className="block">{t.eyebrow2}</span>
@@ -90,7 +115,7 @@ export function LandingHero() {
           </p>
         </div>
 
-        <div className="relative mx-auto w-full max-w-[560px] lg:max-w-none lg:pt-1">
+        <div className="relative mx-auto w-full max-w-[560px] will-change-transform lg:max-w-none lg:pt-1" style={{ transform: `translate3d(0,${scrollProgress * 18}px,0) scale(${1-scrollProgress*0.035})` }}>
           <figure className="relative overflow-hidden rounded-[1.75rem] shadow-[0_22px_50px_rgba(74,32,110,0.18)] lg:rounded-[2rem]">
             <div className="relative aspect-[3/4] w-full lg:aspect-auto lg:min-h-[700px] lg:h-[min(74vh,760px)]">
               <Image
