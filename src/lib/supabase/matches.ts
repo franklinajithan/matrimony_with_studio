@@ -70,9 +70,23 @@ export async function sendInterest(params: {
       throw new Error("You've already sent an interest to this person.");
     }
     if (existing.status === "accepted") {
-      throw new Error("You are already connected with this person.");
+      const [smaller, larger] = params.senderUid < params.receiverUid
+        ? [params.senderUid, params.receiverUid]
+        : [params.receiverUid, params.senderUid];
+      const { data: connection, error: connectionError } = await supabase
+        .from("connections")
+        .select("id")
+        .eq("member_a_id", smaller)
+        .eq("member_b_id", larger)
+        .maybeSingle();
+      if (connectionError) throw connectionError;
+      if (connection) {
+        throw new Error("You are already connected with this person.");
+      }
+      // A removed connection may have an older accepted request. Allow the
+      // members to start a fresh mutual-consent cycle instead of getting stuck.
     }
-    // Allow re-send after decline/withdraw by resetting to pending.
+    // Allow re-send after decline/withdraw or a removed accepted connection by resetting to pending.
     const { error: updateError } = await supabase
       .from("match_requests")
       .update({
