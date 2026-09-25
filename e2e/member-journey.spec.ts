@@ -183,6 +183,37 @@ test.describe("CupidMatch member-to-member QA", () => {
     await a.close(); await b.close();
   });
 
+  test("QA-057 → QA-060 connection removal revokes chat access", async ({ browser }) => {
+    test.setTimeout(90_000);
+    const { a, b, pageA, pageB } = await loginPair(browser);
+    const idA = await userId(pageA);
+    const idB = await userId(pageB);
+    expect(idA).toBeTruthy();
+    expect(idB).toBeTruthy();
+    const chatId = [idA, idB].sort().join("_");
+
+    // QA-057: remove the existing A↔B connection and confirm it disappears.
+    await pageA.goto("/connections");
+    const remove = pageA.getByTestId(`connection-${idB}-remove`);
+    await expect(remove, "QA-057: removable connection is visible").toBeVisible({ timeout: 20_000 });
+    await remove.click();
+    await pageA.getByTestId("confirm-remove-connection").click();
+    await expect(remove, "QA-057: connection disappears for A").toHaveCount(0, { timeout: 20_000 });
+
+    // QA-058: the removal is reflected for the other member too.
+    await pageB.goto("/connections");
+    await expect(pageB.getByTestId(`connection-${idA}-remove`), "QA-058: connection disappears for B").toHaveCount(0, { timeout: 20_000 });
+
+    // QA-059/060: a removed relationship must not regain messaging merely by
+    // navigating to the old deterministic chat URL.
+    await pageA.goto(`/messages/${chatId}`);
+    await expect(pageA.getByTestId("message-composer"), "QA-059: removed connection cannot message from old chat").toHaveCount(0, { timeout: 20_000 });
+    await pageB.goto(`/messages/${chatId}`);
+    await expect(pageB.getByTestId("message-composer"), "QA-060: removed connection cannot message from old chat").toHaveCount(0, { timeout: 20_000 });
+
+    await a.close(); await b.close();
+  });
+
 });
 
 test("member pages remain protected after logout", async ({ browser }) => {
