@@ -47,7 +47,7 @@ export function CompatibilityStory() {
   ] as const;
 
   return (
-    <section ref={ref} className="relative h-[180svh] bg-[#FFFDFB]">
+    <section ref={ref} className="relative h-[165svh] bg-[#FFFDFB]">
       <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-5 py-8">
         <div className="mx-auto w-full max-w-xl text-center">
           <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#A078B0]">Built on what matters</p>
@@ -58,7 +58,7 @@ export function CompatibilityStory() {
             Our smart matching helps you find people who share your important preferences.
           </p>
 
-          <div className="relative mx-auto mt-8 h-[330px] w-[330px] max-w-full">
+          <div className="relative mx-auto mt-5 h-[300px] w-[300px] max-w-full sm:mt-8 sm:h-[330px] sm:w-[330px]">
             <div
               className="absolute left-1/2 top-1/2 h-44 w-44 -translate-x-1/2 -translate-y-1/2 rounded-full p-[11px] shadow-[0_18px_50px_rgba(124,58,237,.12)]"
               style={{ background: `conic-gradient(#7C3AED 0deg, #D946EF ${reveal*331}deg, #F1E8F8 ${reveal*331}deg 360deg)` }}
@@ -70,7 +70,7 @@ export function CompatibilityStory() {
             </div>
             {items.map(([Icon,label],i) => {
               const angle = (-90 + i*60) * Math.PI/180;
-              const radius = 142;
+              const radius = 128;
               return (
                 <div key={label} className="absolute flex w-20 flex-col items-center gap-1 text-[10px] font-semibold text-[#5C4A66] transition-opacity duration-500"
                   style={{ left: `calc(50% + ${Math.cos(angle)*radius}px - 40px)`, top: `calc(50% + ${Math.sin(angle)*radius}px - 24px)`, opacity: clamp((reveal-i*.08)*1.8) }}>
@@ -104,19 +104,19 @@ export function StickyHowItWorks() {
   const active = Math.min(4, Math.floor(progress * 5));
 
   return (
-    <section ref={ref} className="relative h-[320svh] bg-[#FBF8F4]">
+    <section ref={ref} className="relative h-[300svh] bg-[#FBF8F4]">
       <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-5 py-6">
-        <div className="mx-auto grid w-full max-w-4xl items-center gap-7 md:grid-cols-2">
+        <div className="mx-auto grid w-full max-w-4xl items-center gap-4 sm:gap-7 md:grid-cols-2">
           <div className="text-center md:text-left">
             <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#A078B0]">How CupidMatch works</p>
-            <h2 className="mt-2 font-serif text-3xl font-semibold leading-tight text-[#2A1845] sm:text-5xl">Simple Steps to<br/>Find Your Match</h2>
+            <h2 className="mt-2 font-serif text-[1.9rem] font-semibold leading-tight text-[#2A1845] sm:text-5xl">Simple Steps to<br/>Find Your Match</h2>
           </div>
 
           <div className="mx-auto w-full max-w-[315px]">
-            <div className="relative overflow-hidden rounded-[2.5rem] border-[7px] border-[#24152F] bg-white p-2 shadow-[0_24px_70px_rgba(42,24,69,.2)]">
+            <div className="relative overflow-hidden rounded-[2.25rem] border-[6px] border-[#24152F] bg-white p-2 shadow-[0_24px_70px_rgba(42,24,69,.2)]">
               <div className="mx-auto mb-2 h-4 w-24 rounded-b-2xl bg-[#24152F]" />
               <div className="overflow-hidden rounded-[1.9rem] bg-[#FFF9FD]">
-                <div className="relative h-52">
+                <div className="relative h-48 sm:h-52">
                   <Image src="/images/values/shared.jpg?v=3" alt="" fill sizes="300px" className="object-cover" />
                   <div className="absolute inset-x-3 bottom-3 rounded-2xl bg-white/95 p-3 shadow-lg backdrop-blur">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-[#A078B0]">{active+1} / 5</p>
@@ -127,9 +127,9 @@ export function StickyHowItWorks() {
               </div>
             </div>
 
-            <ol className="mt-5 space-y-2">
+            <ol className="mt-3 space-y-1 sm:mt-5 sm:space-y-2">
               {steps.map(([title,,Icon], i) => (
-                <li key={title} className={`flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-300 ${i===active ? "bg-white shadow-sm" : "opacity-55"}`}>
+                <li key={title} className={`flex items-center gap-3 rounded-xl px-3 py-1.5 transition-all duration-300 ${i===active ? "bg-white shadow-sm" : "opacity-55"}`}>
                   <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${i===active ? "bg-[#7C3AED] text-white" : "bg-[#EFE7F7] text-[#7C3AED]"}`}>{i+1}</span>
                   <Icon className="h-4 w-4 text-[#7C3AED]" />
                   <span className="text-xs font-semibold text-[#2A1845]">{title}</span>
