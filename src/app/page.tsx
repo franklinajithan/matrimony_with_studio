@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
 import { LandingHero } from "@/components/landing/LandingHero";
 import { ConnectionScrollStory } from "@/components/landing/ConnectionScrollStory";
+import { CompatibilityStory, StickyHowItWorks } from "@/components/landing/PremiumScrollSections";
 import {
   TrustStrip,
   WhyCupidMatch,
   InternationalRelationships,
   FeatureGrid,
   DiscoveryPreview,
-  HowItWorks,
   PrivacySection,
   FamilyCirclePreview,
   SuccessStoriesPreview,
@@ -33,11 +33,12 @@ export default async function HomePage() {
         <LandingHero />
         <TrustStrip />
         <ConnectionScrollStory />
+        <CompatibilityStory />
+        <StickyHowItWorks />
         <WhyCupidMatch />
         <InternationalRelationships />
         <FeatureGrid />
         <DiscoveryPreview />
-        <HowItWorks />
         <PrivacySection />
         <FamilyCirclePreview />
         <SuccessStoriesPreview />
