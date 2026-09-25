@@ -76,7 +76,6 @@ function HeroCarousel({
           />
         </div>
       ))}
-      <div className="hero-sheen pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(115deg,transparent_35%,rgba(255,255,255,.18)_50%,transparent_65%)]" />
       <div className="absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 gap-2" role="tablist" aria-label="Hero photos">
         {HERO_SLIDES.map((_, i) => (
           <button
@@ -96,16 +95,14 @@ function HeroCarousel({
         @keyframes arrowShoot { 0%,42% { transform:translateX(-30px); opacity:0 } 55% { transform:translateX(7px); opacity:1 } 62%,88% { transform:translateX(0); opacity:1 } 100% { transform:translateX(18px); opacity:0 } }
         @keyframes heartPop { 0%,48% { transform:scale(0) rotate(-18deg); opacity:0 } 62% { transform:scale(1.25) rotate(5deg); opacity:1 } 72%,90% { transform:scale(1); opacity:1 } 100% { transform:scale(.85); opacity:0 } }
         @keyframes signatureFloat { 0%,100% { transform:translateY(1px) rotate(-2deg) } 50% { transform:translateY(-3px) rotate(1deg) } }
-        @keyframes photoBreathe { 0%,100% { transform:scale(1.01) translate3d(0,0,0) } 50% { transform:scale(1.035) translate3d(-.35%, -.25%,0) } }
-        @keyframes sheenPass { 0%,68% { transform:translateX(-120%); opacity:0 } 74% { opacity:.45 } 88% { opacity:.18 } 100% { transform:translateX(120%); opacity:0 } }
+        @keyframes photoBreathe { 0%,100% { transform:scale(1.01) translate3d(0,0,0) } 50% { transform:scale(1.035) translate3d(-.35%, -.25%,0) } } 74% { opacity:.45 } 88% { opacity:.18 } 100% { transform:translateX(120%); opacity:0 } }
         .cupid-signature{animation:signatureFloat 4.8s ease-in-out infinite}
         .hero-photo{animation:photoBreathe 12s ease-in-out infinite}
-        .hero-sheen{animation:sheenPass 10s ease-in-out infinite}
         .cupid-bow{animation:bowDraw 5.2s ease-in-out infinite}
         .cupid-string{animation:stringDraw 5.2s ease-in-out infinite}
         .cupid-arrow{transform-origin:center;animation:arrowShoot 5.2s cubic-bezier(.2,.8,.2,1) infinite}
         .cupid-heart-pop{transform-origin:72px 27px;animation:heartPop 5.2s ease-out infinite}
-        @media(prefers-reduced-motion:reduce){.cupid-signature,.cupid-bow,.cupid-string,.cupid-arrow,.cupid-heart-pop,.hero-photo,.hero-sheen{animation:none}}
+        @media(prefers-reduced-motion:reduce){.cupid-signature,.cupid-bow,.cupid-string,.cupid-arrow,.cupid-heart-pop,.hero-photo,}
       `}</style>
     </div>
   );
