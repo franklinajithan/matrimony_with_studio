@@ -123,15 +123,14 @@ export async function withdrawInterest(requestId: string): Promise<void> {
 }
 
 export async function acceptInterest(requestId: string): Promise<void> {
-  const { data, error } = await supabase
-    .from("match_requests")
-    .update({ status: "accepted", updated_at: new Date().toISOString() })
-    .eq("id", requestId)
-    .eq("status", "pending")
-    .select("id, sender_id, receiver_id")
-    .maybeSingle();
+  // Accepting and creating the canonical connection must be one database
+  // transaction. The RPC is idempotent for an already-accepted request, so a
+  // transient client/navigation failure cannot strand the two members.
+  const { data, error } = await supabase.rpc("accept_interest_and_connect", {
+    p_request_id: requestId,
+  });
   if (error) throw error;
-  if (!data) throw new Error("That interest request is no longer pending.");
+  if (!data?.length) throw new Error("That interest request could not be accepted.");
 }
 
 export async function declineInterest(requestId: string): Promise<void> {
