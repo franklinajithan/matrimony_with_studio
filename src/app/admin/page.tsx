@@ -6,15 +6,11 @@ import Link from 'next/link';
 
 const sections = [
   ['Members','Search, review and manage member accounts.',Users,'/admin/users'],
-  ['Plans & Pricing','Manage Free, Plus and Premium access rules.',BadgePoundSterling,'/admin/plans'],
+  ['Plans & Pricing','View membership plans and pricing.',BadgePoundSterling,'/admin/plans'],
   ['Subscriptions','Review memberships, renewals and account access.',CreditCard,'/admin/subscriptions'],
-  ['Profile Verification','Review identity and profile verification requests.',UserCheck,'/admin/verifications'],
-  ['Moderation & Reports','Review reported profiles, messages and safety cases.',MessageSquareWarning,'/admin/reports'],
+  ['Profile Verification','Review published profiles awaiting verification.',UserCheck,'/admin/verifications'],
   ['Success Stories','Manage community success stories.',BookHeart,'/admin/success-stories'],
-  ['Analytics','Monitor membership, engagement and conversion metrics.',BarChart3,'/admin/analytics'],
-  ['Support','Handle member support and account assistance.',LifeBuoy,'/admin/support'],
-  ['Site Settings','Manage operational feature and site configuration.',Settings,'/admin/settings'],
-  ['Admin Security','Roles, permissions and audit activity.',Shield,'/admin/security'],
+  ['Admin Security','Review recorded administrative audit activity.',Shield,'/admin/security'],
 ] as const;
 
 export default async function AdminDashboardPage() {
