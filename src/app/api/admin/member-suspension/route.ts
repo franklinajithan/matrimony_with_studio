@@ -14,3 +14,13 @@ export async function POST(request:Request){
  if(error)return NextResponse.json({error:error.code==="P0002"?"Member not found":error.code==="42501"?"Not permitted":"Unable to update suspension"},{status:error.code==="P0002"?404:error.code==="42501"?403:503});
  return NextResponse.json(data,{headers:{"Cache-Control":"no-store"}});
 }
+
+export async function GET(request:Request){
+ if(!await requireServerAdmin())return NextResponse.json({error:"Forbidden"},{status:403});
+ const memberId=new URL(request.url).searchParams.get("memberId");
+ if(!memberId||!uuid.test(memberId))return NextResponse.json({error:"Invalid member"},{status:400});
+ const supabase=await createSupabaseServerClient();
+ const {data,error}=await supabase.from("profiles").select("id,suspended_at,suspension_reason,is_admin").eq("id",memberId).single();
+ if(error||!data)return NextResponse.json({error:"Unable to load member status"},{status:404});
+ return NextResponse.json({suspended:Boolean(data.suspended_at),suspendedAt:data.suspended_at,reason:data.suspension_reason,administrator:data.is_admin},{headers:{"Cache-Control":"no-store"}});
+}
