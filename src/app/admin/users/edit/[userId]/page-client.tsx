@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getProfile } from "@/lib/supabase/profiles";
 import type { Profile } from "@/lib/supabase/types";
+import { MemberOperations } from "./member-operations";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 type ReviewHistory = { id: string; status: string; member_note: string; reviewer_note: string | null; created_at: string; reviewed_at: string | null };
@@ -66,6 +67,7 @@ export default function AdminMemberDetailsPage() {
           </dl>}
       </CardContent>
     </Card>
+    <MemberOperations memberId={userId} />
     <Card><CardHeader><CardTitle>Verification request history</CardTitle><CardDescription>Member-submitted profile review requests and recorded decisions. Identity-document verification is a separate process.</CardDescription></CardHeader><CardContent>
       {reviewsLoading ? <p role="status">Loading review history…</p> : reviewError ? <p role="alert">Unable to load review history.</p> : reviews.length === 0 ? <p>No review requests submitted.</p> :
         <ul className="divide-y">{reviews.map(review => <li key={review.id} className="space-y-1 py-3">
