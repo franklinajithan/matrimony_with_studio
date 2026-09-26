@@ -1,5 +1,7 @@
 name: End-to-end QA
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
   repository_dispatch:
     types:
