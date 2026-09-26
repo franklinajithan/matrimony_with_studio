@@ -7,12 +7,17 @@ import { getProfile } from "@/lib/supabase/profiles";
 import type { Profile } from "@/lib/supabase/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
+type ReviewHistory = { id: string; status: string; member_note: string; reviewer_note: string | null; created_at: string; reviewed_at: string | null };
+
 export default function AdminMemberDetailsPage() {
   const params = useParams();
   const userId = params.userId as string;
   const [user, setUser] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [reviews, setReviews] = useState<ReviewHistory[]>([]);
+  const [reviewError, setReviewError] = useState(false);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
@@ -23,6 +28,10 @@ export default function AdminMemberDetailsPage() {
     }).catch(() => {
       if (active) { setError(true); setLoading(false); }
     });
+    fetch(`/api/admin/member-verification-history?memberId=${encodeURIComponent(userId)}`, { cache: "no-store" })
+      .then(async response => { if (!response.ok) throw new Error("Unavailable"); return response.json(); })
+      .then(payload => { if (active) { setReviews(payload.requests); setReviewsLoading(false); } })
+      .catch(() => { if (active) { setReviewError(true); setReviewsLoading(false); } });
     return () => { active = false; };
   }, [userId]);
 
@@ -57,5 +66,14 @@ export default function AdminMemberDetailsPage() {
           </dl>}
       </CardContent>
     </Card>
+    <Card><CardHeader><CardTitle>Verification request history</CardTitle><CardDescription>Member-submitted profile review requests and recorded decisions. Identity-document verification is a separate process.</CardDescription></CardHeader><CardContent>
+      {reviewsLoading ? <p role="status">Loading review history…</p> : reviewError ? <p role="alert">Unable to load review history.</p> : reviews.length === 0 ? <p>No review requests submitted.</p> :
+        <ul className="divide-y">{reviews.map(review => <li key={review.id} className="space-y-1 py-3">
+          <p className="font-medium capitalize">{review.status}</p>
+          <p className="text-sm text-muted-foreground">Requested: {new Date(review.created_at).toLocaleDateString("en-GB")}{review.reviewed_at ? ` · Reviewed: ${new Date(review.reviewed_at).toLocaleDateString("en-GB")}` : ""}</p>
+          {review.member_note && <p className="text-sm">Member note: {review.member_note}</p>}
+          {review.reviewer_note && <p className="text-sm">Reviewer note: {review.reviewer_note}</p>}
+        </li>)}</ul>}
+    </CardContent></Card>
   </div>;
 }
