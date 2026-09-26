@@ -1,7 +1,7 @@
 import { getAdminDashboardMetrics, type AdminDashboardMetrics } from '@/lib/admin/dashboard';
 import { requireAdminPage } from '@/app/admin/guard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Users, Activity, RefreshCw, UserCheck, MessageSquareWarning, Settings, BookHeart, CreditCard, BadgePoundSterling, Shield, BarChart3, LifeBuoy } from 'lucide-react';
+import { Users, Activity, RefreshCw, UserCheck, BookHeart, CreditCard, BadgePoundSterling, Shield } from 'lucide-react';
 import Link from 'next/link';
 
 const sections = [
