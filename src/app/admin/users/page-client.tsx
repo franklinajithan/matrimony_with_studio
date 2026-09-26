@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Users, ShieldCheck, ShieldAlert, UserCog, ArrowUpDown, RefreshCw, LayoutGrid, ExternalLink, ChevronLeft, ChevronRight, ClipboardList } from "lucide-react";
+import { Search, Users, ShieldCheck, ShieldAlert, UserCog, ArrowUpDown, RefreshCw, LayoutGrid, ExternalLink, ChevronLeft, ChevronRight, ClipboardList, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Member {
@@ -90,6 +90,22 @@ export default function UserManagementPage() {
     { value: "unverified", label: "Unverified" }, { value: "published", label: "Published" },
     { value: "unpublished", label: "Unpublished" }, { value: "admins", label: "Administrators" },
   ];
+  function exportFiltered() {
+    const safe = (value: string) => {
+      const normalized = /^[=+@\-\t\r]/.test(value) ? "'" + value : value;
+      return '"' + normalized.replace(/"/g, '""') + '"';
+    };
+    const rows = [["Member ID", "Name", "Email", "Verified", "Published", "Administrator", "Joined"], ...filtered.map(m => [
+      m.id, m.displayName || "", m.email || "", m.isVerified ? "Yes" : "No",
+      m.isPublished ? "Yes" : "No", m.isAdmin ? "Yes" : "No",
+      memberDate(m.createdAt) ? new Date(memberDate(m.createdAt)).toISOString().slice(0, 10) : "",
+    ])];
+    const csv = "\\uFEFF" + rows.map(row => row.map(safe).join(",")).join("\\r\\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const anchor = document.createElement("a");
+    anchor.href = url; anchor.download = "cupidmatch-members-filtered.csv";
+    anchor.click(); URL.revokeObjectURL(url);
+  }
   const chooseFilter = (next: Filter) => { setFilter(next); setPage(1); };
 
   return <div className="space-y-7 pb-12" data-testid="admin-member-management">
@@ -101,7 +117,7 @@ export default function UserManagementPage() {
       </div>
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" asChild><Link href="/admin/verifications"><ClipboardList className="mr-2 h-4 w-4" />Verification queue</Link></Button>
-        <Button variant="outline" onClick={() => window.location.reload()}><RefreshCw className="mr-2 h-4 w-4" />Refresh</Button>
+        <Button variant="outline" disabled={loading || filtered.length === 0} onClick={exportFiltered}><Download className="mr-2 h-4 w-4" />Export filtered</Button>\n        <Button variant="outline" onClick={() => window.location.reload()}><RefreshCw className="mr-2 h-4 w-4" />Refresh</Button>
       </div>
     </div>
 
