@@ -63,6 +63,11 @@ export async function countUnreadMessages(userId: string): Promise<number> {
 }
 
 export async function createChatDocument(user1Uid: string, user2Uid: string): Promise<string> {
+  const chatId = getCompositeId(user1Uid, user2Uid);
+  // Never reset an existing conversation when members reconnect or acceptance is retried.
+  const existing = await getChat(chatId);
+  if (existing) return chatId;
+
   const [user1, user2] = await Promise.all([getProfile(user1Uid), getProfile(user2Uid)]);
   if (!user1 || !user2) {
     throw new Error(
@@ -70,7 +75,6 @@ export async function createChatDocument(user1Uid: string, user2Uid: string): Pr
     );
   }
 
-  const chatId = getCompositeId(user1Uid, user2Uid);
   const [participant_1, participant_2] = sortedPair(user1Uid, user2Uid);
 
   const participantDetails = {
@@ -101,7 +105,7 @@ export async function createChatDocument(user1Uid: string, user2Uid: string): Pr
       last_message_at: new Date().toISOString(),
       unread_by: { [user1Uid]: 0, [user2Uid]: 0 },
     },
-    { onConflict: "id" }
+    { onConflict: "id", ignoreDuplicates: true }
   );
   if (error) throw error;
   return chatId;
