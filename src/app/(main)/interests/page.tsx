@@ -192,7 +192,19 @@ export default function InterestsPage() {
       // acceptInterest atomically accepts the request and creates the canonical
       // connection. Chat creation remains idempotent and can safely follow it.
       await acceptInterest(interestId);
-      await createChatDocument(currentUser.id, senderId);
+      // The database connection is already committed. Chat provisioning must
+      // not turn a successful acceptance into a misleading failure message.
+      try {
+        await createChatDocument(currentUser.id, senderId);
+      } catch (chatError) {
+        console.error("Connection accepted but chat provisioning failed:", chatError);
+        toast({
+          title: "Connection accepted",
+          description: "Your connection is saved. Open Messages to continue your conversation.",
+        });
+        router.push("/messages");
+        return;
+      }
 
       setReceivedInterests((prev) => {
         const next = prev.filter((i) => i.id !== interestId);
