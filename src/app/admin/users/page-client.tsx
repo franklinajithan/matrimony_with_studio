@@ -100,7 +100,7 @@ export default function UserManagementPage() {
       m.isPublished ? "Yes" : "No", m.isAdmin ? "Yes" : "No",
       memberDate(m.createdAt) ? new Date(memberDate(m.createdAt)).toISOString().slice(0, 10) : "",
     ])];
-    const csv = "\\uFEFF" + rows.map(row => row.map(safe).join(",")).join("\\r\\n");
+    const csv = "\uFEFF" + rows.map(row => row.map(safe).join(",")).join("\r\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const anchor = document.createElement("a");
     anchor.href = url; anchor.download = "cupidmatch-members-filtered.csv";
