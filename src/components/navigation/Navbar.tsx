@@ -404,6 +404,9 @@ export function Navbar() {
                       >
                         Nederlands (Dutch)
                       </Button>
+                      <Button variant="ghost" className={cn("w-full justify-start text-sm", language === 'de' && "bg-accent")} onClick={() => setLanguage('de')}>
+                        Deutsch (German)
+                      </Button>
                     </div>
 
                     {!currentUser && !isLoadingAuth && (
