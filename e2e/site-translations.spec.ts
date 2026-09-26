@@ -31,6 +31,9 @@ for (const language of languages) {
       await expect(page.locator("html")).toHaveAttribute("lang", language, { timeout: 15000 });
       await expect(page.getByText("Application error: a client-side exception has occurred")).toHaveCount(0);
     }
+    await page.goto("/");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(messages[language].hero.title);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(messages[language].hero.titleAccent);
     await page.goto("/login");
     await expect(page.getByText(messages[language].auth.loginTitle, { exact: true })).toBeVisible();
     await page.goto("/pricing");
