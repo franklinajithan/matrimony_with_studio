@@ -1,0 +1,1 @@
+revoke all on function public.enforce_connected_chat_writes() from public,anon,authenticated;
