@@ -14,6 +14,19 @@ export function MemberOperations({ memberId }: { memberId: string }) {
   const [data, setData] = useState<Operations | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [resetting, setResetting] = useState(false);
+  const [resetMessage, setResetMessage] = useState("");
+  async function sendReset() {
+    if (!window.confirm("Send a password reset email to this member?")) return;
+    setResetting(true); setResetMessage("");
+    try {
+      const response = await fetch("/api/admin/member-password-reset", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ memberId }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Unable to request reset");
+      setResetMessage("Password reset email requested. Delivery depends on the configured email service.");
+    } catch (err) { setResetMessage(err instanceof Error ? err.message : "Unable to request reset"); }
+    finally { setResetting(false); }
+  }
   useEffect(() => {
     let active = true;
     fetch(`/api/admin/member-operations?memberId=${encodeURIComponent(memberId)}`, { cache: "no-store" })
@@ -45,7 +58,7 @@ export function MemberOperations({ memberId }: { memberId: string }) {
           <ul className="mt-2 divide-y">{data.subscriptions.map(s => <li key={s.id} className="py-3 text-sm"><p className="font-semibold capitalize">{s.plan_code} · {s.status}</p><p className="text-xs text-slate-500">{date(s.current_period_start)} – {date(s.current_period_end)}</p></li>)}</ul>}
         <p className="mt-3 text-xs text-slate-500">Payment transactions, amounts paid and total paid months require verified payment-provider records. Subscription periods alone do not prove payment.</p>
       </CardContent></Card>
-      <Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardHeader><CardTitle className="flex items-center gap-2"><LockKeyhole className="h-5 w-5 text-violet-700" />Account security</CardTitle></CardHeader><CardContent><p className="text-sm text-slate-600">Passwords cannot be viewed or edited here. A secure administrator-triggered password-reset email is being added separately.</p></CardContent></Card>
+      <Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardHeader><CardTitle className="flex items-center gap-2"><LockKeyhole className="h-5 w-5 text-violet-700" />Account security</CardTitle></CardHeader><CardContent><p className="text-sm text-slate-600">Passwords cannot be viewed or edited here. Use a reset email rather than changing or viewing a member password.</p><Button variant="outline" className="mt-3" disabled={resetting} onClick={() => void sendReset()}>{resetting ? "Requesting…" : "Send password reset email"}</Button>{resetMessage && <p role="status" className="mt-2 text-sm">{resetMessage}</p>}</CardContent></Card>
     </div>
   </div>;
 }
