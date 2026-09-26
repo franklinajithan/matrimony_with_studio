@@ -8,8 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Edit3, Loader2, Search, BookHeart, PlusCircle } from 'lucide-react';
-import Link from 'next/link';
+import { Loader2, Search, BookHeart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
@@ -99,13 +98,8 @@ export default function AdminSuccessStoriesPage() {
             <h1 className="text-3xl font-bold text-slate-700 flex items-center gap-2">
                 <BookHeart className="h-8 w-8 text-primary"/>Manage Success Stories
             </h1>
-            <p className="text-slate-600 mt-1">Review, edit, and publish submitted love stories.</p>
+            <p className="text-slate-600 mt-1">View submitted love stories. Moderation actions will be enabled after secure, audited server operations are implemented.</p>
         </div>
-        <Button variant="outline" asChild>
-            <Link href={`/admin/success-stories/edit/new`}>
-                <PlusCircle className="mr-2 h-4 w-4"/> Add New Story Manually
-            </Link>
-        </Button>
       </div>
       
 
@@ -127,7 +121,7 @@ export default function AdminSuccessStoriesPage() {
               <TableHead className="w-[200px]">Couple Names</TableHead>
               <TableHead>Submitted At</TableHead>
               <TableHead className="text-center">Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Story</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -145,14 +139,7 @@ export default function AdminSuccessStoriesPage() {
                     {story.status || 'Unknown'}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right space-x-1">
-                  <Button variant="ghost" size="icon" asChild title="View/Edit Story">
-                    <Link href={`/admin/success-stories/edit/${story.id}`}>
-                        <Edit3 className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  {/* Placeholder for future actions like Delete */}
-                </TableCell>
+                <TableCell className="max-w-sm truncate" title={story.storyText || ""}>{story.storyText || "—"}</TableCell>
               </TableRow>
             ))}
           </TableBody>
