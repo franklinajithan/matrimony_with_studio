@@ -14,6 +14,22 @@ export function MemberOperations({ memberId }: { memberId: string }) {
   const [data, setData] = useState<Operations | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [removing, setRemoving] = useState<string | null>(null);
+  const [removeError, setRemoveError] = useState("");
+  const [reasonFor, setReasonFor] = useState<string | null>(null);
+  const [reason, setReason] = useState("");
+  async function removeConnection(connectionId: string) {
+    if (removing || reason.trim().length < 10) return;
+    if (!window.confirm("Remove this connection? This action is recorded in the audit log.")) return;
+    setRemoving(connectionId); setRemoveError("");
+    try {
+      const response = await fetch("/api/admin/remove-member-connection", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ memberId, connectionId, reason: reason.trim() }) });
+      if (!response.ok) { const result = await response.json(); throw new Error(result.error || "Removal failed"); }
+      setData(previous => previous ? { ...previous, connections: previous.connections.filter(item => item.id !== connectionId), connectionsShown: Math.max(0, previous.connectionsShown - 1) } : previous);
+      setReasonFor(null); setReason("");
+    } catch (error) { setRemoveError(error instanceof Error ? error.message : "Removal failed"); }
+    finally { setRemoving(null); }
+  }
   const [resetting, setResetting] = useState(false);
   const [resetMessage, setResetMessage] = useState("");
   async function sendReset() {
@@ -47,7 +63,9 @@ export function MemberOperations({ memberId }: { memberId: string }) {
           <div className="min-w-0"><p className="truncate font-medium">{c.displayName}</p><p className="text-xs text-slate-500">Connected {date(c.connectedAt)}</p></div>
           <Button variant="outline" size="sm" asChild><Link href={`/admin/users/edit/${c.memberId}`}>View</Link></Button>
         </li>)}</ul>}
-        <p className="mt-4 flex items-center gap-2 text-xs text-slate-500"><ShieldAlert className="h-4 w-4" />Connection removal and member blocking require audited moderation actions.</p>
+        {reasonFor && <div className="mt-3 space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3"><label htmlFor="remove-reason" className="text-sm font-semibold">Reason for removing connection</label><textarea id="remove-reason" value={reason} onChange={event => setReason(event.target.value)} maxLength={1000} rows={3} className="w-full rounded-lg border border-slate-300 bg-white p-2 text-sm" /><div className="flex gap-2"><Button size="sm" variant="destructive" disabled={removing !== null || reason.trim().length < 10} onClick={() => void removeConnection(reasonFor)}>Confirm removal</Button><Button size="sm" variant="outline" onClick={() => setReasonFor(null)}>Cancel</Button></div></div>}
+        {removeError && <p role="alert" className="mt-2 text-sm text-red-700">{removeError}</p>}
+        <p className="mt-4 flex items-center gap-2 text-xs text-slate-500"><ShieldAlert className="h-4 w-4" />Connection removal is audited. Member blocking requires separate moderation controls.</p>
       </CardContent>
     </Card>
     <div className="space-y-4">
