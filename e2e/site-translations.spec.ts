@@ -49,7 +49,9 @@ test("I18N-020 selector persists language through navigation", async ({ page }) 
   await expect(page.getByText(messages.ta.auth.loginTitle, { exact: true })).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem("cupidmatch-language"))).toBe("ta");
 });
-test("I18N-030 all member routes preserve each selected language", async ({ page }) => {
+for (const language of languages) {
+test(`I18N-030 ${language}: member routes preserve selected language`, async ({ page }) => {
+  test.setTimeout(90000);
   const email = process.env.QA_USER_A_EMAIL;
   const password = process.env.QA_USER_A_PASSWORD;
   test.skip(!email || !password, "Member QA credentials not configured");
@@ -58,7 +60,6 @@ test("I18N-030 all member routes preserve each selected language", async ({ page
   await page.getByTestId("login-password").fill(password!);
   await page.getByTestId("login-submit").click();
   await expect(page).not.toHaveURL(/login/, { timeout: 20000 });
-  for (const language of languages) {
     await page.evaluate((code) => {
       localStorage.setItem("cupidmatch-language", code);
       document.cookie = `cupidmatch-language=${code}; Path=/; SameSite=Lax`;
@@ -68,5 +69,5 @@ test("I18N-030 all member routes preserve each selected language", async ({ page
       await expect(page.locator("html")).toHaveAttribute("lang", language, { timeout: 15000 });
       await expect(page.getByText("Application error: a client-side exception has occurred")).toHaveCount(0);
     }
-  }
 });
+}
