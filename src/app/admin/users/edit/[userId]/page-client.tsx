@@ -7,6 +7,7 @@ import { getProfile } from "@/lib/supabase/profiles";
 import type { Profile } from "@/lib/supabase/types";
 import { MemberOperations } from "./member-operations";
 import { MemberAdminNotes } from "./member-admin-notes";
+import { ExtendedMemberProfile } from "./extended-member-profile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -94,6 +95,7 @@ export default function AdminMemberDetailsPage() {
           </dl></div>}
       </CardContent>
     </Card>
+    <ExtendedMemberProfile memberId={userId} profile={user} />
     <MemberOperations memberId={userId} />
     <MemberAdminNotes memberId={userId} />
     <Card><CardHeader><CardTitle>Verification request history</CardTitle><CardDescription>Member-submitted profile review requests and recorded decisions. Identity-document verification is a separate process.</CardDescription></CardHeader><CardContent>
