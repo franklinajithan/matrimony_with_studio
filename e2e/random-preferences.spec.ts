@@ -54,3 +54,64 @@ test("QA-R01 random partner preference combinations", async ({ page }) => {
     }
   }
 });
+
+
+// QA-R02 uses all ten published synthetic QA profiles. Keep this separate from
+// QA-R01's four richly annotated profiles: the other six have known gender,
+// education and height, but not every extended-preference field.
+test("QA-R02 thirty seeded random Find Matches scenarios across ten QA profiles", async ({ page }) => {
+  test.setTimeout(300_000);
+  test.skip(!A.email || !A.password, "QA user required");
+  const cohort = [
+    ["01a0a652-f929-76ac-bbce-9b3f2c188d5a","Man",175,"Bachelor's"],
+    ["01a0a652-f947-73e7-8499-271e3c1e84d8","Man",178,"Master's"],
+    ["01a0a652-f963-7793-a4da-78dff528095e","Man",180,"Doctorate"],
+    ["01a0a652-f983-72ec-95e5-6a2f6cafa0ce","Man",172,"Master's"],
+    ["01a0a652-f9a1-736d-93cf-ac7f98096303","Man",176,"Bachelor's"],
+    ["01a0a652-f9c1-70ff-9eef-ad297f2281b0","Woman",160,"Bachelor's"],
+    ["01a0a652-f9e0-76ea-bb5b-13ce9e54cca5","Woman",165,"Master's"],
+    ["01a0a652-f9ff-7f68-ad79-59442a3508bf","Woman",162,"Master's"],
+    ["01a0a652-fa20-782a-9f96-1a38d12e7135","Woman",158,"Bachelor's"],
+    ["01a0a652-fa40-7ce7-836a-e84608163af4","Woman",163,"Master's"],
+  ] as const;
+  await page.goto("/login");
+  await page.getByTestId("login-email").fill(A.email);
+  await page.getByTestId("login-password").fill(A.password);
+  await page.getByTestId("login-submit").click();
+  await expect(page).not.toHaveURL(/\\/login/);
+
+  const seed = Number(process.env.QA_RANDOM_SEED || "20260926");
+  let state = seed >>> 0;
+  const rnd = () => ((state = (1664525 * state + 1013904223) >>> 0) / 4294967296);
+  const pick = <T,>(values: readonly T[]) => values[Math.floor(rnd() * values.length)];
+
+  for (let scenario = 1; scenario <= 30; scenario++) {
+    await page.goto("/discover");
+    await page.getByTestId("discover-filters-open").click();
+    const gender = rnd() < .75 ? pick(["Man","Woman"] as const) : undefined;
+    const education = rnd() < .65 ? pick(["Bachelor's","Master's","Doctorate"] as const) : undefined;
+    const min = rnd() < .6 ? pick([158,160,163,170,175,178] as const) : undefined;
+    const max = rnd() < .6 ? pick([160,163,165,175,180,185] as const) : undefined;
+    const lo = min !== undefined && max !== undefined ? Math.min(min,max) : min;
+    const hi = min !== undefined && max !== undefined ? Math.max(min,max) : max;
+    const choose = async (testId: string, value: string) => {
+      await page.getByTestId(testId).click();
+      await page.getByRole("option", { name: value, exact: true }).click();
+    };
+    if (gender) await choose("discover-filter-gender", gender);
+    if (education) await choose("discover-filter-education", education);
+    if (lo !== undefined) await page.getByTestId("discover-filter-height-min").fill(String(lo));
+    if (hi !== undefined) await page.getByTestId("discover-filter-height-max").fill(String(hi));
+    const criteria = JSON.stringify({ seed, scenario, gender, education, lo, hi });
+    for (const [id, profileGender, height, profileEducation] of cohort) {
+      const expected = (!gender || gender === profileGender)
+        && (!education || education === profileEducation)
+        && (lo === undefined || height >= lo)
+        && (hi === undefined || height <= hi);
+      const card = page.getByTestId("discover-profile-" + id);
+      const reason = criteria + " profile=" + id + " expected=" + expected;
+      if (expected) await expect(card, reason).toBeVisible({ timeout: 12_000 });
+      else await expect(card, reason).toHaveCount(0, { timeout: 12_000 });
+    }
+  }
+});
