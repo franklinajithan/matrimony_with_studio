@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShieldCheck, RefreshCw } from "lucide-react";
 
@@ -13,6 +14,21 @@ export default function AdminVerificationsPage() {
   const [requests, setRequests] = useState<VerificationRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [reviewing, setReviewing] = useState<string | null>(null);
+  const [reviewNote, setReviewNote] = useState("");
+  const [reviewError, setReviewError] = useState("");
+  async function decide(requestId: string, decision: "approved" | "rejected") {
+    if (reviewing) return;
+    setReviewing(requestId); setReviewError("");
+    try {
+      const response = await fetch("/api/admin/verification-decisions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ requestId, decision, note: reviewNote }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Unable to save review");
+      setReviewNote("");
+      await refresh();
+    } catch (err) { setReviewError(err instanceof Error ? err.message : "Unable to save review"); }
+    finally { setReviewing(null); }
+  }
   async function refresh() {
     setLoading(true);
     setError(false);
@@ -38,8 +54,8 @@ export default function AdminVerificationsPage() {
     </div>
     <Card>
       <CardHeader><CardTitle>Submitted verification requests</CardTitle><CardDescription>Actual member-submitted requests, oldest first. Review only; approval requires an audited workflow.</CardDescription></CardHeader>
-      <CardContent>{loading ? <p>Loading requests…</p> : error ? <p role="alert">Requests unavailable.</p> : requests.length === 0 ? <p>No pending member requests.</p> :
-        <ul className="divide-y" data-testid="admin-submitted-verification-requests">{requests.map(request => <li key={request.id} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><p className="font-medium">Member: {request.member_id}</p><p className="text-sm">{request.member_note || 'No note supplied'}</p><p className="text-xs text-muted-foreground">Submitted {new Date(request.created_at).toLocaleDateString('en-GB')}</p></div><Button variant="outline" asChild><Link href={`/admin/users/edit/${request.member_id}`}>Review member</Link></Button></li>)}</ul>}
+      <CardContent><p className="mb-3 text-sm text-muted-foreground">Approval confirms profile review only. It does not verify government identity documents or set an identity-verified badge.</p><label htmlFor="review-note" className="text-sm font-medium">Reviewer note (applies to the next decision)</label><Textarea id="review-note" value={reviewNote} onChange={event => setReviewNote(event.target.value)} maxLength={1000} className="mb-3" />{reviewError && <p role="alert" className="mb-3 text-sm text-destructive">{reviewError}</p>}{loading ? <p>Loading requests…</p> : error ? <p role="alert">Requests unavailable.</p> : requests.length === 0 ? <p>No pending member requests.</p> :
+        <ul className="divide-y" data-testid="admin-submitted-verification-requests">{requests.map(request => <li key={request.id} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><p className="font-medium">Member: {request.member_id}</p><p className="text-sm">{request.member_note || 'No note supplied'}</p><p className="text-xs text-muted-foreground">Submitted {new Date(request.created_at).toLocaleDateString('en-GB')}</p></div><Button variant="outline" asChild><Link href={`/admin/users/edit/${request.member_id}`}>Review member</Link></Button><Button disabled={reviewing !== null} onClick={() => void decide(request.id, "approved")}>Approve profile review</Button><Button variant="destructive" disabled={reviewing !== null} onClick={() => void decide(request.id, "rejected")}>Reject</Button></li>)}</ul>}
       </CardContent>
     </Card>
     <Card>
