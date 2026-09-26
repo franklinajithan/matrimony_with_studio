@@ -122,6 +122,7 @@ for (const file of adminPages) {
       const page = load(file, {
         '@/app/admin/guard': guard, './guard': guard,
         '@/lib/admin/dashboard': { getAdminDashboardMetrics: async () => ({ members: 14, activeUsers: 3, pendingVerification: 12, updatedAt: '2026-09-18T10:00:00Z' }) },
+        '@/lib/supabase/server': { createSupabaseServerClient: async () => ({ from: table => { assert.equal(table, 'admin_audit_log'); return { select: () => ({ order: () => ({ limit: async () => ({ data: [], error: null }) }) }) }; } }) },
         './page-client': { default: 'AdminPageClient' },
         '@/components/shared/Logo': componentStubs, '@/components/ui/card': componentStubs,
         'lucide-react': componentStubs, 'next/link': { default: 'Link' },
