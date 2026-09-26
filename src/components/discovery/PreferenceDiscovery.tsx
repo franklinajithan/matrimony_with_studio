@@ -70,10 +70,12 @@ export function PreferenceDiscovery() {
       const self = await getProfile(user.id);
       if (!self) throw new Error("Complete your profile before finding matches.");
       const saved = partnerPreferencesFromProfile(self);
-      const defaults = filtersFromPreferences(saved);
+      // Saved preferences rank candidates; they must not silently exclude every profile.
+      const defaults = empty;
       setPreferences(saved);
       setFilters({ ...defaults, query: params.get("q") || "", ageMin: params.get("ageMin") ? Number(params.get("ageMin")) : defaults.ageMin, ageMax: params.get("ageMax") ? Number(params.get("ageMax")) : defaults.ageMax, countries: params.get("country") ? [params.get("country")!] : defaults.countries, languages: params.get("language") ? [params.get("language")!] : defaults.languages, religions: params.get("religion") ? [params.get("religion")!] : defaults.religions });
-      const [profiles, sentIds] = await Promise.all([listProfiles({ limit: 100, excludeId: user.id }), listSentInterestReceiverIds(user.id)]);
+      const [profilePages, sentIds] = await Promise.all([Promise.all(Array.from({ length: 5 }, (_, i) => listProfiles({ limit: 100, offset: i * 100, excludeId: user.id }))), listSentInterestReceiverIds(user.id)]);
+      const profiles = profilePages.flat();
       const shortlisted = await getShortlistedIds(user.id, profiles.map((p) => p.id));
       setPeople(profiles.map((p) => ({ ...p, isShortlisted: shortlisted.has(p.id) })));
       setSent(new Set(sentIds));
@@ -85,7 +87,7 @@ export function PreferenceDiscovery() {
   useEffect(() => { void load(); }, [load]);
   const hasSaved = Boolean(preferences && hasPreferences(preferences));
   const results = useMemo(() => people.filter((p) => profileMatchesFilters(p, filters)).sort((a, b) => preferences ? preferenceScore(b, preferences).percentage - preferenceScore(a, preferences).percentage : 0), [people, filters, preferences]);
-  const reset = () => preferences && setFilters(filtersFromPreferences(preferences));
+  const reset = () => setFilters(empty);
   const clear = () => setFilters(empty);
   const activeCount = [
     filters.ageMin, filters.ageMax, filters.countries.length, filters.languages.length,
@@ -120,7 +122,7 @@ export function PreferenceDiscovery() {
   };
 
   const FilterPanel = () => <div className="space-y-5 pb-8">
-    <div className="rounded-2xl bg-violet-50 p-4 text-sm text-violet-950"><p className="font-semibold">Your Partner Preferences are the starting point</p><p className="mt-1 text-violet-700">Changes here are temporary. Reset returns to your saved preferences.</p></div>
+    <div className="rounded-2xl bg-violet-50 p-4 text-sm text-violet-950"><p className="font-semibold">Filter profiles independently of your saved preferences</p><p className="mt-1 text-violet-700">Changes here filter the results. Your saved preferences are used to rank matches; Reset shows all available profiles.</p></div>
     <div><Label>{t.age}</Label><div className="mt-2 grid grid-cols-2 gap-2"><Input type="number" min={18} placeholder={t.min} value={filters.ageMin || ""} onChange={(e) => setFilters((f) => ({ ...f, ageMin: e.target.value ? Number(e.target.value) : undefined }))}/><Input type="number" min={18} placeholder={t.max} value={filters.ageMax || ""} onChange={(e) => setFilters((f) => ({ ...f, ageMax: e.target.value ? Number(e.target.value) : undefined }))}/></div></div>
     <Choice label={t.country} value={first(filters.countries)} values={options.countries} onChange={(v) => setFilters((f) => ({ ...f, countries: list(v) }))}/><Choice label={t.language} value={first(filters.languages)} values={options.languages} onChange={(v) => setFilters((f) => ({ ...f, languages: list(v) }))}/><Choice label={t.religion} value={first(filters.religions)} values={options.religions} onChange={(v) => setFilters((f) => ({ ...f, religions: list(v) }))}/>
     <div><Label>{t.profession}</Label><Input className="mt-2" placeholder="e.g. Engineer" value={filters.professions[0] || ""} onChange={(e) => setFilters((f) => ({ ...f, professions: e.target.value ? [e.target.value] : [] }))}/></div>
@@ -142,7 +144,7 @@ export function PreferenceDiscovery() {
 
   return <PageFrame>
     <PageHero eyebrow={t.eyebrow} title={t.title} description={t.description}/>
-    <Card className="overflow-hidden border-violet-100"><CardContent className="p-4 sm:p-5"><div className="flex flex-col gap-3 lg:flex-row lg:items-center"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/><Input className="pl-10" placeholder={t.search} value={filters.query} onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))}/></div><div className="flex gap-2"><Sheet open={sheet} onOpenChange={setSheet}><SheetTrigger asChild><Button data-testid="discover-filters-open" variant="outline" className="flex-1 lg:flex-none"><SlidersHorizontal className="mr-2 h-4 w-4"/>{t.filters} {activeCount ? `(${activeCount})` : ""}</Button></SheetTrigger><SheetContent className="w-[92vw] overflow-y-auto sm:max-w-md"><SheetHeader><SheetTitle>{t.matchFilters}</SheetTitle></SheetHeader><div className="mt-5"><FilterPanel/></div></SheetContent></Sheet>{hasSaved && <Button variant="ghost" onClick={reset}><RotateCcw className="mr-2 h-4 w-4"/>{t.myPreferences}</Button>}</div></div>
+    <Card className="overflow-hidden border-violet-100"><CardContent className="p-4 sm:p-5"><div className="flex flex-col gap-3 lg:flex-row lg:items-center"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/><Input className="pl-10" placeholder={t.search} value={filters.query} onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))}/></div><div className="flex gap-2"><Sheet open={sheet} onOpenChange={setSheet}><SheetTrigger asChild><Button data-testid="discover-filters-open" variant="outline" className="flex-1 lg:flex-none"><SlidersHorizontal className="mr-2 h-4 w-4"/>{t.filters} {activeCount ? `(${activeCount})` : ""}</Button></SheetTrigger><SheetContent className="w-[92vw] overflow-y-auto sm:max-w-md"><SheetHeader><SheetTitle>{t.matchFilters}</SheetTitle></SheetHeader><div className="mt-5"><FilterPanel/></div></SheetContent></Sheet>{hasSaved && <Button variant="ghost" onClick={reset}><RotateCcw className="mr-2 h-4 w-4"/>{t.showAll}</Button>}</div></div>
       <div className={`mt-4 flex items-center gap-2 rounded-xl px-3 py-2 text-sm ${hasSaved ? "bg-[#fbf8ff] text-violet-800" : "bg-amber-50 text-amber-800"}`}><Sparkles className="h-4 w-4 shrink-0"/><span>{hasSaved ? <><strong>Preference match %</strong> compares each member with your saved Partner Preferences.</> : <><strong>Match % is waiting for your preferences.</strong> Set Partner Preferences to activate personalised scores.</>}</span>{!hasSaved && <Button size="sm" variant="outline" className="ml-auto" onClick={() => router.push(PREFERENCES_ROUTE)}>Set preferences</Button>}</div>
     </CardContent></Card>
     <div className="flex items-center justify-between"><p className="text-sm text-muted-foreground"><strong className="text-foreground">{results.length}</strong> {t.potential}</p></div>
