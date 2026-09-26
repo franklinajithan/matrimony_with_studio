@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ArrowRight, Heart, Shield, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { HERO_SLIDES } from "@/components/landing/brand";
+import { useI18n } from "@/components/i18n/I18nProvider";
+import { getMessages } from "@/components/i18n/messages";
 
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 const ease=(n:number)=>{const x=clamp(n);return x*x*(3-2*x)};
@@ -109,6 +111,8 @@ function HeroCarousel({
 }
 
 export function PremiumOpeningStory(){
+ const {language}=useI18n();
+ const hero=getMessages(language).hero;
  const {ref:openingRef,p:openingP}=useProgress();
  const heroExit=phase(openingP,.03,.22);
  const profiles=[
@@ -120,14 +124,14 @@ export function PremiumOpeningStory(){
  return <section className="bg-[#FFFDFB]">
   <article ref={openingRef} className="homepage-story-card relative grid min-h-[calc(100svh-7rem)] items-center gap-8 overflow-hidden px-5 py-6 lg:grid-cols-[minmax(440px,.9fr)_minmax(560px,1.1fr)] lg:gap-16 lg:px-[max(5vw,64px)] lg:py-8 xl:mx-auto xl:max-w-[1500px]">
    <div className="story-copy lg:max-w-[620px]" style={{transform:`translate3d(${-heroExit*72}px,${-heroExit*20}px,0)`,opacity:1-heroExit*.88,filter:`blur(${heroExit*3}px)`}}>
-    <p className="text-[10px] font-bold uppercase leading-5 tracking-[.27em] text-[#A078B0] lg:text-xs">Sri Lankan matchmaking<br/>for a brighter tomorrow</p>
+    <p className="text-[10px] font-bold uppercase leading-5 tracking-[.27em] text-[#A078B0] lg:text-xs">{hero.eyebrow}<br/>{hero.eyebrow2}</p>
     <div className="mt-3 flex items-end gap-3 lg:mt-4 lg:gap-5">
-      <h1 className="font-serif text-[2.7rem] font-semibold leading-[1.02] text-[#2A1845] lg:text-[5.1rem] xl:text-[5.65rem]">Find Your<br/><span className="text-[#C026D3]">Perfect Match</span></h1>
+      <h1 className="font-serif text-[2.7rem] font-semibold leading-[1.02] text-[#2A1845] lg:text-[5.1rem] xl:text-[5.65rem]">{hero.title}<br/><span className="text-[#C026D3]">{hero.titleAccent}</span></h1>
       <Image src="/images/cupidmatch-logo.png" alt="CupidMatch" width={210} height={72} className="mb-1 h-auto w-[108px] object-contain sm:w-[132px] lg:mb-2 lg:w-[180px]" />
      </div>
-    <p className="mt-4 max-w-lg text-[12px] leading-5 text-[#65546F] lg:mt-5 lg:text-base lg:leading-7">A trusted matrimony platform for the Sri Lankan community in the UK, Canada, Australia and beyond.</p>
-    <div className="mt-5 flex justify-between lg:mt-7 lg:max-w-lg lg:justify-start lg:gap-12">{[[Users,"Verified\nProfiles"],[Shield,"Safe & Secure"],[Heart,"Find\nCompatibility"]].map(([Icon,label]:any,i)=><div key={i} className="story-item w-24 text-center" style={{animationDelay:`${i*70}ms`}}><span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#F3E8FF] text-[#7C3AED]"><Icon className="h-5 w-5"/></span><span className="mt-2 block whitespace-pre-line text-[10px] font-semibold leading-3 text-[#4C3A5C]">{label}</span></div>)}</div>
-    <div className="mt-5 grid gap-2 lg:mt-7 lg:max-w-lg lg:grid-cols-2 lg:gap-3"><Link href="/signup" className="flex h-11 items-center justify-center rounded-full bg-[#7C3AED] text-sm font-semibold text-white shadow-lg">Create Your Profile <ArrowRight className="ml-1 h-4 w-4"/></Link><Link href="/discover" className="flex h-11 items-center justify-center rounded-full border border-violet-200 bg-white text-sm font-semibold text-violet-700">Explore Matches</Link></div>
+    <p className="mt-4 max-w-lg text-[12px] leading-5 text-[#65546F] lg:mt-5 lg:text-base lg:leading-7">{hero.description}</p>
+    <div className="mt-5 flex justify-between lg:mt-7 lg:max-w-lg lg:justify-start lg:gap-12">{[[Users,hero.verified],[Shield,hero.safe],[Heart,hero.compatibility]].map(([Icon,label]:any,i)=><div key={i} className="story-item w-24 text-center" style={{animationDelay:`${i*70}ms`}}><span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#F3E8FF] text-[#7C3AED]"><Icon className="h-5 w-5"/></span><span className="mt-2 block whitespace-pre-line text-[10px] font-semibold leading-3 text-[#4C3A5C]">{label}</span></div>)}</div>
+    <div className="mt-5 grid gap-2 lg:mt-7 lg:max-w-lg lg:grid-cols-2 lg:gap-3"><Link href="/signup" className="flex h-11 items-center justify-center rounded-full bg-[#7C3AED] text-sm font-semibold text-white shadow-lg">{hero.create} <ArrowRight className="ml-1 h-4 w-4"/></Link><Link href="/discover" className="flex h-11 items-center justify-center rounded-full border border-violet-200 bg-white text-sm font-semibold text-violet-700">{hero.explore}</Link></div>
    </div>
    <div className="story-media relative" style={{transform:`translate3d(${heroExit*-5}%,${heroExit*18}px,0) scale(${1+heroExit*.075})`,transformOrigin:"center center"}}>
     <HeroCarousel className="h-[44svh] min-h-[310px] rounded-[2.25rem] shadow-[0_18px_45px_rgba(76,29,149,.16)] lg:h-[68vh] lg:min-h-[540px] lg:max-h-[720px] lg:rounded-[2.75rem]" priority sizes="(min-width:1024px) 55vw,100vw"/>
