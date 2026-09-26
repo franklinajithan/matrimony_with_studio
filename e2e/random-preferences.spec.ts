@@ -78,7 +78,7 @@ test("QA-R02 thirty seeded random Find Matches scenarios across ten QA profiles"
   await page.getByTestId("login-email").fill(A.email);
   await page.getByTestId("login-password").fill(A.password);
   await page.getByTestId("login-submit").click();
-  await expect(page).not.toHaveURL(/\\/login/);
+  await expect(page).not.toHaveURL(/login/);
 
   const seed = Number(process.env.QA_RANDOM_SEED || "20260926");
   let state = seed >>> 0;
