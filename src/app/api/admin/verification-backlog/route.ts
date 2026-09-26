@@ -14,7 +14,11 @@ export async function GET() {
       .eq('is_published', true).eq('is_verified', false).eq('is_admin', false)
       .order('created_at', { ascending: true }).limit(100);
     if (error) throw error;
-    return NextResponse.json({ profiles: data ?? [] }, { headers: { 'Cache-Control': 'no-store' } });
+    const { data: requests, error: requestError } = await supabase.from('verification_requests')
+      .select('id,member_id,member_note,created_at,status')
+      .eq('status', 'pending').order('created_at', { ascending: true }).limit(100);
+    if (requestError) throw requestError;
+    return NextResponse.json({ profiles: data ?? [], requests: requests ?? [] }, { headers: { 'Cache-Control': 'no-store' } });
   } catch {
     return NextResponse.json({ error: 'Verification backlog unavailable' }, { status: 503 });
   }
