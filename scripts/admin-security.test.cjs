@@ -193,3 +193,54 @@ for (const unavailable of [false, true]) {
     else assert.equal(result.body.members, undefined);
   });
 }
+
+
+for (const scenario of [
+  { name: 'suspend member', suspend: true },
+  { name: 'restore member', suspend: false },
+]) {
+  test(`suspension API: ${scenario.name} invokes audited database RPC`, async () => {
+    const memberId = '11111111-1111-4111-8111-111111111111';
+    const calls = [];
+    const api = load('src/app/api/admin/member-suspension/route.ts', {
+      '@/lib/auth/admin': { requireServerAdmin: async () => user },
+      '@/lib/supabase/server': { createSupabaseServerClient: async () => ({
+        rpc: async (name, args) => {
+          calls.push({ name, args });
+          return { data: { changed: true, suspended: scenario.suspend }, error: null };
+        },
+      }) },
+      'next/server': { NextResponse: { json: (body, init) => ({ body, status: init?.status ?? 200 }) } },
+    });
+    const request = { json: async () => ({ memberId, suspend: scenario.suspend, reason: 'Moderation case reviewed' }) };
+    const response = await api.POST(request);
+    assert.equal(response.status, 200);
+    assert.deepEqual(response.body, { changed: true, suspended: scenario.suspend });
+    assert.deepEqual(calls, [{ name: 'admin_set_member_suspension', args: {
+      p_member_id: memberId, p_suspend: scenario.suspend, p_reason: 'Moderation case reviewed',
+    } }]);
+  });
+}
+test('suspension API rejects invalid input without contacting database', async () => {
+  const api = load('src/app/api/admin/member-suspension/route.ts', {
+    '@/lib/auth/admin': { requireServerAdmin: async () => user },
+    '@/lib/supabase/server': { createSupabaseServerClient: async () => { throw new Error('Invalid input reached database'); } },
+    'next/server': { NextResponse: { json: (body, init) => ({ body, status: init?.status ?? 200 }) } },
+  });
+  for (const body of [
+    { memberId: 'invalid', suspend: true, reason: 'Enough characters' },
+    { memberId: '11111111-1111-4111-8111-111111111111', suspend: 'yes', reason: 'Enough characters' },
+    { memberId: '11111111-1111-4111-8111-111111111111', suspend: true, reason: 'short' },
+  ]) assert.equal((await api.POST({ json: async () => body })).status, 400);
+});
+test('suspension API fails closed on database errors', async () => {
+  const api = load('src/app/api/admin/member-suspension/route.ts', {
+    '@/lib/auth/admin': { requireServerAdmin: async () => user },
+    '@/lib/supabase/server': { createSupabaseServerClient: async () => ({ rpc: async () => ({ data: null, error: { code: '42501' } }) }) },
+    'next/server': { NextResponse: { json: (body, init) => ({ body, status: init?.status ?? 200 }) } },
+  });
+  const response = await api.POST({ json: async () => ({
+    memberId: '11111111-1111-4111-8111-111111111111', suspend: true, reason: 'Moderation case reviewed',
+  }) });
+  assert.equal(response.status, 403);
+});
