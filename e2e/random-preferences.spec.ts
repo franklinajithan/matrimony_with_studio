@@ -115,3 +115,23 @@ test("QA-R02 thirty seeded random Find Matches scenarios across ten QA profiles"
     }
   }
 });
+
+// Regression: saved partner preferences may affect ranking but must not hide all profiles.
+test("QA-R00 Find Matches shows published profiles before any manual filters and restores them on Clear", async ({ page }) => {
+  test.setTimeout(90000);
+  test.skip(!A.email || !A.password, "QA user required");
+  await page.goto("/login");
+  await page.getByTestId("login-email").fill(A.email);
+  await page.getByTestId("login-password").fill(A.password);
+  await page.getByTestId("login-submit").click();
+  await expect(page).not.toHaveURL(/login/);
+  await page.goto("/discover");
+  const known = page.getByTestId("discover-profile-01a0a652-f929-76ac-bbce-9b3f2c188d5a");
+  await expect(known).toBeVisible({timeout:20000});
+  await page.getByTestId("discover-filters-open").click();
+  await page.getByTestId("discover-filter-gender").click();
+  await page.getByRole("option",{name:"Woman",exact:true}).click();
+  await expect(known).toHaveCount(0);
+  await page.getByTestId("discover-filter-clear").click();
+  await expect(known).toBeVisible({timeout:15000});
+});
