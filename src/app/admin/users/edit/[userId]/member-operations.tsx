@@ -61,7 +61,7 @@ export function MemberOperations({ memberId }: { memberId: string }) {
       <CardContent>{data.connections.length === 0 ? <p className="text-sm text-slate-500">No connections found.</p> :
         <ul className="divide-y">{data.connections.map(c => <li key={c.id} className="flex items-center justify-between gap-3 py-3">
           <div className="min-w-0"><p className="truncate font-medium">{c.displayName}</p><p className="text-xs text-slate-500">Connected {date(c.connectedAt)}</p></div>
-          <Button variant="outline" size="sm" asChild><Link href={`/admin/users/edit/${c.memberId}`}>View</Link></Button>
+          <div className="flex shrink-0 gap-2"><Button variant="outline" size="sm" asChild><Link href={`/admin/users/edit/${c.memberId}`}>View</Link></Button><Button variant="outline" size="sm" disabled={removing !== null} onClick={() => { setReasonFor(c.id); setReason(""); setRemoveError(""); }}>Remove</Button></div>
         </li>)}</ul>}
         {reasonFor && <div className="mt-3 space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3"><label htmlFor="remove-reason" className="text-sm font-semibold">Reason for removing connection</label><textarea id="remove-reason" value={reason} onChange={event => setReason(event.target.value)} maxLength={1000} rows={3} className="w-full rounded-lg border border-slate-300 bg-white p-2 text-sm" /><div className="flex gap-2"><Button size="sm" variant="destructive" disabled={removing !== null || reason.trim().length < 10} onClick={() => void removeConnection(reasonFor)}>Confirm removal</Button><Button size="sm" variant="outline" onClick={() => setReasonFor(null)}>Cancel</Button></div></div>}
         {removeError && <p role="alert" className="mt-2 text-sm text-red-700">{removeError}</p>}
