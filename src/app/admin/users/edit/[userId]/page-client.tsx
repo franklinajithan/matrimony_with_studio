@@ -6,6 +6,9 @@ import Link from "next/link";
 import { getProfile } from "@/lib/supabase/profiles";
 import type { Profile } from "@/lib/supabase/types";
 import { MemberOperations } from "./member-operations";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 type ReviewHistory = { id: string; status: string; member_note: string; reviewer_note: string | null; created_at: string; reviewed_at: string | null };
@@ -19,13 +22,18 @@ export default function AdminMemberDetailsPage() {
   const [reviews, setReviews] = useState<ReviewHistory[]>([]);
   const [reviewError, setReviewError] = useState(false);
   const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [editSuccess, setEditSuccess] = useState("");
+  const [form, setForm] = useState({ displayName: "", location: "", profession: "", bio: "" });
 
   useEffect(() => {
     let active = true;
     setLoading(true);
     setError(false);
     getProfile(userId).then(profile => {
-      if (active) { setUser(profile); setLoading(false); }
+      if (active) { setUser(profile); if (profile) setForm({ displayName: profile.displayName || "", location: profile.location || "", profession: profile.profession || "", bio: profile.bio || "" }); setLoading(false); }
     }).catch(() => {
       if (active) { setError(true); setLoading(false); }
     });
@@ -36,6 +44,16 @@ export default function AdminMemberDetailsPage() {
     return () => { active = false; };
   }, [userId]);
 
+  async function saveProfile(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setSaving(true); setEditError(""); setEditSuccess("");
+    try {
+      const response = await fetch("/api/admin/member-profile", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ memberId: userId, ...form }) });
+      if (!response.ok) throw new Error("Unable to save profile changes.");
+      setUser(previous => previous ? { ...previous, ...form } : previous);
+      setEditing(false); setEditSuccess("Member profile updated.");
+    } catch (error) { setEditError(error instanceof Error ? error.message : "Unable to save changes."); }
+    finally { setSaving(false); }
+  }
   return <div className="space-y-6">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h1 className="text-3xl font-bold">Member details</h1>
@@ -43,12 +61,20 @@ export default function AdminMemberDetailsPage() {
     </div>
     <Card>
       <CardHeader><CardTitle>Profile review</CardTitle>
-        <CardDescription>Read-only until audited server-side profile editing and identity verification are implemented. Role changes are not available here.</CardDescription>
+        <CardDescription>Edit basic member details when a member needs assistance. Changes are logged. Verification, roles and billing are managed separately.</CardDescription>
       </CardHeader>
       <CardContent>
         {loading ? <p role="status">Loading member…</p> :
           error ? <p role="alert">Unable to load member details.</p> :
           !user ? <p>Member not found.</p> :
+          <div className="space-y-4"><div className="flex flex-wrap gap-2"><Button type="button" variant="outline" onClick={() => { setEditing(value => !value); setEditError(""); }}> {editing ? "Cancel editing" : "Edit profile"}</Button></div>
+          {editSuccess && <p role="status" className="text-sm text-emerald-700">{editSuccess}</p>}
+          {editing && <form onSubmit={saveProfile} className="space-y-3 rounded-xl border bg-white p-4">
+            {(["displayName","location","profession"] as const).map(field => <label key={field} className="block text-sm font-medium"><span className="mb-1 block capitalize">{field === "displayName" ? "Display name" : field}</span><Input value={form[field]} onChange={event => setForm(previous => ({ ...previous, [field]: event.target.value }))} maxLength={field === "displayName" ? 100 : 150} required={field === "displayName"} /></label>)}
+            <label className="block text-sm font-medium"><span className="mb-1 block">Bio</span><Textarea value={form.bio} onChange={event => setForm(previous => ({ ...previous, bio: event.target.value }))} maxLength={3000} rows={5} /></label>
+            {editError && <p role="alert" className="text-sm text-red-700">{editError}</p>}
+            <Button type="submit" disabled={saving}>{saving ? "Saving…" : "Save member changes"}</Button>
+          </form>}
           <dl className="grid gap-4 sm:grid-cols-2">
             {([
               ["Display name", user.displayName],
@@ -64,7 +90,7 @@ export default function AdminMemberDetailsPage() {
                 <dt className="text-sm text-muted-foreground">{label}</dt>
                 <dd className="break-words font-medium">{value || "—"}</dd>
               </div>)}
-          </dl>}
+          </dl></div>}
       </CardContent>
     </Card>
     <MemberOperations memberId={userId} />
