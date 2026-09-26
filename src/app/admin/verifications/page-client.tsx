@@ -22,7 +22,7 @@ export default function AdminVerificationsPage() {
       const data: unknown = await response.json();
       if (!data || typeof data !== "object" ||
           !("pendingVerification" in data) ||
-          !Number.isSafeInteger(data.pendingVerification) ||
+          !Number.isSafeInteger(data.pendingVerification as number) ||
           (data.pendingVerification as number) < 0 ||
           !("updatedAt" in data) || typeof data.updatedAt !== "string") {
         throw new Error("Invalid verification overview.");
