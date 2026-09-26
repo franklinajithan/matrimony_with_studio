@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShieldCheck, RefreshCw } from "lucide-react";
 
+type VerificationRequest = { id: string; member_id: string; member_note: string; created_at: string };
 type ReviewProfile = { id: string; display_name: string | null; created_at: string | null };
 export default function AdminVerificationsPage() {
   const [profiles, setProfiles] = useState<ReviewProfile[]>([]);
+  const [requests, setRequests] = useState<VerificationRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   async function refresh() {
@@ -20,8 +22,11 @@ export default function AdminVerificationsPage() {
       const payload = await response.json();
       if (!Array.isArray(payload.profiles)) throw new Error("Invalid response");
       setProfiles(payload.profiles);
+      if (!Array.isArray(payload.requests)) throw new Error('Invalid requests');
+      setRequests(payload.requests);
     } catch {
       setProfiles([]);
+      setRequests([]);
       setError(true);
     } finally { setLoading(false); }
   }
@@ -31,6 +36,12 @@ export default function AdminVerificationsPage() {
       <h1 className="text-3xl font-bold">Profile verification backlog</h1>
       <Button variant="outline" asChild><Link href="/admin">Back to dashboard</Link></Button>
     </div>
+    <Card>
+      <CardHeader><CardTitle>Submitted verification requests</CardTitle><CardDescription>Actual member-submitted requests, oldest first. Review only; approval requires an audited workflow.</CardDescription></CardHeader>
+      <CardContent>{loading ? <p>Loading requests…</p> : error ? <p role="alert">Requests unavailable.</p> : requests.length === 0 ? <p>No pending member requests.</p> :
+        <ul className="divide-y" data-testid="admin-submitted-verification-requests">{requests.map(request => <li key={request.id} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><p className="font-medium">Member: {request.member_id}</p><p className="text-sm">{request.member_note || 'No note supplied'}</p><p className="text-xs text-muted-foreground">Submitted {new Date(request.created_at).toLocaleDateString('en-GB')}</p></div><Button variant="outline" asChild><Link href={`/admin/users/edit/${request.member_id}`}>Review member</Link></Button></li>)}</ul>}
+      </CardContent>
+    </Card>
     <Card>
       <CardHeader><CardTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5" />Unverified published profiles</CardTitle>
         <CardDescription>Read-only review queue, oldest first (up to 100). These profiles have not necessarily submitted identity documents. Do not treat this list as proof of identity.</CardDescription>
