@@ -2,6 +2,14 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from 'react';
+import { subscribeToProfiles } from '@/lib/supabase/profiles';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Eye, Edit3, Loader2, Search } from 'lucide-react';
+import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
 
 interface UserData {
   id: string; // UID
