@@ -2,25 +2,6 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { subscribeToProfiles, updateUserProfile } from '@/lib/supabase/profiles';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Eye, Edit3, UserCheck, UserX, ShieldCheck, ShieldOff, Loader2, Search } from 'lucide-react';
-import Link from 'next/link';
-import { useToast } from '@/hooks/use-toast';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 
 interface UserData {
   id: string; // UID
@@ -35,7 +16,6 @@ interface UserData {
 export default function UserManagementPage() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [processingUserId, setProcessingUserId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
@@ -74,39 +54,6 @@ export default function UserManagementPage() {
     );
   }, [users, searchTerm]);
 
-  const toggleAdminStatus = async (userId: string, currentIsAdmin: boolean | undefined) => {
-    setProcessingUserId(userId);
-    try {
-      await updateUserProfile(userId, {
-        isAdmin: !currentIsAdmin,
-      });
-      toast({
-        title: "Admin Status Updated",
-        description: `User ${users.find(u=>u.id === userId)?.displayName || userId} is ${!currentIsAdmin ? 'now an admin' : 'no longer an admin'}.`,
-      });
-    } catch (error) {
-      console.error("Error updating admin status:", error);
-      toast({
-        title: "Update Failed",
-        description: "Could not update admin status.",
-        variant: "destructive",
-      });
-    } finally {
-      setProcessingUserId(null);
-    }
-  };
-
-  const handleBanUser = async (userId: string) => {
-    setProcessingUserId(userId);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    toast({
-      title: "User Banned (Mock)",
-      description: `User ${users.find(u=>u.id === userId)?.displayName || userId} would be banned. Actual ban logic needs implementation.`,
-      variant: "destructive"
-    });
-    setProcessingUserId(null);
-  };
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -118,7 +65,7 @@ export default function UserManagementPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-slate-700">User Management</h1>
-      <p className="text-slate-600">View and manage user accounts in CupidMatch.</p>
+      <p className="text-slate-600">View member accounts. Role changes and bans are disabled until server-authorized, audited actions are implemented.</p>
 
       <div className="flex items-center gap-2 p-1 rounded-md border border-input bg-card focus-within:ring-2 focus-within:ring-ring">
         <Search className="h-5 w-5 ml-2 text-muted-foreground" />
@@ -174,60 +121,7 @@ export default function UserManagementPage() {
                         <Edit3 className="h-4 w-4" />
                     </Link>
                   </Button>
-                   <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                       <Button
-                          variant="ghost"
-                          size="icon"
-                          title={user.isAdmin ? "Remove Admin" : "Make Admin"}
-                          disabled={processingUserId === user.id}
-                          className={user.isAdmin ? "text-orange-600 hover:text-orange-700 hover:bg-orange-100" : "text-green-600 hover:text-green-700 hover:bg-green-100"}
-                        >
-                          {processingUserId === user.id && user.isAdmin ? <Loader2 className="h-4 w-4 animate-spin" /> : user.isAdmin ? <ShieldOff className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
-                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                        <AlertDialogTitle>Confirm Admin Status Change</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Are you sure you want to {user.isAdmin ? 'remove admin privileges from' : 'grant admin privileges to'} {user.displayName || user.id}?
-                        </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                        <AlertDialogCancel disabled={processingUserId === user.id}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={() => toggleAdminStatus(user.id, user.isAdmin)}
-                            disabled={processingUserId === user.id}
-                            className={user.isAdmin ? "bg-orange-600 hover:bg-orange-700" : "bg-green-600 hover:bg-green-700"}
-                        >
-                            {processingUserId === user.id ? <Loader2 className="h-4 w-4 animate-spin mr-2"/> : null}
-                            Yes, {user.isAdmin ? 'Remove Admin' : 'Make Admin'}
-                        </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" title="Ban User (Placeholder)" className="text-destructive hover:bg-destructive/10" disabled={processingUserId === user.id}>
-                           {processingUserId === user.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserX className="h-4 w-4" />}
-                        </Button>
-                    </AlertDialogTrigger>
-                     <AlertDialogContent>
-                        <AlertDialogHeader>
-                        <AlertDialogTitle>Confirm Ban User</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Are you sure you want to ban {user.displayName || user.id}? This action would typically prevent them from accessing the service.
-                        </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                        <AlertDialogCancel disabled={processingUserId === user.id}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleBanUser(user.id)} className="bg-destructive hover:bg-destructive/90" disabled={processingUserId === user.id}>
-                             {processingUserId === user.id ? <Loader2 className="h-4 w-4 animate-spin mr-2"/> : null}
-                            Yes, Ban User
-                        </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+
                 </TableCell>
               </TableRow>
             ))}
