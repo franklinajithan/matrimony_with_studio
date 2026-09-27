@@ -117,7 +117,8 @@ export default function UserManagementPage() {
       </div>
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" asChild><Link href="/admin/verifications"><ClipboardList className="mr-2 h-4 w-4" />Verification queue</Link></Button>
-        <Button variant="outline" disabled={loading || filtered.length === 0} onClick={exportFiltered}><Download className="mr-2 h-4 w-4" />Export filtered</Button>\n        <Button variant="outline" onClick={() => window.location.reload()}><RefreshCw className="mr-2 h-4 w-4" />Refresh</Button>
+        <Button variant="outline" disabled={loading || filtered.length === 0} onClick={exportFiltered}><Download className="mr-2 h-4 w-4" />Export filtered</Button>
+        <Button variant="outline" onClick={() => window.location.reload()}><RefreshCw className="mr-2 h-4 w-4" />Refresh</Button>
       </div>
     </div>
 
