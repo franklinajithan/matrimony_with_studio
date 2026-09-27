@@ -146,13 +146,13 @@ export async function signInWithOAuth(provider: OAuthProvider, next = "/dashboar
   return data;
 }
 
-export async function createUserWithEmailAndPassword(_auth: unknown, email: string, password: string, extras?: { displayName?: string; pendingPhone?: string }) {
+export async function createUserWithEmailAndPassword(_auth: unknown, email: string, password: string, extras?: { displayName?: string; pendingPhone?: string; pendingPromoCode?: string }) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       emailRedirectTo: callbackUrl("/verify-phone"),
-      data: { ...(extras?.displayName ? { display_name: extras.displayName } : {}), ...(extras?.pendingPhone ? { pending_phone: extras.pendingPhone } : {}) },
+      data: { ...(extras?.displayName ? { display_name: extras.displayName } : {}), ...(extras?.pendingPhone ? { pending_phone: extras.pendingPhone } : {}), ...(extras?.pendingPromoCode ? { pending_promo_code: extras.pendingPromoCode } : {}) },
     },
   });
   if (error) mapAuthError(error, "Signup failed");
