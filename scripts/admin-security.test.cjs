@@ -17,6 +17,7 @@ function load(relative, mocks = {}) {
   const module = { exports: {} };
   const requireMock = (name) => {
     if (name === 'server-only') return {};
+    if (name === 'node:crypto') return require('node:crypto');
     if (Object.hasOwn(mocks, name)) return mocks[name];
     if (name === 'react/jsx-runtime') return {
       jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }),
@@ -243,4 +244,25 @@ test('suspension API fails closed on database errors', async () => {
     memberId: '11111111-1111-4111-8111-111111111111', suspend: true, reason: 'Moderation case reviewed',
   }) });
   assert.equal(response.status, 403);
+});
+
+test('trial admin API rejects invalid duration before touching the database', async () => {
+ const api=load('src/app/api/admin/trials/route.ts',{
+  '@/lib/auth/admin':{requireServerAdmin:async()=>user},
+  '@/lib/supabase/server':{createSupabaseServerClient:async()=>{throw new Error('Invalid input reached database');}},
+  'next/server':{NextResponse:{json:(body,init)=>({body,status:init?.status??200})}},
+ });
+ const result=await api.POST({headers:{get:()=>null},json:async()=>({memberId:'11111111-1111-4111-8111-111111111111',action:'grant',months:100,reason:'Admin-approved extended trial'}),url:'https://example.test/api/admin/trials'});
+ assert.equal(result.status,400);
+});
+test('trial admin API invokes audited RPC for valid extension',async()=>{
+ const calls=[];
+ const api=load('src/app/api/admin/trials/route.ts',{
+  '@/lib/auth/admin':{requireServerAdmin:async()=>user},
+  '@/lib/supabase/server':{createSupabaseServerClient:async()=>({rpc:async(name,args)=>{calls.push({name,args});return {data:{endsAt:'2027-06-01'},error:null};}})},
+  'next/server':{NextResponse:{json:(body,init)=>({body,status:init?.status??200})}},
+ });
+ const result=await api.POST({headers:{get:()=>null},json:async()=>({memberId:'11111111-1111-4111-8111-111111111111',action:'extend',months:6,reason:'Customer support approved extension'}),url:'https://example.test/api/admin/trials'});
+ assert.equal(result.status,200);
+ assert.deepEqual(calls,[{name:'admin_adjust_member_trial',args:{p_member_id:'11111111-1111-4111-8111-111111111111',p_action:'extend',p_months:6,p_reason:'Customer support approved extension'}}]);
 });
