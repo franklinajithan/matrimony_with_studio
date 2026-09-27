@@ -43,10 +43,24 @@ export async function PATCH(request:Request){
  if(origin && origin!==new URL(request.url).origin)return NextResponse.json({error:"Invalid origin"},{status:403});
  let body:unknown;try{body=await request.json();}catch{return NextResponse.json({error:"Invalid request"},{status:400});}
  if(!body||typeof body!=="object")return NextResponse.json({error:"Invalid request"},{status:400});
- const {id,isActive}=body as Record<string,unknown>;
- if(typeof id!=="string"||!/^[0-9a-f]{8}-[0-9a-f-]{27,36}$/i.test(id)||typeof isActive!=="boolean")
-  return NextResponse.json({error:"Invalid code or status"},{status:400});
+ const {id,isActive,maxRedemptions,expiresAt}=body as Record<string,unknown>;
+ if(typeof id!=="string"||!/^[0-9a-f]{8}-[0-9a-f-]{27,36}$/i.test(id))
+  return NextResponse.json({error:"Invalid code"},{status:400});
+ const changes:Record<string,unknown>={};
+ if(typeof isActive==="boolean"&&maxRedemptions===undefined&&expiresAt===undefined){changes.is_active=isActive;}
+ else if(isActive===undefined&&typeof maxRedemptions==="number"&&Number.isInteger(maxRedemptions)&&maxRedemptions>=1&&maxRedemptions<=100000){
+  changes.max_redemptions=maxRedemptions;
+  if(expiresAt!==undefined){
+   if(expiresAt!==null&&(typeof expiresAt!=="string"||!/^\\d{4}-\\d{2}-\\d{2}$/.test(expiresAt)))
+    return NextResponse.json({error:"Invalid expiry date"},{status:400});
+   if(expiresAt!==null){
+    const d=new Date(expiresAt+"T23:59:59.999Z");
+    if(!Number.isFinite(d.getTime())||d.getTime()<=Date.now())return NextResponse.json({error:"Expiry must be in the future"},{status:400});
+    changes.expires_at=d.toISOString();
+   } else changes.expires_at=null;
+  }
+ } else return NextResponse.json({error:"Invalid update"},{status:400});
  const db=await createSupabaseServerClient();
- const {data,error}=await db.from("promo_codes").update({is_active:isActive}).eq("id",id).select("id,is_active").single();
+ const {data,error}=await db.from("promo_codes").update(changes).eq("id",id).select("id,is_active,max_redemptions,expires_at").single();
  return error?NextResponse.json({error:"Could not update code"},{status:500}):NextResponse.json({code:data});
 }
