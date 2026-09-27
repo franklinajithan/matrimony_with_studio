@@ -25,7 +25,7 @@ export default async function AdminSecurityPage() {
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div><h1 className="text-3xl font-bold">Admin Security</h1>
         <p className="mt-2 text-sm text-slate-600">Recent administrative activity. Changes to roles require a separate audited server workflow.</p></div>
-      <Link href="/admin" className="rounded-lg border bg-white px-4 py-2 text-sm">Back to dashboard</Link>
+      <div className="flex flex-wrap gap-2"><Link href="/api/admin/audit-log?format=csv" className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-800">Export audit CSV</Link><Link href="/admin" className="rounded-lg border bg-white px-4 py-2 text-sm">Back to dashboard</Link></div>
     </div>
     <Card><CardHeader><CardTitle>Audit activity</CardTitle>
       <CardDescription>Most recent 100 recorded events. Refresh the page to load recent activity.</CardDescription></CardHeader>
