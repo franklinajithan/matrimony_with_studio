@@ -5,8 +5,16 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export async function GET(){
  const admin=await requireServerAdmin(); if(!admin)return NextResponse.json({error:"Forbidden"},{status:403});
  const db=await createSupabaseServerClient();
- const {data,error}=await db.from("promo_codes").select("id,code_hint,duration_months,max_redemptions,redemption_count,starts_at,expires_at,is_active,created_at").order("created_at",{ascending:false}).limit(100);
- return error?NextResponse.json({error:"Unable to load codes"},{status:500}):NextResponse.json({codes:data});
+ const [codes,redemptions]=await Promise.all([
+  db.from("promo_codes").select("id,code_hint,duration_months,max_redemptions,redemption_count,starts_at,expires_at,is_active,created_at").order("created_at",{ascending:false}).limit(100),
+  db.from("promo_redemptions").select("id,promo_code_id,user_id,redeemed_at,trial_ends_at").order("redeemed_at",{ascending:false}).limit(100)
+ ]);
+ if(codes.error||redemptions.error)return NextResponse.json({error:"Unable to load promotion records"},{status:500});
+ const ids=[...new Set((redemptions.data||[]).map(r=>r.user_id))];
+ const people=ids.length?await db.from("profiles").select("id,display_name").in("id",ids):{data:[],error:null};
+ if(people.error)return NextResponse.json({error:"Unable to load redemption records"},{status:500});
+ const names=new Map((people.data||[]).map(p=>[p.id,p.display_name]));
+ return NextResponse.json({codes:codes.data,redemptions:(redemptions.data||[]).map(r=>({...r,member_name:names.get(r.user_id)||"Member"}))},{headers:{"Cache-Control":"no-store"}});
 }
 export async function POST(request:Request){
  const origin=request.headers.get("origin");
