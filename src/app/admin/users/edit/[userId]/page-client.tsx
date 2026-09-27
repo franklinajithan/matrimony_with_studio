@@ -98,6 +98,7 @@ export default function AdminMemberDetailsPage() {
     </Card>
     <ExtendedMemberProfile memberId={userId} profile={user} />
     <MemberSuspension memberId={userId} />
+    {!user?.isAdmin && <Card className="border-violet-200 bg-violet-50/40"><CardHeader><CardTitle>Membership & introductory offer</CardTitle><CardDescription>Manage this member's launch trial through the protected, audited subscription controls. Paid subscription records are managed separately.</CardDescription></CardHeader><CardContent><Button asChild><Link href={`/admin/subscriptions?memberId=${userId}`}>Manage membership</Link></Button></CardContent></Card>}
     <MemberOperations memberId={userId} />
     <MemberAdminNotes memberId={userId} />
     <Card><CardHeader><CardTitle>Verification request history</CardTitle><CardDescription>Member-submitted profile review requests and recorded decisions. Identity-document verification is a separate process.</CardDescription></CardHeader><CardContent>
