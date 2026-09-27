@@ -7,6 +7,7 @@ const modules = [
   { title: "Member management", detail: "Member directory, profiles and account review", icon: Users, href: "/admin/users", tint: "bg-violet-50 text-violet-700", category: "COMMUNITY" },
   { title: "Verification centre", detail: "Review submitted requests and profile status", icon: UserCheck, href: "/admin/verifications", tint: "bg-blue-50 text-blue-700", category: "TRUST & SAFETY" },
   { title: "Subscriptions", detail: "View memberships and subscription records", icon: CreditCard, href: "/admin/subscriptions", tint: "bg-emerald-50 text-emerald-700", category: "REVENUE" },
+  { title: "Invitation codes", detail: "Generate, disable and track special launch offers", icon: Sparkles, href: "/admin/promo-codes", tint: "bg-purple-50 text-purple-700", category: "GROWTH" },
   { title: "Plans & pricing", detail: "Review plan pricing and feature entitlements", icon: BadgePoundSterling, href: "/admin/plans", tint: "bg-amber-50 text-amber-700", category: "REVENUE" },
   { title: "Success stories", detail: "View community stories and submissions", icon: BookHeart, href: "/admin/success-stories", tint: "bg-rose-50 text-rose-700", category: "CONTENT" },
   { title: "Security & audit", detail: "Review recorded administrative activity", icon: Shield, href: "/admin/security", tint: "bg-slate-100 text-slate-700", category: "SYSTEM" },
