@@ -17,9 +17,9 @@ export async function GET(){
  return NextResponse.json({codes:codes.data,redemptions:(redemptions.data||[]).map(r=>({...r,member_name:names.get(r.user_id)||"Member"}))},{headers:{"Cache-Control":"no-store"}});
 }
 export async function POST(request:Request){
+ const admin=await requireServerAdmin();if(!admin)return NextResponse.json({error:"Forbidden"},{status:403});
  const origin=request.headers.get("origin");
  if(origin && origin!==new URL(request.url).origin)return NextResponse.json({error:"Invalid origin"},{status:403});
- const admin=await requireServerAdmin();if(!admin)return NextResponse.json({error:"Forbidden"},{status:403});
  let body:unknown;try{body=await request.json();}catch{return NextResponse.json({error:"Invalid request"},{status:400});}
  if(!body||typeof body!=="object")return NextResponse.json({error:"Invalid request"},{status:400});
  const b=body as Record<string,unknown>, months=b.durationMonths, limit=b.maxRedemptions, expiry=b.expiresAt;
