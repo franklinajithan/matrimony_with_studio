@@ -22,6 +22,7 @@ import { getMessages } from "@/components/i18n/messages";
 const signupSchema = z
   .object({
     name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+    phone: z.string().regex(/^\+[1-9]\d{7,14}$/, { message: "Enter your mobile in international format, e.g. +447700900123." }),
     email: z.string().email({ message: "Enter a valid email address." }),
     password: z.string().min(8, { message: "Password must be at least 8 characters." }),
     confirmPassword: z.string().min(8, { message: "Confirm your password." }),
@@ -47,6 +48,7 @@ export default function SignupPage() {
     defaultValues: {
       name: "",
       email: "",
+      phone: "",
       password: "",
       confirmPassword: "",
       terms: false,
@@ -59,6 +61,7 @@ export default function SignupPage() {
     try {
       const result = await createUserWithEmailAndPassword(auth, values.email, values.password, {
         displayName: values.name,
+        pendingPhone: values.phone,
       });
 
       if (result.needsEmailConfirmation) {
@@ -74,7 +77,7 @@ export default function SignupPage() {
         title: "Account created",
         description: "You can now build your profile.",
       });
-      router.push("/onboarding");
+      router.push("/verify-phone");
       router.refresh();
     } catch (error: unknown) {
       const code = typeof error === "object" && error && "code" in error ? String((error as { code: string }).code) : "";
@@ -121,7 +124,7 @@ export default function SignupPage() {
             </AlertDescription>
           </Alert>
         )}
-        <SocialAuthButtons next="/onboarding" />
+        <SocialAuthButtons next="/verify-phone" />
         <p className="text-center text-xs leading-relaxed text-muted-foreground">
           By continuing with Google or Facebook, you agree to the{" "}
           <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link>{" "}
@@ -142,6 +145,9 @@ export default function SignupPage() {
                 </FormItem>
               )}
             />
+            <FormField control={form.control} name="phone" render={({ field }) => (
+              <FormItem><FormLabel>Mobile number (private)</FormLabel><FormControl><Input type="tel" autoComplete="tel" placeholder="+447700900123" {...field} disabled={isLoading} /></FormControl><p className="text-xs text-muted-foreground">We will send an SMS code after email confirmation. Your number is never displayed on your public profile.</p><FormMessage /></FormItem>
+            )} />
             <FormField
               control={form.control}
               name="email"
