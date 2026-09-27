@@ -10,6 +10,7 @@ const links = [
   { href: "/admin/verifications", label: "Verification", icon: ShieldCheck },
   { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
   { href: "/admin/plans", label: "Plans", icon: Tags },
+  { href: "/admin/promo-codes", label: "Promo Codes", icon: Tags },
   { href: "/admin/success-stories", label: "Stories", icon: Heart },
   { href: "/admin/security", label: "Security", icon: Shield },
 ];
