@@ -9,6 +9,8 @@ export async function GET(){
  return error?NextResponse.json({error:"Unable to load codes"},{status:500}):NextResponse.json({codes:data});
 }
 export async function POST(request:Request){
+ const origin=request.headers.get("origin");
+ if(origin && origin!==new URL(request.url).origin)return NextResponse.json({error:"Invalid origin"},{status:403});
  const admin=await requireServerAdmin();if(!admin)return NextResponse.json({error:"Forbidden"},{status:403});
  let body:unknown;try{body=await request.json();}catch{return NextResponse.json({error:"Invalid request"},{status:400});}
  if(!body||typeof body!=="object")return NextResponse.json({error:"Invalid request"},{status:400});
@@ -26,4 +28,17 @@ export async function POST(request:Request){
  const {error}=await db.from("promo_codes").insert({code_hash:hash,code_hint:code.slice(0,9)+"…"+code.slice(-4),duration_months:months,max_redemptions:limit,expires_at:expiresAt,created_by:admin.id});
  if(error)return NextResponse.json({error:"Could not create code"},{status:500});
  return NextResponse.json({code,message:"Copy this code now. It will not be shown again."},{status:201,headers:{"Cache-Control":"no-store"}});
+}
+export async function PATCH(request:Request){
+ const admin=await requireServerAdmin();if(!admin)return NextResponse.json({error:"Forbidden"},{status:403});
+ const origin=request.headers.get("origin");
+ if(origin && origin!==new URL(request.url).origin)return NextResponse.json({error:"Invalid origin"},{status:403});
+ let body:unknown;try{body=await request.json();}catch{return NextResponse.json({error:"Invalid request"},{status:400});}
+ if(!body||typeof body!=="object")return NextResponse.json({error:"Invalid request"},{status:400});
+ const {id,isActive}=body as Record<string,unknown>;
+ if(typeof id!=="string"||!/^[0-9a-f]{8}-[0-9a-f-]{27,36}$/i.test(id)||typeof isActive!=="boolean")
+  return NextResponse.json({error:"Invalid code or status"},{status:400});
+ const db=await createSupabaseServerClient();
+ const {data,error}=await db.from("promo_codes").update({is_active:isActive}).eq("id",id).select("id,is_active").single();
+ return error?NextResponse.json({error:"Could not update code"},{status:500}):NextResponse.json({code:data});
 }
