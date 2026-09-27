@@ -22,6 +22,7 @@ import { getMessages } from "@/components/i18n/messages";
 const signupSchema = z
   .object({
     name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+    promoCode: z.string().max(32).regex(/^[A-Za-z0-9-]*$/, "Use letters, numbers or hyphens only.").optional(),
     phone: z.string().regex(/^\+[1-9]\d{7,14}$/, { message: "Enter your mobile in international format, e.g. +447700900123." }),
     email: z.string().email({ message: "Enter a valid email address." }),
     password: z.string().min(8, { message: "Password must be at least 8 characters." }),
@@ -49,6 +50,7 @@ export default function SignupPage() {
       name: "",
       email: "",
       phone: "",
+      promoCode: "",
       password: "",
       confirmPassword: "",
       terms: false,
@@ -62,6 +64,7 @@ export default function SignupPage() {
       const result = await createUserWithEmailAndPassword(auth, values.email, values.password, {
         displayName: values.name,
         pendingPhone: values.phone,
+        pendingPromoCode: values.promoCode?.trim().toUpperCase(),
       });
 
       if (result.needsEmailConfirmation) {
@@ -147,6 +150,9 @@ export default function SignupPage() {
             />
             <FormField control={form.control} name="phone" render={({ field }) => (
               <FormItem><FormLabel>Mobile number (private)</FormLabel><FormControl><Input type="tel" autoComplete="tel" placeholder="+447700900123" {...field} disabled={isLoading} /></FormControl><p className="text-xs text-muted-foreground">We will send an SMS code after email confirmation. Your number is never displayed on your public profile.</p><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="promoCode" render={({ field }) => (
+              <FormItem><FormLabel>Special invitation code (optional)</FormLabel><FormControl><Input autoComplete="off" placeholder="Enter your invitation code" {...field} disabled={isLoading} /></FormControl><p className="text-xs text-muted-foreground">Have a special code? Enter it here. Eligibility and any extended trial will be confirmed after verification; entering a code does not automatically activate an offer.</p><FormMessage /></FormItem>
             )} />
             <FormField
               control={form.control}
