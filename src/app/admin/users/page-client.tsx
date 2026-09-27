@@ -181,6 +181,7 @@ export default function UserManagementPage() {
           <div className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-500">Joined: {memberDate(member.createdAt) ? new Date(memberDate(member.createdAt)).toLocaleDateString("en-GB") : "Not available"}</div>
           <div className="mt-4 flex gap-2">
             <Button className="flex-1 rounded-xl" asChild><Link href={`/admin/users/edit/${member.id}`}>Manage member</Link></Button>
+            {!member.isAdmin && <Button variant="outline" className="rounded-xl" asChild><Link href={`/admin/subscriptions?memberId=${member.id}`}>Membership</Link></Button>}
             <Button variant="outline" size="icon" className="rounded-xl" asChild><Link href={`/profile/${member.id}`} aria-label={`Open profile for ${member.displayName || member.id}`}><ExternalLink className="h-4 w-4" /></Link></Button>
           </div>
         </article>)}
@@ -191,6 +192,6 @@ export default function UserManagementPage() {
       <span className="text-sm text-slate-600">Page {currentPage} of {pages}</span>
       <Button variant="outline" disabled={currentPage >= pages} onClick={() => setPage(currentPage + 1)}>Next<ChevronRight className="ml-1 h-4 w-4" /></Button>
     </div>}
-    <p className="text-xs text-slate-500">Account restrictions, role changes and subscription grants require separate secure, audited admin actions. Directory counts reflect currently loaded profiles.</p>
+    <p className="text-xs text-slate-500">Membership grants and extensions use the audited Subscription Control Centre. Directory counts reflect currently loaded profiles.</p>
   </div>;
 }
