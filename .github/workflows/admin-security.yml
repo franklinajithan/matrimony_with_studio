@@ -25,6 +25,8 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      # Keep consistent with Verify until the repository lockfile is refreshed.
+      - run: npm install --package-lock-only --ignore-scripts
       - run: npm ci
       - run: npm run test:admin
       - run: npx tsc --noEmit
