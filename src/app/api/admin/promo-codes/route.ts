@@ -15,7 +15,7 @@ export async function POST(request:Request){
  let body:unknown;try{body=await request.json();}catch{return NextResponse.json({error:"Invalid request"},{status:400});}
  if(!body||typeof body!=="object")return NextResponse.json({error:"Invalid request"},{status:400});
  const b=body as Record<string,unknown>, months=b.durationMonths, limit=b.maxRedemptions, expiry=b.expiresAt;
- if(!Number.isInteger(months)||Number(months)<1||Number(months)>24||!Number.isInteger(limit)||Number(limit)<1||Number(limit)>100000)return NextResponse.json({error:"Invalid duration or usage limit"},{status:400});
+ if(typeof months!=="number"||!Number.isInteger(months)||months<1||months>24||typeof limit!=="number"||!Number.isInteger(limit)||limit<1||limit>100000)return NextResponse.json({error:"Invalid duration or usage limit"},{status:400});
  let expiresAt:string|null=null;
  if(expiry!==null&&expiry!==undefined&&expiry!==""){
   if(typeof expiry!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(expiry))return NextResponse.json({error:"Invalid expiry date"},{status:400});
