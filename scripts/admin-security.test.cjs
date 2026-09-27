@@ -124,7 +124,7 @@ for (const file of adminPages) {
         '@/app/admin/guard': guard, './guard': guard,
         '@/lib/admin/dashboard': { getAdminDashboardMetrics: async () => ({ members: 14, activeUsers: 3, pendingVerification: 12, updatedAt: '2026-09-18T10:00:00Z' }) },
         '@/lib/supabase/server': { createSupabaseServerClient: async () => ({ from: table => { assert.equal(table, 'admin_audit_log'); return { select: () => ({ order: () => ({ limit: async () => ({ data: [], error: null }) }) }) }; } }) },
-        './page-client': { default: 'AdminPageClient' },
+        './page-client': { default: 'AdminPageClient' }, './audit-explorer': { default: 'AuditExplorer' },
         '@/components/shared/Logo': componentStubs, '@/components/ui/card': componentStubs,
         './admin-navigation': { AdminNavigation: 'AdminNavigation' }, './admin-mobile-tab-bar': { AdminMobileTabBar: 'AdminMobileTabBar' },
         'lucide-react': componentStubs, 'next/link': { default: 'Link' },
@@ -265,4 +265,21 @@ test('trial admin API invokes audited RPC for valid extension',async()=>{
  const result=await api.POST({headers:{get:()=>null},json:async()=>({memberId:'11111111-1111-4111-8111-111111111111',action:'extend',months:6,reason:'Customer support approved extension'}),url:'https://example.test/api/admin/trials'});
  assert.equal(result.status,200);
  assert.deepEqual(calls,[{name:'admin_adjust_member_trial',args:{p_member_id:'11111111-1111-4111-8111-111111111111',p_action:'extend',p_months:6,p_reason:'Customer support approved extension'}}]);
+});
+
+test('audit API refuses unauthenticated reads before touching database',async()=>{
+ const api=load('src/app/api/admin/audit-log/route.ts',{
+  '@/lib/auth/admin':{requireServerAdmin:async()=>null},
+  '@/lib/supabase/server':{createSupabaseServerClient:async()=>{throw Error('Read before auth');}},
+  'next/server':{NextResponse:{json:(body,init)=>({body,status:init?.status??200})}},
+ });
+ assert.equal((await api.GET()).status,403);
+});
+test('audit API rejects malformed actor filters before querying',async()=>{
+ const api=load('src/app/api/admin/audit-log/route.ts',{
+  '@/lib/auth/admin':{requireServerAdmin:async()=>user},
+  '@/lib/supabase/server':{createSupabaseServerClient:async()=>{throw Error('Invalid filter queried');}},
+  'next/server':{NextResponse:{json:(body,init)=>({body,status:init?.status??200})}},
+ });
+ assert.equal((await api.GET({url:'https://example.test/api/admin/audit-log?actor=not-a-uuid'})).status,400);
 });
