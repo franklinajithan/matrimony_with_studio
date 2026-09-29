@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { parsePhoneNumberFromString } from "libphonenumber-js";
-
 function normalizePhone(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const parsed = parsePhoneNumberFromString(value.trim());
