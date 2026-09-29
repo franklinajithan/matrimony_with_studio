@@ -70,10 +70,14 @@ export function PhoneVerificationFlow({
       return;
     }
 
+    // UI preview mode: real SMS/OTP is intentionally deferred.
     setLoading(true);
     setError("");
-
     try {
+      setStep("otp");
+      setResendCooldown(60);
+      toast({ title: "Preview mode", description: "SMS delivery will be enabled later. Use any 6 digits to preview the flow." });
+      return;
       const response = await fetch("/api/phone-verification/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -115,6 +119,14 @@ export function PhoneVerificationFlow({
     setError("");
 
     try {
+      // UI preview mode only. Do not persist a verified status until real OTP is enabled.
+      setStep("success");
+      toast({ title: "UI preview complete", description: "No phone verification status was saved." });
+      setTimeout(() => {
+        if (redirectOnSuccess) router.push(redirectOnSuccess);
+        else onSuccess?.();
+      }, 900);
+      return;
       const response = await fetch("/api/phone-verification/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -190,7 +202,7 @@ export function PhoneVerificationFlow({
             Verify your phone number
           </h2>
           <p className="text-muted-foreground">
-            We'll send you a verification code to confirm your phone number
+            Add your mobile number. SMS verification will be enabled later.
           </p>
         </div>
 
@@ -229,7 +241,7 @@ export function PhoneVerificationFlow({
               </>
             ) : (
               <>
-                Send verification code
+                Continue to OTP preview
                 <ArrowRight className="ml-2 h-4 w-4" />
               </>
             )}
@@ -264,7 +276,7 @@ export function PhoneVerificationFlow({
             Enter verification code
           </h2>
           <p className="text-muted-foreground">
-            We sent a 6-digit code to{" "}
+            OTP UI preview for{" "}
             <span className="font-medium text-foreground">{phoneNumber}</span>
           </p>
         </div>
@@ -341,7 +353,7 @@ export function PhoneVerificationFlow({
               Phone verified!
             </h2>
             <p className="text-muted-foreground">
-              Your phone number has been successfully verified
+              Phone verification UI preview completed
             </p>
           </div>
         </div>
@@ -350,7 +362,7 @@ export function PhoneVerificationFlow({
           <CheckCircle2 className="h-4 w-4 text-green-600" />
           <AlertTitle className="text-green-900">All set!</AlertTitle>
           <AlertDescription className="text-green-700">
-            You can now continue with your profile
+            No verified status was saved. Real SMS verification will be enabled later.
           </AlertDescription>
         </Alert>
       </div>
