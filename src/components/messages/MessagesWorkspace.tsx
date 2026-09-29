@@ -47,8 +47,7 @@ import {
 } from "@/lib/supabase/chats";
 import { resolveMediaUrl } from "@/lib/supabase/storage";
 import { areConnected, listConnections } from "@/lib/supabase/connections";
-import { ReportMemberButton } from "@/components/safety/ReportMemberButton";
-import { BlockMemberButton } from "@/components/safety/BlockMemberButton";
+import { Flag, Ban } from "lucide-react";
 
 const QUICK_EMOJIS = ["😀", "😂", "🥰", "😊", "🙏", "👍", "❤️", "🎉", "🔥", "✨", "😢", "👏"];
 
@@ -679,10 +678,9 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                       <DropdownMenuItem asChild>
                         <Link href="/connections">All connections</Link>
                       </DropdownMenuItem>
-                      <div className="border-t p-1">
-                        <ReportMemberButton memberId={selectedConversation.otherUserId} memberName={selectedConversation.otherUserName} className="w-full justify-start" />
-                        <BlockMemberButton memberId={selectedConversation.otherUserId} memberName={selectedConversation.otherUserName} className="w-full justify-start" />
-                      </div>
+                      <DropdownMenuItem asChild>
+                        <Link href={`/profile/${selectedConversation.otherUserId}#safety`}><Flag className="mr-2 h-4 w-4" />Report or block member</Link>
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
