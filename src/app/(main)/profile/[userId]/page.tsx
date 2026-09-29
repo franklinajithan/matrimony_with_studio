@@ -60,6 +60,8 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ShareProfileButton } from "@/components/profile/ShareProfileButton";
+import { ReportMemberButton } from "@/components/safety/ReportMemberButton";
+import { BlockMemberButton } from "@/components/safety/BlockMemberButton";
 
 interface StoredPhoto {
   id: string;
@@ -685,6 +687,12 @@ export default function ProfilePage() {
                 <ShareProfileButton compact />
               ) : null}
               {renderActionButtons()}
+              {currentFirebaseUser && currentFirebaseUser.uid !== viewedUserProfile.userId ? (
+                <div className="flex items-center gap-1">
+                  <ReportMemberButton memberId={viewedUserProfile.userId} memberName={viewedUserProfile.name} />
+                  <BlockMemberButton memberId={viewedUserProfile.userId} memberName={viewedUserProfile.name} />
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
