@@ -6,13 +6,13 @@ const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
 
 export async function GET(
   request: Request,
-  { params }: { params: { reportId: string } }
+  context?: { params: { reportId: string } | Promise<{ reportId: string }> }
 ) {
   if (!await requireServerAdmin()) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { reportId } = params;
+  const { reportId } = context?.params ? await context.params : { reportId: "" };
 
   if (!uuid.test(reportId)) {
     return NextResponse.json({ error: "Invalid report ID" }, { status: 400 });
