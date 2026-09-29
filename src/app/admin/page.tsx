@@ -5,6 +5,7 @@ import Link from "next/link";
 
 const modules = [
   { title: "Member management", detail: "Member directory, profiles and account review", icon: Users, href: "/admin/users", tint: "bg-violet-50 text-violet-700", category: "COMMUNITY" },
+  { title: "Member reports", detail: "Safety moderation and report investigation", icon: ShieldAlert, href: "/admin/reports", tint: "bg-red-50 text-red-700", category: "TRUST & SAFETY" },
   { title: "Verification centre", detail: "Review submitted requests and profile status", icon: UserCheck, href: "/admin/verifications", tint: "bg-blue-50 text-blue-700", category: "TRUST & SAFETY" },
   { title: "Subscriptions", detail: "View memberships and subscription records", icon: CreditCard, href: "/admin/subscriptions", tint: "bg-emerald-50 text-emerald-700", category: "REVENUE" },
   { title: "Invitation codes", detail: "Generate, disable and track special launch offers", icon: Sparkles, href: "/admin/promo-codes", tint: "bg-purple-50 text-purple-700", category: "GROWTH" },
@@ -21,6 +22,7 @@ export default async function AdminDashboardPage() {
   const stats = [
     { title: "Total members", value: metrics?.members, icon: Users, description: "Registered members excluding admins", href: "/admin/users", tint: "bg-violet-50 text-violet-700" },
     { title: "Active members", value: metrics?.activeUsers, icon: Activity, description: "Signed in within the last 30 days", href: "/admin/users", tint: "bg-emerald-50 text-emerald-700" },
+    { title: "Open reports", value: metrics?.openReports, icon: ShieldAlert, description: "Member safety reports awaiting review", href: "/admin/reports", tint: "bg-red-50 text-red-700" },
     { title: "Unverified profiles", value: metrics?.pendingVerification, icon: ShieldAlert, description: "Published profiles awaiting verification", href: "/admin/verifications", tint: "bg-amber-50 text-amber-700" },
   ];
 

@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, ShieldCheck, CreditCard, Menu } from "lucide-react";
+import { LayoutDashboard, Users, ShieldCheck, CreditCard, Menu, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 
 const primary = [
   { href: "/admin", label: "Home", icon: LayoutDashboard },
   { href: "/admin/users", label: "Members", icon: Users },
+  { href: "/admin/reports", label: "Reports", icon: ShieldAlert },
   { href: "/admin/verifications", label: "Reviews", icon: ShieldCheck },
   { href: "/admin/subscriptions", label: "Billing", icon: CreditCard },
 ];
