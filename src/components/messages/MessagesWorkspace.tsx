@@ -47,7 +47,7 @@ import {
 } from "@/lib/supabase/chats";
 import { resolveMediaUrl } from "@/lib/supabase/storage";
 import { areConnected, listConnections } from "@/lib/supabase/connections";
-import { Flag, Ban } from "lucide-react";
+import { Flag } from "lucide-react";
 
 const QUICK_EMOJIS = ["😀", "😂", "🥰", "😊", "🙏", "👍", "❤️", "🎉", "🔥", "✨", "😢", "👏"];
 
