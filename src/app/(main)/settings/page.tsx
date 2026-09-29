@@ -15,6 +15,7 @@ import { auth, updateProfile } from "@/lib/supabase/auth";
 import { extractStoragePath, mediaPathForUser, resolveMediaUrl, uploadFile } from "@/lib/supabase/storage";
 import { getProfile, updateUserProfile } from "@/lib/supabase/profiles";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PhoneVerificationStatus } from "@/components/phone-verification/PhoneVerificationStatus";
 import Link from "next/link";
 
 const profileSchema = z.object({
@@ -154,6 +155,9 @@ export default function SettingsPage() {
   return (
     <div className="container max-w-2xl py-8 space-y-4">
       <Card><CardHeader><CardTitle>Profile verification</CardTitle><CardDescription>Request review and track your verification status.</CardDescription></CardHeader><CardContent><Button asChild variant="outline"><Link href="/verification">Manage verification request</Link></Button></CardContent></Card>
+      
+      <PhoneVerificationStatus />
+      
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Edit Profile</CardTitle>

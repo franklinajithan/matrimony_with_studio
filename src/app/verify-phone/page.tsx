@@ -1,8 +1,6 @@
-import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PhoneVerificationFlow } from "@/components/phone-verification/PhoneVerificationFlow";
-import { Loader2 } from "lucide-react";
 
 export const metadata = {
   title: "Verify Phone | CupidMatch",
@@ -38,22 +36,10 @@ export default async function VerifyPhonePage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-pink-50 to-white">
       <div className="w-full max-w-lg">
-        <Suspense
-          fallback={
-            <div className="flex items-center justify-center p-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          }
-        >
-          <PhoneVerificationFlow
-            redirectOnSuccess="/onboarding"
-            allowSkip={true}
-            onSkip={() => {
-              // User skipped phone verification, redirect to onboarding
-              redirect("/onboarding");
-            }}
-          />
-        </Suspense>
+        <PhoneVerificationFlow
+          redirectOnSuccess="/onboarding"
+          allowSkip={true}
+        />
 
         <div className="mt-8 text-center text-sm text-muted-foreground">
           <p>Why verify your phone?</p>
