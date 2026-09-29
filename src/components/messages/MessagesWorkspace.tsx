@@ -47,6 +47,8 @@ import {
 } from "@/lib/supabase/chats";
 import { resolveMediaUrl } from "@/lib/supabase/storage";
 import { areConnected, listConnections } from "@/lib/supabase/connections";
+import { ReportMemberButton } from "@/components/safety/ReportMemberButton";
+import { BlockMemberButton } from "@/components/safety/BlockMemberButton";
 
 const QUICK_EMOJIS = ["😀", "😂", "🥰", "😊", "🙏", "👍", "❤️", "🎉", "🔥", "✨", "😢", "👏"];
 
@@ -677,6 +679,10 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                       <DropdownMenuItem asChild>
                         <Link href="/connections">All connections</Link>
                       </DropdownMenuItem>
+                      <div className="border-t p-1">
+                        <ReportMemberButton memberId={selectedConversation.otherUserId} memberName={selectedConversation.otherUserName} className="w-full justify-start" />
+                        <BlockMemberButton memberId={selectedConversation.otherUserId} memberName={selectedConversation.otherUserName} className="w-full justify-start" />
+                      </div>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
