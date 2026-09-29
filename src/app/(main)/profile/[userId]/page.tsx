@@ -688,7 +688,7 @@ export default function ProfilePage() {
               ) : null}
               {renderActionButtons()}
               {currentFirebaseUser && currentFirebaseUser.uid !== viewedUserProfile.userId ? (
-                <div className="flex items-center gap-1">
+                <div id="safety" className="flex items-center gap-1">
                   <ReportMemberButton memberId={viewedUserProfile.userId} memberName={viewedUserProfile.name} />
                   <BlockMemberButton memberId={viewedUserProfile.userId} memberName={viewedUserProfile.name} />
                 </div>
