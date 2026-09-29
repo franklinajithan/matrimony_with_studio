@@ -62,13 +62,7 @@ where p.is_published = true
        or (mb.blocker_id = p.id and mb.blocked_id = auth.uid())
   );
 
--- RLS policy for discovery_profiles view
-drop policy if exists "discovery_profiles_select_authenticated" on public.discovery_profiles;
-create policy "discovery_profiles_select_authenticated"
-  on public.discovery_profiles for select
-  to authenticated
-  using (true);
-
--- Grant permissions
+-- Views do not support table RLS policies. The view itself filters suspension and
+-- bidirectional blocks using auth.uid(); keep access authenticated-only.
 revoke all on public.discovery_profiles from anon;
 grant select on public.discovery_profiles to authenticated;
