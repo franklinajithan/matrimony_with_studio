@@ -21,19 +21,19 @@
     --border: 270 24% 92%;
     --input: 270 24% 92%;
 
-    --primary: 265 81% 53%;
+    --primary: 263 84% 58%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 359 100% 72%;
+    --secondary: 40 67% 49%;
     --secondary-foreground: 0 0% 100%;
 
-    --accent: 260 100% 96%;
-    --accent-foreground: 265 81% 53%;
+    --accent: 262 100% 97%;
+    --accent-foreground: 263 84% 58%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --ring: 265 81% 53%;
+    --ring: 263 84% 58%;
     --radius: 0.5rem;
 
     --chart-1: 265 81% 53%;
