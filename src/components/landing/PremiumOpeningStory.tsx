@@ -134,7 +134,7 @@ export function PremiumOpeningStory(){
  ];
  return <section className="bg-[#FFFCF7]">
   <article ref={openingRef} className="homepage-story-card relative grid min-h-[calc(100svh-7rem)] items-center gap-8 overflow-hidden bg-[radial-gradient(circle_at_82%_35%,rgba(201,149,50,.16),transparent_32%),linear-gradient(120deg,#FFFCF7_0%,#FAF5FF_52%,#F3E8FF_100%)] px-5 py-6 lg:grid-cols-[minmax(440px,.82fr)_minmax(620px,1.18fr)] lg:gap-8 lg:px-[max(5vw,64px)] lg:py-0">
-   <div className="story-copy relative z-20 lg:max-w-[620px]" style={{transform:`translate3d(${-heroExit*72}px,${-heroExit*20}px,0)`,opacity:1-heroExit*.88,filter:`blur(${heroExit*3}px)`}}>
+   <div className="story-copy relative z-20 lg:max-w-[620px]" style={{transform:`translate3d(${-heroExit*72}px,${-heroExit*20}px,0)`,opacity:1-heroExit*.88}}>
     <p className="text-[10px] font-bold uppercase leading-5 tracking-[.27em] text-[#A078B0] lg:text-xs">{hero.eyebrow}<br/>{hero.eyebrow2}</p>
     <div className="mt-3 flex items-end gap-3 lg:mt-4 lg:gap-5">
       <h1 className="font-serif text-[2.7rem] font-semibold leading-[1.02] text-[#2A1845] lg:text-[5.25rem] xl:text-[5.9rem]">{hero.title}<br/><span className="bg-gradient-to-r from-[#7C3AED] via-[#9F67EA] to-[#C99532] bg-clip-text text-transparent">{hero.titleAccent}</span></h1>
