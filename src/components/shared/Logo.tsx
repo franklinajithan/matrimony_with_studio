@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 type LogoSize = "sm" | "md" | "lg";
@@ -26,8 +25,6 @@ function resolveSize(size: LogoSize | undefined, iconSize: number | undefined): 
   }
   return "md";
 }
-
-const LOGO_SRC = "/images/acd9ebcc-ba25-41bb-9d0c-b5c24683ce37.png";
 
 const SIZE_CLASS: Record<LogoSize, string> = {
   sm: "w-36 sm:w-40",
@@ -56,21 +53,17 @@ export function Logo({
       )}
       aria-label="CupidMatch home"
     >
-      <Image
-        src={LOGO_SRC}
-        alt="CupidMatch"
-        width={1983}
-        height={793}
-        sizes={
-          resolved === "sm"
-            ? "(min-width: 640px) 160px, 144px"
-            : resolved === "lg"
-              ? "(min-width: 768px) 256px, (min-width: 640px) 224px, 192px"
-              : "(min-width: 768px) 208px, (min-width: 640px) 192px, 176px"
-        }
-        className={cn("h-auto w-full object-contain object-left", onDark && "brightness-0 invert")}
-        priority
-      />
+      <svg viewBox="0 0 420 108" role="img" aria-label="CupidMatch Matrimony" className={cn("h-auto w-full overflow-visible", onDark && "brightness-0 invert")}>
+        <defs><linearGradient id="cmGold" x1="0" x2="1"><stop stopColor="#B97816"/><stop offset=".48" stopColor="#F1C45C"/><stop offset="1" stopColor="#B97816"/></linearGradient><linearGradient id="cmPurple" x1="0" x2="1"><stop stopColor="#3B1768"/><stop offset="1" stopColor="#7C3AED"/></linearGradient></defs>
+        <g transform="translate(4 7)">
+          <path d="M48 24c-17-18-38-5-34 15 4 20 29 32 34 36 5-4 30-16 34-36 4-20-17-33-34-15Z" fill="url(#cmPurple)"/>
+          <path d="M20 29C3 18 5 3 23 5c-7 5-9 11-7 18C7 17 3 8 11 2c13-8 27 4 28 17" fill="url(#cmGold)"/>
+          <circle cx="47" cy="14" r="8" fill="url(#cmGold)"/><path d="M46 21c-12 5-18 15-20 29M45 25c10 4 17 11 22 22" fill="none" stroke="url(#cmGold)" strokeWidth="6" strokeLinecap="round"/>
+          <path d="M58 29c18-13 27-4 31 6M88 35c-2 10-8 18-18 23" fill="none" stroke="url(#cmGold)" strokeWidth="3"/><path d="M66 35l25-8-7 8 8 3Z" fill="#C99532"/>
+        </g>
+        <text x="95" y="58" fontFamily="Georgia,serif" fontSize="48" fontWeight="700" fill="#3B1768">Cupid</text><text x="230" y="58" fontFamily="Georgia,serif" fontSize="48" fontWeight="700" fill="url(#cmGold)">Match</text>
+        <path d="M96 70H363" stroke="#C99532" strokeWidth="1.5"/><text x="178" y="91" fontFamily="Georgia,serif" fontSize="13" fontWeight="700" letterSpacing="5" fill="#6B214E">MATRIMONY</text>
+      </svg>
     </Link>
   );
 }
