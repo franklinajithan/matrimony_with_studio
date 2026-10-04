@@ -133,13 +133,13 @@ export function PremiumOpeningStory(){
   {name:"Vishal, 29",place:"London, UK",src:"/images/profiles/vishal.jpg?v=1"},
  ];
  return <section className="overflow-x-clip bg-[#FFFCF7]">
-  <article ref={openingRef} className="homepage-story-card relative grid min-h-[calc(100svh-7rem)] items-center gap-8 overflow-hidden bg-[radial-gradient(circle_at_82%_35%,rgba(201,149,50,.16),transparent_32%),linear-gradient(120deg,#FFFCF7_0%,#FAF5FF_52%,#F3E8FF_100%)] px-5 py-6 lg:grid-cols-[minmax(470px,.88fr)_minmax(620px,1.12fr)] lg:gap-0 lg:px-0 lg:pl-[max(5vw,64px)] lg:py-0">
-   <div className="story-copy relative z-20 lg:max-w-[650px] lg:pr-10" style={{transform:`translate3d(${-heroExit*72}px,${-heroExit*20}px,0)`,opacity:1-heroExit*.88}}>
-    <p className="text-[10px] font-bold uppercase leading-5 tracking-[.32em] text-[#7C3AED] lg:text-xs">{hero.eyebrow}<br/>{hero.eyebrow2}</p>
+  <article ref={openingRef} className="homepage-story-card relative grid min-h-[calc(100svh-7rem)] min-w-0 items-center gap-8 overflow-hidden bg-[radial-gradient(circle_at_82%_35%,rgba(201,149,50,.16),transparent_32%),linear-gradient(120deg,#FFFCF7_0%,#FAF5FF_52%,#F3E8FF_100%)] px-5 py-6 lg:grid-cols-[minmax(470px,.88fr)_minmax(620px,1.12fr)] lg:gap-0 lg:px-0 lg:pl-[max(5vw,64px)] lg:py-0">
+   <div className="story-copy relative z-20 min-w-0 max-w-full overflow-hidden lg:max-w-[650px] lg:overflow-visible lg:pr-10" style={{transform:`translate3d(${-heroExit*72}px,${-heroExit*20}px,0)`,opacity:1-heroExit*.88}}>
+    <p className="max-w-full text-[9px] font-bold uppercase leading-5 tracking-[.18em] text-[#7C3AED] sm:text-[10px] sm:tracking-[.28em] lg:text-xs lg:tracking-[.32em]">{hero.eyebrow}<br/>{hero.eyebrow2}</p>
     <div className="mt-3 lg:mt-4">
       <h1 className="font-serif text-[2.35rem] font-semibold leading-[1.02] sm:text-[2.7rem] text-[#2A1845] lg:text-[5.25rem] xl:text-[5.9rem]">{hero.title}<br/><span className="bg-gradient-to-r from-[#7C3AED] via-[#9F67EA] to-[#C99532] bg-clip-text text-transparent">{hero.titleAccent}</span></h1>
      </div>
-    <p className="mt-5 max-w-xl text-[13px] leading-6 text-[#5F5270] lg:mt-6 lg:text-[17px] lg:leading-8">{hero.description}</p>
+    <p className="mt-5 max-w-full text-[13px] leading-6 text-[#5F5270] lg:mt-6 lg:max-w-xl lg:text-[17px] lg:leading-8">{hero.description}</p>
     <div className="mt-5 flex justify-between lg:mt-7 lg:max-w-lg lg:justify-start lg:gap-12">{[[Users,hero.verified],[Shield,hero.safe],[Heart,hero.compatibility]].map(([Icon,label]:any,i)=><div key={i} className="story-item w-24 text-center" style={{animationDelay:`${i*70}ms`}}><span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#F3E8FF] text-[#7C3AED]"><Icon className="h-5 w-5"/></span><span className="mt-2 block whitespace-pre-line text-[10px] font-semibold leading-3 text-[#4C3A5C]">{label}</span></div>)}</div>
     <div className="mt-5 grid gap-2 lg:mt-7 lg:max-w-lg lg:grid-cols-2 lg:gap-3"><Link href="/signup" className="flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-sm font-semibold text-white shadow-[0_14px_34px_rgba(124,58,237,.28)] transition hover:-translate-y-0.5">{hero.create} <ArrowRight className="ml-1 h-4 w-4"/></Link><Link href="/discover" className="flex h-11 items-center justify-center rounded-full border border-[#C99532]/55 bg-white text-sm font-semibold text-[#5B21B6]">{hero.explore}</Link></div>
    </div>
