@@ -142,7 +142,7 @@ export function Navbar() {
       <header className="sticky top-0 z-50 w-full border-b border-[#EEE6F7] bg-[#FFFBF5]/95 backdrop-blur supports-[backdrop-filter]:bg-[#FFFBF5]/90">
         <div className="mx-auto flex h-[4.25rem] w-full max-w-[1500px] items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:h-24 lg:px-10 xl:px-14">
           <div className="flex shrink-0 flex-col justify-center">
-            
+            {isMarketingPage ? <Link href="/" className="whitespace-nowrap font-serif text-[1.65rem] font-semibold tracking-[-.045em] sm:text-[2rem] lg:text-[2.5rem]" aria-label="Cupid Match home"><span className="text-[#3B1768]">Cupid</span><span className="text-[#C99532]">Match</span></Link> : null}
             {isMarketingPage ? (
               <p className="hidden -mt-0.5 pl-[2.55rem] text-[10px] font-medium tracking-[0.01em] text-[#9A7A45] sm:block">
                 Real People. Meaningful Connections.
