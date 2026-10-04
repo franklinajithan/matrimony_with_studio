@@ -34,3 +34,5 @@ export default function AuditExplorer(){
  {loading?<p role="status" className="p-6 text-sm text-slate-500">Loading audit records…</p>:events.length===0?<p className="p-6 text-sm text-slate-500">No matching activity found.</p>:<div className="grid gap-3">{events.map(event=><article key={event.id} className="rounded-2xl border border-slate-200 p-4"><div className="flex flex-wrap items-center justify-between gap-2"><span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-bold text-violet-800">{event.action.replace(/_/g," ")}</span><time className="text-xs text-slate-500">{new Date(event.created_at).toLocaleString("en-GB",{timeZone:"UTC",dateStyle:"medium",timeStyle:"short"})} UTC</time></div><p className="mt-3 break-all text-sm font-semibold text-slate-800">{event.target_type}{event.target_id?" · "+event.target_id:""}</p><p className="mt-1 break-all font-mono text-xs text-slate-500">Actor: {event.actor_id||"System"}</p></article>)}</div>}
  {cursor&&<div className="mt-5 flex justify-center"><Button variant="outline" disabled={loading} onClick={()=>{setPage(p=>p+1);void load(filters,cursor);}}>Older events</Button></div>}
  </section></div>;
+
+}
