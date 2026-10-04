@@ -107,11 +107,11 @@ export function Navbar() {
   const marketingLinkClass = (href: string) =>
     cn(
       "relative h-11 rounded-none bg-transparent px-3.5 text-[15px] font-medium text-[#5C4A66] shadow-none hover:bg-transparent hover:text-[#2A1845]",
-      pathname === href && "text-[#2A1845] after:absolute after:inset-x-1 after:-bottom-0.5 after:h-[3px] after:rounded-full after:bg-[#7C3AED]"
+      pathname === href && "text-[#2A1845] after:absolute after:inset-x-1 after:-bottom-0.5 after:h-[3px] after:rounded-full after:bg-gradient-to-r after:from-[#7C3AED] after:to-[#C99532]"
     );
 
   const signUpButtonClass =
-    "rounded-full bg-[#7C3AED] px-6 font-semibold text-white hover:bg-[#6D28D9] shadow-sm transition-all";
+    "rounded-full bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] px-6 font-semibold text-white hover:from-[#6D28D9] hover:to-[#5B21B6] shadow-[0_8px_24px_rgba(124,58,237,.22)] transition-all";
 
   const authActions = (
     <div className="ml-auto hidden items-center gap-3 lg:flex">
@@ -126,7 +126,7 @@ export function Navbar() {
         </>
       ) : (
         <>
-          <Button variant="outline" asChild className="h-10 rounded-full border-[#C4B0E8] bg-white px-5 font-semibold text-[#6D28D9] hover:bg-white hover:text-[#6D28D9]">
+          <Button variant="outline" asChild className="h-10 rounded-full border-[#D6C6F5] bg-white px-5 font-semibold text-[#6D28D9] hover:bg-white hover:text-[#6D28D9]">
             <Link href="/login">Log In</Link>
           </Button>
           <Button asChild className={signUpButtonClass}>
@@ -139,12 +139,12 @@ export function Navbar() {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <header className="sticky top-0 z-50 w-full border-b border-[#F0E8F4] bg-[#FBF8F4]/95 backdrop-blur supports-[backdrop-filter]:bg-[#FBF8F4]/90">
+      <header className="sticky top-0 z-50 w-full border-b border-[#EEE6F7] bg-[#FFFBF5]/95 backdrop-blur supports-[backdrop-filter]:bg-[#FFFBF5]/90">
         <div className="mx-auto flex h-[4.25rem] w-full max-w-[1500px] items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:h-24 lg:px-10 xl:px-14">
           <div className="flex shrink-0 flex-col justify-center">
             <Logo size="sm" className="w-[7.8rem] sm:w-[10rem] lg:w-[12.5rem]" />
             {isMarketingPage ? (
-              <p className="hidden -mt-0.5 pl-[2.55rem] text-[10px] font-medium tracking-[0.01em] text-[#9B7AA8] sm:block">
+              <p className="hidden -mt-0.5 pl-[2.55rem] text-[10px] font-medium tracking-[0.01em] text-[#9A7A45] sm:block">
                 Real People. Meaningful Connections.
               </p>
             ) : null}
@@ -172,7 +172,7 @@ export function Navbar() {
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      className="h-10 gap-1.5 rounded-full border border-[#E4D4F5] bg-white px-3.5 text-[#5C4A66] hover:bg-white"
+                      className="h-10 gap-1.5 rounded-full border border-[#E9DDF8] bg-white px-3.5 text-[#5C4A66] hover:bg-white"
                       aria-label="Select language"
                     >
                       <Globe className="h-4 w-4 text-[#7C3AED]" />
@@ -244,7 +244,7 @@ export function Navbar() {
 
           {isLoadingAuth ? (
             <div className="ml-auto hidden items-center gap-3 lg:flex">
-              <Button variant="outline" asChild className="h-10 rounded-full border-[#C4B0E8] bg-white px-5 font-semibold text-[#6D28D9] hover:bg-white hover:text-[#6D28D9]">
+              <Button variant="outline" asChild className="h-10 rounded-full border-[#D6C6F5] bg-white px-5 font-semibold text-[#6D28D9] hover:bg-white hover:text-[#6D28D9]">
                 <Link href="/login">Log In</Link>
               </Button>
               <Button asChild className={signUpButtonClass}>
