@@ -142,9 +142,21 @@ export function Navbar() {
       <header className="sticky top-0 z-50 w-full border-b border-[#EEE6F7] bg-[#FFFBF5]/95 backdrop-blur supports-[backdrop-filter]:bg-[#FFFBF5]/90">
         <div className="mx-auto flex h-[4.25rem] w-full max-w-[1500px] items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:h-24 lg:px-10 xl:px-14">
           <div className="flex shrink-0 flex-col justify-center">
-            {isMarketingPage ? <Link href="/" className="whitespace-nowrap font-serif text-[1.65rem] font-semibold tracking-[-.045em] sm:text-[2rem] lg:text-[2.5rem]" aria-label="Cupid Match home"><span className="text-[#3B1768]">Cupid</span><span className="text-[#C99532]">Match</span></Link> : null}
+            {isMarketingPage ? <Link href="/" className="group flex shrink-0 items-center gap-1.5 sm:gap-2" aria-label="CupidMatch home">
+              <svg viewBox="0 0 66 54" aria-hidden="true" className="h-9 w-11 shrink-0 overflow-visible sm:h-11 sm:w-14 lg:h-14 lg:w-[4.5rem]">
+                <defs><linearGradient id="cmGold" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#F5D778"/><stop offset=".48" stopColor="#D49A28"/><stop offset="1" stopColor="#A96C13"/></linearGradient><linearGradient id="cmPurple" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#3B1768"/><stop offset="1" stopColor="#7C3AED"/></linearGradient></defs>
+                <path d="M31 19C23 8 9 11 9 24c0 11 13 20 22 27 9-7 22-16 22-27 0-13-14-16-22-5Z" fill="url(#cmPurple)"/>
+                <circle cx="22" cy="9" r="4.6" fill="url(#cmGold)"/><path d="M21 15c-7 4-10 10-9 18M22 16c8 2 13 7 16 14" fill="none" stroke="url(#cmGold)" strokeWidth="4.2" strokeLinecap="round"/>
+                <path d="M16 11C7 4 1 9 6 17c2-4 6-6 10-6ZM27 9c7-7 14-4 14 4-5-3-9-3-14-4Z" fill="url(#cmGold)"/>
+                <path d="M36 20c9-7 16-4 21 1M56 21c-3 6-8 10-14 13" fill="none" stroke="#D49A28" strokeWidth="1.8"/><path d="m40 25 19-7-6 6 7 2Z" fill="#D49A28"/>
+              </svg>
+              <span className="relative inline-flex items-baseline whitespace-nowrap pb-2 font-serif leading-none tracking-[-.055em]">
+                <span className="text-[1.45rem] font-semibold text-[#3B1768] sm:text-[1.75rem] lg:text-[2.35rem]">Cupid</span><span className="text-[1.45rem] font-semibold text-[#C99532] sm:text-[1.75rem] lg:text-[2.35rem]">Match</span>
+                <span className="absolute -bottom-0.5 left-0 right-0 border-t border-[#C99532]/70 pt-0.5 text-center text-[5px] font-semibold tracking-[.28em] text-[#6B214E] sm:text-[6px]">MATRIMONY</span>
+              </span>
+            </Link> : null}
             {isMarketingPage ? (
-              <p className="hidden -mt-0.5 pl-[2.55rem] text-[10px] font-medium tracking-[0.01em] text-[#9A7A45] sm:block">
+              <p className="hidden -mt-0.5 pl-[4.4rem] text-[10px] font-medium tracking-[0.01em] text-[#9A7A45] sm:block">
                 Real People. Meaningful Connections.
               </p>
             ) : null}
