@@ -74,7 +74,7 @@ function HeroCarousel({
             priority={priority && i === 0}
             quality={100}
             sizes={sizes}
-            className="hero-photo object-cover object-[center_28%] lg:object-[center_32%]"
+            className="hero-photo object-cover object-[58%_center] lg:object-[60%_center]"
           />
         </div>
       ))}
@@ -143,8 +143,8 @@ export function PremiumOpeningStory(){
     <div className="mt-5 flex justify-between lg:mt-7 lg:max-w-lg lg:justify-start lg:gap-12">{[[Users,hero.verified],[Shield,hero.safe],[Heart,hero.compatibility]].map(([Icon,label]:any,i)=><div key={i} className="story-item w-24 text-center" style={{animationDelay:`${i*70}ms`}}><span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#F3E8FF] text-[#7C3AED]"><Icon className="h-5 w-5"/></span><span className="mt-2 block whitespace-pre-line text-[10px] font-semibold leading-3 text-[#4C3A5C]">{label}</span></div>)}</div>
     <div className="mt-5 grid gap-2 lg:mt-7 lg:max-w-lg lg:grid-cols-2 lg:gap-3"><Link href="/signup" className="flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-sm font-semibold text-white shadow-[0_14px_34px_rgba(124,58,237,.28)] transition hover:-translate-y-0.5">{hero.create} <ArrowRight className="ml-1 h-4 w-4"/></Link><Link href="/discover" className="flex h-11 items-center justify-center rounded-full border border-[#C99532]/55 bg-white text-sm font-semibold text-[#5B21B6]">{hero.explore}</Link></div>
    </div>
-   <div className="story-media relative -mx-5 mt-0 overflow-hidden lg:mx-0 lg:mt-0 lg:h-full lg:min-h-[650px] lg:before:pointer-events-none lg:before:absolute lg:before:inset-0 lg:before:z-20 lg:before:bg-[linear-gradient(90deg,#FFFCF7_0%,rgba(255,252,247,.78)_8%,transparent_25%)]" style={{transform:`translate3d(${heroExit*-5}%,${heroExit*18}px,0) scale(${1+heroExit*.075})`,transformOrigin:"center center"}}>
-    <HeroCarousel className="h-[48svh] min-h-[340px] rounded-t-[2.25rem] shadow-[0_18px_45px_rgba(76,29,149,.16)] lg:absolute lg:inset-0 lg:h-full lg:min-h-[650px] lg:max-h-none lg:rounded-none lg:[mask-image:linear-gradient(to_right,transparent_0%,black_14%,black_100%)]" priority sizes="(min-width:1024px) 55vw,100vw"/>
+   <div className="story-media relative -mx-5 mt-0 overflow-hidden lg:mx-0 lg:mt-0 lg:h-full lg:min-h-[650px] lg:before:pointer-events-none lg:before:absolute lg:before:inset-0 lg:before:z-20 lg:before:bg-[linear-gradient(90deg,#FFFCF7_0%,rgba(255,252,247,.96)_5%,rgba(255,252,247,.62)_13%,rgba(255,252,247,.16)_23%,transparent_34%)]" style={{transform:`translate3d(${heroExit*-5}%,${heroExit*18}px,0) scale(${1+heroExit*.075})`,transformOrigin:"center center"}}>
+    <HeroCarousel className="h-[48svh] min-h-[340px] rounded-t-[2.25rem] shadow-[0_18px_45px_rgba(76,29,149,.16)] lg:absolute lg:inset-0 lg:h-full lg:min-h-[650px] lg:max-h-none lg:rounded-none lg:[mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,.18)_8%,black_30%,black_100%)]" priority sizes="(min-width:1024px) 55vw,100vw"/>
     <div className="pointer-events-none absolute right-5 top-8 z-30 hidden rounded-full border border-white/60 bg-white/65 px-4 py-2 text-[10px] font-bold uppercase tracking-[.24em] text-[#6D28D9] shadow-sm backdrop-blur-sm lg:block">Sri Lankan hearts · worldwide</div><div className="pointer-events-none absolute -bottom-3 left-1/2 h-px w-[70%] -translate-x-1/2 bg-gradient-to-r from-transparent via-amber-300 to-transparent" style={{transform:`translateX(-50%) scaleX(${.35+heroExit*.65})`,opacity:.25+heroExit*.65}}/>
    </div>
   </article>
