@@ -15,8 +15,8 @@ export const brand = {
 } as const;
 
 export const HERO_SLIDES = [
-  "/images/hero-welcome.png?v=2",
-  "/images/hero-welcome.png?v=2",
+  "/images/hero-slide-1.png?v=2",
+  "/images/hero-slide-2.png?v=2",
 ] as const;
 
 /** @deprecated Prefer HERO_SLIDES — kept for any remaining single-image usages */
