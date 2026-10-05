@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   MessageCircle,
@@ -140,12 +141,18 @@ export function Navbar() {
     <TooltipProvider delayDuration={0}>
       <header className="sticky top-0 z-50 w-full border-b border-[#EEE6F7] bg-[#FFFBF5]/95 backdrop-blur supports-[backdrop-filter]:bg-[#FFFBF5]/90">
         <div className="mx-auto flex h-[4.25rem] w-full max-w-[1500px] items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:h-24 lg:px-10 xl:px-14">
-          <div className="flex shrink-0 flex-col justify-center">
-            {isMarketingPage ? <Link href="/" className="shrink-0 whitespace-nowrap font-serif text-[1.55rem] font-semibold tracking-[-.055em] sm:text-[1.9rem] lg:text-[2.25rem]" aria-label="CupidMatch home"><span className="text-[#3B1768]">Cupid</span><span className="text-[#C99532]">Match</span></Link> : null}
+          <div className="flex shrink-0 items-center">
             {isMarketingPage ? (
-              <p className="hidden -mt-0.5 pl-0 text-[10px] font-medium tracking-[0.01em] text-[#9A7A45] sm:block">
-                Real People. Meaningful Connections.
-              </p>
+              <Link href="/" className="relative block h-[48px] w-[190px] sm:h-[56px] sm:w-[225px] lg:h-[70px] lg:w-[280px]" aria-label="CupidMatch home">
+                <Image
+                  src="/images/cupidmatch-logo-new.png?v=1"
+                  alt="CupidMatch — Real People. Meaningful Connections."
+                  fill
+                  priority
+                  sizes="(min-width:1024px) 280px, (min-width:640px) 225px, 190px"
+                  className="object-contain object-left"
+                />
+              </Link>
             ) : null}
           </div>
 
