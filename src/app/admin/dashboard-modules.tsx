@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useAdminResource } from "@/components/admin/use-admin-resource";
 const modules = [
+ {scope:"support",title:"Support inbox",detail:"Respond to member requests and track resolutions",icon:Users,href:"/admin/support",tint:"bg-cyan-50 text-cyan-700",category:"COMMUNITY"},
   {
     scope: "content",
     title: "Content moderation",

@@ -115,25 +115,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get blocks created by the current user
-  const { data, error } = await supabase
-    .from("member_blocks")
-    .select(`
-      id,
-      blocked_id,
-      created_at
-    `)
-    .eq('blocker_id', user.id)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching blocks:', error);
-    return NextResponse.json({ error: "Unable to fetch blocked members" }, { status: 500 });
-  }
-
-  return NextResponse.json({ 
-    blocks: data || [] 
-  }, {
-    headers: { "Cache-Control": "no-store" }
-  });
+  const params=new URL(request.url).searchParams;
+  const page=Number(params.get('page')||1),memberId=params.get('memberId');
+  if(!Number.isSafeInteger(page)||page<1||page>100000||(memberId&&!uuid.test(memberId)))return NextResponse.json({error:'Invalid filters'},{status:400});
+  const {data,error}=await supabase.rpc('own_blocks_list',{p_page:page,p_member_id:memberId});
+  if(error)return NextResponse.json({error:'Unable to fetch blocked members'},{status:503});
+  return NextResponse.json(data,{headers:{'Cache-Control':'no-store'}});
 }

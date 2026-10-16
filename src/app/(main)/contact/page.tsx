@@ -1,112 +1,65 @@
-
-"use client"; // Required for form handling
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Mail, Phone, MapPin, Send } from "lucide-react";
-import Image from "next/image";
-
-export default function ContactPage() {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    alert("Thank you for your message! We will get back to you soon. (This is a mock submission)");
-    (event.target as HTMLFormElement).reset();
-  };
-
+export default function Contact() {
   return (
-    <div className="space-y-12 py-8">
-      <section className="text-center py-12 bg-gradient-to-br from-rose-50 to-peach-100 rounded-xl shadow-lg">
-        <h1 className="font-headline text-5xl font-bold text-primary mb-6">
-          Get In Touch
-        </h1>
-        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-          We're here to help! Whether you have a question, feedback, or need support, please don't hesitate to reach out.
+    <div className="mx-auto max-w-4xl space-y-8 py-10">
+      <section className="rounded-3xl border border-violet-100 bg-violet-50 px-6 py-12 text-center">
+        <p className="text-xs font-bold uppercase tracking-widest text-violet-700">
+          CupidMatch help
         </p>
+        <h1 className="mt-3 text-4xl font-bold">We’re here to help</h1>
+        <p className="mx-auto mt-4 max-w-xl leading-7 text-slate-600">
+          Get help with your profile, account, membership or a safety concern.
+          Support requests and replies stay private inside your account.
+        </p>
+        <Button asChild className="mt-6">
+          <Link href="/support">Open support centre</Link>
+        </Button>
       </section>
-
-      <section className="grid md:grid-cols-2 gap-12 items-start">
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="font-headline text-2xl">Send Us a Message</CardTitle>
-            <CardDescription>Fill out the form below and we'll respond as soon as possible.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input id="name" placeholder="Your Name" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" placeholder="you@example.com" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="subject">Subject</Label>
-                <Input id="subject" placeholder="Regarding..." required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="message">Message</Label>
-                <Textarea id="message" placeholder="Your message..." rows={5} required />
-              </div>
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                <Send className="mr-2 h-4 w-4" /> Send Message
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-8">
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="font-headline text-2xl">Contact Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start">
-                <div className="p-2 bg-primary/10 rounded-full mr-3">
-                    <Mail className="h-5 w-5 text-primary flex-shrink-0" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-card-foreground">Email Us</h3>
-                  <a href="mailto:support@matchcraft.com" className="text-muted-foreground hover:text-primary">support@matchcraft.com</a>
-                </div>
-              </div>
-               <div className="flex items-start">
-                <div className="p-2 bg-primary/10 rounded-full mr-3">
-                    <Phone className="h-5 w-5 text-primary flex-shrink-0" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-card-foreground">Call Us (Mon-Fri, 9am-6pm)</h3>
-                  <p className="text-muted-foreground">+91 123 456 7890 (India)</p>
-                  <p className="text-muted-foreground">+94 112 345 678 (Sri Lanka)</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                 <div className="p-2 bg-primary/10 rounded-full mr-3">
-                    <MapPin className="h-5 w-5 text-primary flex-shrink-0" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-card-foreground">Our Office (By Appointment Only)</h3>
-                  <p className="text-muted-foreground">123 Matrimony Lane, Tech Park, Bangalore, India</p>
-                  <p className="text-muted-foreground">456 Love Street, Colombo, Sri Lanka</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <div className="rounded-lg overflow-hidden shadow-lg">
-            <Image 
-                src="https://placehold.co/600x400.png?text=Map+to+Our+Office" 
-                alt="Map placeholder showing office location"
-                width={600}
-                height={400}
-                className="w-full h-auto object-cover"
-                data-ai-hint="office map"
-            />
-          </div>
-        </div>
+      <section className="grid gap-4 sm:grid-cols-2">
+        {[
+          {
+            title: "Trouble signing in?",
+            text: "Reset your password using the email address on your account.",
+            href: "/forgot-password",
+            label: "Reset password",
+          },
+          {
+            title: "Waiting for your confirmation email?",
+            text: "Request another confirmation email and check your spam folder.",
+            href: "/signup/check-email",
+            label: "Email confirmation help",
+          },
+          {
+            title: "A safety concern?",
+            text: "Report the member from their profile, block contact, or ask our team for help.",
+            href: "/safety",
+            label: "Read safety guidance",
+          },
+          {
+            title: "Your profile and privacy",
+            text: "Manage visibility and photo privacy, or review the members you have blocked.",
+            href: "/dashboard/privacy",
+            label: "Privacy and safety",
+          },
+        ].map((item) => (
+          <article
+            key={item.title}
+            className="space-y-3 rounded-2xl border bg-white p-6"
+          >
+            <h2 className="text-lg font-bold">{item.title}</h2>
+            <p className="text-sm leading-6 text-slate-500">{item.text}</p>
+            <Button variant="outline" asChild>
+              <Link href={item.href}>{item.label}</Link>
+            </Button>
+          </article>
+        ))}
       </section>
+      <p className="text-sm leading-6 text-slate-500">
+        Sign in to create a support request and track responses. Never send your
+        password, verification codes or bank details. For immediate danger,
+        contact local emergency services.
+      </p>
     </div>
   );
 }

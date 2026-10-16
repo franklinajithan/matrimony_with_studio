@@ -128,14 +128,16 @@ for (const file of adminPages) {
         '@/lib/admin/dashboard': { getAdminDashboardMetrics: async () => ({ members: 14, activeUsers: 3, pendingVerification: 12, updatedAt: '2026-09-18T10:00:00Z' }) },
         '@/lib/supabase/server': { createSupabaseServerClient: async () => ({ from: table => { assert.equal(table, 'admin_audit_log'); return { select: () => ({ order: () => ({ limit: async () => ({ data: [], error: null }) }) }) }; } }) },
         './dashboard-modules':{AdminDashboardModules:'AdminDashboardModules'},
+        '@/components/support/SupportInbox':{SupportInbox:'SupportInbox'},
+        '@/components/support/SupportThread':{SupportThread:'SupportThread'},
         './page-client': { default: 'AdminPageClient' }, './audit-explorer': { default: 'AuditExplorer' },
         '@/components/shared/Logo': componentStubs, '@/components/ui/card': componentStubs,
         './admin-navigation': { AdminNavigation: 'AdminNavigation' }, './admin-mobile-tab-bar': { AdminMobileTabBar: 'AdminMobileTabBar' },
         'lucide-react': componentStubs, 'next/link': { default: 'Link' },
         '@/lib/subscriptions/plans': { PLANS: {}, formatPlanPrice: () => '' },
       });
-      if (authorized) assert.ok(await page.default({ children: 'protected' }));
-      else await assert.rejects(page.default({ children: 'protected' }), error => error === denied);
+      if (authorized) assert.ok(await page.default({ children: 'protected',params:Promise.resolve({ticketId:'11111111-1111-4111-8111-111111111111',reportId:'11111111-1111-4111-8111-111111111111'}) }));
+      else await assert.rejects(page.default({ children: 'protected',params:Promise.resolve({ticketId:'11111111-1111-4111-8111-111111111111',reportId:'11111111-1111-4111-8111-111111111111'}) }), error => error === denied);
       assert.equal(checks, 1);
     });
   }

@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const assert = require("node:assert/strict");
 const root = path.resolve(__dirname, "..");
-(async () => {
+async function run(extra) {
   const db = new PGlite();
   await db.exec(`create role anon;create role authenticated;create schema auth;create schema cupidmatch_admin;
 create table auth.users(id uuid primary key,email text,last_sign_in_at timestamptz);
@@ -450,8 +450,8 @@ create table public.messages(id uuid primary key,chat_id text,sender_id uuid);
   console.log(
     `PASS: ${checks} database assertions (real PostgreSQL, RLS, scoped roles, ownership, audit, concurrency and moderation).`,
   );
+  if(extra)await extra({db,ids,as,check,denied,handler,request,apiMocks});
   await db.close();
-})().catch((e) => {
-  console.error(e);
-  process.exitCode = 1;
-});
+}
+module.exports={run};
+if(require.main===module)run().catch(e=>{console.error(e);process.exitCode=1;});

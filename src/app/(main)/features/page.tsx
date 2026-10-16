@@ -1,69 +1,85 @@
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Telescope, Brain, ShieldCheck, Globe, FileText, MessageSquareText, UserCheckIcon, Palette, ListFilter, SmartphoneNfc, Languages, Maximize, Heart } from "lucide-react";
-import React from "react";
-import Image from "next/image";
-
-
-const featuresData = [
-  {
-    icon: <Telescope className="h-8 w-8" />,
-    title: "Horoscope Matching",
-    description: "Explore cosmic compatibility with Rasi/Nakshatra matching and AI-generated compatibility scores.",
-    borderColor: "border-red-500",
-  },
-  { icon: <Brain className="h-8 w-8" />, title: "AI Smart Matching", description: "Intelligent suggestions based on profile data, preferences, and user activity.", borderColor: "border-blue-500" },
-  { icon: <ShieldCheck className="h-8 w-8" />, title: "Privacy & Security", description: "Control your information with robust privacy settings like photo/phone hiding until matched.", borderColor: "border-green-500" },
-  { icon: <Globe className="h-8 w-8" />, title: "Global & Community Reach", description: "Connect with diverse Indian & Sri Lankan profiles, with advanced filters for community, location etc.", borderColor: "border-yellow-500" },
-  {
-    icon: <FileText className="h-8 w-8" />,
-    title: "Comprehensive Profiles",
-    description: "Detailed profiles with multiple photos, AI-enhanced bio, preferences, and horoscope PDF uploads.",
-    borderColor: "border-purple-500",
-  },
-  { icon: <MessageSquareText className="h-8 w-8" />, title: "Secure Real-time Chat", description: "Chat safely via our encrypted system with typing indicators and photo sharing.", borderColor: "border-orange-500" },
-  { icon: <UserCheckIcon className="h-8 w-8" />, title: "Verified Profiles", description: "Connect with genuine users through admin approval with ID proof for a verified badge.", borderColor: "border-cyan-500" },
-  { icon: <Palette className="h-8 w-8" />, title: "Easy Profile Setup", description: "Step-by-Step Profile Setup after sign-in with AI assistance for bio and interests.", borderColor: "border-lime-500" },
-  { icon: <ListFilter className="h-8 w-8" />, title: "Custom Match Preferences", description: "Refine criteria to find your ideal match, e.g. only show verified / premium users.", borderColor: "border-pink-500" },
-  { icon: <SmartphoneNfc className="h-8 w-8" />, title: "Subscription & Notifications", description: "Premium plans with Razorpay/Stripe, push notifications for matches, messages, and profile views.", borderColor: "border-rose-500" },
-  { icon: <Languages className="h-8 w-8" />, title: "Cultural Preferences", description: "Specify religion, caste, language (Tamil, Sinhala, etc.), height, age and more.", borderColor: "border-amber-500" },
-  { icon: <Maximize className="h-8 w-8" />, title: "Event Invites & Moderation", description: "Invite to marriage expos, profile flagging, and user moderation system.", borderColor: "border-teal-500" },
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+const features = [
+  [
+    "Profiles and preferences",
+    "Share your background, interests, cultural preferences and future plans. Update your profile as your priorities change.",
+    "/signup",
+  ],
+  [
+    "Discover members",
+    "Browse published profiles and filter by the preferences that matter to you. Some advanced discovery features require an active Premium membership.",
+    "/discover",
+  ],
+  [
+    "Mutual connections and messages",
+    "Send an interest and start a conversation after a mutual connection. Blocking and suspension prevent further interaction.",
+    "/connections",
+  ],
+  [
+    "Biodata Studio",
+    "Create and customize a biodata document, preview it and share or export it. AI writing assistance depends on service availability.",
+    "/biodata",
+  ],
+  [
+    "Photo privacy and safety",
+    "Choose member, connection-only or hidden photo visibility. Report inappropriate behaviour and manage your blocked members.",
+    "/dashboard/privacy",
+  ],
+  [
+    "Profile visitors",
+    "Members with an active Premium plan or introductory trial can see recent profile visits. Premium+ private browsing keeps future visits out of visitor lists.",
+    "/dashboard/profile-views",
+  ],
+  [
+    "Member support",
+    "Create a private support request, follow replies and continue the conversation in your account.",
+    "/support",
+  ],
+  [
+    "Membership and introductory offers",
+    "Compare plan features and eligible introductory offers. Paid checkout remains unavailable until the payment integration is activated.",
+    "/pricing",
+  ],
+  [
+    "Profile review",
+    "Submit a profile-review request for the team to review. Profile review is separate from government identity-document verification.",
+    "/verification",
+  ],
 ];
-
-
-export default function FeaturesPage() {
+export const metadata = {
+  title: "Features | CupidMatch",
+  description:
+    "Profiles, discovery, connections, messages, biodata, privacy and member support.",
+};
+export default function Features() {
   return (
-    <div className="space-y-12 py-8">
-      <section className="text-center py-12 bg-gradient-to-br from-rose-50 to-peach-100 rounded-xl shadow-lg">
-        <h1 className="font-headline text-5xl font-bold text-primary mb-6">
-          Features of MatchCraft
+    <div className="space-y-8 py-10">
+      <header className="rounded-3xl border border-violet-100 bg-violet-50 p-8 sm:p-12">
+        <p className="text-xs font-bold uppercase tracking-widest text-violet-700">
+          Your CupidMatch tools
+        </p>
+        <h1 className="mt-3 text-4xl font-bold">
+          Meet people with more clarity
         </h1>
-        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-          Discover the tools and functionalities designed to help you find your perfect match seamlessly and securely.
+        <p className="mt-4 max-w-2xl leading-7 text-slate-600">
+          Build your profile, explore introductions and choose what to share at
+          each step.
         </p>
-      </section>
-
-      <section className="grid md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">
-        {featuresData.map((feature) => (
-          <Card key={feature.title} className={`flex flex-col shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out bg-card border-t-4 ${feature.borderColor} rounded-b-lg rounded-t-sm h-full`}>
-            <CardHeader className="items-center text-center pt-6 pb-3">
-              <div className={`p-3 rounded-full bg-muted mb-3 text-${feature.borderColor.replace("border-", "text-")}`}>
-                {React.cloneElement(feature.icon, { className: `${feature.icon.props.className || ''} h-10 w-10` })}
-              </div>
-              <CardTitle className="font-headline text-2xl text-card-foreground">{feature.title}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-grow text-center px-6 pb-6">
-              <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
-            </CardContent>
-          </Card>
+      </header>
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {features.map(([title, text, href]) => (
+          <article
+            key={title}
+            className="flex flex-col rounded-2xl border bg-white p-6"
+          >
+            <h2 className="text-xl font-bold">{title}</h2>
+            <p className="my-4 text-sm leading-7 text-slate-500">{text}</p>
+            <Button asChild variant="outline" className="mt-auto">
+              <Link href={href}>Explore</Link>
+            </Button>
+          </article>
         ))}
-      </section>
-
-      <section className="text-center py-10 mt-8">
-        <Heart className="w-16 h-16 text-primary mx-auto mb-4" />
-        <p className="text-lg text-muted-foreground">
-          We are continuously innovating to bring you the best matchmaking experience.
-        </p>
       </section>
     </div>
   );

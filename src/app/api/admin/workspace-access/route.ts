@@ -14,6 +14,7 @@ export async function GET() {
     "notifications",
     "member_read",
     "notes",
+    "support",
   ] as const;
   try {
     const results = await Promise.all(

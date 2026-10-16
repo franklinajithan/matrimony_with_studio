@@ -11,6 +11,7 @@ import { LANGUAGES, useI18n, type LanguageCode } from "@/components/i18n/I18nPro
 const AUTHENTICATED_ROUTES = [
   "/dashboard",
   "/notifications",
+  "/support",
   "/biodata",
   "/discover",
   "/interests",

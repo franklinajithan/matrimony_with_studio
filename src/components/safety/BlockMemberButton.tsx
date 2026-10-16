@@ -44,7 +44,7 @@ export function BlockMemberButton({
     const checkBlockStatus = async () => {
       setChecking(true);
       try {
-        const response = await fetch('/api/members/block');
+        const response = await fetch(`/api/members/block?memberId=${encodeURIComponent(memberId)}`);
         if (response.ok) {
           const data = await response.json();
           const blocked = data.blocks?.some((b: any) => b.blocked_id === memberId);

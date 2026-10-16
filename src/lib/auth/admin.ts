@@ -11,7 +11,8 @@ export type AdminPermission =
   | "billing"
   | "notifications"
   | "member_read"
-  | "notes";
+  | "notes"
+  | "support";
 
 type AdminAccess =
   | { status: "authorized"; user: User }

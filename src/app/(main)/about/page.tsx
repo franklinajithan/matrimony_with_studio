@@ -8,7 +8,7 @@ export default function AboutUsPage() {
     <div className="space-y-12 py-8">
       <section className="text-center py-12 bg-gradient-to-br from-rose-50 to-peach-100 rounded-xl shadow-lg">
         <h1 className="font-headline text-5xl font-bold text-primary mb-6">
-          About MatchCraft
+          About CupidMatch
         </h1>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
           Crafting Connections, Building Futures. We are dedicated to helping you find your perfect life partner within the Indian and Sri Lankan communities.
@@ -19,27 +19,20 @@ export default function AboutUsPage() {
         <div className="prose lg:prose-lg max-w-none">
           <h2 className="font-headline text-3xl font-semibold text-gray-800 mb-4">Our Mission</h2>
           <p className="text-lg text-foreground/80 leading-relaxed mb-6">
-            At MatchCraft, our mission is to provide a safe, secure, and effective platform for individuals from Indian and Sri Lankan backgrounds to connect and find meaningful, long-lasting relationships. We believe in the power of compatibility, tradition, and modern technology to bring people together.
+            At CupidMatch, our mission is to provide a safe, secure, and effective platform for individuals from Indian and Sri Lankan backgrounds to connect and find meaningful, long-lasting relationships. We believe in the power of compatibility, tradition, and modern technology to bring people together.
           </p>
           <h2 className="font-headline text-3xl font-semibold text-gray-800 mb-4">Our Vision</h2>
           <p className="text-lg text-foreground/80 leading-relaxed">
-            We envision a world where finding a life partner is a joyful and empowering experience. MatchCraft aims to be the most trusted and preferred matrimonial service, celebrated for creating countless successful love stories and happy families.
+            We envision a world where finding a life partner is a joyful and empowering experience. CupidMatch aims to be the most trusted and preferred matrimonial service, celebrated for creating countless successful love stories and happy families.
           </p>
         </div>
         <div className="flex justify-center items-center">
-           <Image
-            src="https://placehold.co/500x400.png?text=Our+Story"
-            alt="Symbolic image representing connection and community"
-            width={500}
-            height={400}
-            className="rounded-xl shadow-md object-cover"
-            data-ai-hint="community connection"
-          />
+           <div className="flex min-h-64 items-center justify-center rounded-3xl border border-violet-100 bg-violet-50 p-8"><p className="max-w-sm text-center text-3xl font-bold leading-tight text-violet-900">Your story.<br/>Your values.<br/>Your next chapter.</p></div>
         </div>
       </section>
 
       <section className="py-10">
-        <h2 className="font-headline text-3xl font-semibold text-gray-800 text-center mb-10">Why Choose MatchCraft?</h2>
+        <h2 className="font-headline text-3xl font-semibold text-gray-800 text-center mb-10">Why Choose CupidMatch?</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
           <Card className="shadow-md hover:shadow-lg transition-shadow bg-card">
             <CardHeader className="items-center text-center">
@@ -80,7 +73,7 @@ export default function AboutUsPage() {
       <section className="text-center py-10">
         <Heart className="w-12 h-12 text-primary mx-auto mb-4" />
         <p className="text-lg text-muted-foreground">
-          Join MatchCraft today and take the first step towards finding your happily ever after.
+          Join CupidMatch today and take the first step towards finding your happily ever after.
         </p>
       </section>
     </div>

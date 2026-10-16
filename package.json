@@ -14,7 +14,8 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:admin:database": "node scripts/admin-database.test.cjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:website:database": "node scripts/website-database.test.cjs"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.28.0",

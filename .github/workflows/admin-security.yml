@@ -8,6 +8,10 @@ on:
       - 'src/lib/auth/admin.ts'
       - 'scripts/admin-security.test.cjs'
       - 'scripts/admin-database.test.cjs'
+      - 'scripts/website-database.test.cjs'
+      - 'src/app/api/support/**'
+      - 'src/app/api/members/**'
+      - 'src/components/support/**'
       - 'src/components/admin/**'
       - 'supabase/migrations/**'
       - '.github/workflows/admin-security.yml'
@@ -18,6 +22,10 @@ on:
       - 'src/lib/auth/admin.ts'
       - 'scripts/admin-security.test.cjs'
       - 'scripts/admin-database.test.cjs'
+      - 'scripts/website-database.test.cjs'
+      - 'src/app/api/support/**'
+      - 'src/app/api/members/**'
+      - 'src/components/support/**'
       - 'src/components/admin/**'
       - 'supabase/migrations/**'
 jobs:
@@ -33,5 +41,5 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:admin
-      - run: npm run test:admin:database
+      - run: npm run test:website:database
       - run: npx tsc --noEmit

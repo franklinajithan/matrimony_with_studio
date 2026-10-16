@@ -55,7 +55,7 @@ export default function StaffPage() {
           ["Super Admin", "Full administration, billing and staff access."],
           [
             "Support",
-            "Member profiles, private notes, connections and member notifications.",
+            "Member profiles, private notes, connections, support conversations and member notifications.",
           ],
           [
             "Moderator",

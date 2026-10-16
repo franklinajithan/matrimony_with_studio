@@ -125,6 +125,11 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [currentFirebaseUser, setCurrentFirebaseUser] = useState<FirebaseUser | null>(null);
 
+  useEffect(()=>{
+    if(!currentFirebaseUser?.uid||!viewedUserProfile?.userId||currentFirebaseUser.uid===viewedUserProfile.userId)return;
+    void fetch('/api/members/activity',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({memberId:viewedUserProfile.userId})}).catch(()=>undefined);
+  },[currentFirebaseUser?.uid,viewedUserProfile?.userId]);
+
   const [mainPageImage, setMainPageImage] = useState<StoredPhoto | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentModalImageIndex, setCurrentModalImageIndex] = useState(0);

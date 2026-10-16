@@ -9,6 +9,7 @@ See [ADMIN_SECTION_STATUS.md](ADMIN_SECTION_STATUS.md) for the current implement
 | Private member notes | Yes | Yes | Yes |
 | Reports, suspension and profile-review decisions | Yes | No | Yes |
 | Story and profile-content moderation | Yes | No | Yes |
+| Support inbox, assignment, replies and resolution | Yes | Yes | No |
 | Individual in-app member notices | Yes | Yes | No |
 | Trial/promo controls, subscription records and plans | Yes | No | No |
 | Staff assignment and security/audit explorer | Yes | No | No |

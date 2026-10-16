@@ -18,6 +18,7 @@ export const adminLinks = [
     icon: LayoutDashboard,
     scope: "workspace",
   },
+  {href:"/admin/support",label:"Support",icon:Users,scope:"support"},
   { href: "/admin/users", label: "Members", icon: Users, scope: "members" },
   {
     href: "/admin/reports",

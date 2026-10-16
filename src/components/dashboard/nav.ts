@@ -1,5 +1,7 @@
 import {
   Compass,
+  Eye,
+  LifeBuoy,
   CreditCard,
   FileText,
   Heart,
@@ -29,6 +31,8 @@ export const dashboardPrimaryNav: DashboardNavItem[] = [
 ];
 
 export const dashboardAccountNav: DashboardNavItem[] = [
+ {href:"/support",label:"Support",icon:LifeBuoy,match:"prefix"},
+ {href:"/dashboard/profile-views",label:"Profile visitors",icon:Eye,match:"prefix"},
   { href: "/dashboard/edit-profile", label: "My profile", icon: UserCircle, match: "exact" },
   { href: "/dashboard/edit-profile/match-details", label: "Match profile", icon: Heart, match: "prefix" },
   { href: "/biodata", label: "Biodata Studio", icon: FileText, match: "prefix" },
@@ -56,6 +60,8 @@ export function isNavActive(pathname: string, item: DashboardNavItem): boolean {
 
 export function titleForDashboardPath(pathname: string): string {
   if (pathname === "/dashboard") return "Your overview";
+  if(pathname.startsWith("/support"))return "Support";
+  if(pathname.startsWith("/notifications"))return "Service notices";
   if (pathname.startsWith("/discover")) return "Find Matches";
   if (pathname.startsWith("/interests")) return "Interests";
   if (pathname.startsWith("/connections")) return "Connections";

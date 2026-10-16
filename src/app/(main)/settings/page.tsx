@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { User, Image as ImageIcon, Info, Loader2, MapPin, Briefcase, Cake } from 'lucide-react';
 import { useState, useEffect } from "react";
-import { auth, updateProfile } from "@/lib/supabase/auth";
+import { auth, onAuthStateChanged, updateProfile } from "@/lib/supabase/auth";
 import { extractStoragePath, mediaPathForUser, resolveMediaUrl, uploadFile } from "@/lib/supabase/storage";
 import { getProfile, updateUserProfile } from "@/lib/supabase/profiles";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -80,7 +80,8 @@ export default function SettingsPage() {
       }
     };
 
-    loadUserProfile();
+    const unsubscribe=onAuthStateChanged(auth,user=>{if(user)void loadUserProfile();else setIsLoading(false)});
+    return ()=>unsubscribe();
   }, [form, toast]);
 
   async function onSubmit(values: z.infer<typeof profileSchema>) {
