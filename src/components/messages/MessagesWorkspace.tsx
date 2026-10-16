@@ -47,6 +47,7 @@ import {
 } from "@/lib/supabase/chats";
 import { resolveMediaUrl } from "@/lib/supabase/storage";
 import { areConnected, listConnections } from "@/lib/supabase/connections";
+import { Flag } from "lucide-react";
 
 const QUICK_EMOJIS = ["😀", "😂", "🥰", "😊", "🙏", "👍", "❤️", "🎉", "🔥", "✨", "😢", "👏"];
 
@@ -676,6 +677,9 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link href="/connections">All connections</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href={`/profile/${selectedConversation.otherUserId}#safety`}><Flag className="mr-2 h-4 w-4" />Report or block member</Link>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

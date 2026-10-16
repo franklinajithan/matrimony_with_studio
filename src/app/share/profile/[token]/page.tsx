@@ -4,7 +4,7 @@ import { CheckCircle2, MapPin, Briefcase } from "lucide-react";
 import { resolveSharedProfile } from "@/lib/supabase/profile-share";
 import { Button } from "@/components/ui/button";
 
-export const robots = { index: false, follow: false };
+const robots = { index: false, follow: false };
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 

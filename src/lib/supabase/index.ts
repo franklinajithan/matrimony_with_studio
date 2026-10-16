@@ -76,7 +76,7 @@ export {
   countUnreadCommentedPosts,
   subscribeToPosts,
 } from "./posts";
-export { createSuccessStory, subscribeToSuccessStories } from "./stories";
+export { createSuccessStory } from "./stories";
 export {
   listDocuments,
   getDocument,

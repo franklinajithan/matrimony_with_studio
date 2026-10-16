@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PLANS, formatPlanPrice, type PlanCode } from '@/lib/subscriptions/plans';
 
 export default async function AdminPlansPage() {
-  await requireAdminPage();
+  await requireAdminPage("billing");
 
   return <div className="space-y-7">
     <div><p className="text-sm font-semibold text-primary">Revenue & access</p><h1 className="mt-1 text-3xl font-bold text-slate-800">Plans & Pricing</h1><p className="mt-2 text-slate-500">Launch pricing and the entitlement foundation used across CupidMatch.</p></div>

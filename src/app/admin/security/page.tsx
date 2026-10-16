@@ -15,7 +15,7 @@ type AuditEvent = {
 };
 
 export default async function AdminSecurityPage() {
-  await requireAdminPage();
+  await requireAdminPage("manage");
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.from('admin_audit_log')
     .select('id,actor_id,action,target_type,target_id,created_at')

@@ -8,7 +8,7 @@ import type {
 import { defaultDesignForTemplate } from "@/lib/biodata/defaults";
 import { DocumentRenderer } from "@/components/biodata/DocumentRenderer";
 
-export const robots = { index: false, follow: false };
+const robots = { index: false, follow: false };
 const SHARE_CARD_VERSION = "2";
 
 type PageProps = {

@@ -17,6 +17,8 @@ function load(relative, mocks = {}) {
   const module = { exports: {} };
   const requireMock = (name) => {
     if (name === 'server-only') return {};
+    if(name==='zod') return require('zod');
+    if(name==='@/lib/admin/http')return load('src/lib/admin/http.ts',mocks);
     if (name === 'node:crypto') return require('node:crypto');
     if (Object.hasOwn(mocks, name)) return mocks[name];
     if (name === 'react/jsx-runtime') return {
@@ -39,6 +41,7 @@ function authModule({ authUser = user, authError = null, role = true, roleError 
     } },
     rpc: async (name, ...args) => {
       calls.push(name);
+      if(name==='admin_has_permission')return {data:false,error:null};
       assert.equal(name, 'is_admin');
       assert.equal(args.length, 0, 'Caller must not choose the user whose role is checked');
       if (throwsAt === 'rpc') throw new Error('Database unavailable');
@@ -124,6 +127,7 @@ for (const file of adminPages) {
         '@/app/admin/guard': guard, './guard': guard,
         '@/lib/admin/dashboard': { getAdminDashboardMetrics: async () => ({ members: 14, activeUsers: 3, pendingVerification: 12, updatedAt: '2026-09-18T10:00:00Z' }) },
         '@/lib/supabase/server': { createSupabaseServerClient: async () => ({ from: table => { assert.equal(table, 'admin_audit_log'); return { select: () => ({ order: () => ({ limit: async () => ({ data: [], error: null }) }) }) }; } }) },
+        './dashboard-modules':{AdminDashboardModules:'AdminDashboardModules'},
         './page-client': { default: 'AdminPageClient' }, './audit-explorer': { default: 'AuditExplorer' },
         '@/components/shared/Logo': componentStubs, '@/components/ui/card': componentStubs,
         './admin-navigation': { AdminNavigation: 'AdminNavigation' }, './admin-mobile-tab-bar': { AdminMobileTabBar: 'AdminMobileTabBar' },
@@ -282,4 +286,16 @@ test('audit API rejects malformed actor filters before querying',async()=>{
   'next/server':{NextResponse:{json:(body,init)=>({body,status:init?.status??200})}},
  });
  assert.equal((await api.GET({url:'https://example.test/api/admin/audit-log?actor=not-a-uuid'})).status,400);
+});
+
+for (const [permission,allowed] of [['members',true],['moderation',false],['manage',false],['billing',false]]) {
+ test(`delegated support access to ${permission}: ${allowed}`,async()=>{
+  const api=load('src/lib/auth/admin.ts',{'@/lib/supabase/server':{createSupabaseServerClient:async()=>({auth:{getUser:async()=>({data:{user},error:null})},rpc:async(name,args)=>({data:name==='is_admin'?false:args.p_permission==='members',error:null})})}});
+  assert.equal(Boolean(await api.requireServerAdmin(permission)),allowed);
+ });
+}
+test('revoked delegated permissions take effect without waiting for JWT refresh',async()=>{
+ let granted=true;
+ const api=load('src/lib/auth/admin.ts',{'@/lib/supabase/server':{createSupabaseServerClient:async()=>({auth:{getUser:async()=>({data:{user},error:null})},rpc:async(name)=>({data:name==='is_admin'?false:granted,error:null})})}});
+ assert.equal(await api.requireServerAdmin('content'),user);granted=false;assert.equal(await api.requireServerAdmin('content'),null);
 });

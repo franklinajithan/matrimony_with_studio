@@ -1,0 +1,62 @@
+import {
+  LayoutDashboard,
+  Users,
+  ShieldCheck,
+  CreditCard,
+  Tags,
+  Heart,
+  Shield,
+  ShieldAlert,
+  Image,
+  UserCog,
+  Bell,
+} from "lucide-react";
+export const adminLinks = [
+  {
+    href: "/admin",
+    label: "Overview",
+    icon: LayoutDashboard,
+    scope: "workspace",
+  },
+  { href: "/admin/users", label: "Members", icon: Users, scope: "members" },
+  {
+    href: "/admin/reports",
+    label: "Reports",
+    icon: ShieldAlert,
+    scope: "moderation",
+  },
+  {
+    href: "/admin/verifications",
+    label: "Verification",
+    icon: ShieldCheck,
+    scope: "moderation",
+  },
+  { href: "/admin/content", label: "Content", icon: Image, scope: "content" },
+  {
+    href: "/admin/success-stories",
+    label: "Stories",
+    icon: Heart,
+    scope: "content",
+  },
+  {
+    href: "/admin/subscriptions",
+    label: "Subscriptions",
+    icon: CreditCard,
+    scope: "billing",
+  },
+  { href: "/admin/plans", label: "Plans", icon: Tags, scope: "billing" },
+  {
+    href: "/admin/promo-codes",
+    label: "Promo Codes",
+    icon: Tags,
+    scope: "billing",
+  },
+  {
+    href: "/admin/notifications",
+    label: "Notifications",
+    icon: Bell,
+    scope: "notifications",
+  },
+  { href: "/admin/staff", label: "Staff", icon: UserCog, scope: "manage" },
+  { href: "/admin/security", label: "Security", icon: Shield, scope: "manage" },
+];

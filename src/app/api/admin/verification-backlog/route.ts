@@ -5,7 +5,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const admin = await requireServerAdmin();
+  const admin = await requireServerAdmin("moderation");
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   try {
     const supabase = await createSupabaseServerClient();

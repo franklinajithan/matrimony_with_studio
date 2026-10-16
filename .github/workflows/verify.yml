@@ -12,10 +12,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      # Regenerate the stale lockfile in CI until the refreshed lockfile is committed.
-      - run: npm install --package-lock-only --ignore-scripts
       - run: npm ci
       - run: npm run test:admin
+      - run: npm run test:admin:database
       - run: npx tsc --noEmit
       - run: npm run build
         env:

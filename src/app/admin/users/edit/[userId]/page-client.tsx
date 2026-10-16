@@ -14,9 +14,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
+import {useAdminResource} from '@/components/admin/use-admin-resource';
+
 type ReviewHistory = { id: string; status: string; member_note: string; reviewer_note: string | null; created_at: string; reviewed_at: string | null };
 
 export default function AdminMemberDetailsPage() {
+  const {data:access}=useAdminResource<{permissions:string[]}>('/api/admin/workspace-access');
+  const can=(permission:string)=>access?.permissions.includes(permission)===true;
   const params = useParams();
   const userId = params.userId as string;
   const [user, setUser] = useState<Profile | null>(null);
@@ -70,7 +74,7 @@ export default function AdminMemberDetailsPage() {
         {loading ? <p role="status">Loading member…</p> :
           error ? <p role="alert">Unable to load member details.</p> :
           !user ? <p>Member not found.</p> :
-          <div className="space-y-4"><div className="flex flex-wrap gap-2"><Button type="button" variant="outline" onClick={() => { setEditing(value => !value); setEditError(""); }}> {editing ? "Cancel editing" : "Edit profile"}</Button></div>
+          <div className="space-y-4"><div className="flex flex-wrap gap-2">{can("members")&&<Button type="button" variant="outline" onClick={() => { setEditing(value => !value); setEditError(""); }}> {editing ? "Cancel editing" : "Edit profile"}</Button>}</div>
           {editSuccess && <p role="status" className="text-sm text-emerald-700">{editSuccess}</p>}
           {editing && <form onSubmit={saveProfile} className="space-y-3 rounded-xl border bg-white p-4">
             {(["displayName","location","profession"] as const).map(field => <label key={field} className="block text-sm font-medium"><span className="mb-1 block capitalize">{field === "displayName" ? "Display name" : field}</span><Input value={form[field]} onChange={event => setForm(previous => ({ ...previous, [field]: event.target.value }))} maxLength={field === "displayName" ? 100 : 150} required={field === "displayName"} /></label>)}
@@ -96,10 +100,10 @@ export default function AdminMemberDetailsPage() {
           </dl></div>}
       </CardContent>
     </Card>
-    <ExtendedMemberProfile memberId={userId} profile={user} />
-    <MemberSuspension memberId={userId} />
-    {!user?.isAdmin && <Card className="border-violet-200 bg-violet-50/40"><CardHeader><CardTitle>Membership & introductory offer</CardTitle><CardDescription>Manage this member's launch trial through the protected, audited subscription controls. Paid subscription records are managed separately.</CardDescription></CardHeader><CardContent><Button asChild><Link href={`/admin/subscriptions?memberId=${userId}`}>Manage membership</Link></Button></CardContent></Card>}
-    <MemberOperations memberId={userId} />
+    {can("members")&&<ExtendedMemberProfile memberId={userId} profile={user} />}
+    {can("moderation")&&<MemberSuspension memberId={userId} />}
+    {can("billing")&&!user?.isAdmin && <Card className="border-violet-200 bg-violet-50/40"><CardHeader><CardTitle>Membership & introductory offer</CardTitle><CardDescription>Manage this member's launch trial through the protected, audited subscription controls. Paid subscription records are managed separately.</CardDescription></CardHeader><CardContent><Button asChild><Link href={`/admin/subscriptions?memberId=${userId}`}>Manage membership</Link></Button></CardContent></Card>}
+    {can("members")&&<MemberOperations memberId={userId} />}
     <MemberAdminNotes memberId={userId} />
     <Card><CardHeader><CardTitle>Verification request history</CardTitle><CardDescription>Member-submitted profile review requests and recorded decisions. Identity-document verification is a separate process.</CardDescription></CardHeader><CardContent>
       {reviewsLoading ? <p role="status">Loading review history…</p> : reviewError ? <p role="alert">Unable to load review history.</p> : reviews.length === 0 ? <p>No review requests submitted.</p> :
