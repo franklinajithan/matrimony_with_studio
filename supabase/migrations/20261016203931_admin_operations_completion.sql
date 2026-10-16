@@ -31,7 +31,7 @@ declare v_before text;
 begin
  if auth.uid() is null or not public.is_admin() then raise exception 'Forbidden' using errcode='42501'; end if;
  if p_member_id is null or p_role is null or p_role not in ('support','moderator','none') or p_reason is null or length(trim(p_reason)) not between 10 and 1000 then raise exception 'Invalid staff change' using errcode='22023'; end if;
- perform 1 from public.profiles where id=p_member_id and is_admin is not true and suspended_at is null for update;
+ perform 1 from public.profiles where id=p_member_id and is_admin is not true and (p_role='none' or suspended_at is null) for update;
  if not found then raise exception 'Choose an active, non-administrator member' using errcode='22023'; end if;
  select role into v_before from public.admin_staff where user_id=p_member_id;
  if p_role='none' then delete from public.admin_staff where user_id=p_member_id;

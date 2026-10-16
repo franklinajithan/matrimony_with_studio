@@ -20,7 +20,7 @@
 
 - `npm ci --ignore-scripts --no-audit --no-fund`: successful clean dependency installation; lockfile refreshed.
 - `npm run test:admin`: page/API authorization and role revocation checks.
-- `npm run test:admin:database`: 103 assertions against isolated PostgreSQL (PGlite), including actual API handlers calling the database, RLS, privilege escalation attempts, role suspension/revocation, exact pagination, search parameter safety, notification ownership, story publication/privacy/concurrency, content changes and audit records.
+- `npm run test:admin:database`: 105 assertions against isolated PostgreSQL (PGlite), including actual API handlers calling the database, RLS, privilege escalation attempts, role suspension/revocation, exact pagination, search parameter safety, notification ownership, story publication/privacy/concurrency, content changes and audit records.
 - `npm run typecheck`: successful.
 - `npm run build`: production compilation and TypeScript validation; TypeScript build error suppression is disabled.
 - CI now runs the database suite with the existing authorization checks.

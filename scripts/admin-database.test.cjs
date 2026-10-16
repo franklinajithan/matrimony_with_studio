@@ -438,6 +438,15 @@ create table public.messages(id uuid primary key,chat_id text,sender_id uuid);
   assert.equal(response.status,200);assert.equal(response.body.stories[0].id,story.id);checks+=2;
   response=await api.POST(request('/api/admin/success-stories',{storyId:story.id,status:'rejected',note:'Conflicting review from API',expectedUpdatedAt:story.updated_at.toISOString()}));
   assert.equal(response.status,409);checks++;
+  await as('admin');
+  await db.exec(`select public.admin_set_member_suspension('${ids.support}',true,'Suspending staff before access removal')`);
+  await db.exec(`select public.admin_set_staff('${ids.support}','none','Remove access from suspended staff')`);
+  await as('support');
+  await check(`select public.admin_has_permission('workspace') as value`,false);
+  await as('admin');
+  await db.exec(`select public.admin_set_member_suspension('${ids.support}',false,'Restoring the member account only')`);
+  await as('support');
+  await check(`select public.admin_has_permission('workspace') as value`,false);
   console.log(
     `PASS: ${checks} database assertions (real PostgreSQL, RLS, scoped roles, ownership, audit, concurrency and moderation).`,
   );
