@@ -53,6 +53,7 @@ export function PreferenceDiscovery() {
   const [people, setPeople] = useState<Person[]>([]);
   const [preferences, setPreferences] = useState<PartnerPreferences | null>(null);
   const [filters, setFilters] = useState<DiscoveryFilters>(empty);
+  const [requiredGender, setRequiredGender] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [sheet, setSheet] = useState(false);
   const [sent, setSent] = useState<Set<string>>(new Set());
@@ -70,6 +71,18 @@ export function PreferenceDiscovery() {
       const self = await getProfile(user.id);
       if (!self) throw new Error("Complete your profile before finding matches.");
       const saved = partnerPreferencesFromProfile(self);
+      // Gender is a matching eligibility filter rather than just a score.
+      const extra = (self.extra || {}) as Record<string, any>;
+      const details = (extra.matchDetails || {}) as Record<string, any>;
+      const draft = (self.onboardingDraft || {}) as Record<string, any>;
+      const ownGender = String(details.gender || extra.gender || draft.gender || "").toLowerCase();
+      const chosen = String(saved.gender || "").trim();
+      const mandatoryGender = chosen && !["no preference", "any", "all"].includes(chosen.toLowerCase())
+        ? chosen
+        : ["man", "male"].includes(ownGender) ? "Woman"
+        : ["woman", "female"].includes(ownGender) ? "Man"
+        : undefined;
+      setRequiredGender(mandatoryGender);
       // Saved preferences rank candidates; they must not silently exclude every profile.
       const defaults = empty;
       setPreferences(saved);
@@ -86,9 +99,9 @@ export function PreferenceDiscovery() {
 
   useEffect(() => { void load(); }, [load]);
   const hasSaved = Boolean(preferences && hasPreferences(preferences));
-  const results = useMemo(() => people.filter((p) => profileMatchesFilters(p, filters)).sort((a, b) => preferences ? preferenceScore(b, preferences).percentage - preferenceScore(a, preferences).percentage : 0), [people, filters, preferences]);
-  const reset = () => setFilters(empty);
-  const clear = () => setFilters(empty);
+  const results = useMemo(() => people.filter((p) => profileMatchesFilters(p, { ...filters, gender: requiredGender || filters.gender })).sort((a, b) => preferences ? preferenceScore(b, preferences).percentage - preferenceScore(a, preferences).percentage : 0), [people, filters, preferences, requiredGender]);
+  const reset = () => setFilters({ ...empty, gender: requiredGender });
+  const clear = () => setFilters({ ...empty, gender: requiredGender });
   const activeCount = [
     filters.ageMin, filters.ageMax, filters.countries.length, filters.languages.length,
     filters.religions.length, filters.professions.length, filters.smoking.length, filters.drinking.length,
@@ -128,7 +141,7 @@ export function PreferenceDiscovery() {
     <div><Label>{t.profession}</Label><Input className="mt-2" placeholder="e.g. Engineer" value={filters.professions[0] || ""} onChange={(e) => setFilters((f) => ({ ...f, professions: e.target.value ? [e.target.value] : [] }))}/></div>
     <Choice label={t.smoking} value={first(filters.smoking)} values={["Never", "Occasionally", "Socially"]} onChange={(v) => setFilters((f) => ({ ...f, smoking: list(v) }))}/><Choice label={t.drinking} value={first(filters.drinking)} values={["Never", "Occasionally", "Socially"]} onChange={(v) => setFilters((f) => ({ ...f, drinking: list(v) }))}/>
     <div className="border-t border-violet-100 pt-4"><p className="mb-3 text-sm font-semibold text-violet-950">More partner preferences</p><div className="space-y-4">
-      <Choice testId="discover-filter-gender" label="Gender" value={filters.gender || "all"} values={options.genders} onChange={(v) => setFilters((f) => ({ ...f, gender: v === "all" ? undefined : v }))}/>
+      <Choice testId="discover-filter-gender" label="Gender" value={requiredGender || filters.gender || "all"} values={options.genders} onChange={(v) => setFilters((f) => ({ ...f, gender: v === "all" ? undefined : v }))}/>
       <Choice testId="discover-filter-marital-status" label="Marital status" value={first(filters.maritalStatuses || [])} values={options.maritalStatuses} onChange={(v) => setFilters((f) => ({ ...f, maritalStatuses: list(v) }))}/>
       <div><Label>Height (cm)</Label><div className="mt-2 grid grid-cols-2 gap-2"><Input data-testid="discover-filter-height-min" inputMode="numeric" placeholder="Min" value={filters.heightMin || ""} onChange={(e) => setFilters((f) => ({ ...f, heightMin: e.target.value }))}/><Input data-testid="discover-filter-height-max" inputMode="numeric" placeholder="Max" value={filters.heightMax || ""} onChange={(e) => setFilters((f) => ({ ...f, heightMax: e.target.value }))}/></div></div>
       <Choice testId="discover-filter-education" label="Education" value={first(filters.education || [])} values={options.education} onChange={(v) => setFilters((f) => ({ ...f, education: list(v) }))}/>
