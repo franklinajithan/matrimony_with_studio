@@ -12,13 +12,18 @@ export async function GET(request: Request) {
   const errorCode = searchParams.get("error_code");
   const errorDescription = searchParams.get("error_description");
 
+  const loginFailure = (reason: string) => {
+    const target = new URL("/login", origin);
+    target.searchParams.set("error", reason);
+    target.searchParams.set("next", next);
+    return NextResponse.redirect(target);
+  };
+
   if (authError || errorCode) {
     const expired =
       errorCode === "otp_expired" ||
-      authError === "access_denied" ||
       `${errorDescription || ""}`.toLowerCase().includes("expired");
-    const target = expired ? "/login?error=expired_link" : "/login?error=invalid_link";
-    return NextResponse.redirect(`${origin}${target}`);
+    return loginFailure(expired ? "expired_link" : authError === "access_denied" ? "oauth_cancelled" : "oauth_failed");
   }
 
   const supabase = await createSupabaseServerClient();
@@ -27,9 +32,7 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
       const expired = error.message.toLowerCase().includes("expired");
-      return NextResponse.redirect(
-        `${origin}/login?error=${expired ? "expired_link" : "invalid_link"}`
-      );
+      return loginFailure(expired ? "expired_link" : "invalid_link");
     }
     return NextResponse.redirect(`${origin}${next}`);
   }
@@ -41,12 +44,10 @@ export async function GET(request: Request) {
     });
     if (error) {
       const expired = error.message.toLowerCase().includes("expired");
-      return NextResponse.redirect(
-        `${origin}/login?error=${expired ? "expired_link" : "invalid_link"}`
-      );
+      return loginFailure(expired ? "expired_link" : "invalid_link");
     }
     return NextResponse.redirect(`${origin}${next}`);
   }
 
-  return NextResponse.redirect(`${origin}/login?error=invalid_link`);
+  return loginFailure("invalid_link");
 }

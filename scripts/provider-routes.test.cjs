@@ -381,3 +381,22 @@ test("ordinary members cannot start Stripe sandbox checkout", async () => {
     403,
   );
 });
+
+ test("newly enabled Google is offered without stale settings cache", async () => {
+  const oldFetch = global.fetch;
+  let options;
+  global.fetch = async (_url, init) => {
+    options = init;
+    return { ok: true, json: async () => ({ external: { google: true, facebook: false } }) };
+  };
+  try {
+    const api = load("src/app/api/auth/providers/route.ts", {
+      "@/lib/supabase/env": {
+        getSupabaseUrl: () => "https://fixture.supabase.co",
+        getSupabaseAnonKey: () => "publishable_fixture",
+      },
+    });
+    assert.deepEqual((await api.GET()).body.providers, ["google"]);
+    assert.equal(options.cache, "no-store");
+  } finally { global.fetch = oldFetch; }
+});

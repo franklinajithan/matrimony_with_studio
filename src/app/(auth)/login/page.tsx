@@ -29,6 +29,8 @@ const loginSchema = z.object({
 });
 
 const ERROR_MESSAGES: Record<string, string> = {
+  oauth_cancelled: "Sign-in was cancelled. Choose Google again or use your email.",
+  oauth_failed: "Social sign-in could not be completed. Please try again or use email.",
   expired_link: "That link has expired. Request a new confirmation or password reset email.",
   invalid_link: "That link is invalid. Request a new email and try again.",
   email_not_confirmed: "Please confirm your email before logging in.",
@@ -124,7 +126,7 @@ function LoginForm() {
       <CardContent className="space-y-4">
         {linkError && ERROR_MESSAGES[linkError] && (
           <Alert variant="destructive">
-            <AlertTitle>Link not valid</AlertTitle>
+            <AlertTitle>Sign-in not completed</AlertTitle>
             <AlertDescription>{ERROR_MESSAGES[linkError]}</AlertDescription>
           </Alert>
         )}

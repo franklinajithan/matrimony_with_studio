@@ -55,7 +55,7 @@ export function SocialAuthButtons({ next = "/dashboard" }: { next?: string }) {
   const loadProviders = useCallback(async () => {
     setConfigurationError(false);
     try {
-      const response = await fetch("/api/auth/providers");
+      const response = await fetch("/api/auth/providers", { cache: "no-store" });
       const data = await response.json();
       if (!response.ok) throw new Error("Unavailable");
       setProviders(
@@ -104,7 +104,7 @@ export function SocialAuthButtons({ next = "/dashboard" }: { next?: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className={`grid gap-3 ${providers.length > 1 ? "sm:grid-cols-2" : ""}`}>
         {providers.includes("google") && (
           <Button
             type="button"
@@ -120,7 +120,7 @@ export function SocialAuthButtons({ next = "/dashboard" }: { next?: string }) {
                 <GoogleIcon />
               </span>
             )}
-            Google
+            Continue with Google
           </Button>
         )}
         {providers.includes("facebook") && (
@@ -138,7 +138,7 @@ export function SocialAuthButtons({ next = "/dashboard" }: { next?: string }) {
                 <FacebookIcon />
               </span>
             )}
-            Facebook
+            Continue with Facebook
           </Button>
         )}
       </div>

@@ -1,6 +1,7 @@
 import type { User as SupabaseAuthUser, Session } from "@supabase/supabase-js";
 import { supabase } from "./client";
 import { getSiteUrl, isSupabaseConfigured } from "./env";
+import { safeInternalPath } from "@/lib/auth/safe-redirect";
 
 export type AuthUser = {
   uid: string;
@@ -135,10 +136,13 @@ export async function signInWithOAuth(provider: OAuthProvider, next = "/dashboar
     err.code = "auth/invalid-api-key";
     throw err;
   }
+  // Keep the PKCE verifier cookie and callback on the same browser origin.
+  const origin = typeof window !== "undefined" ? window.location.origin : getSiteUrl();
+  const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(safeInternalPath(next, "/dashboard"))}`;
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: callbackUrl(next),
+      redirectTo,
       scopes: provider === "facebook" ? "email,public_profile" : "openid email profile",
     },
   });

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseUrl, getSupabaseAnonKey } from "@/lib/supabase/env";
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const url = getSupabaseUrl(),
     key = getSupabaseAnonKey();
@@ -12,7 +14,7 @@ export async function GET() {
     const response = await fetch(`${url}/auth/v1/settings`, {
       headers: { apikey: key },
       signal: AbortSignal.timeout(4000),
-      next: { revalidate: 60 },
+      cache: "no-store",
     });
     if (!response.ok) throw new Error("Auth settings unavailable");
     const settings = await response.json();
@@ -24,7 +26,7 @@ export async function GET() {
         phoneEnabled: settings.external?.phone === true,
         emailConfirmationRequired: settings.mailer_autoconfirm !== true,
       },
-      { headers: { "Cache-Control": "public, max-age=60" } },
+      { headers: { "Cache-Control": "no-store" } },
     );
   } catch {
     return NextResponse.json(

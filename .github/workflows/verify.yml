@@ -16,6 +16,7 @@ jobs:
       - run: npm run test:admin
       - run: npm run test:project:database
       - run: npm run test:providers
+      - run: npm run test:oauth
       - run: npx tsc --noEmit
       - run: npm run build
         env:
