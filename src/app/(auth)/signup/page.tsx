@@ -23,7 +23,7 @@ const signupSchema = z
   .object({
     name: z.string().min(2, { message: "Name must be at least 2 characters." }),
     promoCode: z.string().max(32).regex(/^[A-Za-z0-9-]*$/, "Use letters, numbers or hyphens only.").optional(),
-    phone: z.string().regex(/^\+[1-9]\d{7,14}$/, { message: "Enter your mobile in international format, e.g. +447700900123." }),
+    phone: z.string().optional(),
     email: z.string().email({ message: "Enter a valid email address." }),
     password: z.string().min(8, { message: "Password must be at least 8 characters." }),
     confirmPassword: z.string().min(8, { message: "Confirm your password." }),
@@ -80,7 +80,7 @@ export default function SignupPage() {
         title: "Account created",
         description: "You can now build your profile.",
       });
-      router.push("/verify-phone");
+      router.push("/dashboard");
       router.refresh();
     } catch (error: unknown) {
       const code = typeof error === "object" && error && "code" in error ? String((error as { code: string }).code) : "";
@@ -149,7 +149,7 @@ export default function SignupPage() {
               )}
             />
             <FormField control={form.control} name="phone" render={({ field }) => (
-              <FormItem><FormLabel>Mobile number (private)</FormLabel><FormControl><Input type="tel" autoComplete="tel" placeholder="+447700900123" {...field} disabled={isLoading} /></FormControl><p className="text-xs text-muted-foreground">We will send an SMS code after email confirmation. Your number is never displayed on your public profile.</p><FormMessage /></FormItem>
+              <FormItem><FormLabel>Mobile number (optional)</FormLabel><FormControl><Input type="tel" autoComplete="tel" placeholder="+447700900123" {...field} disabled={isLoading} /></FormControl><p className="text-xs text-muted-foreground">SMS verification will be available later. You can continue without a mobile number.</p><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="promoCode" render={({ field }) => (
               <FormItem><FormLabel>Special invitation code (optional)</FormLabel><FormControl><Input autoComplete="off" placeholder="Enter your invitation code" {...field} disabled={isLoading} /></FormControl><p className="text-xs text-muted-foreground">Have a special code? Enter it here. Eligibility and any extended trial will be confirmed after verification; entering a code does not automatically activate an offer.</p><FormMessage /></FormItem>
