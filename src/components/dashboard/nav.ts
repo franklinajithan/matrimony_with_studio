@@ -31,6 +31,7 @@ export const dashboardPrimaryNav: DashboardNavItem[] = [
   },
   { href: "/discover", label: "Find Matches", icon: Compass, match: "prefix" },
   { href: "/interests", label: "Interests", icon: Heart, match: "prefix" },
+  { href: "/shortlist", label: "Shortlist", icon: Heart, match: "prefix" },
   { href: "/connections", label: "Connections", icon: Users, match: "prefix" },
   {
     href: "/messages",
@@ -145,6 +146,7 @@ export function titleForDashboardPath(pathname: string): string {
   if (pathname.startsWith("/notifications")) return "Service notices";
   if (pathname.startsWith("/discover")) return "Find Matches";
   if (pathname.startsWith("/interests")) return "Interests";
+  if (pathname.startsWith("/shortlist")) return "Your shortlist";
   if (pathname.startsWith("/connections")) return "Connections";
   if (pathname.startsWith("/messages")) return "Messages";
   if (pathname.startsWith("/dashboard/privacy")) return "Privacy and safety";

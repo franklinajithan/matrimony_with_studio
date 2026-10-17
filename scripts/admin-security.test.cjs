@@ -233,6 +233,7 @@ for (const file of adminPages) {
         "./page-client": { default: "AdminPageClient" },
         "./audit-explorer": { default: "AuditExplorer" },
         "@/components/shared/Logo": componentStubs,
+        "@/components/admin/IntegrationReadiness": componentStubs,
         "@/components/ui/card": componentStubs,
         "./admin-navigation": { AdminNavigation: "AdminNavigation" },
         "./admin-mobile-tab-bar": { AdminMobileTabBar: "AdminMobileTabBar" },

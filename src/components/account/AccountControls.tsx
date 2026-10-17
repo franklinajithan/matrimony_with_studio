@@ -53,6 +53,34 @@ export function AccountControls() {
       setBusy(false);
     }
   }
+  async function downloadArchive() {
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/account/export", {
+        method: "HEAD",
+        cache: "no-store",
+      });
+      if (!response.ok)
+        throw new Error(
+          response.status === 401
+            ? "Your session expired. Sign in again."
+            : "File archives are unavailable. Use the JSON export or retry later.",
+        );
+      const link = document.createElement("a");
+      link.href = "/api/account/export";
+      link.download = "cupidmatch-account-export.tar.gz";
+      link.click();
+      setNotice(
+        "Archive requested. Check browser downloads and manifest.json inside. An interrupted archive is incomplete; retry if needed.",
+      );
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
   async function changePassword(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -166,13 +194,28 @@ export function AccountControls() {
                 disabled={busy}
                 onClick={() => void act("export")}
               >
-                Download account data
+                Download account JSON
               </Button>
               <p className="text-xs text-muted-foreground">
                 The export includes your profile, sent messages, biodata
                 documents, share links, private plans, circle invitations and
                 support history. Uploaded file binaries and restricted
                 safety/staff records are excluded.
+              </p>
+              <Button
+                variant="outline"
+                disabled={busy}
+                onClick={() => void downloadArchive()}
+              >
+                Download records and files archive
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                The .tar.gz archive streams paginated records and available
+                uploaded files. Check manifest.json for missing files or
+                incomplete datasets. Keep it secure. Up to three archives per
+                hour; 250MB per archive, 10MB per file and two minutes
+                processing. Larger exports require support. File archives
+                require server storage configuration.
               </p>
             </section>
             <section className="space-y-3 border-t pt-4">

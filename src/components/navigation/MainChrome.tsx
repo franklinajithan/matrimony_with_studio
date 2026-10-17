@@ -25,6 +25,7 @@ const AUTHENTICATED_ROUTES = [
   "/family-circle",
   "/biodata",
   "/discover",
+  "/shortlist",
   "/interests",
   "/connections",
   "/messages",

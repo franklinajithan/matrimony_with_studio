@@ -1,21 +1,21 @@
 # CupidMatch completion checklist — 17 October 2026
 
-Code completion, isolated tests, preview deployment and live acceptance are separate. PR #40 remains the delivery branch; repository main was `f95b7cd6dfe69550d4a5de4e979a320ef663c8ca` when inspected (its latest production deployment failed; an older READY deployment is serving). No production migrations were applied during this pass.
+Code completion, isolated tests, preview deployment and live acceptance are separate. PR #40 remains the delivery branch and includes main's `1422f4f7d480de55d986e385b2fd4fa0c2010d1f` login/SMS deferral changes. That main commit is READY and serving cupidmatch.co.uk at the latest inspection. No production migrations were applied during this pass.
 
 | Requested feature | Code status | Verification / outstanding work |
 |---|---|---|
-| Registration, confirmation, login/logout, recovery | Existing implementation preserved | Supabase Auth email confirmation enabled; Google/Facebook/phone currently disabled. Dedicated-account/browser and email-delivery acceptance outstanding |
+| Registration, confirmation, login/logout, recovery | Refreshed cookies preserved through redirects, dashboard callback default, explicit recovery/error states; optional SMS retained | Google browser test failed with provider `redirect_uri_mismatch`; exact callback is documented in GOOGLE_LOGIN_SETUP.md. Facebook hidden until enabled. Eight OAuth/session tests pass. Signed-in/email-delivery acceptance outstanding |
 | Resumable onboarding, validation, completion and publication | Existing implementation preserved | Existing schema/readiness checks; signed-in persistence journey outstanding |
 | Password/account settings and notification preferences | Added current-password confirmation, password update and email preferences | Type checked; real password/recovery testing requires dedicated account |
 | Account pause/reactivation | Added authoritative account controls; discovery, messaging and planning honor pauses | Database tested; browser acceptance outstanding |
-| Account data export | Added profile, sent messages, biodata/share records, plans, circles, notices and support JSON | Ownership tested; binary archive/asynchronous large-account export absent |
+| Account data export | JSON plus streamed .tar.gz archive of paginated owner records and owned photos/available attachments; read receipts excluded | Database/API/system-tar checks pass. Private/no-store, three/hour, 250MB total, 10MB/file and two-minute processing bound; incomplete manifest on failures. Server key and real Storage/browser acceptance pending; larger exports require assistance |
 | Account deletion | **Incomplete**: confirmation, immediate pause, cancel request and staff queue implemented | Permanent erasure/provider cleanup and approved retention procedure unfinished |
 | Profile/background/preferences editing, photos and review | Existing implementation preserved; media gateway added | Existing validation; storage and browser CRUD acceptance outstanding |
 | Profile/photo privacy, publication and sharing | Hardened direct media access; token-only biodata resolver, server redaction and active/block checks | PostgreSQL privacy tests passed; needs server key and browser share/photo acceptance |
 | Biodata editing/exports | Existing studio preserved; secure token randomness and share privacy fixed | PDF/image export and device acceptance outstanding |
-| Search/filters/sorting/pagination/saved preferences | Existing implementation preserved | Uses real profile data; browser coverage outstanding |
+| Search/filters/sorting/pagination/saved preferences | Removed silent 500-profile cutoff; all privacy-safe directory pages read before scoring/filtering; match/newest/name/age sorting and 20-result pages; fixed filter-reset loop | Tests include records beyond 500, cancellation/failure, URL-sized shortlist status batches. Explicit 10,000-profile safety ceiling; indexed server discovery required above that scale. Signed-in browser coverage outstanding |
 | Explainable recommendations | Existing deterministic preference scoring/reasons preserved | Broader signed-in recommendation acceptance outstanding; no fabricated AI matching claims |
-| Shortlists/interests/acceptance/connections | Existing implementation preserved | Existing atomic acceptance and permissions; browser journeys outstanding |
+| Shortlists/interests/acceptance/connections | Added protected paginated shortlist screen, owner-only removal and privacy-safe profile projection; existing atomic interests/connections preserved | API ownership/visibility checks pass; actual two-member journeys outstanding |
 | Visitors/private browsing | Existing PR #40 work preserved; corrected legacy Plus privacy entitlement | Database tests passed; migrations not live |
 | Persistent text messages/history | Atomic sending/unread/read operations; idempotent request IDs; earlier history pagination; polling fallback | SQL/API checks passed; multi-browser unread/history acceptance outstanding |
 | Message attachments | Private JPEG/PNG/WebP/PDF upload/download, 5MB/type-signature/quota checks; connected unblocked access; moderation removal | SQL + signature tests passed; Storage/browser upload/download and failure acceptance outstanding |
@@ -31,16 +31,17 @@ Code completion, isolated tests, preview deployment and live acceptance are sepa
 | Support tickets/threads/assignment/resolution/reopen | Existing PR #40 work preserved | Existing SQL/API tests passed; browser journey outstanding |
 | In-app notices | Existing private notices and read status preserved | SQL ownership tests passed; live acceptance outstanding |
 | Email notifications | Preference-aware outbox and authenticated worker, Resend idempotency, retries, confirmed-email and authorised-test-recipient allowlist | **Disabled**: sender/provider/cron/test recipients missing; no scheduler enabled, no actual sends tested; unrestricted delivery not implemented |
-| Full admin workspace | Existing role-aware directory/reports/moderation/support/notices/trials/promos/audit; new scoped feature queues, access revocation and test payment operations | 110 authorization tests and SQL role/scope checks passed; signed-in roles/mobile acceptance outstanding |
-| Public website | Existing pages preserved; removed another unsupported membership claim; linked planning/circle tools; privacy information updated | Build/typecheck passed; full keyboard/mobile/desktop/link acceptance outstanding |
+| Full admin workspace | Existing role-aware operations preserved; Super Admin plan page now shows integration flags, missing input names and acceptance requirements without exposing secrets | 110 authorization tests and SQL role/scope checks passed; signed-in roles/mobile acceptance outstanding |
+| Public website | Existing pages preserved; removed unsupported claims; fixed shortlist/preferences/help destinations and obsolete disabled attachment control | Literal internal link audit passes. Build/typecheck pass; full keyboard/mobile/desktop acceptance outstanding |
 | Legal/contact information | Factual product information pages exist | **Incomplete**: owner must provide legal operator, public contact, lawful-processing details, final retention/terms/refund policy; no details invented |
 | Database/release | Nine missing migrations identified in order; CI expanded | All tested in isolated PostgreSQL; live schema compatibility/backup, signed-in acceptance, migration application, merge and production promotion outstanding |
 
 ## Validation recorded in this pass
 
 - 110 admin page/API authorization tests.
-- 224 isolated PostgreSQL assertions: 105 existing admin, 57 existing website, 31 planning/account and 31 communication/provider/privacy. Actual API handlers are exercised where the fixtures support them.
-- 14 provider/file/API tests, including genuine Stripe SDK test signatures with **mocked provider responses**. These are not external sandbox tests.
+- 256 isolated PostgreSQL assertions: 105 existing admin, 57 website, 31 planning/account and 63 communication/provider/privacy/export. Actual API handlers are exercised where the fixtures support them.
+- 31 provider/file/API/directory tests, including system-tar archive interoperability, shortlist ownership/visibility and genuine Stripe SDK test signatures with **mocked provider responses**. These are not external sandbox tests.
+- Eight OAuth/session routing tests.
 - TypeScript and production build. No lint pass is claimed (existing build skips lint).
 - Preview/public browser inspection does not count as signed-in acceptance.
 

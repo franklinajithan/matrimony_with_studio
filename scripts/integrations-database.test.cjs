@@ -255,6 +255,95 @@ runRoadmap(async ({ db, ids, as }) => {
   await as("a");
   await db.query(`select public.reserve_integration_attempt('sms_send')`);
   await denied(`select public.reserve_integration_attempt('sms_send')`);
+  const exportPage = async (dataset, after = null) =>
+    (
+      await db.query("select public.account_export_page($1,$2::uuid)as value", [
+        dataset,
+        after,
+      ])
+    ).rows[0].value;
+  equal((await exportPage("profile")).rows[0].id, ids.a);
+  equal("is_admin" in (await exportPage("profile")).rows[0], false);
+  equal(
+    (await exportPage("sent_messages")).rows.every(
+      (row) => row.sender_id === ids.a,
+    ),
+    true,
+  );
+  equal(
+    (await exportPage("sent_messages")).rows.some((row) => "is_read" in row),
+    false,
+  );
+  const oldExport = (
+    await db.query("select public.member_workspace('export','{}')as value")
+  ).rows[0].value;
+  equal(
+    oldExport.messages.some((row) => "is_read" in row),
+    false,
+  );
+  await denied("select public.account_export_page('admin_audit_log')");
+  await db.exec("reset role");
+  await db.query(
+    "insert into storage.objects(bucket_id,name,metadata)values('media',$1,'{\"size\":4}'),('media',$2,'{\"size\":4}')",
+    [
+      "users/" + ids.a + "/photos/own.png",
+      "users/" + ids.b + "/photos/private.png",
+    ],
+  );
+  await as("a");
+  equal(
+    (await exportPage("files")).rows.map((row) => row.path),
+    ["users/" + ids.a + "/photos/own.png"],
+  );
+  await as("b");
+  equal(
+    (await exportPage("files")).rows.some((row) => row.path.includes(ids.a)),
+    false,
+  );
+  await db.exec("reset role");
+  await db.query(
+    "insert into public.member_notices(id,member_id,title,body)select gen_random_uuid(),$1,'Export pagination','Own notice'from generate_series(1,105)",
+    [ids.a],
+  );
+  await as("a");
+  const firstPage = await exportPage("notices");
+  equal(firstPage.rows.length, 100);
+  equal(typeof firstPage.next, "string");
+  const secondPage = await exportPage("notices", firstPage.next);
+  equal(
+    secondPage.rows.every(
+      (row) => !firstPage.rows.some((first) => first.id === row.id),
+    ),
+    true,
+  );
+  equal(secondPage.next, null);
+  for (const dataset of [
+    "settings",
+    "future_map",
+    "plan_shares",
+    "family_invitations",
+    "family_activity",
+    "support_tickets",
+    "support_messages",
+    "sent_interests",
+    "subscriptions",
+    "trials",
+    "calls",
+    "attachments",
+    "biodata_documents",
+    "biodata_shares",
+    "profile_shares",
+    "shortlist",
+  ])
+    equal(Array.isArray((await exportPage(dataset)).rows), true);
+  await db.query("select public.member_workspace('deactivate','{}')");
+  equal((await exportPage("profile")).rows[0].id, ids.a);
+  for (let i = 0; i < 3; i++)
+    await db.query("select public.reserve_account_export()");
+  await denied("select public.reserve_account_export()");
+  await as("anonymous");
+  await denied("select public.account_export_page('profile')");
+  await denied("select public.reserve_account_export()");
   console.log(
     `PASS: ${count} communication/provider/privacy PostgreSQL assertions.`,
   );

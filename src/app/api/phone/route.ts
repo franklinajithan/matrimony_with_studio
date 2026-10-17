@@ -15,9 +15,13 @@ const input = z.discriminatedUnion("action", [
 ]);
 export async function GET() {
   const db = await createSupabaseServerClient();
-  const {data, error} = await db.auth.getUser();
-  if(error || !data.user) return NextResponse.json({error:"Sign in again"}, {status:401});
-  return NextResponse.json({enabled:process.env.SMS_ENABLED === "true"}, {headers:{"Cache-Control":"private, no-store"}});
+  const { data, error } = await db.auth.getUser();
+  if (error || !data.user)
+    return NextResponse.json({ error: "Sign in again" }, { status: 401 });
+  return NextResponse.json(
+    { enabled: process.env.SMS_ENABLED === "true" },
+    { headers: { "Cache-Control": "private, no-store" } },
+  );
 }
 export async function POST(request: Request) {
   if (!validOrigin(request))

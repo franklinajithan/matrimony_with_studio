@@ -78,7 +78,7 @@ begin
   select jsonb_build_object('exportedAt',now(),'profile',to_jsonb(p)-'is_admin'-'suspension_reason','settings',(select to_jsonb(a)-'member_id'from public.member_account_controls a where member_id=v_me),'futureMap',(select to_jsonb(f)from public.future_maps f where member_id=v_me),'familyInvitations',coalesce((select jsonb_agg(to_jsonb(i))from public.family_invitations i where member_id=v_me),'[]'),'supportTickets',coalesce((select jsonb_agg(to_jsonb(t))from public.support_tickets t where member_id=v_me),'[]'),'supportMessages',coalesce((select jsonb_agg(to_jsonb(m))from public.support_messages m join public.support_tickets t on t.id=m.ticket_id where t.member_id=v_me),'[]'))into v_result from public.profiles p where id=v_me;
   for v_export_table,v_export_column in select * from(values('biodata_documents','owner_id'),('biodata_share_links','owner_id'),('messages','sender_id'),('match_requests','sender_id'),('member_notices','member_id'),('profile_share_links','owner_id'))as q(table_name,column_name)loop
    if to_regclass('public.'||v_export_table)is not null then
-    execute format('select coalesce(jsonb_agg(to_jsonb(t)),''[]''::jsonb)from public.%I t where %I=$1',v_export_table,v_export_column)into v_export_data using v_me;
+    execute format('select coalesce(jsonb_agg(%s),''[]''::jsonb)from public.%I t where %I=$1',case when v_export_table='messages' then 'to_jsonb(t)-''is_read''' else 'to_jsonb(t)' end,v_export_table,v_export_column)into v_export_data using v_me;
     v_result:=v_result||jsonb_build_object(v_export_table,v_export_data);
    end if;
   end loop;

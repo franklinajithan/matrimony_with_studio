@@ -285,3 +285,53 @@ revoke all on function public.claim_email_jobs()from public,anon,authenticated;
 grant execute on function public.claim_email_jobs()to service_role;
 grant select on public.member_account_controls,public.profiles,auth.users to service_role;
 grant execute on function public.member_is_active(uuid)to service_role;
+
+-- Owner-only account export pages. This migration is still pending, not applied live.
+create function cupidmatch_admin.account_export_page(p_dataset text,p_after uuid default null)
+returns jsonb language plpgsql security definer set search_path=''as $$
+declare v_me uuid:=auth.uid();v_query text;v_rows jsonb;v_next uuid;
+begin
+ if v_me is null then raise exception 'Sign in required'using errcode='42501';end if;
+ v_query:=case p_dataset
+ when 'profile' then 'select id,to_jsonb(p)-''is_admin''-''suspension_reason'' as record from public.profiles p where id=$1'
+ when 'settings' then 'select member_id as id,to_jsonb(a) as record from public.member_account_controls a where member_id=$1'
+ when 'future_map' then 'select member_id as id,to_jsonb(f) as record from public.future_maps f where member_id=$1'
+ when 'plan_shares' then 'select viewer_id as id,to_jsonb(s) as record from public.future_map_shares s where member_id=$1'
+ when 'family_invitations' then 'select id,to_jsonb(i) as record from public.family_invitations i where member_id=$1 or helper_id=$1'
+ when 'family_activity' then 'select id,to_jsonb(a) as record from public.family_activity a where author_id=$1'
+ when 'support_tickets' then 'select id,to_jsonb(t)-''assigned_to'' as record from public.support_tickets t where member_id=$1'
+ when 'support_messages' then 'select m.id,to_jsonb(m) as record from public.support_messages m join public.support_tickets t on t.id=m.ticket_id where t.member_id=$1'
+ when 'sent_messages' then 'select id,to_jsonb(m)-''is_read'' as record from public.messages m where sender_id=$1'
+ when 'sent_interests' then 'select id,to_jsonb(m) as record from public.match_requests m where sender_id=$1'
+ when 'notices' then 'select id,to_jsonb(n)-''created_by'' as record from public.member_notices n where member_id=$1'
+ when 'subscriptions' then 'select id,to_jsonb(s) as record from public.user_subscriptions s where user_id=$1'
+ when 'trials' then 'select user_id as id,to_jsonb(t)-''granted_by'' as record from public.member_trials t where user_id=$1'
+ when 'calls' then 'select id,to_jsonb(c)-''offer''-''answer'' as record from public.member_calls c where $1 in(caller_id,callee_id)'
+ when 'attachments' then 'select id,to_jsonb(a) as record from public.message_attachments a where uploader_id=$1'
+ when 'files' then 'select o.id,jsonb_build_object(''id'',o.id,''bucket'',o.bucket_id,''path'',o.name,''size'',o.metadata->''size'') as record from storage.objects o where (o.bucket_id=''media'' and o.name like ''users/''||$1::text||''/%'')or(o.bucket_id=''message-attachments''and exists(select 1 from public.message_attachments a where a.uploader_id=$1 and a.object_path=o.name and a.status=''ready''))'
+ when 'biodata_documents' then case when to_regclass('public.biodata_documents')is not null then 'select id,to_jsonb(b) as record from public.biodata_documents b where owner_id=$1'else 'select null::uuid as id,null::jsonb as record where false'end
+ when 'biodata_shares' then 'select id,to_jsonb(b) as record from public.biodata_share_links b where owner_id=$1'
+ when 'profile_shares' then 'select id,to_jsonb(p)-''token_hash'' as record from public.profile_share_links p where owner_id=$1'
+ when 'shortlist' then case when to_regclass('public.shortlist')is not null then 'select id,to_jsonb(s) as record from public.shortlist s where user_id=$1'else 'select null::uuid as id,null::jsonb as record where false'end
+ else null end;
+ if v_query is null then raise exception 'Unknown dataset'using errcode='22023';end if;
+ execute 'select coalesce(jsonb_agg(record order by id),''[]''::jsonb),(array_agg(id order by id desc))[1] from(select * from('||v_query||')owned where($2 is null or id>$2)order by id limit 100)page'into v_rows,v_next using v_me,p_after;
+ return jsonb_build_object('rows',v_rows,'next',case when jsonb_array_length(v_rows)=100 then v_next else null end);
+end $$;
+revoke all on function cupidmatch_admin.account_export_page(text,uuid)from public,anon;
+grant execute on function cupidmatch_admin.account_export_page(text,uuid)to authenticated;
+create function public.account_export_page(p_dataset text,p_after uuid default null)returns jsonb language sql security invoker set search_path=''as $$select cupidmatch_admin.account_export_page(p_dataset,p_after)$$;
+revoke all on function public.account_export_page(text,uuid)from public,anon;
+grant execute on function public.account_export_page(text,uuid)to authenticated;
+create function cupidmatch_admin.reserve_account_export()returns boolean language plpgsql security definer set search_path=''as $$
+begin
+ if auth.uid()is null then raise exception 'Sign in required'using errcode='42501';end if;
+ perform pg_advisory_xact_lock(hashtextextended(auth.uid()::text,821));
+ if(select count(*)from public.integration_attempts where member_id=auth.uid()and kind='account_export'and attempted_at>now()-interval '1 hour')>=3 then raise exception 'Try again in an hour'using errcode='22023';end if;
+ insert into public.integration_attempts(member_id,kind)values(auth.uid(),'account_export');return true;
+end $$;
+revoke all on function cupidmatch_admin.reserve_account_export()from public,anon;
+grant execute on function cupidmatch_admin.reserve_account_export()to authenticated;
+create function public.reserve_account_export()returns boolean language sql security invoker set search_path=''as $$select cupidmatch_admin.reserve_account_export()$$;
+revoke all on function public.reserve_account_export()from public,anon;
+grant execute on function public.reserve_account_export()to authenticated;

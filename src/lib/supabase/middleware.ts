@@ -10,6 +10,7 @@ const PROTECTED_PREFIXES = [
   "/family-circle",
   "/future-map",
   "/discover",
+  "/shortlist",
   "/interests",
   "/connections",
   "/verification",
@@ -40,15 +41,24 @@ export async function updateSession(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const finish = (target: NextResponse) => {
     if (target !== response) {
-      response.cookies.getAll().forEach(cookie => target.cookies.set(cookie));
+      response.cookies.getAll().forEach((cookie) => target.cookies.set(cookie));
     }
     target.headers.set("Cache-Control", "private, no-store");
     return target;
   };
-  const unavailable = () => finish(new NextResponse(
-    "Sign-in is temporarily unavailable. Please refresh this page in a moment.",
-    { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8", "Retry-After": "30" } },
-  ));
+  const unavailable = () =>
+    finish(
+      new NextResponse(
+        "Sign-in is temporarily unavailable. Please refresh this page in a moment.",
+        {
+          status: 503,
+          headers: {
+            "Content-Type": "text/plain; charset=utf-8",
+            "Retry-After": "30",
+          },
+        },
+      ),
+    );
 
   if (!url || !key) {
     return isProtectedPath(pathname) ? unavailable() : finish(response);
@@ -77,7 +87,12 @@ export async function updateSession(request: NextRequest) {
   try {
     const result = await supabase.auth.getUser();
     user = result.data.user;
-    if (result.error && (result.error.status || 0) >= 500 && isProtectedPath(pathname)) return unavailable();
+    if (
+      result.error &&
+      (result.error.status || 0) >= 500 &&
+      isProtectedPath(pathname)
+    )
+      return unavailable();
   } catch {
     return isProtectedPath(pathname) ? unavailable() : finish(response);
   }

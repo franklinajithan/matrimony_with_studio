@@ -30,10 +30,10 @@ const navigationItems = [
   { href: "/connections", label: "Connections", icon: Users, count: 0 },
   { href: "/messages", label: "Messages", icon: MessageCircle, count: 0 },
   { href: "/profile", label: "My profile", icon: User },
-  { href: "/preferences", label: "Partner preferences", icon: Sliders },
+  { href: "/dashboard/preferences", label: "Partner preferences", icon: Sliders },
   { href: "/privacy", label: "Privacy & verification", icon: Shield },
   { href: "/membership", label: "Membership", icon: CreditCard },
-  { href: "/help", label: "Help centre", icon: HelpCircle },
+  { href: "/support", label: "Help centre", icon: HelpCircle },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

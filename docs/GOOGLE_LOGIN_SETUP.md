@@ -1,5 +1,11 @@
 # Google login
 
+Latest browser acceptance on 17 October: Google is offered on the preview, but
+the provider rejected the request with `Error 400: redirect_uri_mismatch`.
+The error details identify the callback below. This is a Google Cloud client
+configuration blocker; no signed-in success is claimed. Console access was
+blocked by automatic approval review, so no provider configuration was changed.
+
 Google login uses Supabase OAuth with PKCE, not a client secret in the app.
 The shared buttons appear on login/signup only when the public Supabase settings
 report the provider enabled. Provider detection is not cached, so dashboard
@@ -25,6 +31,10 @@ be read. Existing internal destinations (including `/admin`) are preserved;
 Supabase/database permissions still determine access. External destinations are
 rejected. Signup's existing onboarding destination is retained. Cancellation and
 expired links display distinct errors and preserve the destination for retry.
+Callbacks without a destination now open the dashboard; recovery-token callbacks
+open password reset. Middleware copies refreshed cookies to redirect responses
+and makes session responses private/no-store. SMS deferral does not grant phone
+verification or trial eligibility.
 
 ## Acceptance
 

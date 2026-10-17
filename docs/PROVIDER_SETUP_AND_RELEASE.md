@@ -56,14 +56,18 @@ Rollback: restore the previous Vercel deployment **together with** the prior com
 
 - Legal operator/public contact, final privacy lawful-processing information, retention schedule and applicable terms are not invented.
 - Account deletion currently creates a visible paused-account request and staff queue. Automated permanent erasure, provider data-redaction/cancellation and a tested retained-record policy are **unfinished**.
-- Full data export is a synchronous account download; large-account asynchronous export and binary archive are not implemented.
+- Account export now includes a streamed, paginated .tar.gz download with available owned binaries and an explicit completeness manifest. It requires the server storage key; three requests/hour, 250MB total, 10MB/file and a two-minute processing budget are enforced. Larger exports need assistance; there is no asynchronous export worker.
 - TURN credentials are short-lived and user-scoped in code. Provider monitoring and real two-device tests remain outstanding.
 - Live payment activation, international price IDs, applicable tax/refund policy, unrestricted notification delivery and identity production onboarding are not approved or tested by this development pass.
 
 ## Observed live baseline
 
-The latest production attempts for main commit `f95b7cd6dfe69550d4a5de4e979a320ef663c8ca` are ERROR. A previous production build at `1e984e71945c829e8bf200c6153473081574d636` is READY and a rollback candidate. These failures predate this PR; the `cupidmatch.co.uk` alias was confirmed to point to deployment `dpl_7iLpBDWAPwAyBUjSLXrSCVgLXTk4` at that commit. Security advisors still report the existing security-definer discovery view and other legacy warnings because the pending migrations have not been applied. The new discovery invoker view and token-only share resolver are tested in isolated PostgreSQL; do not describe those fixes as live.
+The current production alias was rechecked: `cupidmatch.co.uk` serves READY deployment `dpl_LiKLiHzLohPnK6b7V8bzNKB5KdLh`, main commit `1422f4f7d480de55d986e385b2fd4fa0c2010d1f`. Earlier failed production attempts have been superseded by that deployment. Pending privacy/admin schema fixes have not been applied live; do not describe isolated PostgreSQL verification as a production fix.
 
 ## Confirmed authentication settings
 
-The public Supabase Auth settings endpoint was inspected read-only on 17 October: email signup enabled, email confirmation required, Google/Facebook disabled, phone authentication disabled (SMS provider label Twilio). No provider secret or sending capability was verified. Social buttons now follow actual enabled-provider settings. The phone/launch-offer journey remains blocked until an authorised SMS provider and phone authentication are configured and tested; no confirmation bypass was added.
+The latest preview offers Google and email/password; Facebook is hidden until enabled. The actual Google browser attempt reached `Error 400: redirect_uri_mismatch`; Google identifies `https://ztuquqsmmfkoqhobfgyt.supabase.co/auth/v1/callback` as the request callback. Correct the registered URI for the active Google client and repeat acceptance. Console access was blocked by automatic approval review; no provider setting was changed.
+
+SMS is intentionally deferred, preserving today's main-branch decision: members may use the dashboard without a mobile number. The guarded OTP flow is retained for later enablement; no phone status or trial entitlement is granted without actual evidence. Email confirmation remains required.
+
+The attempted isolated Supabase staging branch setup returned an expired-request error and no branch exists. Signed-in acceptance requires a working isolated environment and existing authorised test accounts.

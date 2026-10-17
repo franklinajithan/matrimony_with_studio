@@ -17,7 +17,7 @@
     "typecheck": "tsc --noEmit",
     "test:website:database": "node scripts/website-database.test.cjs",
     "test:project:database": "node scripts/integrations-database.test.cjs",
-    "test:providers": "node --test scripts/provider-routes.test.cjs",
+    "test:providers": "node --test scripts/provider-routes.test.cjs scripts/account-export.test.cjs scripts/directory.test.cjs",
     "test:oauth": "node --test scripts/oauth.test.cjs"
   },
   "dependencies": {
