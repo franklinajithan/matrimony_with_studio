@@ -39,7 +39,8 @@ function HeroCarousel({
   priority?: boolean;
   sizes: string;
 }) {
-  const [slide, setSlide] = useState(0);\n  const [ready, setReady] = useState(false);
+  const [slide, setSlide] = useState(0);
+  const [ready, setReady] = useState(false);
   const paused = useRef(false);
 
   useEffect(() => {
