@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type");
-  const next = safeInternalPath(searchParams.get("next"), "/onboarding");
+  const next = safeInternalPath(searchParams.get("next"), type === "recovery" ? "/reset-password" : "/dashboard");
   const authError = searchParams.get("error");
   const errorCode = searchParams.get("error_code");
   const errorDescription = searchParams.get("error_description");

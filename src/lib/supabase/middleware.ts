@@ -37,9 +37,21 @@ export async function updateSession(request: NextRequest) {
   const url = getSupabaseUrl();
   const key = getSupabaseAnonKey();
   let response = NextResponse.next({ request });
+  const { pathname, search } = request.nextUrl;
+  const finish = (target: NextResponse) => {
+    if (target !== response) {
+      response.cookies.getAll().forEach(cookie => target.cookies.set(cookie));
+    }
+    target.headers.set("Cache-Control", "private, no-store");
+    return target;
+  };
+  const unavailable = () => finish(new NextResponse(
+    "Sign-in is temporarily unavailable. Please refresh this page in a moment.",
+    { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8", "Retry-After": "30" } },
+  ));
 
   if (!url || !key) {
-    return response;
+    return isProtectedPath(pathname) ? unavailable() : finish(response);
   }
 
   const supabase = createServerClient(url, key, {
@@ -61,17 +73,20 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { pathname, search } = request.nextUrl;
+  let user;
+  try {
+    const result = await supabase.auth.getUser();
+    user = result.data.user;
+    if (result.error && (result.error.status || 0) >= 500 && isProtectedPath(pathname)) return unavailable();
+  } catch {
+    return isProtectedPath(pathname) ? unavailable() : finish(response);
+  }
 
   if (isProtectedPath(pathname) && !user) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
     redirectUrl.search = `next=${encodeURIComponent(`${pathname}${search}`)}`;
-    return NextResponse.redirect(redirectUrl);
+    return finish(NextResponse.redirect(redirectUrl));
   }
 
   const isAuthPage = AUTH_ONLY_PREFIXES.some(
@@ -80,10 +95,10 @@ export async function updateSession(request: NextRequest) {
   if (user && isAuthPage && pathname !== "/signup/check-email") {
     const next = safeInternalPath(
       request.nextUrl.searchParams.get("next"),
-      "/onboarding",
+      "/dashboard",
     );
-    return NextResponse.redirect(new URL(next, request.url));
+    return finish(NextResponse.redirect(new URL(next, request.url)));
   }
 
-  return response;
+  return finish(response);
 }

@@ -34,12 +34,60 @@ test('OAuth exchange establishes session before returning to requested destinati
 });
 test('OAuth return rejects external redirects', async () => {
   const result = await callback().GET(new Request('https://cupidmatch.co.uk/auth/callback?code=fixture&next=https%3A%2F%2Fevil.test'));
-  assert.equal(result.href, 'https://cupidmatch.co.uk/onboarding');
+  assert.equal(result.href, 'https://cupidmatch.co.uk/dashboard');
 });
 test('Expired exchange retains requested destination for retry', async () => {
   const result = await callback(async () => ({ error: { message: 'code expired' } })).GET(new Request('https://cupidmatch.co.uk/auth/callback?code=expired&next=%2Fdashboard'));
   assert.equal(result.searchParams.get('error'), 'expired_link');
   assert.equal(result.searchParams.get('next'), '/dashboard');
+});
+test('OAuth callbacks with no destination open dashboard and email recovery opens password reset', async () => {
+  const result = await callback().GET(new Request('https://cupidmatch.co.uk/auth/callback?code=fixture'));
+  assert.equal(result.pathname, '/dashboard');
+  const handler = load('src/app/auth/callback/route.ts', {
+    'next/server': {NextResponse:{redirect:url=>new URL(url)}},
+    '@/lib/supabase/server': {createSupabaseServerClient:async()=>({auth:{verifyOtp:async()=>({error:null})}})},
+  });
+  const recovery = await handler.GET(new Request('https://cupidmatch.co.uk/auth/callback?token_hash=fixture&type=recovery'));
+  assert.equal(recovery.pathname, '/reset-password');
+});
+
+function middlewareHarness(user, options={}) {
+  class FakeResponse extends Response {
+    constructor(body,init) {super(body,init);this.saved=new Map();this.cookies={
+      getAll:()=>Array.from(this.saved.values()),
+      set:(name,value,cookieOptions={})=>{const c=typeof name==='string'?{name,value,...cookieOptions}:name;this.saved.set(c.name,c)},
+    }}
+    static next(){return new FakeResponse(null)}
+    static redirect(url){return new FakeResponse(null,{status:307,headers:{location:String(url)}})}
+  }
+  return load('src/lib/supabase/middleware.ts',{
+    'next/server':{NextResponse:FakeResponse},
+    './env':{getSupabaseUrl:()=>options.missing?null:'https://fixture.supabase.co',getSupabaseAnonKey:()=>'publishable_fixture'},
+    '@supabase/ssr':{createServerClient:(_url,_key,config)=>({auth:{getUser:async()=>{
+      if(options.throw)throw Error('Network unavailable');
+      if(options.refresh)config.cookies.setAll([{name:'sb-fixture-auth-token',value:'refreshed_fixture',options:{path:'/',sameSite:'lax'}}]);
+      return {data:{user},error:options.error || null};
+    }}})},
+  });
+}
+function middlewareRequest(path) {
+  const nextUrl=new URL('https://cupidmatch.co.uk'+path);
+  nextUrl.clone=()=>new URL(nextUrl);
+  return {url:nextUrl.href,nextUrl,cookies:{getAll:()=>[],set:()=>{}}};
+}
+test('middleware preserves refreshed cookies on dashboard redirect and prevents session caching',async()=>{
+  const r=await middlewareHarness({id:'fixture'},{refresh:true}).updateSession(middlewareRequest('/login'));
+  assert.equal(new URL(r.headers.get('location')).pathname,'/dashboard');
+  assert.equal(r.cookies.getAll()[0].value,'refreshed_fixture');
+  assert.equal(r.headers.get('cache-control'),'private, no-store');
+});
+test('middleware keeps requested route on anonymous login and fails closed during auth outage',async()=>{
+  const r=await middlewareHarness(null).updateSession(middlewareRequest('/future-map?tab=own'));
+  assert.equal(new URL(r.headers.get('location')).searchParams.get('next'),'/future-map?tab=own');
+  assert.equal((await middlewareHarness(null,{throw:true}).updateSession(middlewareRequest('/admin'))).status,503);
+  assert.equal((await middlewareHarness(null,{missing:true}).updateSession(middlewareRequest('/admin'))).status,503);
+  assert.equal((await middlewareHarness(null,{throw:true}).updateSession(middlewareRequest('/about'))).status,200);
 });
 test('Google OAuth starts on current browser origin with minimum scopes and safe redirect', async () => {
   const oldWindow = global.window;

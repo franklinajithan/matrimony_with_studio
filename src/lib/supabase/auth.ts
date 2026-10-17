@@ -155,7 +155,7 @@ export async function createUserWithEmailAndPassword(_auth: unknown, email: stri
     email,
     password,
     options: {
-      emailRedirectTo: callbackUrl("/verify-phone"),
+      emailRedirectTo: callbackUrl("/dashboard"),
       data: { ...(extras?.displayName ? { display_name: extras.displayName } : {}), ...(extras?.pendingPhone ? { pending_phone: extras.pendingPhone } : {}), ...(extras?.pendingPromoCode ? { pending_promo_code: extras.pendingPromoCode } : {}) },
     },
   });
@@ -210,7 +210,7 @@ export async function updatePassword(password: string) {
 }
 
 export async function resendSignupConfirmation(email: string) {
-  const { error } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: callbackUrl("/verify-phone") } });
+  const { error } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: callbackUrl("/dashboard") } });
   if (error) mapAuthError(error, "Could not resend confirmation email");
 }
 

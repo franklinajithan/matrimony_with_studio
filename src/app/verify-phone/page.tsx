@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function VerifyPhonePage() {
   const router = useRouter();
+  const [smsAvailable, setSmsAvailable] = useState<boolean | null>(null);
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [sent, setSent] = useState(false);
@@ -17,6 +19,12 @@ export default function VerifyPhonePage() {
   const [offerCode, setOfferCode] = useState("");
   const [trialReady, setTrialReady] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  useEffect(() => {
+    void fetch("/api/phone", {cache:"no-store"})
+      .then(async response => { if(!response.ok) throw new Error("Unavailable"); return response.json(); })
+      .then(result => setSmsAvailable(result.enabled === true))
+      .catch(() => setSmsAvailable(false));
+  }, []);
   useEffect(() => {
     if (cooldown <= 0) return;
     const timer = setTimeout(
@@ -127,7 +135,11 @@ export default function VerifyPhonePage() {
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {verified ? (
+        {smsAvailable === null ? <p role="status">Checking verification availability…</p> : smsAvailable === false ? <>
+          <p>SMS verification is deferred. You can use your email or social login and continue to your dashboard without a mobile number.</p>
+          <p className="text-sm text-muted-foreground">Your phone will remain unverified. Any offer requiring phone verification stays unavailable until verification is enabled.</p>
+          <Button asChild className="w-full"><Link href="/dashboard">Continue to dashboard</Link></Button>
+        </> : verified ? (
           <>
             <p className="text-emerald-700">Your mobile number is verified.</p>
             <Button
