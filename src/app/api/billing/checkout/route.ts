@@ -9,6 +9,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { validOrigin, mutationError } from "@/lib/admin/http";
 import {
   getStripe,
+  isProviderTestMember,
   validatedPrice,
   providerError,
 } from "@/lib/providers/stripe";
@@ -25,6 +26,14 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Sign in to choose a plan" },
       { status: 401 },
+    );
+  if (!isProviderTestMember(user.id))
+    return NextResponse.json(
+      {
+        error:
+          "Sandbox checkout is available only to authorised test accounts.",
+      },
+      { status: 403 },
     );
   if (!billingConfigured())
     return NextResponse.json(

@@ -62,6 +62,7 @@ function billingHarness(subscription) {
   const writes = [];
   const api = load("src/app/api/billing/webhook/route.ts", {
     "@/lib/providers/stripe": {
+      isProviderTestMember: () => true,
       getStripe: () => ({
         webhooks: sdk.webhooks,
         subscriptions: { retrieve: async () => subscription },
@@ -170,6 +171,7 @@ test("identity webhook requires signature and stores test evidence without profi
   const writes = [];
   const api = load("src/app/api/identity/webhook/route.ts", {
     "@/lib/providers/stripe": {
+      isProviderTestMember: () => true,
       getStripe: () => ({
         webhooks: sdk.webhooks,
         identity: {
@@ -276,4 +278,106 @@ test("phone verification applies server attempt limits before sending", async ()
   );
   assert.equal(sent, 0);
   delete process.env.SMS_ENABLED;
+});
+
+test("provider availability omits disabled OAuth methods", async () => {
+  const oldFetch = global.fetch;
+  global.fetch = async () => ({
+    ok: true,
+    json: async () => ({
+      external: { google: false, facebook: false, phone: false },
+      mailer_autoconfirm: false,
+    }),
+  });
+  try {
+    const api = load("src/app/api/auth/providers/route.ts", {
+      "@/lib/supabase/env": {
+        getSupabaseUrl: () => "https://fixture.supabase.co",
+        getSupabaseAnonKey: () => "publishable_fixture",
+      },
+    });
+    const response = await api.GET();
+    assert.deepEqual(response.body.providers, []);
+    assert.equal(response.body.phoneEnabled, false);
+    assert.equal(response.body.emailConfirmationRequired, true);
+  } finally {
+    global.fetch = oldFetch;
+  }
+});
+test("Stripe sandbox member allowlist is exact and live keys are rejected", () => {
+  const oldIds = process.env.PROVIDER_TEST_MEMBER_IDS,
+    oldKey = process.env.STRIPE_SECRET_KEY;
+  const provider = load("src/lib/providers/stripe.ts", {
+    "@/lib/subscriptions/checkout": { stripePriceId: () => null },
+    "@/lib/subscriptions/plans": { PLANS: {} },
+  });
+  try {
+    delete process.env.PROVIDER_TEST_MEMBER_IDS;
+    assert.equal(provider.isProviderTestMember("fixture"), false);
+    process.env.PROVIDER_TEST_MEMBER_IDS = "fixture,another";
+    assert.equal(provider.isProviderTestMember("fixture"), true);
+    assert.equal(provider.isProviderTestMember("fixture-extra"), false);
+    process.env.STRIPE_SECRET_KEY = "sk_live_never_use";
+    assert.throws(() => provider.getStripe(), /test-mode/);
+  } finally {
+    if (oldIds === undefined) delete process.env.PROVIDER_TEST_MEMBER_IDS;
+    else process.env.PROVIDER_TEST_MEMBER_IDS = oldIds;
+    if (oldKey === undefined) delete process.env.STRIPE_SECRET_KEY;
+    else process.env.STRIPE_SECRET_KEY = oldKey;
+  }
+});
+test("TURN credentials are short-lived, user-bound and do not disclose shared secret", () => {
+  const oldSecret = process.env.TURN_AUTH_SECRET,
+    oldUrl = process.env.TURN_URL;
+  try {
+    process.env.TURN_AUTH_SECRET =
+      "fixture-secret-with-more-than-32-characters";
+    process.env.TURN_URL = "turns:turn.example.test:5349";
+    const { turnServer } = load("src/lib/communication/turn.ts");
+    const first = turnServer("member-a", 1700000000000),
+      other = turnServer("member-b", 1700000000000);
+    assert.equal(first.username, "1700000600:member-a");
+    assert.notEqual(first.credential, other.credential);
+    assert.equal(
+      JSON.stringify(first).includes(process.env.TURN_AUTH_SECRET),
+      false,
+    );
+  } finally {
+    if (oldSecret === undefined) delete process.env.TURN_AUTH_SECRET;
+    else process.env.TURN_AUTH_SECRET = oldSecret;
+    if (oldUrl === undefined) delete process.env.TURN_URL;
+    else process.env.TURN_URL = oldUrl;
+  }
+});
+test("ordinary members cannot start Stripe sandbox checkout", async () => {
+  const api = load("src/app/api/billing/checkout/route.ts", {
+    "@/lib/subscriptions/checkout": {
+      billingConfigured: () => true,
+      assertBillingConfiguration: () => {},
+    },
+    "@/lib/subscriptions/server": {
+      getServerSubscription: async () => ({
+        user: { id: "ordinary-member" },
+        subscription: null,
+      }),
+    },
+    "@/lib/providers/stripe": { isProviderTestMember: () => false },
+    "@/lib/supabase/server": {
+      createSupabaseServerClient: () => {
+        throw new Error("Must reject before database/provider access");
+      },
+    },
+  });
+  assert.equal(
+    (
+      await api.POST(
+        req("/api/billing/checkout", {
+          plan: "premium",
+          term: "monthly",
+          requestId: "40000000-0000-4000-8000-000000000001",
+        }),
+      )
+    ).status,
+    403,
+  );
 });

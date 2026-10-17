@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getStripe } from "@/lib/providers/stripe";
+import { getStripe, isProviderTestMember } from "@/lib/providers/stripe";
 import { serviceClient } from "@/lib/supabase/service";
 import type Stripe from "stripe";
 export const runtime = "nodejs";
@@ -33,6 +33,12 @@ export async function POST(request: Request) {
   try {
     const ref = event.data.object as Stripe.Identity.VerificationSession;
     const session = await stripe.identity.verificationSessions.retrieve(ref.id);
+    if (
+      !isProviderTestMember(
+        session.metadata?.member_id || session.client_reference_id || "",
+      )
+    )
+      throw new Error("Unauthorised sandbox member");
     const result = await serviceClient().rpc("apply_identity_event", {
       p_event_id: event.id,
       p_session_id: session.id,

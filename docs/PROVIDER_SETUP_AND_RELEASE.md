@@ -1,6 +1,6 @@
 # CupidMatch provider setup and release gates — 17 October 2026
 
-All integrations are application-side implementations until the sandbox checklist below passes. No real member records were changed, no real charge/refund was made, and no email/SMS was sent during development.
+All integrations are application-side implementations until the sandbox checklist below passes. Stripe/Identity sandbox routes require a dedicated test-member allowlist and reject ordinary member IDs. No real member records were changed, no real charge/refund was made, and no email/SMS was sent during development.
 
 ## Secure environment setup
 
@@ -9,7 +9,7 @@ Configure through Vercel/provider settings; never commit or paste secret values 
 | Capability | Required setup | Current boundary |
 |---|---|---|
 | Provider database writes | `SUPABASE_SERVICE_ROLE_KEY` (server only) | Missing on inspected Vercel project |
-| Stripe billing | `BILLING_ENABLED=true`, `STRIPE_SECRET_KEY` (`sk_test_` or restricted test key), `STRIPE_WEBHOOK_SECRET`; six `STRIPE_PRICE_*` values in `docs/STRIPE_SETUP.env.example` | Test keys only; live keys rejected |
+| Stripe billing | `BILLING_ENABLED=true`, `STRIPE_SECRET_KEY` (`sk_test_` or restricted test key), `STRIPE_WEBHOOK_SECRET`; mandatory `PROVIDER_TEST_MEMBER_IDS` allowlist of dedicated test account UUIDs; six `STRIPE_PRICE_*` values in `docs/STRIPE_SETUP.env.example` | Test keys only; live keys rejected |
 | Prices | Recurring GBP prices: Premium £7.99 / £19.99 / £34.99; Premium+ £14.99 / £34.99 / £59.99, recurring every 1 / 3 / 6 months | Provider price amount/currency/interval is validated; other market displays remain estimates |
 | Billing webhook | `/api/billing/webhook`, subscription lifecycle, checkout completion and invoice events | Raw-body Stripe signature verification, receipt idempotency and stale-event protection |
 | Identity | `IDENTITY_ENABLED=true`, Stripe Identity enabled in authorised account, same test key, separate `STRIPE_IDENTITY_WEBHOOK_SECRET`; endpoint `/api/identity/webhook` | Hosted document + matching selfie; test result never grants a live badge; no ID images stored by app |
@@ -63,3 +63,7 @@ Rollback: restore the previous Vercel deployment **together with** the prior com
 ## Observed live baseline
 
 The latest production attempts for main commit `f95b7cd6dfe69550d4a5de4e979a320ef663c8ca` are ERROR. A previous production build at `1e984e71945c829e8bf200c6153473081574d636` is READY and a rollback candidate. These failures predate this PR; the `cupidmatch.co.uk` alias was confirmed to point to deployment `dpl_7iLpBDWAPwAyBUjSLXrSCVgLXTk4` at that commit. Security advisors still report the existing security-definer discovery view and other legacy warnings because the pending migrations have not been applied. The new discovery invoker view and token-only share resolver are tested in isolated PostgreSQL; do not describe those fixes as live.
+
+## Confirmed authentication settings
+
+The public Supabase Auth settings endpoint was inspected read-only on 17 October: email signup enabled, email confirmation required, Google/Facebook disabled, phone authentication disabled (SMS provider label Twilio). No provider secret or sending capability was verified. Social buttons now follow actual enabled-provider settings. The phone/launch-offer journey remains blocked until an authorised SMS provider and phone authentication are configured and tested; no confirmation bypass was added.

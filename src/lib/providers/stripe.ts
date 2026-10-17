@@ -47,3 +47,12 @@ export async function validatedPrice(
 export function providerError() {
   return "The provider could not complete this request. Please retry or contact support.";
 }
+
+/** Sandbox billing/identity must never mutate an ordinary production member. */
+export function isProviderTestMember(memberId: string) {
+  return (process.env.PROVIDER_TEST_MEMBER_IDS || "")
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean)
+    .includes(memberId);
+}

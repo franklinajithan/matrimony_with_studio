@@ -129,7 +129,7 @@ export default function SignupPage() {
         )}
         <SocialAuthButtons next="/verify-phone" />
         <p className="text-center text-xs leading-relaxed text-muted-foreground">
-          By continuing with Google or Facebook, you agree to the{" "}
+          Read the{" "}
           <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link>{" "}
           and <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
         </p>

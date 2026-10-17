@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { serviceClient, serviceConfigured } from "@/lib/supabase/service";
 import {
   getStripe,
+  isProviderTestMember,
   providerError,
   stripeTestConfigured,
 } from "@/lib/providers/stripe";
@@ -15,6 +16,14 @@ export async function POST(request: Request) {
   const { data } = await db.auth.getUser();
   if (!data.user)
     return NextResponse.json({ error: "Sign in again" }, { status: 401 });
+  if (!isProviderTestMember(data.user.id))
+    return NextResponse.json(
+      {
+        error:
+          "Sandbox verification is available only to authorised test accounts.",
+      },
+      { status: 403 },
+    );
   if (
     process.env.IDENTITY_ENABLED !== "true" ||
     !serviceConfigured() ||
@@ -82,17 +91,15 @@ export async function POST(request: Request) {
       },
       { idempotencyKey: `identity:${data.user.id}:${parsed.data.requestId}` },
     );
-    const saved = await service
-      .from("identity_sessions")
-      .upsert(
-        {
-          member_id: data.user.id,
-          provider_session_id: session.id,
-          status: session.status,
-          livemode: session.livemode,
-        },
-        { onConflict: "provider_session_id", ignoreDuplicates: true },
-      );
+    const saved = await service.from("identity_sessions").upsert(
+      {
+        member_id: data.user.id,
+        provider_session_id: session.id,
+        status: session.status,
+        livemode: session.livemode,
+      },
+      { onConflict: "provider_session_id", ignoreDuplicates: true },
+    );
     if (saved.error) throw saved.error;
     return NextResponse.json({ url: session.url, testMode: true });
   } catch {

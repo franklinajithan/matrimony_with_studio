@@ -22,7 +22,8 @@ export function billingConfigured() {
     process.env.BILLING_ENABLED === "true" &&
       /^([sr]k)_test_/.test(process.env.STRIPE_SECRET_KEY || "") &&
       process.env.STRIPE_WEBHOOK_SECRET &&
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      process.env.SUPABASE_SERVICE_ROLE_KEY &&
+      process.env.PROVIDER_TEST_MEMBER_IDS?.trim(),
   );
 }
 

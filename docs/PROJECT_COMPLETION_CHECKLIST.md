@@ -4,7 +4,7 @@ Code completion, isolated tests, preview deployment and live acceptance are sepa
 
 | Requested feature | Code status | Verification / outstanding work |
 |---|---|---|
-| Registration, confirmation, login/logout, recovery | Existing implementation preserved | Supabase Auth; dedicated-account/browser and email-delivery acceptance outstanding |
+| Registration, confirmation, login/logout, recovery | Existing implementation preserved | Supabase Auth email confirmation enabled; Google/Facebook/phone currently disabled. Dedicated-account/browser and email-delivery acceptance outstanding |
 | Resumable onboarding, validation, completion and publication | Existing implementation preserved | Existing schema/readiness checks; signed-in persistence journey outstanding |
 | Password/account settings and notification preferences | Added current-password confirmation, password update and email preferences | Type checked; real password/recovery testing requires dedicated account |
 | Account pause/reactivation | Added authoritative account controls; discovery, messaging and planning honor pauses | Database tested; browser acceptance outstanding |
@@ -40,7 +40,7 @@ Code completion, isolated tests, preview deployment and live acceptance are sepa
 
 - 110 admin page/API authorization tests.
 - 224 isolated PostgreSQL assertions: 105 existing admin, 57 existing website, 31 planning/account and 31 communication/provider/privacy. Actual API handlers are exercised where the fixtures support them.
-- 10 provider/file/API tests, including genuine Stripe SDK test signatures with **mocked provider responses**. These are not external sandbox tests.
+- 14 provider/file/API tests, including genuine Stripe SDK test signatures with **mocked provider responses**. These are not external sandbox tests.
 - TypeScript and production build. No lint pass is claimed (existing build skips lint).
 - Preview/public browser inspection does not count as signed-in acceptance.
 

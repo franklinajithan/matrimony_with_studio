@@ -3,7 +3,11 @@ import { z } from "zod";
 import { requireServerAdmin } from "@/lib/auth/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { serviceClient, serviceConfigured } from "@/lib/supabase/service";
-import { getStripe, providerError } from "@/lib/providers/stripe";
+import {
+  getStripe,
+  providerError,
+  isProviderTestMember,
+} from "@/lib/providers/stripe";
 import { billingConfigured } from "@/lib/subscriptions/checkout";
 import { validOrigin, mutationError } from "@/lib/admin/http";
 const Input = z.object({
@@ -34,6 +38,11 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   const b = parsed.data;
+  if (!isProviderTestMember(b.memberId))
+    return NextResponse.json(
+      { error: "Sandbox operations require an authorised test member." },
+      { status: 403 },
+    );
   if (b.memberId === actor.id)
     return NextResponse.json(
       { error: "Cannot administer your own billing" },

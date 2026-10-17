@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import {
   getStripe,
+  isProviderTestMember,
   priceMapping,
   validatedPrice,
 } from "@/lib/providers/stripe";
@@ -53,6 +54,8 @@ export async function POST(request: Request) {
       memberId = subscription.metadata.member_id;
     if (!mapping || subscription.items.data.length !== 1 || !memberId || !item)
       throw new Error("Unrecognized subscription");
+    if (!isProviderTestMember(memberId))
+      throw new Error("Unauthorised sandbox member");
     await validatedPrice(mapping.plan, mapping.term);
     const status =
       subscription.status === "active"

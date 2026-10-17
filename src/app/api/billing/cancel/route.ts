@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { billingConfigured } from "@/lib/subscriptions/checkout";
 import { getServerSubscription } from "@/lib/subscriptions/server";
-import { getStripe, providerError } from "@/lib/providers/stripe";
+import {
+  getStripe,
+  providerError,
+  isProviderTestMember,
+} from "@/lib/providers/stripe";
 import { validOrigin } from "@/lib/admin/http";
 export async function POST(request: Request) {
   if (!validOrigin(request))
@@ -13,6 +17,13 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "No provider subscription is available" },
       { status: 503 },
+    );
+  if (!isProviderTestMember(user.id))
+    return NextResponse.json(
+      {
+        error: "Sandbox billing is available only to authorised test accounts.",
+      },
+      { status: 403 },
     );
   try {
     const stripe = getStripe();
