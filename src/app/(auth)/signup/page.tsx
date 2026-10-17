@@ -127,7 +127,7 @@ export default function SignupPage() {
             </AlertDescription>
           </Alert>
         )}
-        <SocialAuthButtons next="/verify-phone" />
+        <SocialAuthButtons next="/dashboard" />
         <p className="text-center text-xs leading-relaxed text-muted-foreground">
           By continuing with Google or Facebook, you agree to the{" "}
           <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link>{" "}
