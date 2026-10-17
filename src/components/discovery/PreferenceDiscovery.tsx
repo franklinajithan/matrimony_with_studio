@@ -154,6 +154,7 @@ export function PreferenceDiscovery() {
     null,
   );
   const [filters, setFilters] = useState<DiscoveryFilters>(empty);
+  const [requiredGender, setRequiredGender] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [sheet, setSheet] = useState(false);
   const [sent, setSent] = useState<Set<string>>(new Set());
@@ -181,6 +182,19 @@ export function PreferenceDiscovery() {
         if (!self)
           throw new Error("Complete your profile before finding matches.");
         const saved = partnerPreferencesFromProfile(self);
+        // Saved looking-for gender determines eligibility, not merely ranking.
+        // Existing Man/Woman accounts without a selected preference default
+        // to the opposite gender until they save an explicit choice.
+        const extra = (self.extra || {}) as Record<string, any>;
+        const matchDetails = (extra.matchDetails || {}) as Record<string, any>;
+        const ownGender = String(matchDetails.gender || extra.gender || "").toLowerCase();
+        const chosenGender = String(saved.gender || "").trim();
+        const mandatoryGender = chosenGender && !["no preference", "any", "all"].includes(chosenGender.toLowerCase())
+          ? chosenGender
+          : ["man", "male"].includes(ownGender) ? "Woman"
+          : ["woman", "female"].includes(ownGender) ? "Man"
+          : undefined;
+        setRequiredGender(mandatoryGender);
         // Saved preferences rank candidates; they must not silently exclude every profile.
         const defaults = empty;
         setPreferences(saved);
@@ -245,7 +259,7 @@ export function PreferenceDiscovery() {
   const results = useMemo(
     () =>
       people
-        .filter((p) => profileMatchesFilters(p, filters))
+        .filter((p) => profileMatchesFilters(p, { ...filters, gender: requiredGender || filters.gender }))
         .sort((a, b) => {
           if (sort === "name")
             return (
@@ -269,11 +283,11 @@ export function PreferenceDiscovery() {
               : 0) || a.id.localeCompare(b.id)
           );
         }),
-    [people, filters, preferences, sort],
+    [people, filters, preferences, requiredGender, sort],
   );
   useEffect(() => setPage(1), [filters, sort]);
-  const reset = () => setFilters(empty);
-  const clear = () => setFilters(empty);
+  const reset = () => setFilters({ ...empty, gender: requiredGender });
+  const clear = () => setFilters({ ...empty, gender: requiredGender });
   const activeCount = [
     filters.ageMin,
     filters.ageMax,
@@ -435,7 +449,7 @@ export function PreferenceDiscovery() {
           <Choice
             testId="discover-filter-gender"
             label="Gender"
-            value={filters.gender || "all"}
+            value={requiredGender || filters.gender || "all"}
             values={options.genders}
             onChange={(v) =>
               setFilters((f) => ({ ...f, gender: v === "all" ? undefined : v }))
