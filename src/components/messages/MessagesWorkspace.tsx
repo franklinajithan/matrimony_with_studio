@@ -40,6 +40,7 @@ import { getProfile } from "@/lib/supabase/profiles";
 import {
   createChatDocument,
   getChat,
+  listMessages,
   markMessagesRead,
   sendMessage,
   subscribeToChats,
@@ -66,6 +67,8 @@ type Conversation = {
 type ChatMessage = {
   id: string;
   text: string;
+  attachmentId?: string|null;
+  attachmentName?: string|null;
   senderId: string;
   timestamp: Timestamp | null;
   isRead: boolean;
@@ -112,6 +115,10 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [olderMessages,setOlderMessages]=useState<ChatMessage[]>([]);
+  const [hasEarlier,setHasEarlier]=useState(true);
+  const [loadingEarlier,setLoadingEarlier]=useState(false);
+  const allMessages=useMemo(()=>Array.from(new Map([...olderMessages,...messages].map(m=>[m.id,m])).values()).sort((a,b)=>(a.timestamp?.toMillis()||0)-(b.timestamp?.toMillis()||0)||a.id.localeCompare(b.id)),[messages,olderMessages]);
   const [searchTerm, setSearchTerm] = useState("");
   const [draft, setDraft] = useState("");
   const [isLoadingChats, setIsLoadingChats] = useState(true);
@@ -121,6 +128,9 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
   const [fallbackConversation, setFallbackConversation] = useState<Conversation | null>(null);
   const [authorizedChatId, setAuthorizedChatId] = useState<string | null>(null);
 
+  const attachmentInput=useRef<HTMLInputElement>(null);
+  const [attachment,setAttachment]=useState<{id:string;name:string}|null>(null);
+  const [uploading,setUploading]=useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const setUnreadRef = useRef(setUnread);
@@ -239,6 +249,9 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
     }
 
     let cancelled = false;
+    setAttachment(null);
+    setOlderMessages([]);
+    setHasEarlier(true);
     setIsLoadingMessages(true);
 
     const unsubscribe = subscribeToMessages(
@@ -252,6 +265,8 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
             senderId: row.senderId,
             timestamp: row.timestamp,
             isRead: row.isRead,
+            attachmentId: row.attachmentId,
+            attachmentName: row.attachmentName,
           }))
         );
         setIsLoadingMessages(false);
@@ -403,18 +418,23 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
     [router]
   );
 
+  const latestIncomingId=messages.filter(m=>m.senderId!==userId).at(-1)?.id;
+  useEffect(()=>{if(!selectedChatId||!userId)return;const read=()=>{if(document.visibilityState==='visible')void markMessagesRead(selectedChatId,userId).catch(()=>{})};read();document.addEventListener('visibilitychange',read);return()=>document.removeEventListener('visibilitychange',read)},[selectedChatId,userId,latestIncomingId]);
+
   const closeChat = useCallback(() => {
     router.push("/messages");
   }, [router]);
 
   const handleSend = async () => {
     const text = draft.trim();
-    if (!text || !currentUser || !selectedChatId || !selectedConversation || isSending) return;
+    if ((!text&&!attachment) || uploading || !currentUser || !selectedChatId || !selectedConversation || isSending) return;
 
     const optimisticId = `local-${Date.now()}`;
     const optimistic: ChatMessage = {
       id: optimisticId,
       text,
+      attachmentId:attachment?.id,
+      attachmentName:attachment?.name,
       senderId: currentUser.uid,
       timestamp: Timestamp.now(),
       isRead: false,
@@ -431,7 +451,9 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
         senderId: currentUser.uid,
         otherUserId: selectedConversation.otherUserId,
         text,
+        attachmentId: attachment?.id,
       });
+      setAttachment(null);
     } catch (error) {
       setMessages((prev) =>
         prev.map((m) => (m.id === optimisticId ? { ...m, pending: false, failed: true } : m))
@@ -659,10 +681,10 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                   </div>
                 </Link>
                 <div className="flex items-center gap-0.5">
-                  <Button variant="ghost" size="icon" className="hidden rounded-full text-primary sm:inline-flex" disabled title="Video calling coming soon">
+                  <Button variant="ghost" size="icon" className="rounded-full text-primary" aria-label="Start video call" onClick={()=>window.dispatchEvent(new CustomEvent("cupid-call",{detail:{chatId:selectedChatId,kind:"video"}}))}>
                     <Video className="h-5 w-5" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="hidden rounded-full text-primary sm:inline-flex" disabled title="Voice calling coming soon">
+                  <Button variant="ghost" size="icon" className="rounded-full text-primary" aria-label="Start voice call" onClick={()=>window.dispatchEvent(new CustomEvent("cupid-call",{detail:{chatId:selectedChatId,kind:"voice"}}))}>
                     <Phone className="h-5 w-5" />
                   </Button>
                   <DropdownMenu>
@@ -691,7 +713,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                   <div className="flex h-full items-center justify-center">
                     <Loader2 className="h-7 w-7 animate-spin text-primary" />
                   </div>
-                ) : messages.length === 0 ? (
+                ) : allMessages.length === 0 ? (
                   <div className="mx-auto mt-10 max-w-sm rounded-3xl bg-muted/60 px-5 py-7 text-center">
                     <p className="text-sm font-medium text-foreground">No messages yet</p>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -700,9 +722,10 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                   </div>
                 ) : (
                   <div className="flex w-full flex-col gap-0.5">
-                    {messages.map((message, index) => {
+                    {hasEarlier&&allMessages.length>=100&&<Button variant="outline"disabled={loadingEarlier}onClick={async()=>{const first=allMessages[0];if(!selectedChatId||!first?.timestamp)return;setLoadingEarlier(true);try{const rows=await listMessages(selectedChatId,{before:first.timestamp.toDate().toISOString(),beforeId:first.id});setOlderMessages(old=>[...rows,...old]);setHasEarlier(rows.length===100)}catch(error){toast({title:'Could not load earlier messages',description:(error as Error).message,variant:'destructive'})}finally{setLoadingEarlier(false)}}}>{loadingEarlier?'Loading history…':'Load earlier messages'}</Button>}
+                    {allMessages.map((message, index) => {
                       const mine = message.senderId === currentUser.uid;
-                      const prev = messages[index - 1];
+                      const prev = allMessages[index - 1];
                       const next = messages[index + 1];
                       const startsGroup = !prev || prev.senderId !== message.senderId;
                       const endsGroup = !next || next.senderId !== message.senderId;
@@ -750,6 +773,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                               )}
                             >
                               <p className="whitespace-pre-wrap break-words">{message.text}</p>
+                              {message.attachmentId&&<a className="block underline" href={`/api/communication/attachments/${message.attachmentId}?chatId=${encodeURIComponent(selectedChatId||"")}`} download>{message.attachmentName||"Download attachment"}</a>}
                               <div className={cn("mt-1 items-center justify-end gap-1", endsGroup ? "flex" : "hidden")}>
                                 <span className={cn("text-[10px]", mine ? "text-white/75" : "text-muted-foreground")}>
                                   {message.pending
@@ -814,14 +838,17 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="mb-0.5 hidden shrink-0 rounded-full text-primary sm:inline-flex"
-                    disabled
-                    title="Photo sharing coming soon"
+                    className="mb-0.5 shrink-0 rounded-full text-primary"
+                    disabled={uploading||isSending}
+                    aria-label="Attach image or PDF"
+                    onClick={()=>attachmentInput.current?.click()}
                   >
                     <ImageIcon className="h-5 w-5" />
                   </Button>
 
-                  <div className="relative min-w-0 flex-1">
+                  <input ref={attachmentInput} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="sr-only" aria-label="Choose attachment" onChange={async e=>{const file=e.target.files?.[0];e.target.value='';if(!file||!selectedChatId)return;const chatAtUpload=selectedChatId;setUploading(true);try{if(file.size>5242880)throw new Error('Maximum file size is 5MB');const form=new FormData();form.set('file',file);form.set('chatId',chatAtUpload);const response=await fetch('/api/communication/attachments',{method:'POST',body:form});const data=await response.json();if(!response.ok)throw new Error(data.error||'Upload failed');setAttachment(data)}catch(error){toast({title:'Attachment failed',description:(error as Error).message,variant:'destructive'})}finally{setUploading(false)}}}/>
+                                    <div className="relative min-w-0 flex-1">
+                    {uploading&&<p role="status" className="text-xs">Uploading…</p>}{attachment&&<p className="text-xs">{attachment.name} <button type="button" className="underline" onClick={()=>setAttachment(null)}>Remove</button></p>}
                     <Textarea
                       ref={textareaRef}
                       data-testid="message-composer"
@@ -837,13 +864,13 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                   <Button
                     type="button"
                     size="icon"
-                    variant={draft.trim() ? "default" : "ghost"}
+                    variant={draft.trim()||attachment ? "default" : "ghost"}
                     className={cn(
                       "mb-0.5 h-11 w-11 shrink-0 rounded-full",
                       draft.trim() && "bg-primary hover:bg-primary/90"
                     )}
                     onClick={() => void handleSend()}
-                    disabled={!draft.trim() || isSending}
+                    disabled={(!draft.trim()&&!attachment) || isSending||uploading}
                     data-testid="message-send"
                     aria-label="Send message"
                   >

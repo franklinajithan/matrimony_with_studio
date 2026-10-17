@@ -1,4 +1,5 @@
 "use client";
+import {CallPanel}from"@/components/communication/CallPanel";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -501,7 +502,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             )}
           >
             <DashboardChromeProvider value={chromeValue}>
-              {children}
+              <CallPanel/>{children}
             </DashboardChromeProvider>
           </main>
         </div>

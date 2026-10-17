@@ -26,11 +26,11 @@ export default function Page() {
           },
           {
             title: "Services used to operate CupidMatch",
-            text: "The application is hosted on Vercel and uses Supabase for accounts, database records and uploaded media. If you choose a social sign-in provider, that provider handles its sign-in step. If you use optional AI writing assistance, the text you submit is processed by the configured AI service to provide the requested result.",
+            text: "The application is hosted on Vercel and uses Supabase for accounts, database records and uploaded media. Optional Stripe test billing and Identity verification use Stripe when configured. Identity documents and selfies are collected by Stripe Identity; CupidMatch stores the session reference and status. Optional email notifications use the configured email provider and your preferences. Calls use WebRTC and a configured TURN service; the app does not record call media. If you choose a social sign-in provider, that provider handles its sign-in step. If you use optional AI writing assistance, the text you submit is processed by the configured AI service to provide the requested result.",
           },
           {
             title: "Keeping and correcting information",
-            text: "You can edit your profile and preferences or unpublish your profile in Privacy and safety. Visitor lists cover the last 90 days. Other account, conversation, support and moderation records do not currently have a single automatic deletion period in the app. Contact support to request account closure, correction or deletion and discuss the records involved.",
+            text: "You can edit your profile and preferences or unpublish your profile in Privacy and safety. Visitor lists cover the last 90 days. Other account, conversation, support and moderation records do not currently have a single automatic deletion period in the app. Account settings lets you export account information, pause matching, or request deletion. A request pauses your account immediately; erasure requires authorised processing and applicable retention review. The app does not claim your data is erased when a request is submitted.",
           },
           {
             title: "Your choices",

@@ -14,7 +14,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:admin
-      - run: npm run test:website:database
+      - run: npm run test:project:database
+      - run: npm run test:providers
       - run: npx tsc --noEmit
       - run: npm run build
         env:

@@ -6,7 +6,7 @@ const root = path.resolve(__dirname, "..");
 async function run(extra) {
   const db = new PGlite();
   await db.exec(`create role anon;create role authenticated;create schema auth;create schema cupidmatch_admin;
-create table auth.users(id uuid primary key,email text,last_sign_in_at timestamptz);
+create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz default now(),last_sign_in_at timestamptz);
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
 grant usage on schema auth,public to authenticated,anon;grant execute on function auth.uid() to authenticated,anon;
 create table public.profiles(id uuid primary key references auth.users(id),display_name text,email text,bio text,photo_url text,additional_photo_urls jsonb default '[]',subscription_plan text,subscription_entitlements jsonb,is_admin boolean default false,is_verified boolean default false,is_published boolean default true,suspended_at timestamptz,suspension_reason text,created_at timestamptz default now(),updated_at timestamptz default now(),location text,profession text,height text,religion text,caste text,language text,hobbies text,favorite_movies text,favorite_music text,education_level text,smoking_habits text,drinking_habits text,country text,region text);
@@ -379,79 +379,201 @@ create table public.messages(id uuid primary key,chat_id text,sender_id uuid);
     0,
   );
   // Exercise the real API handlers against PostgreSQL, retaining database authorization.
-  const vm=require('node:vm');const ts=require('typescript');
-  const rpcCalls=[];
-  const apiMocks={
-    'next/server':{NextResponse:{json:(body,init)=>({body,status:init?.status??200,headers:init?.headers})}},
-    '@/lib/auth/admin':{requireServerAdmin:async(permission='manage')=>{
-      const result=await db.query('select public.admin_has_permission($1) as allowed',[permission]);
-      return result.rows[0].allowed?{id:'authenticated-test-actor'}:null;
-    }},
-    '@/lib/supabase/server':{createSupabaseServerClient:async()=>({rpc:async(name,args)=>{
-      assert.match(name,/^[a-z_]+$/);rpcCalls.push(name);
-      const entries=Object.entries(args??{});
-      const sql=`select public.${name}(${entries.map(([key],i)=>{assert.match(key,/^[a-z_]+$/);return `${key}=>$${i+1}`}).join(',')}) as result`;
-      try{const result=await db.query(sql,entries.map(([,value])=>value));return {data:result.rows[0].result,error:null};}catch(error){return {data:null,error:{code:error.code}};}
-    }})},
+  const vm = require("node:vm");
+  const ts = require("typescript");
+  const rpcCalls = [];
+  const apiMocks = {
+    "next/server": {
+      NextResponse: {
+        json: (body, init) => ({
+          body,
+          status: init?.status ?? 200,
+          headers: init?.headers,
+        }),
+      },
+    },
+    "@/lib/auth/admin": {
+      requireServerAdmin: async (permission = "manage") => {
+        const result = await db.query(
+          "select public.admin_has_permission($1) as allowed",
+          [permission],
+        );
+        return result.rows[0].allowed
+          ? { id: "authenticated-test-actor" }
+          : null;
+      },
+    },
+    "@/lib/supabase/server": {
+      createSupabaseServerClient: async () => ({
+        rpc: async (name, args) => {
+          assert.match(name, /^[a-z_]+$/);
+          rpcCalls.push(name);
+          const entries = Object.entries(args ?? {});
+          const sql = `select public.${name}(${entries
+            .map(([key], i) => {
+              assert.match(key, /^[a-z_]+$/);
+              return `${key}=>$${i + 1}`;
+            })
+            .join(",")}) as result`;
+          try {
+            const result = await db.query(
+              sql,
+              entries.map(([, value]) => value),
+            );
+            return { data: result.rows[0].result, error: null };
+          } catch (error) {
+            return { data: null, error: { code: error.code } };
+          }
+        },
+      }),
+    },
   };
-  function handler(relative){
-    const filename=path.join(root,relative),module={exports:{}};
-    const code=ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
-    const load=(name)=>{
-      if(name==='zod')return require('zod');
-      if(name==='@/lib/admin/http')return handler('src/lib/admin/http.ts');
-      if(apiMocks[name])return apiMocks[name];
-      throw new Error('Unexpected API import: '+name);
+  function handler(relative) {
+    const filename = path.join(root, relative),
+      module = { exports: {} };
+    const code = ts.transpileModule(fs.readFileSync(filename, "utf8"), {
+      compilerOptions: {
+        module: ts.ModuleKind.CommonJS,
+        target: ts.ScriptTarget.ES2022,
+      },
+    }).outputText;
+    const load = (name) => {
+      if (name === "zod") return require("zod");
+      if (name === "@/lib/admin/http") return handler("src/lib/admin/http.ts");
+      if (apiMocks[name]) return apiMocks[name];
+      throw new Error("Unexpected API import: " + name);
     };
-    vm.runInThisContext(`(function(require,module,exports){${code}\n})`,{filename})(load,module,module.exports);
+    vm.runInThisContext(`(function(require,module,exports){${code}\n})`, {
+      filename,
+    })(load, module, module.exports);
     return module.exports;
   }
-  function request(url,body){return new Request('http://localhost'+url,{method:body?'POST':'GET',headers:{'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});}
-  await as('moderator');
-  let api=handler('src/app/api/admin/members/route.ts');
-  assert.equal((await api.GET(request('/api/admin/members'))).status,403);checks++;
-  await as('admin');
-  let response=await api.GET(request('/api/admin/members?search=Paging%20test&page=2'));
-  assert.equal(response.status,200);assert.equal(response.body.members.length,12);assert.equal(response.body.total,30);checks+=3;
-  let callsBefore=rpcCalls.length;
-  assert.equal((await api.GET(request('/api/admin/members?page=0'))).status,400);
-  assert.equal(rpcCalls.length,callsBefore);checks+=2;
-  api=handler('src/app/api/admin/reports/route.ts');
-  response=await api.GET(request('/api/admin/reports?page=2'));
-  assert.equal(response.body.reports.length,6);assert.equal(response.body.total,26);checks+=2;
-  callsBefore=rpcCalls.length;
-  assert.equal((await api.GET(request('/api/admin/reports?dateFrom=2026-10-20&dateTo=2026-10-01'))).status,400);
-  assert.equal(rpcCalls.length,callsBefore);checks+=2;
-  api=handler('src/app/api/admin/staff/route.ts');
-  response=await api.POST(request('/api/admin/staff',{memberId:ids.support,role:'support',reason:'Restoring support after tests'}));
-  assert.equal(response.status,200);checks++;
-  await as('support');
-  response=await api.POST(request('/api/admin/staff',{memberId:ids.b,role:'moderator',reason:'Unauthorized change request'}));
-  assert.equal(response.status,403);checks++;
-  api=handler('src/app/api/admin/notifications/route.ts');
-  response=await api.POST(request('/api/admin/notifications',{memberId:ids.b,title:'API integration check',body:'Test of the real handler and database.'}));
-  assert.equal(response.status,200);checks++;
-  await as('b');await check(`select title as value from public.member_notices where member_id='${ids.b}'`,'API integration check');
-  await as('moderator');
-  api=handler('src/app/api/admin/success-stories/route.ts');
-  response=await api.GET(request('/api/admin/success-stories?status=approved'));
-  assert.equal(response.status,200);assert.equal(response.body.stories[0].id,story.id);checks+=2;
-  response=await api.POST(request('/api/admin/success-stories',{storyId:story.id,status:'rejected',note:'Conflicting review from API',expectedUpdatedAt:story.updated_at.toISOString()}));
-  assert.equal(response.status,409);checks++;
-  await as('admin');
-  await db.exec(`select public.admin_set_member_suspension('${ids.support}',true,'Suspending staff before access removal')`);
-  await db.exec(`select public.admin_set_staff('${ids.support}','none','Remove access from suspended staff')`);
-  await as('support');
-  await check(`select public.admin_has_permission('workspace') as value`,false);
-  await as('admin');
-  await db.exec(`select public.admin_set_member_suspension('${ids.support}',false,'Restoring the member account only')`);
-  await as('support');
-  await check(`select public.admin_has_permission('workspace') as value`,false);
+  function request(url, body) {
+    return new Request("http://localhost" + url, {
+      method: body ? "POST" : "GET",
+      headers: { "Content-Type": "application/json" },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+  }
+  await as("moderator");
+  let api = handler("src/app/api/admin/members/route.ts");
+  assert.equal((await api.GET(request("/api/admin/members"))).status, 403);
+  checks++;
+  await as("admin");
+  let response = await api.GET(
+    request("/api/admin/members?search=Paging%20test&page=2"),
+  );
+  assert.equal(response.status, 200);
+  assert.equal(response.body.members.length, 12);
+  assert.equal(response.body.total, 30);
+  checks += 3;
+  let callsBefore = rpcCalls.length;
+  assert.equal(
+    (await api.GET(request("/api/admin/members?page=0"))).status,
+    400,
+  );
+  assert.equal(rpcCalls.length, callsBefore);
+  checks += 2;
+  api = handler("src/app/api/admin/reports/route.ts");
+  response = await api.GET(request("/api/admin/reports?page=2"));
+  assert.equal(response.body.reports.length, 6);
+  assert.equal(response.body.total, 26);
+  checks += 2;
+  callsBefore = rpcCalls.length;
+  assert.equal(
+    (
+      await api.GET(
+        request("/api/admin/reports?dateFrom=2026-10-20&dateTo=2026-10-01"),
+      )
+    ).status,
+    400,
+  );
+  assert.equal(rpcCalls.length, callsBefore);
+  checks += 2;
+  api = handler("src/app/api/admin/staff/route.ts");
+  response = await api.POST(
+    request("/api/admin/staff", {
+      memberId: ids.support,
+      role: "support",
+      reason: "Restoring support after tests",
+    }),
+  );
+  assert.equal(response.status, 200);
+  checks++;
+  await as("support");
+  response = await api.POST(
+    request("/api/admin/staff", {
+      memberId: ids.b,
+      role: "moderator",
+      reason: "Unauthorized change request",
+    }),
+  );
+  assert.equal(response.status, 403);
+  checks++;
+  api = handler("src/app/api/admin/notifications/route.ts");
+  response = await api.POST(
+    request("/api/admin/notifications", {
+      memberId: ids.b,
+      title: "API integration check",
+      body: "Test of the real handler and database.",
+    }),
+  );
+  assert.equal(response.status, 200);
+  checks++;
+  await as("b");
+  await check(
+    `select title as value from public.member_notices where member_id='${ids.b}'`,
+    "API integration check",
+  );
+  await as("moderator");
+  api = handler("src/app/api/admin/success-stories/route.ts");
+  response = await api.GET(
+    request("/api/admin/success-stories?status=approved"),
+  );
+  assert.equal(response.status, 200);
+  assert.equal(response.body.stories[0].id, story.id);
+  checks += 2;
+  response = await api.POST(
+    request("/api/admin/success-stories", {
+      storyId: story.id,
+      status: "rejected",
+      note: "Conflicting review from API",
+      expectedUpdatedAt: story.updated_at.toISOString(),
+    }),
+  );
+  assert.equal(response.status, 409);
+  checks++;
+  await as("admin");
+  await db.exec(
+    `select public.admin_set_member_suspension('${ids.support}',true,'Suspending staff before access removal')`,
+  );
+  await db.exec(
+    `select public.admin_set_staff('${ids.support}','none','Remove access from suspended staff')`,
+  );
+  await as("support");
+  await check(
+    `select public.admin_has_permission('workspace') as value`,
+    false,
+  );
+  await as("admin");
+  await db.exec(
+    `select public.admin_set_member_suspension('${ids.support}',false,'Restoring the member account only')`,
+  );
+  await as("support");
+  await check(
+    `select public.admin_has_permission('workspace') as value`,
+    false,
+  );
   console.log(
     `PASS: ${checks} database assertions (real PostgreSQL, RLS, scoped roles, ownership, audit, concurrency and moderation).`,
   );
-  if(extra)await extra({db,ids,as,check,denied,handler,request,apiMocks});
+  if (extra)
+    await extra({ db, ids, as, check, denied, handler, request, apiMocks });
   await db.close();
 }
-module.exports={run};
-if(require.main===module)run().catch(e=>{console.error(e);process.exitCode=1;});
+module.exports = { run };
+if (require.main === module)
+  run().catch((e) => {
+    console.error(e);
+    process.exitCode = 1;
+  });

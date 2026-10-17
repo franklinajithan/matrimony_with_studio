@@ -20,6 +20,8 @@ export default function robots(): MetadataRoute.Robots {
         "/profile",
         "/messages",
         "/support",
+        "/future-map",
+        "/family-circle",
         "/notifications",
         "/share",
         "/biodata",

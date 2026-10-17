@@ -1,3 +1,5 @@
+> Updated 17 October 2026: this document records the previous pass. Current roadmap implementation, verification and remaining release blockers are tracked in [PROJECT_COMPLETION_CHECKLIST.md](PROJECT_COMPLETION_CHECKLIST.md) and [PROVIDER_SETUP_AND_RELEASE.md](PROVIDER_SETUP_AND_RELEASE.md). Historic “deferred/roadmap” boundaries below are superseded by that checklist; provider integrations are still disabled pending setup and sandbox acceptance.
+
 # Website and admin completion pass — 16 October 2026
 
 ## Added and corrected

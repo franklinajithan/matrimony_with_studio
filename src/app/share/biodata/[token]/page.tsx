@@ -1,3 +1,4 @@
+import { extractStoragePath } from "@/lib/supabase/storage";
 import type { Metadata } from "next";
 import { getShareByToken } from "@/lib/supabase/biodata";
 import type {
@@ -15,7 +16,9 @@ type PageProps = {
   params: Promise<{ token: string }>;
 };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { token } = await params;
   const link = await getShareByToken(token);
   if (!link) {
@@ -24,9 +27,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const snap = link.snapshot;
   const content = asContent(snap.content);
+  const photoPath = extractStoragePath(content.photoUrl);
+  if (photoPath)
+    content.photoUrl = `/api/media?path=${encodeURIComponent(photoPath)}&shareType=biodata&token=${encodeURIComponent(token)}`;
   const visibility = asVisibility(snap.visibility);
   const safeName = findSafeName(content);
-  const title = safeName ? `${safeName}'s Biodata | CupidMatch` : "Shared Biodata | CupidMatch";
+  const title = safeName
+    ? `${safeName}'s Biodata | CupidMatch`
+    : "Shared Biodata | CupidMatch";
   const description = "A private biodata shared securely through CupidMatch.";
   const imageUrl = `/share/biodata/${encodeURIComponent(token)}/opengraph-image?v=${SHARE_CARD_VERSION}`;
 
@@ -104,10 +112,12 @@ export default async function SharedBiodataPage({ params }: PageProps) {
   if (!link) {
     return (
       <main className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-4 text-center">
-        <h1 className="text-2xl font-semibold text-[#1a1a1a]">Link unavailable</h1>
+        <h1 className="text-2xl font-semibold text-[#1a1a1a]">
+          Link unavailable
+        </h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          This biodata share link is no longer available. It may have been revoked, expired, or
-          the address may be incorrect.
+          This biodata share link is no longer available. It may have been
+          revoked, expired, or the address may be incorrect.
         </p>
       </main>
     );
@@ -117,10 +127,14 @@ export default async function SharedBiodataPage({ params }: PageProps) {
   const templateId =
     typeof snap.templateId === "string"
       ? snap.templateId
-      : typeof (snap.design as { templateId?: string } | undefined)?.templateId === "string"
+      : typeof (snap.design as { templateId?: string } | undefined)
+            ?.templateId === "string"
         ? (snap.design as { templateId: string }).templateId
         : "classic-formal";
   const content = asContent(snap.content);
+  const photoPath = extractStoragePath(content.photoUrl);
+  if (photoPath)
+    content.photoUrl = `/api/media?path=${encodeURIComponent(photoPath)}&shareType=biodata&token=${encodeURIComponent(token)}`;
   const design = asDesign(snap.design, templateId);
   const visibility = asVisibility(snap.visibility);
   const sectionOrder = Array.isArray(snap.sectionOrder)
@@ -133,9 +147,13 @@ export default async function SharedBiodataPage({ params }: PageProps) {
   return (
     <main className="min-h-screen bg-[#FBF8F4] px-4 py-8">
       <div className="mx-auto mb-6 max-w-3xl text-center">
-        <p className="text-xs uppercase tracking-wide text-[#7027E8]">Shared biodata</p>
+        <p className="text-xs uppercase tracking-wide text-[#7027E8]">
+          Shared biodata
+        </p>
         {link.recipientLabel ? (
-          <p className="mt-1 text-sm text-muted-foreground">For {link.recipientLabel}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            For {link.recipientLabel}
+          </p>
         ) : null}
       </div>
       <div className="mx-auto w-fit overflow-x-auto">

@@ -7,6 +7,8 @@ const PROTECTED_PREFIXES = [
   "/dashboard",
   "/notifications",
   "/support",
+  "/family-circle",
+  "/future-map",
   "/discover",
   "/interests",
   "/connections",
@@ -27,7 +29,7 @@ const AUTH_ONLY_PREFIXES = ["/login", "/signup"];
 function isProtectedPath(pathname: string): boolean {
   if (pathname === "/profile" || pathname.startsWith("/profile/")) return true;
   return PROTECTED_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 }
 
@@ -45,8 +47,12 @@ export async function updateSession(request: NextRequest) {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+      setAll(
+        cookiesToSet: Array<{ name: string; value: string; options?: any }>,
+      ) {
+        cookiesToSet.forEach(({ name, value }) =>
+          request.cookies.set(name, value),
+        );
         response = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) => {
           response.cookies.set(name, value, options);
@@ -69,15 +75,14 @@ export async function updateSession(request: NextRequest) {
   }
 
   const isAuthPage = AUTH_ONLY_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
   if (user && isAuthPage && pathname !== "/signup/check-email") {
-    const next = safeInternalPath(request.nextUrl.searchParams.get("next"), "/onboarding");
+    const next = safeInternalPath(
+      request.nextUrl.searchParams.get("next"),
+      "/onboarding",
+    );
     return NextResponse.redirect(new URL(next, request.url));
-  }
-
-  if (user && pathname === "/forgot-password") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return response;

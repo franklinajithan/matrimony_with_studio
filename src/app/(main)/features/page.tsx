@@ -2,6 +2,16 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 const features = [
   [
+    "Future Map",
+    "Save your location, relocation, career and family plans; track milestones and explicitly share your plan with connections.",
+    "/future-map",
+  ],
+  [
+    "Family Circle",
+    "Invite a trusted helper with separate permissions to view your plan, suggest profiles or comment. An eligible membership is required.",
+    "/family-circle",
+  ],
+  [
     "Profiles and preferences",
     "Share your background, interests, cultural preferences and future plans. Update your profile as your priorities change.",
     "/signup",
