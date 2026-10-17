@@ -19,15 +19,16 @@ export function isSupabaseConfigured(): boolean {
 }
 
 export function getSiteUrl(): string {
-  const configured = stripQuotes(process.env.NEXT_PUBLIC_SITE_URL)?.replace(/\/$/, "");
-  if (configured) return configured;
-
-  // Localhost is useful only while deliberately running the development server.
-  if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
+  // OAuth initiated in the browser must return to the exact origin that
+  // initiated sign-in, including preview and custom domains. Otherwise the
+  // PKCE verifier cookie remains on the original host and login fails.
+  if (typeof window !== "undefined") {
     return window.location.origin;
   }
 
-  // Never generate production auth emails with a localhost redirect if the
-  // environment variable is accidentally missing from a deployment.
+  const configured = stripQuotes(process.env.NEXT_PUBLIC_SITE_URL)?.replace(/\/$/, "");
+  if (configured) return configured;
+
+  // Server-generated email links need a stable public fallback.
   return PRODUCTION_SITE_URL;
 }
