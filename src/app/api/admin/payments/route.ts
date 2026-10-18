@@ -108,7 +108,13 @@ export async function POST(request: Request) {
         charge.currency !== "gbp" ||
         !charge.paid ||
         b.amount > charge.amount - charge.amount_refunded
-      )
+      ) {
+        const rejected = await service.rpc("complete_provider_operation", {
+          p_id: b.requestId,
+          p_status: "failed",
+          p_reference: "validation_failed",
+        });
+        if (rejected.error) throw rejected.error;
         return NextResponse.json(
           {
             error:
@@ -116,6 +122,7 @@ export async function POST(request: Request) {
           },
           { status: 400 },
         );
+      }
       const refund = await stripe.refunds.create(
         {
           charge: charge.id,

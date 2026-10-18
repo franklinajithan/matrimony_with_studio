@@ -40,7 +40,7 @@ Code completion, isolated tests, preview deployment and live acceptance are sepa
 
 - 112 admin page/API authorization tests.
 - 300 isolated PostgreSQL assertions: 105 admin, 57 website, 31 planning/account, 63 communication/provider/privacy/export and 44 billing/delivery/erasure assertions. Checks include partial-job visibility, shared conversation cleanup, opt-out, blocked-interest email suppression and retry exhaustion. Actual API handlers are exercised where fixtures support them.
-- 56 provider/file/API/directory tests, including system-tar interoperability, Stripe SDK signatures, invoice ownership, duplicate checkout prevention, plan-preserving sign-in, Svix's published signature vector and erasure failure ordering. Provider responses are **mocked**; these are not external sandbox tests.
+- 59 provider/file/API/directory tests, including system-tar interoperability, Stripe SDK signatures, invoice ownership, duplicate checkout prevention, plan-preserving sign-in, scoped/idempotent refunds, Svix's published signature vector and erasure failure ordering. Provider responses are **mocked**; these are not external sandbox tests.
 - Eight OAuth/session routing tests.
 - Clean dependency installation, TypeScript and production build. No lint pass is claimed (existing build skips lint).
 - Preview/public browser inspection does not count as signed-in acceptance.

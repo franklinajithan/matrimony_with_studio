@@ -372,6 +372,111 @@ test("checkout expires changed choices and creates idempotent customer-scoped se
   assert.equal(created[2].idempotencyKey, `checkout:${user.id}:${requestId}`);
 });
 const job = { id: requestId, member_id: user.id, lease: requestId };
+function refundHarness({ foreign = false, prior = null } = {}) {
+  const calls = [];
+  const service = {
+    rpc: async (name, args) => {
+      calls.push([name, args]);
+      return {};
+    },
+    from: (table) => {
+      const chain = {
+        select: () => chain,
+        eq: () => chain,
+        order: () => chain,
+        limit: () => chain,
+        maybeSingle: async () => ({
+          data:
+            table === "provider_operations"
+              ? prior
+              : {
+                  provider_customer_id: "cus_one",
+                  provider_subscription_id: "sub_one",
+                },
+        }),
+      };
+      return chain;
+    },
+  };
+  const api = load("src/app/api/admin/payments/route.ts", {
+    "@/lib/auth/admin": { requireServerAdmin: async () => ({ id: requestId }) },
+    "@/lib/supabase/server": {
+      createSupabaseServerClient: async () => ({
+        rpc: async () => ({ data: requestId }),
+      }),
+    },
+    "@/lib/supabase/service": {
+      serviceConfigured: () => true,
+      serviceClient: () => service,
+    },
+    "@/lib/subscriptions/checkout": { billingConfigured: () => true },
+    "@/lib/providers/billing-history": {},
+    "@/lib/providers/stripe": {
+      isProviderTestMember: () => true,
+      providerError: () => "Unavailable",
+      getStripe: () => ({
+        charges: {
+          retrieve: async () => ({
+            id: "ch_one",
+            customer: foreign ? "cus_other" : "cus_one",
+            livemode: false,
+            currency: "gbp",
+            paid: true,
+            amount: 799,
+            amount_refunded: 0,
+          }),
+        },
+        refunds: {
+          create: async (args, options) => {
+            calls.push(["refund", args, options]);
+            return { id: "re_one" };
+          },
+        },
+      }),
+    },
+  });
+  return {
+    calls,
+    post: () =>
+      api.POST(
+        request("/api/admin/payments", {
+          memberId: user.id,
+          action: "refund",
+          chargeId: "ch_one",
+          amount: 799,
+          reason: "Authorised fixture refund review",
+          requestId,
+        }),
+      ),
+  };
+}
+test("foreign refund is denied and the audit operation is failed rather than left pending", async () => {
+  const h = refundHarness({ foreign: true });
+  assert.equal((await h.post()).status, 400);
+  assert.equal(
+    h.calls.some((c) => c[0] === "refund"),
+    false,
+  );
+  assert.equal(h.calls.at(-1)[1].p_status, "failed");
+  assert.equal(h.calls.at(-1)[1].p_reference, "validation_failed");
+});
+test("successful refund retry replays the stored result without a second provider operation", async () => {
+  const h = refundHarness({
+    prior: { status: "succeeded", provider_reference: "re_existing" },
+  });
+  const result = await h.post();
+  assert.equal(result.body.reference, "re_existing");
+  assert.equal(result.body.replayed, true);
+  assert.equal(h.calls.length, 0);
+});
+test("authorised mock refund is scoped, idempotent and audited", async () => {
+  const h = refundHarness();
+  assert.equal((await h.post()).body.reference, "re_one");
+  const call = h.calls.find((c) => c[0] === "refund");
+  assert.equal(call[1].charge, "ch_one");
+  assert.equal(call[2].idempotencyKey, `refund:${requestId}`);
+  assert.equal(h.calls.at(-1)[1].p_status, "succeeded");
+});
 function erasureHarness(failure) {
   const calls = [];
   let files = 0;
