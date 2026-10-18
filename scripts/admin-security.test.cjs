@@ -124,6 +124,7 @@ for (const file of adminPages) {
         '@/app/admin/guard': guard, './guard': guard,
         '@/lib/admin/dashboard': { getAdminDashboardMetrics: async () => ({ members: 14, activeUsers: 3, pendingVerification: 12, updatedAt: '2026-09-18T10:00:00Z' }) },
         '@/lib/supabase/server': { createSupabaseServerClient: async () => ({ from: table => { assert.equal(table, 'admin_audit_log'); return { select: () => ({ order: () => ({ limit: async () => ({ data: [], error: null }) }) }) }; } }) },
+        './registration-controls': { default: 'RegistrationControls' },
         './page-client': { default: 'AdminPageClient' }, './audit-explorer': { default: 'AuditExplorer' },
         '@/components/shared/Logo': componentStubs, '@/components/ui/card': componentStubs,
         './admin-navigation': { AdminNavigation: 'AdminNavigation' }, './admin-mobile-tab-bar': { AdminMobileTabBar: 'AdminMobileTabBar' },
@@ -144,6 +145,7 @@ for (const file of files('src/app/api/admin', 'route.ts')) {
       '@/lib/auth/admin': { requireServerAdmin: async () => { checks++; return null; } },
       '@/lib/supabase/server': { createSupabaseServerClient: () => { throw new Error('Protected data accessed before authorization'); } },
       '@/lib/subscriptions': { ADMIN_BILLING_CAPABILITIES: {} },
+      '@/lib/registration/server': { getRegistrationStatus: () => { throw new Error('Read before authorization'); } },
       '@/lib/admin/dashboard': { getAdminDashboardMetrics: () => { throw new Error('Read before authorization'); } },
       'next/server': { NextResponse: { json: (body, init) => ({ body, status: init?.status ?? 200 }) } },
     });
@@ -283,3 +285,58 @@ test('audit API rejects malformed actor filters before querying',async()=>{
  });
  assert.equal((await api.GET({url:'https://example.test/api/admin/audit-log?actor=not-a-uuid'})).status,400);
 });
+
+
+function registrationAPI({ rpcError = null } = {}) {
+  const calls = [];
+  const api = load('src/app/api/admin/registration/route.ts', {
+    '@/lib/auth/admin': { requireServerAdmin: async () => user },
+    '@/lib/supabase/server': { createSupabaseServerClient: async () => ({ rpc: async (name, args) => { calls.push({ name, args }); return { data: { enabled: args.p_enabled, message: args.p_message, version: 2 }, error: rpcError }; } }) },
+    '@/lib/registration/server': { getRegistrationStatus: async () => ({ enabled: true, version: 1 }) },
+    'next/server': { NextResponse: { json: (body, init) => ({ body, status: init?.status ?? 200 }) } },
+  });
+  return { api, calls };
+}
+function registrationRequest(body, origin = 'https://cupidmatch.co.uk') {
+  return new Request('https://cupidmatch.co.uk/api/admin/registration', { method: 'PATCH', headers: { origin, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+}
+for (const enabled of [true, false]) {
+  test(`registration admin can ${enabled ? 'enable' : 'pause'} with optimistic version`, async () => {
+    const { api, calls } = registrationAPI();
+    const result = await api.PATCH(registrationRequest({ enabled, message: ' Paused for launch. ', version: 1 }));
+    assert.equal(result.status, 200);
+    assert.equal(calls[0].name, 'set_registration_access');
+    assert.equal(calls[0].args.p_enabled, enabled);
+    assert.equal(calls[0].args.p_message, 'Paused for launch.');
+    assert.equal(calls[0].args.p_version, 1);
+  });
+}
+for (const body of [null, {}, { enabled: 'false', message: 'Paused', version: 1 }, { enabled: false, message: ' ', version: 1 }, { enabled: false, message: 'x'.repeat(301), version: 1 }, { enabled: false, message: 'Paused', version: 0 }]) {
+  test(`registration rejects invalid payload ${JSON.stringify(body).slice(0,70)}`, async () => {
+    const { api, calls } = registrationAPI();
+    assert.equal((await api.PATCH(registrationRequest(body))).status, 400);
+    assert.equal(calls.length, 0);
+  });
+}
+test('registration rejects cross-origin writes before database access', async () => {
+  const { api, calls } = registrationAPI();
+  assert.equal((await api.PATCH(registrationRequest({ enabled: false, message: 'Paused', version: 1 }, 'https://other.example'))).status, 403);
+  assert.equal(calls.length, 0);
+});
+test('registration rejects stale saves with a recoverable conflict', async () => {
+  const { api } = registrationAPI({ rpcError: { code: '40001' } });
+  assert.equal((await api.PATCH(registrationRequest({ enabled: false, message: 'Paused', version: 1 }))).status, 409);
+});
+for (const enabled of [true, false, null]) {
+  test(`signup page ${enabled === true ? 'opens' : enabled === false ? 'shows pause' : 'fails closed'}`, async () => {
+    const page = load('src/app/(auth)/signup/page.tsx', {
+      'next/link': { default: 'Link' }, './signup-form': { default: 'SignupForm' },
+      '@/lib/registration/status': { REGISTRATION_PAUSED_MESSAGE: 'Paused' },
+      '@/lib/registration/server': { getRegistrationStatus: async () => { if (enabled === null) throw new Error('Offline'); return { enabled, message: 'Paused for launch.' }; } },
+    });
+    const result = await page.default();
+    assert.equal(result.type === 'SignupForm', enabled === true);
+    if (enabled === false) assert.ok(JSON.stringify(result).includes('Paused for launch.'));
+    if (enabled === null) assert.ok(JSON.stringify(result).includes('temporarily unavailable'));
+  });
+}

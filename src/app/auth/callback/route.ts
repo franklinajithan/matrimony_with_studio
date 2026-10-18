@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getRegistrationStatus } from "@/lib/registration/server";
 import { safeInternalPath } from "@/lib/auth/safe-redirect";
 
 export async function GET(request: Request) {
@@ -13,6 +14,11 @@ export async function GET(request: Request) {
   const errorDescription = searchParams.get("error_description");
 
   if (authError || errorCode) {
+    // Account-creation failures during a pause should show the pause message.
+    // Cancellation/expired-link errors keep their existing handling.
+    if (errorCode === 'unexpected_failure' || errorCode === 'signup_disabled' || (errorDescription || '').toLowerCase().includes('saving new user')) {
+      try { if (!(await getRegistrationStatus()).enabled) return NextResponse.redirect(`${origin}/signup`); } catch {}
+    }
     const expired =
       errorCode === "otp_expired" ||
       authError === "access_denied" ||

@@ -147,6 +147,11 @@ export async function signInWithOAuth(provider: OAuthProvider, next = "/dashboar
 }
 
 export async function createUserWithEmailAndPassword(_auth: unknown, email: string, password: string, extras?: { displayName?: string; pendingPhone?: string; pendingPromoCode?: string }) {
+  // Recheck at submission so an already-open form respects a later admin pause.
+  const accessResponse = await fetch('/api/registration', { cache: 'no-store' });
+  const access = await accessResponse.json();
+  if (!accessResponse.ok) throw new Error(access.error || 'Registration is temporarily unavailable.');
+  if (access.enabled !== true) throw new Error(access.message || 'New registrations are temporarily paused.');
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
