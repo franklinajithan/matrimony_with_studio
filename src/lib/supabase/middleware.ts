@@ -20,6 +20,7 @@ const PROTECTED_PREFIXES = [
   "/onboarding",
   "/profile-setup",
   "/settings",
+  "/success-stories/submit",
   "/search",
   "/suggestions",
   "/admin",

@@ -17,9 +17,13 @@ jobs:
       - run: npm run test:project:database
       - run: npm run test:providers
       - run: npm run test:oauth
+      - run: npm run test:foundation
+      - run: npm run test:domain
+      - run: npm run test:site
       - run: npx tsc --noEmit
       - run: npm run build
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
 
+      - run: npm run test:site:http

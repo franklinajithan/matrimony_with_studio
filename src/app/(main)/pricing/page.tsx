@@ -25,24 +25,20 @@ const features: Record<PlanCode, string[]> = {
   free: [
     "Create & browse profiles",
     "Basic matching",
-    "10 interests / month",
+    "Send interests to other members",
     "Messaging after a mutual match",
   ],
   premium: [
     "Everything in Free",
-    "Unlimited interests*",
-    "Full compatibility analysis",
-    "Advanced search",
-    "See who liked/viewed you",
-    "Family Introduction Mode",
+    "Recent profile visitor history",
+    "Message read receipts",
+    "Member-controlled Family Circle",
   ],
   premium_plus: [
     "Everything in Premium",
-    "Unlimited interests*",
     "Incognito & privacy controls",
-    "4 profile boosts / month",
-    "Priority visibility",
-    "Premium+ badge",
+    "Read receipts after a mutual match",
+    "Member-controlled Family Circle",
   ],
 };
 const icons = { free: Heart, premium: Sparkles, premium_plus: Crown };
@@ -88,6 +84,7 @@ export default function PricingPage() {
           </select>
         </label>
         <p className="mt-2 text-xs text-muted-foreground">{t.countryHelp}</p>
+        <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">Test checkout currently bills in GBP using UK prices. Other currencies shown here are indicative price previews; choosing a display country does not change the checkout currency. Profile boosts, priority placement and paid badges are not currently available.</p>
       </div>
 
       <div className="mt-12 grid gap-6 lg:grid-cols-3">

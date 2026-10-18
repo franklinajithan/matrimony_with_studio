@@ -18,7 +18,7 @@ const features = [
   ],
   [
     "Discover members",
-    "Browse published profiles and filter by the preferences that matter to you. Some advanced discovery features require an active Premium membership.",
+    "Browse published profiles, filter by your preferences and see explainable suggestions based on available profile information.",
     "/discover",
   ],
   [

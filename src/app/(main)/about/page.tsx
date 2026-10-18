@@ -1,7 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heart, Users, Globe, ShieldCheck } from "lucide-react"; // Added ShieldCheck
-import Image from "next/image"; // Added import for Image component
 
 export default function AboutUsPage() {
   return (
@@ -53,7 +52,7 @@ export default function AboutUsPage() {
               <CardTitle className="font-headline text-xl text-card-foreground">Intelligent Matching</CardTitle>
             </CardHeader>
             <CardContent className="text-center">
-              <p className="text-sm text-muted-foreground">Leveraging AI and detailed preferences to suggest highly compatible profiles, including horoscope matching.</p>
+              <p className="text-sm text-muted-foreground">Suggestions compare saved partner preferences with available profile information and show the reasons behind the score. They do not predict relationship success.</p>
             </CardContent>
           </Card>
           <Card className="shadow-md hover:shadow-lg transition-shadow bg-card">

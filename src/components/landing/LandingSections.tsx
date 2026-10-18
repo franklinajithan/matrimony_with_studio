@@ -760,7 +760,7 @@ export function FaqSection() { const t=useHomeCopy();
     },
     {
       q: "What verification is available?",
-      a: "We offer optional identity and liveness checks. Each verification badge states exactly what was checked — we never imply that verification guarantees safety or honesty. Email and phone verification are also available.",
+      a: "Email confirmation is part of account setup. Profile review and government-ID verification are separate. Government-ID checks are optional and currently disabled, and SMS verification is deferred. A review or verification badge does not guarantee someone’s safety or honesty.",
     },
     {
       q: "How does family involvement work?",
@@ -771,12 +771,12 @@ export function FaqSection() { const t=useHomeCopy();
       a: "You control whether your profile appears in discovery and whether photos are visible to members, connections or nobody. You can block or report members and unpublish your profile in Privacy and safety.",
     },
     {
-      q: "How do AI recommendations work?",
+      q: "How do recommendations work?",
       a: "Our matching algorithm is deterministic and explainable. You'll see clear evidence-based reasons for each suggestion, like shared settlement preferences or aligned family expectations. AI doesn't decide who is eligible — you do.",
     },
     {
       q: "Can I cancel my subscription?",
-      a: "Paid checkout and the billing portal are not active yet. You can ask support about an introductory offer or recorded membership. Core report and block tools are available regardless of membership.",
+      a: "Billing is currently restricted to authorised Stripe test accounts. When configured, the membership page offers the billing portal and cancellation at the end of the current period. Paid access changes only after a verified provider event. Core report and block tools do not require paid membership.",
     },
   ];
 

@@ -52,9 +52,7 @@ export default function LaunchPricingPage() {
                 <p>✓ Profile browsing and basic matching</p>
                 <p>✓ Messaging after mutual match</p>
                 <p>
-                  {plan.entitlements.advancedFilters
-                    ? "✓ Advanced matching filters"
-                    : "— Basic matching filters"}
+                  ✓ Profile preference filters
                 </p>
                 <p>
                   {plan.entitlements.familyIntroduction

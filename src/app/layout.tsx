@@ -7,7 +7,7 @@ const productionHost =
   process.env.NEXT_PUBLIC_SITE_URL ||
   process.env.VERCEL_PROJECT_PRODUCTION_URL ||
   process.env.VERCEL_URL ||
-  'matrimony-with-studio.vercel.app';
+  'cupidmatch.co.uk';
 const siteUrl = productionHost.startsWith('http') ? productionHost : `https://${productionHost}`;
 const SHARE_CARD_VERSION = '3';
 const shareCardImage = `/opengraph-image?v=${SHARE_CARD_VERSION}`;
@@ -15,7 +15,7 @@ const shareCardImage = `/opengraph-image?v=${SHARE_CARD_VERSION}`;
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: 'CupidMatch - Find Your Perfect Match in India & Sri Lanka',
-  description: 'Matrimony site for Indian and Sri Lankan communities, powered by intelligent suggestions and horoscope matching.',
+  description: 'Matrimony for Indian and Sri Lankan communities, with profile preferences, introductions, privacy controls and member support.',
   icons: {
     icon: [
       { url: '/images/cupidmatch-logo.png', type: 'image/png' },

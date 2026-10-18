@@ -10,6 +10,7 @@ import { EMPTY_ONBOARDING_DRAFT } from "@/lib/onboarding/schema";
 
 const adultDraft = {
   displayName: "Amina Perera",
+  gender: "female" as const,
   dob: "1995-03-12",
   country: "Sri Lanka",
   region: "Colombo",
@@ -27,8 +28,8 @@ describe("onboarding validation", () => {
   it("uses DOB itself for adult eligibility without a second checkbox", () => {
     expect(isAdult("2015-01-01")).toBe(false);
     expect(isAdult("1980-06-29")).toBe(true);
-    expect(validateOnboardingStep(0, parseOnboardingDraft({ displayName: "Ajithan", dob: "1980-06-29", confirmedAdult: false }))).toEqual([]);
-    expect(validateOnboardingStep(0, parseOnboardingDraft({ displayName: "Amina", dob: "2015-01-01", confirmedAdult: true }))).not.toEqual([]);
+    expect(validateOnboardingStep(0, parseOnboardingDraft({ displayName: "Ajithan", gender: "male", dob: "1980-06-29", confirmedAdult: false }))).toEqual([]);
+    expect(validateOnboardingStep(0, parseOnboardingDraft({ displayName: "Amina", gender: "female", dob: "2015-01-01", confirmedAdult: true }))).not.toEqual([]);
   });
 
   it("checks the exact 18th birthday boundary", () => {
@@ -44,6 +45,9 @@ describe("onboarding validation", () => {
 
   it("accepts a complete confirmed draft", () => {
     expect(validateForPublish(parseOnboardingDraft(adultDraft))).toEqual([]);
+  });
+  it("requires a gender before publishing so discovery can enforce eligibility", () => {
+    expect(validateForPublish(parseOnboardingDraft({ ...adultDraft, gender: undefined }))).toContain("Please select Male or Female.");
   });
 
   it("does not copy empty defaults onto profile columns", () => {

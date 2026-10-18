@@ -323,6 +323,7 @@ export async function revokeShareLink(id: string): Promise<void> {
 export async function getShareByToken(
   token: string,
 ): Promise<BiodataShareLink | null> {
+  if (!/^[A-Za-z0-9_-]{32,128}$/.test(token)) return null;
   const { data, error } = await supabase.rpc("resolve_biodata_share", {
     p_token: token,
   });
