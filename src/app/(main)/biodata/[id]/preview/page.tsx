@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { ResponsiveDocumentPreview } from "@/components/biodata/ResponsiveDocumentPreview";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Copy, Download, Link2, Loader2, Printer } from "lucide-react";
@@ -265,8 +266,13 @@ export default function BiodataPreviewPage() {
         }
       />
 
-      <div className="overflow-x-auto rounded-lg border border-[#7027E8]/15 bg-[#F3EEE8]/50 p-4">
-        <div ref={rootRef} className="mx-auto w-fit">
+      <div className="min-w-0 rounded-lg border border-[#7027E8]/15 bg-[#F3EEE8]/50 p-2 sm:p-4">
+        <ResponsiveDocumentPreview pageSize={doc.design.pageSize}>
+          <DocumentRenderer {...doc} visibility={visibility} />
+        </ResponsiveDocumentPreview>
+      </div>
+      <div aria-hidden className="pointer-events-none fixed left-[-10000px] top-0 -z-10">
+        <div ref={rootRef} className="w-fit">
           <DocumentRenderer
             content={doc.content}
             design={doc.design}

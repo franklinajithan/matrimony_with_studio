@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { ResponsiveDocumentPreview } from "./ResponsiveDocumentPreview";
 import { useRouter } from "next/navigation";
 import {
   ChevronDown,
@@ -247,7 +248,6 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
   const [saveStatus, setSaveStatus] = React.useState<SaveStatus>("Idle");
   const [dirty, setDirty] = React.useState(false);
   const [mobileTab, setMobileTab] = React.useState("content");
-  const [previewZoom, setPreviewZoom] = React.useState(0.45);
 
   const [renameOpen, setRenameOpen] = React.useState(false);
   const [renameValue, setRenameValue] = React.useState("");
@@ -765,21 +765,6 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
     }
   }
 
-  React.useEffect(() => {
-    const updateZoom = () => {
-      if (typeof window === "undefined") return;
-      const w = window.innerWidth;
-      if (w < 1024) {
-        const pageW = design.pageSize === "letter" ? 816 : 794;
-        setPreviewZoom(Math.min(0.92, Math.max(0.28, (w - 32) / pageW)));
-      } else {
-        setPreviewZoom(0.55);
-      }
-    };
-    updateZoom();
-    window.addEventListener("resize", updateZoom);
-    return () => window.removeEventListener("resize", updateZoom);
-  }, [design.pageSize]);
 
   if (loading) {
     return (
@@ -1111,13 +1096,10 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
   };
 
   const preview = (
-    <div className="flex justify-center overflow-x-hidden p-2">
-      <div
-        className="origin-top"
-        style={{ transform: `scale(${previewZoom})`, width: design.pageSize === "letter" ? 816 : 794 }}
-      >
+    <div className="min-w-0 p-2">
+      <ResponsiveDocumentPreview pageSize={design.pageSize}>
         <DocumentRenderer {...rendererProps} />
-      </div>
+      </ResponsiveDocumentPreview>
     </div>
   );
 
@@ -1214,7 +1196,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <p className="text-xs uppercase tracking-wide text-[#7027E8]">Biodata Studio</p>
-            <h1 className="text-lg font-semibold">{title || "Untitled biodata"}</h1>
+            <h1 className="break-words text-lg font-semibold">{title || "Untitled biodata"}</h1>
           </div>
           <Button variant="ghost" size="sm" onClick={() => router.push("/biodata")}>
             Studio home
@@ -1223,7 +1205,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
       </div>
 
       {/* Desktop */}
-      <div className="hidden lg:grid lg:grid-cols-[280px_minmax(0,1fr)_280px] lg:gap-0">
+      <div className="hidden lg:grid lg:grid-cols-[240px_minmax(0,1fr)_240px] xl:grid-cols-[280px_minmax(0,1fr)_280px] lg:gap-0">
         <ScrollArea className="h-[calc(100vh-9rem)] border-r border-[#7027E8]/10">
           <h2 className="sticky top-0 z-10 bg-[#FBF8F4] px-3 py-2 text-sm font-medium text-[#7027E8]">
             Content

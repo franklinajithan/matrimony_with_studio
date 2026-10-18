@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { ResponsiveDocumentPreview } from "./ResponsiveDocumentPreview";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, Search } from "lucide-react";
@@ -510,8 +511,8 @@ export function TemplateGallery() {
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="h-[70vh]">
-            <div className="flex justify-center p-2">
-              <div className="origin-top scale-[0.55]">
+            <div className="min-w-0 p-2">
+              <ResponsiveDocumentPreview>
                 {previewTemplate ? (
                   <DocumentRenderer
                     content={previewContent}
@@ -521,7 +522,7 @@ export function TemplateGallery() {
                     templateId={previewTemplate.id}
                   />
                 ) : null}
-              </div>
+              </ResponsiveDocumentPreview>
             </div>
           </ScrollArea>
           <Button
@@ -540,14 +541,14 @@ export function TemplateGallery() {
             <DialogTitle>Compare templates</DialogTitle>
             <DialogDescription>Side-by-side with sample data</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 overflow-x-auto md:grid-cols-3">
+          <div className="grid max-h-[70vh] gap-4 overflow-y-auto md:grid-cols-3">
             {compareIds.map((id) => {
               const t = getTemplate(id);
               if (!t) return null;
               return (
-                <div key={id} className="min-w-[220px]">
+                <div key={id} className="min-w-0">
                   <p className="mb-2 text-center text-sm font-medium">{t.name}</p>
-                  <div className="origin-top scale-[0.28]">
+                  <ResponsiveDocumentPreview>
                     <DocumentRenderer
                       content={SAMPLE_CONTENT}
                       design={defaultDesignForTemplate(t.id)}
@@ -555,7 +556,7 @@ export function TemplateGallery() {
                       sectionOrder={SAMPLE_SECTION_ORDER}
                       templateId={t.id}
                     />
-                  </div>
+                  </ResponsiveDocumentPreview>
                 </div>
               );
             })}
