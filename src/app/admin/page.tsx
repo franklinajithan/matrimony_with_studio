@@ -4,6 +4,7 @@ import { Users, Activity, RefreshCw, UserCheck, BookHeart, CreditCard, BadgePoun
 import Link from "next/link";
 
 const modules = [
+  { title: "Registration controls", detail: "Pause or reopen new member registrations", icon: Users, href: "/admin/registration", tint: "bg-violet-50 text-violet-700", category: "SITE ACCESS" },
   { title: "Member management", detail: "Member directory, profiles and account review", icon: Users, href: "/admin/users", tint: "bg-violet-50 text-violet-700", category: "COMMUNITY" },
   { title: "Verification centre", detail: "Review submitted requests and profile status", icon: UserCheck, href: "/admin/verifications", tint: "bg-blue-50 text-blue-700", category: "TRUST & SAFETY" },
   { title: "Subscriptions", detail: "View memberships and subscription records", icon: CreditCard, href: "/admin/subscriptions", tint: "bg-emerald-50 text-emerald-700", category: "REVENUE" },

@@ -1,0 +1,272 @@
+"use client";
+
+import Link from "next/link";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
+import { Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { auth, createUserWithEmailAndPassword } from "@/lib/supabase/auth";
+import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
+import { useI18n } from "@/components/i18n/I18nProvider";
+import { getMessages } from "@/components/i18n/messages";
+
+const signupSchema = z
+  .object({
+    name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+    promoCode: z.string().max(32).regex(/^[A-Za-z0-9-]*$/, "Use letters, numbers or hyphens only.").optional(),
+    phone: z.string().optional(),
+    email: z.string().email({ message: "Enter a valid email address." }),
+    password: z.string().min(8, { message: "Password must be at least 8 characters." }),
+    confirmPassword: z.string().min(8, { message: "Confirm your password." }),
+    terms: z.boolean().refine((val) => val === true, { message: "You must accept the terms to continue." }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
+  });
+
+export default function SignupPage() {
+  const { toast } = useToast();
+  const { language } = useI18n();
+  const t = getMessages(language).auth;
+  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const form = useForm<z.infer<typeof signupSchema>>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      promoCode: "",
+      password: "",
+      confirmPassword: "",
+      terms: false,
+    },
+  });
+
+  async function onSubmit(values: z.infer<typeof signupSchema>) {
+    setIsLoading(true);
+    setFormError(null);
+    try {
+      const result = await createUserWithEmailAndPassword(auth, values.email, values.password, {
+        displayName: values.name,
+        pendingPhone: values.phone,
+        pendingPromoCode: values.promoCode?.trim().toUpperCase(),
+      });
+
+      if (result.needsEmailConfirmation) {
+        toast({
+          title: "Confirm your email",
+          description: "We sent a confirmation link. Open it to continue your profile.",
+        });
+        router.push(`/signup/check-email?email=${encodeURIComponent(values.email)}`);
+        return;
+      }
+
+      toast({
+        title: "Account created",
+        description: "You can now build your profile.",
+      });
+      router.push("/dashboard");
+      router.refresh();
+    } catch (error: unknown) {
+      const code = typeof error === "object" && error && "code" in error ? String((error as { code: string }).code) : "";
+      let errorMessage = "Could not create your account. Please try again.";
+      if (code === "auth/email-already-in-use") {
+        errorMessage = "An account with this email already exists. Try logging in.";
+      } else if (code === "auth/invalid-api-key") {
+        errorMessage = "This deployment is missing a valid Supabase key. Set NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in Vercel and redeploy.";
+      } else if (code === "auth/weak-password") {
+        errorMessage = "Choose a stronger password (at least 8 characters).";
+      } else if (code === "auth/invalid-email") {
+        errorMessage = "Enter a valid email address.";
+      } else if (code === "auth/too-many-requests") {
+        errorMessage = "Supabase has temporarily paused confirmation emails. Wait about an hour, then try once more. Do not keep submitting.";
+      } else if (error instanceof Error && error.message) {
+        errorMessage = error.message;
+      }
+      setFormError(errorMessage);
+      toast({ title: "Signup failed", description: errorMessage, variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  return (
+    <Card className="w-full max-w-md shadow-2xl">
+      <CardHeader className="text-center">
+        <CardTitle className="font-headline text-3xl text-primary">{t.signupTitle}</CardTitle>
+        <CardDescription>{t.signupDescription}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {formError && (
+          <Alert variant="destructive">
+            <AlertTitle>Could not create account</AlertTitle>
+            <AlertDescription className="space-y-2">
+              <p>{formError}</p>
+              {formError.toLowerCase().includes("already exists") ? (
+                <p>
+                  <Link href="/login" className="font-medium underline underline-offset-2">
+                    Go to log in
+                  </Link>
+                </p>
+              ) : null}
+            </AlertDescription>
+          </Alert>
+        )}
+        <SocialAuthButtons next="/dashboard" />
+        <p className="text-center text-xs leading-relaxed text-muted-foreground">
+          By continuing with Google or Facebook, you agree to the{" "}
+          <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link>{" "}
+          and <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
+        </p>
+        <Form {...form}>
+          <form method="post" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center"><User className="mr-2 h-4 w-4 text-muted-foreground" />{t.fullName}</FormLabel>
+                  <FormControl>
+                    <Input autoComplete="name" placeholder={t.yourName} {...field} disabled={isLoading} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField control={form.control} name="phone" render={({ field }) => (
+              <FormItem><FormLabel>Mobile number (optional)</FormLabel><FormControl><Input type="tel" autoComplete="tel" placeholder="+447700900123" {...field} disabled={isLoading} /></FormControl><p className="text-xs text-muted-foreground">SMS verification will be available later. You can continue without a mobile number.</p><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="promoCode" render={({ field }) => (
+              <FormItem><FormLabel>Special invitation code (optional)</FormLabel><FormControl><Input autoComplete="off" placeholder="Enter your invitation code" {...field} disabled={isLoading} /></FormControl><p className="text-xs text-muted-foreground">Have a special code? Enter it here. Eligibility and any extended trial will be confirmed after verification; entering a code does not automatically activate an offer.</p><FormMessage /></FormItem>
+            )} />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center"><Mail className="mr-2 h-4 w-4 text-muted-foreground" />{t.email}</FormLabel>
+                  <FormControl>
+                    <Input type="email" autoComplete="email" placeholder="you@example.com" {...field} disabled={isLoading} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center"><Lock className="mr-2 h-4 w-4 text-muted-foreground" />{t.password}</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        placeholder="At least 8 characters"
+                        {...field}
+                        className="pr-10"
+                        disabled={isLoading}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute inset-y-0 right-0 h-full min-w-11 px-3 text-muted-foreground hover:text-primary"
+                        onClick={() => setShowPassword(!showPassword)}
+                        disabled={isLoading}
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+                      </Button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center"><Lock className="mr-2 h-4 w-4 text-muted-foreground" />{t.confirmPassword}</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        type={showConfirmPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        placeholder="••••••••"
+                        {...field}
+                        className="pr-10"
+                        disabled={isLoading}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute inset-y-0 right-0 h-full min-w-11 px-3 text-muted-foreground hover:text-primary"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        disabled={isLoading}
+                        tabIndex={-1}
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        <span className="sr-only">{showConfirmPassword ? "Hide password" : "Show password"}</span>
+                      </Button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="terms"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-muted/50">
+                  <FormControl>
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={isLoading} />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      I agree to the <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
+                    </FormLabel>
+                    <FormMessage />
+                  </div>
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full min-h-11" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {t.create}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+      <CardFooter className="flex justify-center">
+        <p className="text-sm text-muted-foreground">
+          {t.haveAccount}{" "}
+          <Link href="/login" className="font-medium text-primary hover:underline">
+            {t.login}
+          </Link>
+        </p>
+      </CardFooter>
+    </Card>
+  );
+}
