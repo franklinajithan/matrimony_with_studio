@@ -58,7 +58,12 @@ const IntelligentMatchSuggestionsOutputSchema = z.array(z.object({
 export type IntelligentMatchSuggestionsOutput = z.infer<typeof IntelligentMatchSuggestionsOutputSchema>;
 
 export async function intelligentMatchSuggestions(input: IntelligentMatchSuggestionsInput): Promise<IntelligentMatchSuggestionsOutput> {
-  return intelligentMatchSuggestionsFlow(input);
+  // Disable this exported action until durable, database-enforced usage limits exist.
+  const {getServerAuthUser} = await import('@/lib/supabase/server');
+  const user = await getServerAuthUser();
+  if (!user) throw new Error('Authentication required.');
+  IntelligentMatchSuggestionsInputSchema.parse(input);
+  throw new Error('AI assistance is temporarily unavailable.');
 }
 
 const prompt = ai.definePrompt({
