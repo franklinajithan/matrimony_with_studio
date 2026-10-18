@@ -29,7 +29,14 @@ export async function GET(request: Request) {
     .map((x) => x.trim().toLowerCase())
     .filter(Boolean);
   const mode = process.env.EMAIL_DELIVERY_MODE || "test";
-  if (!["test", "live"].includes(mode) || (mode === "live" && process.env.EMAIL_LIVE_DELIVERY_APPROVED !== "true")) return NextResponse.json({ error: "Email delivery mode requires operator configuration" }, { status: 503 });
+  if (
+    !["test", "live"].includes(mode) ||
+    (mode === "live" && process.env.EMAIL_LIVE_DELIVERY_APPROVED !== "true")
+  )
+    return NextResponse.json(
+      { error: "Email delivery mode requires operator configuration" },
+      { status: 503 },
+    );
   if (mode === "test" && !allowlist.length)
     return NextResponse.json(
       {
@@ -53,12 +60,19 @@ export async function GET(request: Request) {
     email: string;
     eligible: boolean;
   }[]) {
-    if (!job.eligible || (mode === "test" && !allowlist.includes(job.email.toLowerCase()))) {
+    if (
+      !job.eligible ||
+      (mode === "test" && !allowlist.includes(job.email.toLowerCase()))
+    ) {
       const skippedUpdate = await db
         .from("email_outbox")
         .update({ status: "skipped", updated_at: new Date().toISOString() })
         .eq("id", job.id);
-      if (skippedUpdate.error) return NextResponse.json({ error: "Email queue update failed" }, { status: 503 });
+      if (skippedUpdate.error)
+        return NextResponse.json(
+          { error: "Email queue update failed" },
+          { status: 503 },
+        );
       skipped++;
       continue;
     }
@@ -79,7 +93,7 @@ export async function GET(request: Request) {
               : job.category === "messages"
                 ? "You have a new CupidMatch message"
                 : "You have a new CupidMatch interest",
-          text: `Sign in to CupidMatch to view your ${job.category === "support" ? "support update" : job.category === "messages" ? "message" : "interest"}: ${process.env.NEXT_PUBLIC_SITE_URL || "https://cupidmatch.co.uk"}/${job.category === "support" ? "support" : job.category}`,
+          text: `Sign in to CupidMatch to view your ${job.category === "support" ? "support update" : job.category === "messages" ? "message" : "interest"}: ${process.env.NEXT_PUBLIC_SITE_URL || "https://cupidmatch.co.uk"}/${job.category === "support" ? "support" : job.category}\n\nChange optional email preferences in account settings: ${process.env.NEXT_PUBLIC_SITE_URL || "https://cupidmatch.co.uk"}/settings`,
         }),
         signal: AbortSignal.timeout(10000),
       });
@@ -93,15 +107,21 @@ export async function GET(request: Request) {
           provider_id: result.id,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", job.id).eq("status", "sending");
+        .eq("id", job.id)
+        .eq("status", "sending");
       if (saved.error) throw saved.error;
       sent++;
     } catch {
       const reset = await db
         .from("email_outbox")
         .update({ status: "pending", updated_at: new Date().toISOString() })
-        .eq("id", job.id).eq("status", "sending");
-      if (reset.error) return NextResponse.json({ error: "Email retry state could not be saved" }, { status: 503 });
+        .eq("id", job.id)
+        .eq("status", "sending");
+      if (reset.error)
+        return NextResponse.json(
+          { error: "Email retry state could not be saved" },
+          { status: 503 },
+        );
     }
   }
   return NextResponse.json(

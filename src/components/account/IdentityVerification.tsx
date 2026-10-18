@@ -37,6 +37,7 @@ export function IdentityVerification() {
       if (!r.ok) throw new Error(d.error || "Provider unavailable");
       if (
         typeof d.url !== "string" ||
+        new URL(d.url).protocol !== "https:" ||
         new URL(d.url).hostname !== "verify.stripe.com"
       )
         throw new Error("Provider did not return a valid verification link");
@@ -49,9 +50,19 @@ export function IdentityVerification() {
   }
   return (
     <section className="space-y-4 rounded-xl border p-5">
-      <h2 className="text-xl font-semibold">Optional government-ID verification</h2>
-      <p className="text-sm">Government-ID verification is optional during setup. It is not required for registration, matching or messages.</p>
-      {data && !data.enabled && <p role="status">Provider verification is currently unavailable. You can continue using your account.</p>}
+      <h2 className="text-xl font-semibold">
+        Optional government-ID verification
+      </h2>
+      <p className="text-sm">
+        Government-ID verification is optional during setup. It is not required
+        for registration, matching or messages.
+      </p>
+      {data && !data.enabled && (
+        <p role="status">
+          Provider verification is currently unavailable. You can continue using
+          your account.
+        </p>
+      )}
       <p className="text-sm text-muted-foreground">
         Separate from profile review and mobile verification. Stripe Identity
         handles document and selfie collection. CupidMatch stores the session

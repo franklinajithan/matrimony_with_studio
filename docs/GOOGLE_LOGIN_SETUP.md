@@ -1,10 +1,13 @@
 # Google login
 
-Latest browser acceptance on 17 October: Google is offered on the preview, but
-the provider rejected the request with `Error 400: redirect_uri_mismatch`.
-The error details identify the callback below. This is a Google Cloud client
-configuration blocker; no signed-in success is claimed. Console access was
-blocked by automatic approval review, so no provider configuration was changed.
+Latest successful browser acceptance: 17 October 2026, approximately 23:11 London.
+After the owner corrected Google and Supabase redirect settings, Google login
+opened `https://cupidmatch.co.uk/dashboard`; reloading retained the authenticated
+session. The earlier `redirect_uri_mismatch` and old-domain redirect are resolved.
+The owner changed provider settings from their own browser; no client secret was
+committed. Dedicated-account signup/recovery and delegated staff acceptance still
+need verification. The 18 October preview shows Google and guards membership
+behind sign-in; that public check is not another completed OAuth journey.
 
 Google login uses Supabase OAuth with PKCE, not a client secret in the app.
 The shared buttons appear on login/signup only when the public Supabase settings

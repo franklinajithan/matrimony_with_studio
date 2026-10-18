@@ -129,7 +129,8 @@ declare v_rows jsonb;v_total bigint;begin
  if not public.admin_has_permission(case when p_section='deletion'then'support'when p_section='payments'then'billing'else'moderation'end)then raise exception 'Forbidden'using errcode='42501';end if;
  -- Only operational metadata. No private plan contents, ID images, or conversation bodies.
  with items as(
- select a.member_id::text as id,a.member_id,p.display_name as name,'deletion_requested'as status,a.deletion_requested_at as created_at,jsonb_build_object('email',p.email)as detail from public.member_account_controls a join public.profiles p on p.id=a.member_id where p_section='deletion'and a.deletion_requested_at is not null
+ select a.member_id::text as id,a.member_id,p.display_name as name,coalesce(j.status,'deletion_requested')as status,a.deletion_requested_at as created_at,jsonb_build_object('email',p.email,'jobId',j.id,'attempts',j.attempts,'startedAt',j.started_at,'recordsRemoved',j.records_removed)as detail from public.member_account_controls a join public.profiles p on p.id=a.member_id left join cupidmatch_admin.account_deletion_jobs j on j.member_id=a.member_id and j.requested_at=a.deletion_requested_at where p_section='deletion'and a.deletion_requested_at is not null
+ union all select j.id::text,j.member_id,'Erasure job',j.status,j.requested_at,jsonb_build_object('jobId',j.id,'attempts',j.attempts,'startedAt',j.started_at,'completedAt',j.completed_at,'recordsRemoved',j.records_removed)from cupidmatch_admin.account_deletion_jobs j where p_section='deletion'and j.status<>'cancelled'and not exists(select 1 from public.member_account_controls a where a.member_id=j.member_id and a.deletion_requested_at=j.requested_at)
  union all select i.id::text,i.member_id,p.display_name,i.status,i.created_at,jsonb_build_object('testMode',not i.livemode,'providerSession',i.provider_session_id,'error',i.error_code)from public.identity_sessions i join public.profiles p on p.id=i.member_id where p_section='identity'
  union all select i.id::text,i.member_id,p.display_name,i.status,i.created_at,jsonb_build_object('relationship',i.relationship,'expiresAt',i.expires_at)from public.family_invitations i join public.profiles p on p.id=i.member_id where p_section='family'
  union all select s.member_id::text||':'||s.viewer_id::text,s.member_id,p.display_name,'shared',s.created_at,jsonb_build_object('viewerId',s.viewer_id)from public.future_map_shares s join public.profiles p on p.id=s.member_id where p_section='plans'
@@ -416,7 +417,7 @@ declare v_sender uuid;v_one uuid;v_two uuid;begin
   select m.sender_id,c.participant_1,c.participant_2 into v_sender,v_one,v_two from public.messages m join public.chats c on c.id=m.chat_id where m.id::text=p_source;
   return coalesce(p_member in(v_one,v_two)and v_sender<>p_member and cupidmatch_admin.planning_pair_allowed(v_one,v_two)and exists(select 1 from public.connections where(member_a_id=v_one and member_b_id=v_two)or(member_a_id=v_two and member_b_id=v_one)),false);
  end if;
- select sender_id into v_sender from public.match_requests where id::text=p_source and receiver_id=p_member and status='pending';
+ select m.sender_id into v_sender from public.match_requests m where m.id::text=p_source and m.receiver_id=p_member and m.status='pending'and to_jsonb(m)->>'withdrawn_at' is null;
  return v_sender is not null and cupidmatch_admin.planning_pair_allowed(v_sender,p_member);
 end $$;
 revoke all on function cupidmatch_admin.email_source_allowed(uuid,text,text)from public,anon,authenticated;
@@ -448,11 +449,12 @@ create function cupidmatch_admin.deletion_hold(p_member uuid)returns boolean lan
  or exists(select 1 from public.admin_staff where user_id=p_member)
  or exists(select 1 from public.member_reports where(reporter_id=p_member or reported_member_id=p_member)and status in('open','under_review'))
  or exists(select 1 from public.member_admin_notes where author_id=p_member)
+ or exists(select 1 from public.provider_operations where actor_id=p_member)
 $$;
 revoke all on function cupidmatch_admin.deletion_hold(uuid)from public,anon,authenticated;
 create function cupidmatch_admin.approve_account_deletion(p_member uuid,p_requested_at timestamptz,p_reason text)returns jsonb language plpgsql security definer set search_path=''as $$
 declare v_id uuid;begin
- if not public.is_admin()or p_member=auth.uid()then raise exception 'Super Admin required'using errcode='42501';end if;
+ if not public.is_admin()or not public.member_is_active(auth.uid())or p_member=auth.uid()then raise exception 'Active Super Admin required'using errcode='42501';end if;
  if p_reason is null or length(trim(p_reason))not between 20 and 500 then raise exception 'Review reason required'using errcode='22023';end if;
  perform 1 from public.member_account_controls where member_id=p_member and deletion_requested_at=p_requested_at for update;
  if not found then raise exception 'Deletion request changed; refresh'using errcode='40001';end if;

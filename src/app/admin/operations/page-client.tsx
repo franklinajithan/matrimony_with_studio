@@ -235,7 +235,14 @@ export function FeatureOperations() {
                       </div>
                     ))}
                   </dl>
-                  {section === "deletion" && scopes.includes("manage") && <DeletionApproval memberId={item.member_id} requestedAt={item.created_at} />}
+                  {section === "deletion" &&
+                    item.status === "deletion_requested" &&
+                    scopes.includes("manage") && (
+                      <DeletionApproval
+                        memberId={item.member_id}
+                        requestedAt={item.created_at}
+                      />
+                    )}
                   {["family", "plans", "calls", "attachments"].includes(
                     section,
                   ) && (
@@ -328,7 +335,13 @@ export function FeatureOperations() {
               <option value="cancel_subscription">Cancel renewal</option>
             </select>
           </label>
-          <BillingMemberHistory memberId={paymentMember} selectCharge={(id, value) => { setCharge(id); setAmount(value); }} />
+          <BillingMemberHistory
+            memberId={paymentMember}
+            selectCharge={(id, value) => {
+              setCharge(id);
+              setAmount(value);
+            }}
+          />
           {paymentAction === "refund" && (
             <>
               <label className="block text-sm">

@@ -2,7 +2,17 @@
 export function integrationReadiness(env: Record<string, string | undefined>) {
   const present = (name: string) => !!env[name]?.trim();
   const definitions = [
-    { name: "Account erasure", flag: "ACCOUNT_DELETION_ENABLED", requirements: ["SUPABASE_SERVICE_ROLE_KEY", "CRON_SECRET", "RETENTION_POLICY_APPROVED"], tests: "Approved retention, storage/provider cleanup, retry recovery and dedicated-account erasure acceptance" },
+    {
+      name: "Account erasure",
+      flag: "ACCOUNT_DELETION_ENABLED",
+      requirements: [
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "CRON_SECRET",
+        "RETENTION_POLICY_APPROVED",
+      ],
+      tests:
+        "Approved retention, storage/provider cleanup, retry recovery and dedicated-account erasure acceptance",
+    },
     {
       name: "Private media and archives",
       flag: null,
@@ -62,7 +72,9 @@ export function integrationReadiness(env: Record<string, string | undefined>) {
         "RESEND_WEBHOOK_SECRET",
         "EMAIL_FROM",
         "CRON_SECRET",
-        "EMAIL_TEST_RECIPIENTS",
+        ...(env.EMAIL_DELIVERY_MODE === "live"
+          ? ["EMAIL_LIVE_DELIVERY_APPROVED"]
+          : ["EMAIL_TEST_RECIPIENTS"]),
       ],
       tests:
         "Verified sender, authorised recipients, delivery/retries and worker schedule",
@@ -71,7 +83,21 @@ export function integrationReadiness(env: Record<string, string | undefined>) {
   return definitions.map((item) => {
     const missing = item.requirements.filter((name) => !present(name)),
       invalid: string[] = [];
-    if (item.flag === "ACCOUNT_DELETION_ENABLED" && env.RETENTION_POLICY_APPROVED !== "true") invalid.push("RETENTION_POLICY_APPROVED must be true after operator review");
+    if (
+      item.flag === "ACCOUNT_DELETION_ENABLED" &&
+      env.RETENTION_POLICY_APPROVED !== "true"
+    )
+      invalid.push(
+        "RETENTION_POLICY_APPROVED must be true after operator review",
+      );
+    if (
+      item.flag === "EMAIL_NOTIFICATIONS_ENABLED" &&
+      env.EMAIL_DELIVERY_MODE === "live" &&
+      env.EMAIL_LIVE_DELIVERY_APPROVED !== "true"
+    )
+      invalid.push(
+        "Live email delivery requires EMAIL_LIVE_DELIVERY_APPROVED=true",
+      );
     if (
       item.requirements.includes("STRIPE_SECRET_KEY") &&
       present("STRIPE_SECRET_KEY") &&

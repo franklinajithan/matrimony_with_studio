@@ -64,29 +64,73 @@ export async function POST(request: Request) {
   if (attempt.error) return mutationError(attempt.error);
   const service = serviceClient();
   const { requestId, plan, term } = parsed.data;
-  const lock = await service.rpc("billing_checkout_lock", { p_member: user.id, p_request: requestId, p_release: false });
+  const lock = await service.rpc("billing_checkout_lock", {
+    p_member: user.id,
+    p_request: requestId,
+    p_release: false,
+  });
   if (lock.error) return mutationError(lock.error);
-  if (!lock.data) return NextResponse.json({ error: "Another checkout is being prepared. Please retry shortly." }, { status: 409 });
+  if (!lock.data)
+    return NextResponse.json(
+      { error: "Another checkout is being prepared. Please retry shortly." },
+      { status: 409 },
+    );
   try {
     assertBillingConfiguration(plan, term);
     const price = await validatedPrice(plan, term);
     const stripe = getStripe();
-    const binding = await service.rpc("billing_customer", { p_member: user.id, p_customer: null });
+    const binding = await service.rpc("billing_customer", {
+      p_member: user.id,
+      p_customer: null,
+    });
     if (binding.error) throw binding.error;
     let customerId = binding.data as string | null;
     if (!customerId) {
-      const customer = await stripe.customers.create({ email: user.email, metadata: { member_id: user.id } }, { idempotencyKey: `member-customer:${user.id}` });
-      const saved = await service.rpc("billing_customer", { p_member: user.id, p_customer: customer.id });
-      if (saved.error || saved.data !== customer.id) throw new Error("Customer binding failed");
+      const customer = await stripe.customers.create(
+        { email: user.email, metadata: { member_id: user.id } },
+        { idempotencyKey: `member-customer:${user.id}` },
+      );
+      const saved = await service.rpc("billing_customer", {
+        p_member: user.id,
+        p_customer: customer.id,
+      });
+      if (saved.error || saved.data !== customer.id)
+        throw new Error("Customer binding failed");
       customerId = customer.id;
     }
-    const subscriptions = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 100 });
-    if (subscriptions.has_more || subscriptions.data.some(s => !["canceled", "incomplete_expired"].includes(s.status))) return NextResponse.json({ error: "An existing or pending subscription is present. Manage billing through the portal or contact support." }, { status: 409 });
-    const open = await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 100 });
+    const subscriptions = await stripe.subscriptions.list({
+      customer: customerId,
+      status: "all",
+      limit: 100,
+    });
+    if (
+      subscriptions.has_more ||
+      subscriptions.data.some(
+        (s) => !["canceled", "incomplete_expired"].includes(s.status),
+      )
+    )
+      return NextResponse.json(
+        {
+          error:
+            "An existing or pending subscription is present. Manage billing through the portal or contact support.",
+        },
+        { status: 409 },
+      );
+    const open = await stripe.checkout.sessions.list({
+      customer: customerId,
+      status: "open",
+      limit: 100,
+    });
     if (open.has_more) throw new Error("Too many pending checkout sessions");
     for (const pending of open.data) {
-      if (pending.livemode || pending.client_reference_id !== user.id) throw new Error("Checkout owner mismatch");
-      if (pending.metadata?.plan === plan && pending.metadata?.term === term && pending.url) return NextResponse.json({ url: pending.url, testMode: true });
+      if (pending.livemode || pending.client_reference_id !== user.id)
+        throw new Error("Checkout owner mismatch");
+      if (
+        pending.metadata?.plan === plan &&
+        pending.metadata?.term === term &&
+        pending.url
+      )
+        return NextResponse.json({ url: pending.url, testMode: true });
       await stripe.checkout.sessions.expire(pending.id);
     }
     const origin = new URL(request.url).origin;
@@ -108,6 +152,10 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: providerError() }, { status: 503 });
   } finally {
-    await service.rpc("billing_checkout_lock", { p_member: user.id, p_request: requestId, p_release: true });
+    await service.rpc("billing_checkout_lock", {
+      p_member: user.id,
+      p_request: requestId,
+      p_release: true,
+    });
   }
 }

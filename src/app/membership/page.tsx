@@ -5,10 +5,22 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getServerSubscription } from "@/lib/subscriptions/server";
-export default async function MembershipPage() {
+export default async function MembershipPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const db = await createSupabaseServerClient();
   const { data: auth } = await db.auth.getUser();
-  if (!auth.user) redirect("/login?next=%2Fmembership");
+  if (!auth.user) {
+    const query = await searchParams;
+    const chosen = query?.plan;
+    const next =
+      chosen === "premium" || chosen === "premium_plus"
+        ? `/membership?plan=${chosen}`
+        : "/membership";
+    redirect(`/login?next=${encodeURIComponent(next)}`);
+  }
   const { plan, trial, subscription } = await getServerSubscription();
   const ends = trial ? new Date(trial.ends_at) : null;
   const remaining = ends
@@ -60,12 +72,42 @@ export default async function MembershipPage() {
           </p>
         ) : (
           <p className="mt-3 text-slate-600">
-            No introductory offer is active. Phone verification is deferred and is not required to use your account.
+            No introductory offer is active. Phone verification is deferred and
+            is not required to use your account.
           </p>
         )}
       </section>
-      {subscription && <section className="space-y-2 rounded-xl border p-5"><h2 className="font-semibold">Subscription status</h2><p>{subscription.status.replaceAll("_", " ")}{subscription.cancel_at_period_end ? " · Renewal cancelled" : ""}</p>{subscription.current_period_end && <p>Current period ends {new Date(subscription.current_period_end).toLocaleDateString("en-GB")}</p>}{subscription.status === "past_due" && <p role="alert">Your payment needs attention. Update your payment method in the billing portal.</p>}</section>}
-      <BillingActions hasProvider={!!subscription?.provider_customer_id} cancelling={!!subscription?.cancel_at_period_end} />
+      {subscription && (
+        <section className="space-y-2 rounded-xl border p-5">
+          <h2 className="font-semibold">Subscription status</h2>
+          <p>
+            {subscription.status.replaceAll("_", " ")}
+            {subscription.cancel_at_period_end ? " · Renewal cancelled" : ""}
+          </p>
+          {subscription.current_period_end && (
+            <p>
+              Current period ends{" "}
+              {new Date(subscription.current_period_end).toLocaleDateString(
+                "en-GB",
+              )}
+            </p>
+          )}
+          {subscription.status === "past_due" && (
+            <p role="alert">
+              Your payment needs attention. Update your payment method in the
+              billing portal.
+            </p>
+          )}
+        </section>
+      )}
+      <BillingActions
+        hasProvider={!!subscription?.provider_customer_id}
+        cancelling={!!subscription?.cancel_at_period_end}
+        hasSubscription={
+          !!subscription &&
+          ["active", "trialing", "past_due"].includes(subscription.status)
+        }
+      />
       {!!subscription?.provider_customer_id && <BillingHistory />}
       <div className="grid gap-3 sm:grid-cols-2">
         <Link
@@ -78,12 +120,13 @@ export default async function MembershipPage() {
           className="rounded-xl border bg-white p-4 font-semibold text-violet-700 hover:bg-violet-50"
           href="/dashboard"
         >
-          Back to dashboard{" "}
-          →
+          Back to dashboard →
         </Link>
       </div>
       <p className="text-sm text-slate-500">
-        Stripe checkout is restricted to authorised test accounts. No live payments or payouts are available. Subscriptions recur for the selected period until renewal is cancelled.
+        Stripe checkout is restricted to authorised test accounts. No live
+        payments or payouts are available. Subscriptions recur for the selected
+        period until renewal is cancelled.
       </p>
     </main>
   );

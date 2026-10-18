@@ -27,13 +27,25 @@ export async function POST(request: Request) {
       { status: 403 },
     );
   try {
-    const parsed = z.object({ cancel: z.boolean().default(true), requestId: z.string().uuid() }).safeParse(await request.json().catch(() => null));
-    if (!parsed.success) return NextResponse.json({ error: "Invalid renewal request" }, { status: 400 });
+    const parsed = z
+      .object({
+        cancel: z.boolean().default(true),
+        requestId: z.string().uuid(),
+      })
+      .safeParse(await request.json().catch(() => null));
+    if (!parsed.success)
+      return NextResponse.json(
+        { error: "Invalid renewal request" },
+        { status: 400 },
+      );
     const stripe = getStripe();
     const current = await stripe.subscriptions.retrieve(
       subscription.provider_subscription_id,
     );
-    const customer = typeof current.customer === "string" ? current.customer : current.customer.id;
+    const customer =
+      typeof current.customer === "string"
+        ? current.customer
+        : current.customer.id;
     if (current.livemode || customer !== subscription.provider_customer_id)
       return NextResponse.json(
         { error: "Subscription ownership could not be confirmed" },
@@ -46,8 +58,9 @@ export async function POST(request: Request) {
     );
     return NextResponse.json({
       requested: true,
-      message:
-        parsed.data.cancel ? "Cancellation requested at the end of your paid period. Status updates after the verified provider event." : "Renewal resume requested. Status updates after the verified provider event.",
+      message: parsed.data.cancel
+        ? "Cancellation requested at the end of your paid period. Status updates after the verified provider event."
+        : "Renewal resume requested. Status updates after the verified provider event.",
     });
   } catch {
     return NextResponse.json({ error: providerError() }, { status: 503 });

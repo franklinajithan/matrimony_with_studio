@@ -5,9 +5,11 @@ import { PLANS, type BillingTerm } from "@/lib/subscriptions/plans";
 export function BillingActions({
   hasProvider = false,
   cancelling = false,
+  hasSubscription = hasProvider,
 }: {
   hasProvider?: boolean;
   cancelling?: boolean;
+  hasSubscription?: boolean;
 }) {
   const [enabled, setEnabled] = useState(false),
     [plan, setPlan] = useState<"premium" | "premium_plus">("premium"),
@@ -18,7 +20,8 @@ export function BillingActions({
   const requestId = useRef<string | null>(null);
   useEffect(() => {
     const selected = new URLSearchParams(window.location.search).get("plan");
-    if (selected === "premium" || selected === "premium_plus") setPlan(selected);
+    if (selected === "premium" || selected === "premium_plus")
+      setPlan(selected);
     void fetch("/api/billing/config")
       .then((r) => r.json())
       .then((d) => setEnabled(d.configured === true))
@@ -37,14 +40,20 @@ export function BillingActions({
       const r = await fetch(`/api/billing/${name}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, term, cancel: !cancelling, requestId: requestId.current }),
+        body: JSON.stringify({
+          plan,
+          term,
+          cancel: !cancelling,
+          requestId: requestId.current,
+        }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || "Billing unavailable");
       if (d.url) {
         const url = new URL(d.url);
         if (
-          url.protocol !== "https:" || !["checkout.stripe.com", "billing.stripe.com"].includes(url.hostname)
+          url.protocol !== "https:" ||
+          !["checkout.stripe.com", "billing.stripe.com"].includes(url.hostname)
         )
           throw new Error("Invalid provider URL");
         window.location.assign(url.href);
@@ -83,7 +92,9 @@ export function BillingActions({
             onClick={() => {
               if (
                 window.confirm(
-                  cancelling ? "Resume subscription renewal?" : "Cancel renewal at the end of the current paid period?",
+                  cancelling
+                    ? "Resume subscription renewal?"
+                    : "Cancel renewal at the end of the current paid period?",
                 )
               )
                 void action("cancel");
@@ -92,7 +103,8 @@ export function BillingActions({
             {cancelling ? "Resume renewal" : "Cancel renewal"}
           </Button>
         </div>
-      ) : (
+      ) : null}
+      {!hasSubscription && (
         <>
           <label className="block text-sm">
             Plan
@@ -140,7 +152,12 @@ export function BillingActions({
           {error}
         </p>
       )}
-      <p className="text-xs text-muted-foreground">Prices are recurring GBP charges per selected period. Stripe promotion codes can be entered at checkout. Invitation codes for introductory offers are separate. Only authorised test accounts can use billing during setup.</p>
+      <p className="text-xs text-muted-foreground">
+        Prices are recurring GBP charges per selected period. Stripe promotion
+        codes can be entered at checkout. Invitation codes for introductory
+        offers are separate. Only authorised test accounts can use billing
+        during setup.
+      </p>
       {notice && (
         <p role="status" className="text-sm">
           {notice}
