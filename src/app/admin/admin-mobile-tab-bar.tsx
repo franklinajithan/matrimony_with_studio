@@ -2,23 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, ShieldCheck, CreditCard, Menu } from "lucide-react";
+import { LayoutDashboard, Users, ShieldCheck, CreditCard, Menu, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 
-const primary = [
-  { href: "/admin", label: "Home", icon: LayoutDashboard },
-  { href: "/admin/users", label: "Members", icon: Users },
-  { href: "/admin/verifications", label: "Reviews", icon: ShieldCheck },
-  { href: "/admin/subscriptions", label: "Billing", icon: CreditCard },
-];
-const extra = [
-  { href: "/admin/plans", label: "Plans & pricing" },
-  { href: "/admin/success-stories", label: "Success stories" },
-  { href: "/admin/security", label: "Security & audit" },
-];
+import {adminLinks} from '@/components/admin/admin-links';
+import {useAdminResource} from '@/components/admin/use-admin-resource';
 
 export function AdminMobileTabBar() {
   const pathname = usePathname();
+  const {data}=useAdminResource<{permissions:string[]}>('/api/admin/workspace-access');
+  const links=adminLinks.filter(l=>l.scope==='workspace'||data?.permissions.includes(l.scope));
+  const primary=links.slice(0,4);
+  const extra=links.slice(4);
   const [moreOpen, setMoreOpen] = useState(false);
   const moreActive = extra.some(item => pathname.startsWith(item.href));
   return <>

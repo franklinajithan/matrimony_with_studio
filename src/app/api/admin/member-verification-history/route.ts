@@ -5,7 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const admin = await requireServerAdmin();
+  const admin = await requireServerAdmin("member_read");
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const memberId = new URL(request.url).searchParams.get("memberId");
   if (!memberId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(memberId))

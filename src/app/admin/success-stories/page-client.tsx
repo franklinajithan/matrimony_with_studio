@@ -1,156 +1,170 @@
-
 "use client";
-
-import React, { useEffect, useState, useMemo } from 'react';
-import { subscribeToSuccessStories } from '@/lib/supabase/stories';
-import type { Timestamp } from '@/lib/supabase/timestamp';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Search, BookHeart } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
-
-interface SuccessStoryData {
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  useAdminResource,
+  adminMutation,
+} from "@/components/admin/use-admin-resource";
+import {
+  WorkspaceHeading,
+  ResourceState,
+  Pager,
+} from "@/components/admin/workspace-ui";
+type Story = {
   id: string;
-  coupleNames?: string;
-  status?: 'pending' | 'approved' | 'rejected';
-  submittedAt?: Timestamp;
-  storyText?: string; 
-}
-
-export default function AdminSuccessStoriesPage() {
-  const [stories, setStories] = useState<SuccessStoryData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const { toast } = useToast();
-
-  useEffect(() => {
-    setIsLoading(true);
-    const unsubscribe = subscribeToSuccessStories((fetchedStories) => {
-      setStories(fetchedStories.map((story) => ({
-        id: story.id,
-        coupleNames: story.coupleNames,
-        status: story.status,
-        submittedAt: story.submittedAt || undefined,
-        storyText: story.storyText,
-      })));
-      setIsLoading(false);
-    }, (error) => {
-      console.error("Error fetching success stories:", error);
-      toast({
-        title: "Error Loading Stories",
-        description: "Could not fetch success stories. Please try again.",
-        variant: "destructive",
+  couple_names: string;
+  story_text: string;
+  photo_url: string | null;
+  status: string;
+  admin_notes: string | null;
+  submitted_at: string;
+  updated_at: string | null;
+};
+function ReviewCard({
+  story,
+  onSave,
+}: {
+  story: Story;
+  onSave: () => Promise<void>;
+}) {
+  const [note, setNote] = useState(""),
+    [busy, setBusy] = useState(false),
+    [message, setMessage] = useState("");
+  async function decide(status: string) {
+    if (note.trim().length < 10) {
+      setMessage("Add a reason of at least 10 characters.");
+      return;
+    }
+    setBusy(true);
+    setMessage("");
+    try {
+      await adminMutation("/api/admin/success-stories", {
+        storyId: story.id,
+        status,
+        note,
+        expectedUpdatedAt: story.updated_at,
       });
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [toast]);
-
-  const filteredStories = useMemo(() => {
-    if (!searchTerm) return stories;
-    return stories.filter(story =>
-      (story.coupleNames?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (story.id?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (story.status?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-    );
-  }, [stories, searchTerm]);
-
-  const getStatusBadgeVariant = (status?: string): "default" | "secondary" | "destructive" | "outline" => {
-    switch (status) {
-      case 'approved':
-        return 'default'; // Green (using primary for now)
-      case 'pending':
-        return 'secondary'; // Yellow/Amber (using secondary)
-      case 'rejected':
-        return 'destructive'; // Red
-      default:
-        return 'outline';
+      await onSave();
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Unable to save");
+    } finally {
+      setBusy(false);
     }
-  };
-   const getStatusBadgeClasses = (status?: string): string => {
-    switch (status) {
-      case 'approved':
-        return 'bg-green-500 hover:bg-green-600 text-white';
-      case 'pending':
-        return 'bg-amber-500 hover:bg-amber-600 text-white';
-      default:
-        return ''; // Uses default destructive or outline styles
-    }
-  };
-
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
   }
-
+  return (
+    <article className="flex flex-col gap-4 rounded-2xl border bg-white p-5">
+      <div>
+        <p className="text-xs font-semibold uppercase text-violet-700">
+          {story.status}
+        </p>
+        <h2 className="mt-1 text-lg font-bold">{story.couple_names}</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          Submitted {new Date(story.submitted_at).toLocaleDateString("en-GB")}
+        </p>
+      </div>
+      {story.photo_url && /^https?:\/\//.test(story.photo_url) && (
+        <img
+          src={story.photo_url}
+          alt="Submitted couple photo"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          className="max-h-64 w-full rounded-xl object-contain"
+        />
+      )}
+      <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-700">
+        {story.story_text}
+      </p>
+      {story.admin_notes && (
+        <p className="rounded-lg bg-slate-50 p-3 text-xs">
+          Previous review: {story.admin_notes}
+        </p>
+      )}
+      <label className="mt-auto text-sm">
+        Decision reason
+        <Textarea
+          maxLength={1000}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          className="mt-2"
+        />
+      </label>
+      <div className="flex flex-wrap gap-2">
+        {[
+          ["approved", "Approve"],
+          ["rejected", "Reject"],
+          ["pending", "Return to review"],
+        ]
+          .filter(([status]) => status !== story.status)
+          .map(([status, label]) => (
+            <Button
+              key={status}
+              variant={status === "rejected" ? "destructive" : "outline"}
+              disabled={busy}
+              onClick={() => void decide(status)}
+            >
+              {label}
+            </Button>
+          ))}
+      </div>
+      {message && (
+        <p role="alert" className="text-sm text-red-700">
+          {message}
+        </p>
+      )}
+    </article>
+  );
+}
+export default function Stories() {
+  const [status, setStatus] = useState("pending"),
+    [page, setPage] = useState(1);
+  const { data, error, loading, refresh } = useAdminResource<{
+    stories: Story[];
+    total: number;
+  }>(`/api/admin/success-stories?status=${status}&page=${page}`);
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-            <h1 className="text-3xl font-bold text-slate-700 flex items-center gap-2">
-                <BookHeart className="h-8 w-8 text-primary"/>Manage Success Stories
-            </h1>
-            <p className="text-slate-600 mt-1">View submitted love stories. Moderation actions will be enabled after secure, audited server operations are implemented.</p>
-        </div>
-      </div>
-      
-
-      <div className="flex items-center gap-2 p-1 rounded-md border border-input bg-card focus-within:ring-2 focus-within:ring-ring">
-        <Search className="h-5 w-5 ml-2 text-muted-foreground" />
-        <Input
-            type="text"
-            placeholder="Filter by names, ID, or status..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full border-none shadow-none focus-visible:ring-0 h-9"
-        />
-      </div>
-
-      <div className="overflow-x-auto bg-card p-4 rounded-lg shadow">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[200px]">Couple Names</TableHead>
-              <TableHead>Submitted At</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-              <TableHead>Story</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredStories.map((story) => (
-              <TableRow key={story.id}>
-                <TableCell className="font-medium">{story.coupleNames || 'N/A'}</TableCell>
-                <TableCell>
-                  {story.submittedAt ? format(story.submittedAt.toDate(), 'PPp') : 'N/A'}
-                </TableCell>
-                <TableCell className="text-center">
-                  <Badge 
-                    variant={getStatusBadgeVariant(story.status)} 
-                    className={getStatusBadgeClasses(story.status)}
-                  >
-                    {story.status || 'Unknown'}
-                  </Badge>
-                </TableCell>
-                <TableCell className="max-w-sm truncate" title={story.storyText || ""}>{story.storyText || "—"}</TableCell>
-              </TableRow>
+      <WorkspaceHeading
+        title="Success stories"
+        description="Read each submission in full, then approve, reject or return it for review. Every decision records your reason in the audit history."
+        refresh={() => void refresh()}
+      />
+      <label className="block max-w-xs text-sm">
+        Status
+        <select
+          className="mt-2 h-10 w-full rounded-md border bg-white px-3"
+          value={status}
+          onChange={(e) => {
+            setStatus(e.target.value);
+            setPage(1);
+          }}
+        >
+          {["pending", "approved", "rejected", "all"].map((s) => (
+            <option key={s} value={s}>
+              {s === "all" ? "All stories" : s[0].toUpperCase() + s.slice(1)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <ResourceState
+        loading={loading}
+        error={error}
+        empty={!data?.stories.length}
+      />
+      {!loading && !error && (
+        <>
+          <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {data?.stories.map((s) => (
+              <ReviewCard
+                key={`${s.id}-${s.updated_at}`}
+                story={s}
+                onSave={refresh}
+              />
             ))}
-          </TableBody>
-        </Table>
-        {filteredStories.length === 0 && !isLoading && (
-          <p className="text-center text-slate-500 py-8">
-            {stories.length > 0 && searchTerm ? `No stories found matching "${searchTerm}".` : "No success stories submitted yet."}
-          </p>
-        )}
-      </div>
+          </div>
+          <Pager page={page} total={data?.total ?? 0} onPage={setPage} />
+        </>
+      )}
     </div>
   );
 }
-

@@ -1,73 +1,118 @@
-const { test } = require('node:test');
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const vm = require('node:vm');
-const ts = require('typescript');
+const { test } = require("node:test");
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const vm = require("node:vm");
+const ts = require("typescript");
 
 // Execute the real TypeScript modules with isolated Auth/Next boundaries.
 // No network, real sessions, or additional test dependencies are needed.
 function load(relative, mocks = {}) {
-  const filename = path.resolve(__dirname, '..', relative);
-  const source = fs.readFileSync(filename, 'utf8');
+  const filename = path.resolve(__dirname, "..", relative);
+  const source = fs.readFileSync(filename, "utf8");
   const { outputText } = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      jsx: ts.JsxEmit.ReactJSX,
+    },
     fileName: filename,
   });
   const module = { exports: {} };
   const requireMock = (name) => {
-    if (name === 'server-only') return {};
-    if (name === 'node:crypto') return require('node:crypto');
+    if (name === "server-only") return {};
+    if (name === "zod") return require("zod");
+    if (name === "@/lib/admin/http")
+      return load("src/lib/admin/http.ts", mocks);
+    if (name === "node:crypto") return require("node:crypto");
     if (Object.hasOwn(mocks, name)) return mocks[name];
-    if (name === 'react/jsx-runtime') return {
-      jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }),
-    };
+    if (name === "react/jsx-runtime")
+      return {
+        jsx: (type, props) => ({ type, props }),
+        jsxs: (type, props) => ({ type, props }),
+      };
     throw new Error(`Unexpected dependency: ${name} in ${relative}`);
   };
-  vm.runInThisContext(`(function(require,module,exports){${outputText}\n})`, { filename })(requireMock, module, module.exports);
+  vm.runInThisContext(`(function(require,module,exports){${outputText}\n})`, {
+    filename,
+  })(requireMock, module, module.exports);
   return module.exports;
 }
 
-const user = { id: 'verified-user', user_metadata: { isAdmin: true } };
-function authModule({ authUser = user, authError = null, role = true, roleError = null, throwsAt } = {}) {
+const user = { id: "verified-user", user_metadata: { isAdmin: true } };
+function authModule({
+  authUser = user,
+  authError = null,
+  role = true,
+  roleError = null,
+  throwsAt,
+} = {}) {
   const calls = [];
   const client = {
-    auth: { getUser: async () => {
-      calls.push('getUser');
-      if (throwsAt === 'auth') throw new Error('Auth unavailable');
-      return { data: { user: authUser }, error: authError };
-    } },
+    auth: {
+      getUser: async () => {
+        calls.push("getUser");
+        if (throwsAt === "auth") throw new Error("Auth unavailable");
+        return { data: { user: authUser }, error: authError };
+      },
+    },
     rpc: async (name, ...args) => {
       calls.push(name);
-      assert.equal(name, 'is_admin');
-      assert.equal(args.length, 0, 'Caller must not choose the user whose role is checked');
-      if (throwsAt === 'rpc') throw new Error('Database unavailable');
+      if (name === "admin_has_permission") return { data: false, error: null };
+      assert.equal(name, "is_admin");
+      assert.equal(
+        args.length,
+        0,
+        "Caller must not choose the user whose role is checked",
+      );
+      if (throwsAt === "rpc") throw new Error("Database unavailable");
       return { data: role, error: roleError };
     },
   };
-  return { calls, ...load('src/lib/auth/admin.ts', {
-    '@/lib/supabase/server': { createSupabaseServerClient: async () => {
-      if (throwsAt === 'client') throw new Error('Missing configuration');
-      return client;
-    } },
-  }) };
+  return {
+    calls,
+    ...load("src/lib/auth/admin.ts", {
+      "@/lib/supabase/server": {
+        createSupabaseServerClient: async () => {
+          if (throwsAt === "client") throw new Error("Missing configuration");
+          return client;
+        },
+      },
+    }),
+  };
 }
 
-test('only a verified user with a true database role is authorized', async () => {
+test("only a verified user with a true database role is authorized", async () => {
   const api = authModule();
   assert.equal((await api.getServerAdminAccess()).user, user);
-  assert.deepEqual(api.calls, ['getUser', 'is_admin']);
+  assert.deepEqual(api.calls, ["getUser", "is_admin"]);
 });
 
 for (const scenario of [
-  { name: 'guest', authUser: null, status: 'unauthenticated' },
-  { name: 'invalid session even with a user object', authError: new Error('invalid token'), status: 'unauthenticated' },
-  { name: 'member with forged user metadata', role: false, status: 'forbidden' },
-  { name: 'missing role', role: null, status: 'forbidden' },
-  { name: 'string role', role: 'true', status: 'forbidden' },
-  { name: 'numeric role', role: 1, status: 'forbidden' },
-  { name: 'RPC error even with true data', roleError: new Error('RPC failed'), status: 'unavailable' },
-  ...['client', 'auth', 'rpc'].map(throwsAt => ({ name: `${throwsAt} failure`, throwsAt, status: 'unavailable' })),
+  { name: "guest", authUser: null, status: "unauthenticated" },
+  {
+    name: "invalid session even with a user object",
+    authError: new Error("invalid token"),
+    status: "unauthenticated",
+  },
+  {
+    name: "member with forged user metadata",
+    role: false,
+    status: "forbidden",
+  },
+  { name: "missing role", role: null, status: "forbidden" },
+  { name: "string role", role: "true", status: "forbidden" },
+  { name: "numeric role", role: 1, status: "forbidden" },
+  {
+    name: "RPC error even with true data",
+    roleError: new Error("RPC failed"),
+    status: "unavailable",
+  },
+  ...["client", "auth", "rpc"].map((throwsAt) => ({
+    name: `${throwsAt} failure`,
+    throwsAt,
+    status: "unavailable",
+  })),
 ]) {
   test(`fail closed: ${scenario.name}`, async () => {
     const api = authModule(scenario);
@@ -75,17 +120,20 @@ for (const scenario of [
     assert.equal(access.status, scenario.status);
     assert.equal(access.user, null);
     assert.equal(await api.requireServerAdmin(), null);
-    if (scenario.status === 'unauthenticated') assert.ok(!api.calls.includes('is_admin'));
+    if (scenario.status === "unauthenticated")
+      assert.ok(!api.calls.includes("is_admin"));
   });
 }
 
-test('a revoked admin role is rechecked on the next call', async () => {
+test("a revoked admin role is rechecked on the next call", async () => {
   let role = true;
-  const api = load('src/lib/auth/admin.ts', {
-    '@/lib/supabase/server': { createSupabaseServerClient: async () => ({
-      auth: { getUser: async () => ({ data: { user }, error: null }) },
-      rpc: async () => ({ data: role, error: null }),
-    }) },
+  const api = load("src/lib/auth/admin.ts", {
+    "@/lib/supabase/server": {
+      createSupabaseServerClient: async () => ({
+        auth: { getUser: async () => ({ data: { user }, error: null }) },
+        rpc: async () => ({ data: role, error: null }),
+      }),
+    },
   });
   assert.equal(await api.requireServerAdmin(), user);
   role = false;
@@ -93,62 +141,175 @@ test('a revoked admin role is rechecked on the next call', async () => {
 });
 
 for (const [status, destination] of [
-  ['unauthenticated', '/login?next=%2Fadmin'], ['forbidden', '/dashboard'],
-  ['unavailable', null], ['authorized', null],
+  ["unauthenticated", "/login?next=%2Fadmin"],
+  ["forbidden", "/dashboard"],
+  ["unavailable", null],
+  ["authorized", null],
 ]) {
   test(`page guard: ${status}`, async () => {
     let redirected;
-    const guard = load('src/app/admin/guard.tsx', {
-      '@/lib/auth/admin': { getServerAdminAccess: async () => ({ status, user: status === 'authorized' ? user : null }) },
-      'next/navigation': { redirect: value => { redirected = value; throw new Error('redirect'); } },
+    const guard = load("src/app/admin/guard.tsx", {
+      "@/lib/auth/admin": {
+        getServerAdminAccess: async () => ({
+          status,
+          user: status === "authorized" ? user : null,
+        }),
+      },
+      "next/navigation": {
+        redirect: (value) => {
+          redirected = value;
+          throw new Error("redirect");
+        },
+      },
     });
-    if (status === 'authorized') assert.equal(await guard.requireAdminPage(), user);
+    if (status === "authorized")
+      assert.equal(await guard.requireAdminPage(), user);
     else await assert.rejects(guard.requireAdminPage());
     assert.equal(redirected, destination ?? undefined);
   });
 }
 
 function files(dir, basename) {
-  return fs.readdirSync(path.resolve(__dirname, '..', dir), { withFileTypes: true }).flatMap(entry =>
-    entry.isDirectory() ? files(`${dir}/${entry.name}`, basename) : entry.name === basename ? [`${dir}/${entry.name}`] : []);
+  return fs
+    .readdirSync(path.resolve(__dirname, "..", dir), { withFileTypes: true })
+    .flatMap((entry) =>
+      entry.isDirectory()
+        ? files(`${dir}/${entry.name}`, basename)
+        : entry.name === basename
+          ? [`${dir}/${entry.name}`]
+          : [],
+    );
 }
 const componentStubs = new Proxy({}, { get: (_, name) => name });
-const adminPages = ['src/app/admin/layout.tsx', ...files('src/app/admin', 'page.tsx')];
+const adminPages = [
+  "src/app/admin/layout.tsx",
+  ...files("src/app/admin", "page.tsx"),
+];
 for (const file of adminPages) {
   for (const authorized of [false, true]) {
-    test(`${file}: ${authorized ? 'admin allowed' : 'denied before rendering'}`, async () => {
-      const denied = new Error('Denied');
+    test(`${file}: ${authorized ? "admin allowed" : "denied before rendering"}`, async () => {
+      const denied = new Error("Denied");
       let checks = 0;
-      const guard = { requireAdminPage: async () => { checks++; if (!authorized) throw denied; return user; } };
+      const guard = {
+        requireAdminPage: async () => {
+          checks++;
+          if (!authorized) throw denied;
+          return user;
+        },
+      };
       const page = load(file, {
-        '@/app/admin/guard': guard, './guard': guard,
-        '@/lib/admin/dashboard': { getAdminDashboardMetrics: async () => ({ members: 14, activeUsers: 3, pendingVerification: 12, updatedAt: '2026-09-18T10:00:00Z' }) },
-        '@/lib/supabase/server': { createSupabaseServerClient: async () => ({ from: table => { assert.equal(table, 'admin_audit_log'); return { select: () => ({ order: () => ({ limit: async () => ({ data: [], error: null }) }) }) }; } }) },
-        './page-client': { default: 'AdminPageClient' }, './audit-explorer': { default: 'AuditExplorer' },
-        '@/components/shared/Logo': componentStubs, '@/components/ui/card': componentStubs,
-        './admin-navigation': { AdminNavigation: 'AdminNavigation' }, './admin-mobile-tab-bar': { AdminMobileTabBar: 'AdminMobileTabBar' },
-        'lucide-react': componentStubs, 'next/link': { default: 'Link' },
-        '@/lib/subscriptions/plans': { PLANS: {}, formatPlanPrice: () => '' },
+        "@/app/admin/guard": guard,
+        "./guard": guard,
+        "../guard": guard,
+        "@/lib/admin/dashboard": {
+          getAdminDashboardMetrics: async () => ({
+            members: 14,
+            activeUsers: 3,
+            pendingVerification: 12,
+            updatedAt: "2026-09-18T10:00:00Z",
+          }),
+        },
+        "@/lib/supabase/server": {
+          createSupabaseServerClient: async () => ({
+            from: (table) => {
+              assert.equal(table, "admin_audit_log");
+              return {
+                select: () => ({
+                  order: () => ({
+                    limit: async () => ({ data: [], error: null }),
+                  }),
+                }),
+              };
+            },
+          }),
+        },
+        "./dashboard-modules": {
+          AdminDashboardModules: "AdminDashboardModules",
+        },
+        "@/components/support/SupportInbox": { SupportInbox: "SupportInbox" },
+        "@/components/support/SupportThread": {
+          SupportThread: "SupportThread",
+        },
+        "./page-client": { default: "AdminPageClient" },
+        "@/components/admin/EmailDelivery": { EmailDelivery: "EmailDelivery" },
+        "./audit-explorer": { default: "AuditExplorer" },
+        "@/components/shared/Logo": componentStubs,
+        "@/components/admin/IntegrationReadiness": componentStubs,
+        "@/components/ui/card": componentStubs,
+        "./admin-navigation": { AdminNavigation: "AdminNavigation" },
+        "./admin-mobile-tab-bar": { AdminMobileTabBar: "AdminMobileTabBar" },
+        "lucide-react": componentStubs,
+        "next/link": { default: "Link" },
+        "@/lib/subscriptions/plans": { PLANS: {}, formatPlanPrice: () => "" },
       });
-      if (authorized) assert.ok(await page.default({ children: 'protected' }));
-      else await assert.rejects(page.default({ children: 'protected' }), error => error === denied);
+      if (authorized)
+        assert.ok(
+          await page.default({
+            children: "protected",
+            params: Promise.resolve({
+              ticketId: "11111111-1111-4111-8111-111111111111",
+              reportId: "11111111-1111-4111-8111-111111111111",
+            }),
+          }),
+        );
+      else
+        await assert.rejects(
+          page.default({
+            children: "protected",
+            params: Promise.resolve({
+              ticketId: "11111111-1111-4111-8111-111111111111",
+              reportId: "11111111-1111-4111-8111-111111111111",
+            }),
+          }),
+          (error) => error === denied,
+        );
       assert.equal(checks, 1);
     });
   }
 }
 
-for (const file of files('src/app/api/admin', 'route.ts')) {
+for (const file of files("src/app/api/admin", "route.ts")) {
   test(`${file}: rejects direct unauthorized requests without reading data`, async () => {
     let checks = 0;
     const api = load(file, {
-      '@/lib/auth/admin': { requireServerAdmin: async () => { checks++; return null; } },
-      '@/lib/supabase/server': { createSupabaseServerClient: () => { throw new Error('Protected data accessed before authorization'); } },
-      '@/lib/subscriptions': { ADMIN_BILLING_CAPABILITIES: {} },
-      '@/lib/admin/dashboard': { getAdminDashboardMetrics: () => { throw new Error('Read before authorization'); } },
-      'next/server': { NextResponse: { json: (body, init) => ({ body, status: init?.status ?? 200 }) } },
+      "@/lib/auth/admin": {
+        requireServerAdmin: async () => {
+          checks++;
+          return null;
+        },
+      },
+      "@/lib/supabase/server": {
+        createSupabaseServerClient: () => {
+          throw new Error("Protected data accessed before authorization");
+        },
+      },
+      "@/lib/subscriptions": { ADMIN_BILLING_CAPABILITIES: {} },
+      "@/lib/supabase/service": {
+        serviceConfigured: () => false,
+        serviceClient: () => {
+          throw new Error("Service before authorization");
+        },
+      },
+      "@/lib/providers/stripe": {
+        getStripe: () => {
+          throw new Error("Provider before authorization");
+        },
+      },
+      "@/lib/subscriptions/checkout": { billingConfigured: () => false },
+      "@/lib/providers/billing-history": { billingHistory: () => { throw new Error("Provider read before authorization"); } },
+      "@/lib/admin/dashboard": {
+        getAdminDashboardMetrics: () => {
+          throw new Error("Read before authorization");
+        },
+      },
+      "next/server": {
+        NextResponse: {
+          json: (body, init) => ({ body, status: init?.status ?? 200 }),
+        },
+      },
     });
-    for (const method of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
-      if (typeof api[method] !== 'function') continue;
+    for (const method of ["GET", "POST", "PUT", "PATCH", "DELETE"]) {
+      if (typeof api[method] !== "function") continue;
       const response = await api[method]();
       assert.equal(response.status, 403);
     }
@@ -157,129 +318,352 @@ for (const file of files('src/app/api/admin', 'route.ts')) {
 }
 
 for (const [name, payload, error, valid] of [
-  ['real counts', { members: 14, activeUsers: 3, pendingVerification: 12, updatedAt: '2026-09-18T10:00:00Z' }, null, true],
-  ['empty membership', { members: 0, activeUsers: 0, pendingVerification: 0, updatedAt: '2026-09-18T10:00:00Z' }, null, true],
-  ['database error', null, { message: 'Permission denied' }, false],
-  ['missing counts', {}, null, false],
-  ['negative counts', { members: -1, activeUsers: 0, pendingVerification: 0, updatedAt: '2026-09-18T10:00:00Z' }, null, false],
-  ['invalid timestamp', { members: 1, activeUsers: 0, pendingVerification: 0, updatedAt: 'invalid' }, null, false],
+  [
+    "real counts",
+    {
+      members: 14,
+      activeUsers: 3,
+      pendingVerification: 12,
+      updatedAt: "2026-09-18T10:00:00Z",
+    },
+    null,
+    true,
+  ],
+  [
+    "empty membership",
+    {
+      members: 0,
+      activeUsers: 0,
+      pendingVerification: 0,
+      updatedAt: "2026-09-18T10:00:00Z",
+    },
+    null,
+    true,
+  ],
+  ["database error", null, { message: "Permission denied" }, false],
+  ["missing counts", {}, null, false],
+  [
+    "negative counts",
+    {
+      members: -1,
+      activeUsers: 0,
+      pendingVerification: 0,
+      updatedAt: "2026-09-18T10:00:00Z",
+    },
+    null,
+    false,
+  ],
+  [
+    "invalid timestamp",
+    {
+      members: 1,
+      activeUsers: 0,
+      pendingVerification: 0,
+      updatedAt: "invalid",
+    },
+    null,
+    false,
+  ],
 ]) {
   test(`dashboard metrics: ${name}`, async () => {
-    const metrics = load('src/lib/admin/dashboard.ts', {
-      '@/lib/supabase/server': { createSupabaseServerClient: async () => ({ rpc: async (name) => {
-        assert.equal(name, 'admin_dashboard_counts');
-        return { data: payload, error };
-      } }) },
+    const metrics = load("src/lib/admin/dashboard.ts", {
+      "@/lib/supabase/server": {
+        createSupabaseServerClient: async () => ({
+          rpc: async (name) => {
+            assert.equal(name, "admin_dashboard_counts");
+            return { data: payload, error };
+          },
+        }),
+      },
     });
-    if (valid) assert.deepEqual(await metrics.getAdminDashboardMetrics(), payload);
-    else await assert.rejects(metrics.getAdminDashboardMetrics(), /unavailable/);
+    if (valid)
+      assert.deepEqual(await metrics.getAdminDashboardMetrics(), payload);
+    else
+      await assert.rejects(metrics.getAdminDashboardMetrics(), /unavailable/);
   });
 }
 
 for (const unavailable of [false, true]) {
-  test(`summary API: ${unavailable ? 'returns 503 on failure instead of false zeros' : 'returns counts without caching'}`, async () => {
-    const payload = { members: 14, activeUsers: 3, pendingVerification: 12, updatedAt: '2026-09-18T10:00:00Z' };
-    const api = load('src/app/api/admin/summary/route.ts', {
-      '@/lib/auth/admin': { requireServerAdmin: async () => user },
-      '@/lib/admin/dashboard': { getAdminDashboardMetrics: async () => {
-        if (unavailable) throw new Error('Database failed');
-        return payload;
-      } },
-      'next/server': { NextResponse: { json: (body, init) => ({ body, status: init?.status ?? 200, headers: init?.headers }) } },
+  test(`summary API: ${unavailable ? "returns 503 on failure instead of false zeros" : "returns counts without caching"}`, async () => {
+    const payload = {
+      members: 14,
+      activeUsers: 3,
+      pendingVerification: 12,
+      updatedAt: "2026-09-18T10:00:00Z",
+    };
+    const api = load("src/app/api/admin/summary/route.ts", {
+      "@/lib/auth/admin": { requireServerAdmin: async () => user },
+      "@/lib/admin/dashboard": {
+        getAdminDashboardMetrics: async () => {
+          if (unavailable) throw new Error("Database failed");
+          return payload;
+        },
+      },
+      "next/server": {
+        NextResponse: {
+          json: (body, init) => ({
+            body,
+            status: init?.status ?? 200,
+            headers: init?.headers,
+          }),
+        },
+      },
     });
     const result = await api.GET();
     assert.equal(result.status, unavailable ? 503 : 200);
-    assert.equal(result.headers['Cache-Control'], 'no-store');
+    assert.equal(result.headers["Cache-Control"], "no-store");
     if (!unavailable) assert.deepEqual(result.body, payload);
     else assert.equal(result.body.members, undefined);
   });
 }
 
-
 for (const scenario of [
-  { name: 'suspend member', suspend: true },
-  { name: 'restore member', suspend: false },
+  { name: "suspend member", suspend: true },
+  { name: "restore member", suspend: false },
 ]) {
   test(`suspension API: ${scenario.name} invokes audited database RPC`, async () => {
-    const memberId = '11111111-1111-4111-8111-111111111111';
+    const memberId = "11111111-1111-4111-8111-111111111111";
     const calls = [];
-    const api = load('src/app/api/admin/member-suspension/route.ts', {
-      '@/lib/auth/admin': { requireServerAdmin: async () => user },
-      '@/lib/supabase/server': { createSupabaseServerClient: async () => ({
-        rpc: async (name, args) => {
-          calls.push({ name, args });
-          return { data: { changed: true, suspended: scenario.suspend }, error: null };
+    const api = load("src/app/api/admin/member-suspension/route.ts", {
+      "@/lib/auth/admin": { requireServerAdmin: async () => user },
+      "@/lib/supabase/server": {
+        createSupabaseServerClient: async () => ({
+          rpc: async (name, args) => {
+            calls.push({ name, args });
+            return {
+              data: { changed: true, suspended: scenario.suspend },
+              error: null,
+            };
+          },
+        }),
+      },
+      "next/server": {
+        NextResponse: {
+          json: (body, init) => ({ body, status: init?.status ?? 200 }),
         },
-      }) },
-      'next/server': { NextResponse: { json: (body, init) => ({ body, status: init?.status ?? 200 }) } },
+      },
     });
-    const request = { json: async () => ({ memberId, suspend: scenario.suspend, reason: 'Moderation case reviewed' }) };
+    const request = {
+      json: async () => ({
+        memberId,
+        suspend: scenario.suspend,
+        reason: "Moderation case reviewed",
+      }),
+    };
     const response = await api.POST(request);
     assert.equal(response.status, 200);
-    assert.deepEqual(response.body, { changed: true, suspended: scenario.suspend });
-    assert.deepEqual(calls, [{ name: 'admin_set_member_suspension', args: {
-      p_member_id: memberId, p_suspend: scenario.suspend, p_reason: 'Moderation case reviewed',
-    } }]);
+    assert.deepEqual(response.body, {
+      changed: true,
+      suspended: scenario.suspend,
+    });
+    assert.deepEqual(calls, [
+      {
+        name: "admin_set_member_suspension",
+        args: {
+          p_member_id: memberId,
+          p_suspend: scenario.suspend,
+          p_reason: "Moderation case reviewed",
+        },
+      },
+    ]);
   });
 }
-test('suspension API rejects invalid input without contacting database', async () => {
-  const api = load('src/app/api/admin/member-suspension/route.ts', {
-    '@/lib/auth/admin': { requireServerAdmin: async () => user },
-    '@/lib/supabase/server': { createSupabaseServerClient: async () => { throw new Error('Invalid input reached database'); } },
-    'next/server': { NextResponse: { json: (body, init) => ({ body, status: init?.status ?? 200 }) } },
+test("suspension API rejects invalid input without contacting database", async () => {
+  const api = load("src/app/api/admin/member-suspension/route.ts", {
+    "@/lib/auth/admin": { requireServerAdmin: async () => user },
+    "@/lib/supabase/server": {
+      createSupabaseServerClient: async () => {
+        throw new Error("Invalid input reached database");
+      },
+    },
+    "next/server": {
+      NextResponse: {
+        json: (body, init) => ({ body, status: init?.status ?? 200 }),
+      },
+    },
   });
   for (const body of [
-    { memberId: 'invalid', suspend: true, reason: 'Enough characters' },
-    { memberId: '11111111-1111-4111-8111-111111111111', suspend: 'yes', reason: 'Enough characters' },
-    { memberId: '11111111-1111-4111-8111-111111111111', suspend: true, reason: 'short' },
-  ]) assert.equal((await api.POST({ json: async () => body })).status, 400);
+    { memberId: "invalid", suspend: true, reason: "Enough characters" },
+    {
+      memberId: "11111111-1111-4111-8111-111111111111",
+      suspend: "yes",
+      reason: "Enough characters",
+    },
+    {
+      memberId: "11111111-1111-4111-8111-111111111111",
+      suspend: true,
+      reason: "short",
+    },
+  ])
+    assert.equal((await api.POST({ json: async () => body })).status, 400);
 });
-test('suspension API fails closed on database errors', async () => {
-  const api = load('src/app/api/admin/member-suspension/route.ts', {
-    '@/lib/auth/admin': { requireServerAdmin: async () => user },
-    '@/lib/supabase/server': { createSupabaseServerClient: async () => ({ rpc: async () => ({ data: null, error: { code: '42501' } }) }) },
-    'next/server': { NextResponse: { json: (body, init) => ({ body, status: init?.status ?? 200 }) } },
+test("suspension API fails closed on database errors", async () => {
+  const api = load("src/app/api/admin/member-suspension/route.ts", {
+    "@/lib/auth/admin": { requireServerAdmin: async () => user },
+    "@/lib/supabase/server": {
+      createSupabaseServerClient: async () => ({
+        rpc: async () => ({ data: null, error: { code: "42501" } }),
+      }),
+    },
+    "next/server": {
+      NextResponse: {
+        json: (body, init) => ({ body, status: init?.status ?? 200 }),
+      },
+    },
   });
-  const response = await api.POST({ json: async () => ({
-    memberId: '11111111-1111-4111-8111-111111111111', suspend: true, reason: 'Moderation case reviewed',
-  }) });
+  const response = await api.POST({
+    json: async () => ({
+      memberId: "11111111-1111-4111-8111-111111111111",
+      suspend: true,
+      reason: "Moderation case reviewed",
+    }),
+  });
   assert.equal(response.status, 403);
 });
 
-test('trial admin API rejects invalid duration before touching the database', async () => {
- const api=load('src/app/api/admin/trials/route.ts',{
-  '@/lib/auth/admin':{requireServerAdmin:async()=>user},
-  '@/lib/supabase/server':{createSupabaseServerClient:async()=>{throw new Error('Invalid input reached database');}},
-  'next/server':{NextResponse:{json:(body,init)=>({body,status:init?.status??200})}},
- });
- const result=await api.POST({headers:{get:()=>null},json:async()=>({memberId:'11111111-1111-4111-8111-111111111111',action:'grant',months:100,reason:'Admin-approved extended trial'}),url:'https://example.test/api/admin/trials'});
- assert.equal(result.status,400);
+test("trial admin API rejects invalid duration before touching the database", async () => {
+  const api = load("src/app/api/admin/trials/route.ts", {
+    "@/lib/auth/admin": { requireServerAdmin: async () => user },
+    "@/lib/supabase/server": {
+      createSupabaseServerClient: async () => {
+        throw new Error("Invalid input reached database");
+      },
+    },
+    "next/server": {
+      NextResponse: {
+        json: (body, init) => ({ body, status: init?.status ?? 200 }),
+      },
+    },
+  });
+  const result = await api.POST({
+    headers: { get: () => null },
+    json: async () => ({
+      memberId: "11111111-1111-4111-8111-111111111111",
+      action: "grant",
+      months: 100,
+      reason: "Admin-approved extended trial",
+    }),
+    url: "https://example.test/api/admin/trials",
+  });
+  assert.equal(result.status, 400);
 });
-test('trial admin API invokes audited RPC for valid extension',async()=>{
- const calls=[];
- const api=load('src/app/api/admin/trials/route.ts',{
-  '@/lib/auth/admin':{requireServerAdmin:async()=>user},
-  '@/lib/supabase/server':{createSupabaseServerClient:async()=>({rpc:async(name,args)=>{calls.push({name,args});return {data:{endsAt:'2027-06-01'},error:null};}})},
-  'next/server':{NextResponse:{json:(body,init)=>({body,status:init?.status??200})}},
- });
- const result=await api.POST({headers:{get:()=>null},json:async()=>({memberId:'11111111-1111-4111-8111-111111111111',action:'extend',months:6,reason:'Customer support approved extension'}),url:'https://example.test/api/admin/trials'});
- assert.equal(result.status,200);
- assert.deepEqual(calls,[{name:'admin_adjust_member_trial',args:{p_member_id:'11111111-1111-4111-8111-111111111111',p_action:'extend',p_months:6,p_reason:'Customer support approved extension'}}]);
+test("trial admin API invokes audited RPC for valid extension", async () => {
+  const calls = [];
+  const api = load("src/app/api/admin/trials/route.ts", {
+    "@/lib/auth/admin": { requireServerAdmin: async () => user },
+    "@/lib/supabase/server": {
+      createSupabaseServerClient: async () => ({
+        rpc: async (name, args) => {
+          calls.push({ name, args });
+          return { data: { endsAt: "2027-06-01" }, error: null };
+        },
+      }),
+    },
+    "next/server": {
+      NextResponse: {
+        json: (body, init) => ({ body, status: init?.status ?? 200 }),
+      },
+    },
+  });
+  const result = await api.POST({
+    headers: { get: () => null },
+    json: async () => ({
+      memberId: "11111111-1111-4111-8111-111111111111",
+      action: "extend",
+      months: 6,
+      reason: "Customer support approved extension",
+    }),
+    url: "https://example.test/api/admin/trials",
+  });
+  assert.equal(result.status, 200);
+  assert.deepEqual(calls, [
+    {
+      name: "admin_adjust_member_trial",
+      args: {
+        p_member_id: "11111111-1111-4111-8111-111111111111",
+        p_action: "extend",
+        p_months: 6,
+        p_reason: "Customer support approved extension",
+      },
+    },
+  ]);
 });
 
-test('audit API refuses unauthenticated reads before touching database',async()=>{
- const api=load('src/app/api/admin/audit-log/route.ts',{
-  '@/lib/auth/admin':{requireServerAdmin:async()=>null},
-  '@/lib/supabase/server':{createSupabaseServerClient:async()=>{throw Error('Read before auth');}},
-  'next/server':{NextResponse:{json:(body,init)=>({body,status:init?.status??200})}},
- });
- assert.equal((await api.GET()).status,403);
+test("audit API refuses unauthenticated reads before touching database", async () => {
+  const api = load("src/app/api/admin/audit-log/route.ts", {
+    "@/lib/auth/admin": { requireServerAdmin: async () => null },
+    "@/lib/supabase/server": {
+      createSupabaseServerClient: async () => {
+        throw Error("Read before auth");
+      },
+    },
+    "next/server": {
+      NextResponse: {
+        json: (body, init) => ({ body, status: init?.status ?? 200 }),
+      },
+    },
+  });
+  assert.equal((await api.GET()).status, 403);
 });
-test('audit API rejects malformed actor filters before querying',async()=>{
- const api=load('src/app/api/admin/audit-log/route.ts',{
-  '@/lib/auth/admin':{requireServerAdmin:async()=>user},
-  '@/lib/supabase/server':{createSupabaseServerClient:async()=>{throw Error('Invalid filter queried');}},
-  'next/server':{NextResponse:{json:(body,init)=>({body,status:init?.status??200})}},
- });
- assert.equal((await api.GET({url:'https://example.test/api/admin/audit-log?actor=not-a-uuid'})).status,400);
+test("audit API rejects malformed actor filters before querying", async () => {
+  const api = load("src/app/api/admin/audit-log/route.ts", {
+    "@/lib/auth/admin": { requireServerAdmin: async () => user },
+    "@/lib/supabase/server": {
+      createSupabaseServerClient: async () => {
+        throw Error("Invalid filter queried");
+      },
+    },
+    "next/server": {
+      NextResponse: {
+        json: (body, init) => ({ body, status: init?.status ?? 200 }),
+      },
+    },
+  });
+  assert.equal(
+    (
+      await api.GET({
+        url: "https://example.test/api/admin/audit-log?actor=not-a-uuid",
+      })
+    ).status,
+    400,
+  );
+});
+
+for (const [permission, allowed] of [
+  ["members", true],
+  ["moderation", false],
+  ["manage", false],
+  ["billing", false],
+]) {
+  test(`delegated support access to ${permission}: ${allowed}`, async () => {
+    const api = load("src/lib/auth/admin.ts", {
+      "@/lib/supabase/server": {
+        createSupabaseServerClient: async () => ({
+          auth: { getUser: async () => ({ data: { user }, error: null }) },
+          rpc: async (name, args) => ({
+            data: name === "is_admin" ? false : args.p_permission === "members",
+            error: null,
+          }),
+        }),
+      },
+    });
+    assert.equal(Boolean(await api.requireServerAdmin(permission)), allowed);
+  });
+}
+test("revoked delegated permissions take effect without waiting for JWT refresh", async () => {
+  let granted = true;
+  const api = load("src/lib/auth/admin.ts", {
+    "@/lib/supabase/server": {
+      createSupabaseServerClient: async () => ({
+        auth: { getUser: async () => ({ data: { user }, error: null }) },
+        rpc: async (name) => ({
+          data: name === "is_admin" ? false : granted,
+          error: null,
+        }),
+      }),
+    },
+  });
+  assert.equal(await api.requireServerAdmin("content"), user);
+  granted = false;
+  assert.equal(await api.requireServerAdmin("content"), null);
 });

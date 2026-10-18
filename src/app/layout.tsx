@@ -3,27 +3,23 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 
-const productionHost =
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  process.env.VERCEL_PROJECT_PRODUCTION_URL ||
-  process.env.VERCEL_URL ||
-  'matrimony-with-studio.vercel.app';
-const siteUrl = productionHost.startsWith('http') ? productionHost : `https://${productionHost}`;
-const SHARE_CARD_VERSION = '3';
+const siteUrl = 'https://cupidmatch.co.uk';
+const SHARE_CARD_VERSION = '4';
 const shareCardImage = `/opengraph-image?v=${SHARE_CARD_VERSION}`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: 'CupidMatch - Find Your Perfect Match in India & Sri Lanka',
-  description: 'Matrimony site for Indian and Sri Lankan communities, powered by intelligent suggestions and horoscope matching.',
+  title: 'CupidMatch | Sri Lankan & Indian Matrimony',
+  applicationName: 'CupidMatch',
+  description: 'Find meaningful connections with people who share your values, culture and future goals. Explore profiles and start your journey with CupidMatch.',
   icons: {
-    icon: [
-      { url: '/images/cupidmatch-logo.png', type: 'image/png' },
-    ],
-    shortcut: '/images/cupidmatch-logo.png',
-    apple: '/images/cupidmatch-logo.png',
+    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    shortcut: '/icon.svg',
+    apple: '/images/cupidmatch-logo-new.png',
   },
+  robots: { index: true, follow: true },
   openGraph: {
+    url: siteUrl,
     type: 'website',
     siteName: 'CupidMatch',
     title: 'CupidMatch - Find Your Perfect Match',

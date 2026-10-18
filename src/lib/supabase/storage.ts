@@ -2,20 +2,33 @@ import { supabase } from "./client";
 
 export const MEDIA_BUCKET = "media";
 
-export function mediaPathForUser(userId: string, fileName: string, folder = "photos"): string {
-  const safeName = fileName.replace(/[^\w.\-]+/g, "-").slice(0, 80) || "photo.jpg";
+export function mediaPathForUser(
+  userId: string,
+  fileName: string,
+  folder = "photos",
+): string {
+  const safeName =
+    fileName.replace(/[^\w.\-]+/g, "-").slice(0, 80) || "photo.jpg";
   return `users/${userId}/${folder}/${Date.now()}-${safeName}`;
 }
 
 /** One stable profile-photo object per account, shared by every screen/device. */
-export function profilePhotoPathForUser(userId: string, fileName: string): string {
-  const extension = fileName.toLowerCase().match(/\.(jpe?g|png|webp)$/)?.[0] || ".jpg";
+export function profilePhotoPathForUser(
+  userId: string,
+  fileName: string,
+): string {
+  const extension =
+    fileName.toLowerCase().match(/\.(jpe?g|png|webp)$/)?.[0] || ".jpg";
   return `users/${userId}/profile_photo/profile${extension}`;
 }
 
-export function extractStoragePath(urlOrPath: string | null | undefined): string | null {
+export function extractStoragePath(
+  urlOrPath: string | null | undefined,
+): string | null {
   if (!urlOrPath) return null;
   const value = urlOrPath.trim();
+  if (value.startsWith("/api/media?"))
+    return new URLSearchParams(value.split("?")[1]).get("path");
   if (!value) return null;
 
   if (value.startsWith("users/") || value.startsWith("success_stories/")) {
@@ -40,10 +53,9 @@ export function extractStoragePath(urlOrPath: string | null | undefined): string
   return null;
 }
 
-/** Stable browser URL for a storage path (requires public media bucket). */
+/** Stable browser URL for a storage path (served through the authenticated media gateway). */
 export function getPublicMediaUrl(path: string): string {
-  const { data } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
-  return data.publicUrl;
+  return `/api/media?path=${encodeURIComponent(path)}`;
 }
 
 /** Normalize a stored photo value into something an <img> can load. */
@@ -61,33 +73,35 @@ export function resolveMediaUrl(urlOrPath: string | null | undefined): string {
   return value;
 }
 
+/** Use the gateway rather than issuing a long-lived signed URL for private media. */
 export async function createSignedMediaUrl(
   path: string,
-  expiresIn = 60 * 60 * 24 * 7
+  _expiresIn = 60,
 ): Promise<string | null> {
-  if (!path) return null;
   const storagePath = extractStoragePath(path) || path;
-  const { data, error } = await supabase.storage
-    .from(MEDIA_BUCKET)
-    .createSignedUrl(storagePath, expiresIn);
-  if (error || !data?.signedUrl) return null;
-  return data.signedUrl;
+  return storagePath ? getPublicMediaUrl(storagePath) : null;
 }
 
 function describeUploadError(error: { message?: string }, path: string): Error {
   const message = error.message || "";
   if (/bucket not found|NoSuchBucket/i.test(message)) {
     return new Error(
-      "Photo storage is not set up. Run supabase/fixups/create-media-bucket.sql in the Supabase SQL Editor, then try again."
+      "Photo storage is not set up. Run supabase/fixups/create-media-bucket.sql in the Supabase SQL Editor, then try again.",
     );
   }
-  if (/row-level security|violates|policy|unauthorized|jwt|not allowed/i.test(message)) {
+  if (
+    /row-level security|violates|policy|unauthorized|jwt|not allowed/i.test(
+      message,
+    )
+  ) {
     return new Error(
-      "Photo upload was blocked by storage permissions. Sign in again, and ensure the media bucket policies are installed."
+      "Photo upload was blocked by storage permissions. Sign in again, and ensure the media bucket policies are installed.",
     );
   }
   if (/Payload too large|exceeded|too large/i.test(message)) {
-    return new Error("That photo is too large. Please upload an image under 5MB.");
+    return new Error(
+      "That photo is too large. Please upload an image under 5MB.",
+    );
   }
   return new Error(message || `Failed to upload file to ${path}.`);
 }
@@ -104,11 +118,13 @@ export async function uploadFile(file: File, path: string): Promise<string> {
     ? profilePhotoPathForUser(profileMatch[1], file.name)
     : path;
 
-  const { error } = await supabase.storage.from(MEDIA_BUCKET).upload(uploadPath, file, {
-    upsert: true,
-    contentType: file.type || undefined,
-    cacheControl: "3600",
-  });
+  const { error } = await supabase.storage
+    .from(MEDIA_BUCKET)
+    .upload(uploadPath, file, {
+      upsert: true,
+      contentType: file.type || undefined,
+      cacheControl: "3600",
+    });
 
   if (error) {
     console.error("Error uploading file:", error);
@@ -121,7 +137,7 @@ export async function uploadFile(file: File, path: string): Promise<string> {
 /** Upload and return both durable path and display URL. */
 export async function uploadMediaFile(
   file: File,
-  path: string
+  path: string,
 ): Promise<{ path: string; url: string }> {
   const storedPath = await uploadFile(file, path);
   const publicUrl = getPublicMediaUrl(storedPath);

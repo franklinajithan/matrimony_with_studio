@@ -1,6 +1,6 @@
 const stripQuotes = (value?: string) => value?.replace(/^["']|["']$/g, "");
 
-const PRODUCTION_SITE_URL = "https://matrimony-with-studio.vercel.app";
+const PRODUCTION_SITE_URL = "https://cupidmatch.co.uk";
 
 export function getSupabaseUrl(): string {
   return stripQuotes(process.env.NEXT_PUBLIC_SUPABASE_URL) || "";

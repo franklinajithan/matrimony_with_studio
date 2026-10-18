@@ -33,8 +33,14 @@ export function mapBiodataDocument(row: Row | null): BiodataDocument | null {
     templateId: String(row.template_id),
     templateVersion: Number(row.template_version ?? TEMPLATE_VERSION),
     language: (row.language as BiodataLanguage) || "en",
-    content: asObject<BiodataContent>(row.content, { introduction: "", sections: [] }),
-    design: asObject<BiodataDesign>(row.design, defaultDesignForTemplate(String(row.template_id))),
+    content: asObject<BiodataContent>(row.content, {
+      introduction: "",
+      sections: [],
+    }),
+    design: asObject<BiodataDesign>(
+      row.design,
+      defaultDesignForTemplate(String(row.template_id)),
+    ),
     visibility: asObject<BiodataVisibility>(row.visibility, {
       includePhoto: false,
       includeDob: false,
@@ -70,7 +76,9 @@ function mapShareLink(row: Row | null): BiodataShareLink | null {
   };
 }
 
-export async function listDocuments(ownerId: string): Promise<BiodataDocument[]> {
+export async function listDocuments(
+  ownerId: string,
+): Promise<BiodataDocument[]> {
   const { data, error } = await supabase
     .from("biodata_documents")
     .select("*")
@@ -110,7 +118,11 @@ export async function createDocument(input: {
       template_version: templateVersion,
       language: input.language,
       content: input.content,
-      design: { ...input.design, templateId: input.templateId, templateVersion },
+      design: {
+        ...input.design,
+        templateId: input.templateId,
+        templateVersion,
+      },
       visibility: input.visibility,
       section_order: input.sectionOrder,
       document_version: 1,
@@ -140,7 +152,10 @@ export class BiodataVersionConflictError extends Error {
   readonly code = "version_conflict" as const;
   readonly currentVersion?: number;
 
-  constructor(message = "Document was updated elsewhere. Reload and try again.", currentVersion?: number) {
+  constructor(
+    message = "Document was updated elsewhere. Reload and try again.",
+    currentVersion?: number,
+  ) {
     super(message);
     this.name = "BiodataVersionConflictError";
     this.currentVersion = currentVersion;
@@ -153,7 +168,7 @@ export class BiodataVersionConflictError extends Error {
  */
 export async function updateDocument(
   id: string,
-  patch: BiodataDocumentPatch
+  patch: BiodataDocumentPatch,
 ): Promise<BiodataDocument> {
   const expectedVersion = patch.documentVersion;
   const nextVersion = expectedVersion + 1;
@@ -165,14 +180,16 @@ export async function updateDocument(
 
   if (patch.title !== undefined) row.title = patch.title;
   if (patch.templateId !== undefined) row.template_id = patch.templateId;
-  if (patch.templateVersion !== undefined) row.template_version = patch.templateVersion;
+  if (patch.templateVersion !== undefined)
+    row.template_version = patch.templateVersion;
   if (patch.language !== undefined) row.language = patch.language;
   if (patch.content !== undefined) row.content = patch.content;
   if (patch.design !== undefined) row.design = patch.design;
   if (patch.visibility !== undefined) row.visibility = patch.visibility;
   if (patch.sectionOrder !== undefined) row.section_order = patch.sectionOrder;
   if (patch.isFavourite !== undefined) row.is_favourite = patch.isFavourite;
-  if (patch.lastExportedAt !== undefined) row.last_exported_at = patch.lastExportedAt;
+  if (patch.lastExportedAt !== undefined)
+    row.last_exported_at = patch.lastExportedAt;
 
   const { data, error } = await supabase
     .from("biodata_documents")
@@ -187,7 +204,7 @@ export async function updateDocument(
     const current = await getDocument(id);
     throw new BiodataVersionConflictError(
       "Document was updated elsewhere. Reload and try again.",
-      current?.documentVersion
+      current?.documentVersion,
     );
   }
 
@@ -200,7 +217,9 @@ export async function duplicateDocument(id: string): Promise<BiodataDocument> {
 
   return createDocument({
     ownerId: source.ownerId,
-    title: source.title.startsWith("Copy of ") ? source.title : `Copy of ${source.title}`,
+    title: source.title.startsWith("Copy of ")
+      ? source.title
+      : `Copy of ${source.title}`,
     templateId: source.templateId,
     content: structuredClone(source.content),
     design: structuredClone(source.design),
@@ -211,11 +230,16 @@ export async function duplicateDocument(id: string): Promise<BiodataDocument> {
 }
 
 export async function deleteDocument(id: string): Promise<void> {
-  const { error } = await supabase.from("biodata_documents").delete().eq("id", id);
+  const { error } = await supabase
+    .from("biodata_documents")
+    .delete()
+    .eq("id", id);
   if (error) throw error;
 }
 
-export async function listFavouriteTemplates(ownerId: string): Promise<string[]> {
+export async function listFavouriteTemplates(
+  ownerId: string,
+): Promise<string[]> {
   const { data, error } = await supabase
     .from("biodata_template_favourites")
     .select("template_id")
@@ -228,13 +252,15 @@ export async function listFavouriteTemplates(ownerId: string): Promise<string[]>
 export async function setFavouriteTemplate(
   ownerId: string,
   templateId: string,
-  favourite: boolean
+  favourite: boolean,
 ): Promise<void> {
   if (favourite) {
-    const { error } = await supabase.from("biodata_template_favourites").upsert(
-      { owner_id: ownerId, template_id: templateId },
-      { onConflict: "owner_id,template_id" }
-    );
+    const { error } = await supabase
+      .from("biodata_template_favourites")
+      .upsert(
+        { owner_id: ownerId, template_id: templateId },
+        { onConflict: "owner_id,template_id" },
+      );
     if (error) throw error;
     return;
   }
@@ -252,7 +278,9 @@ function createShareToken(): string {
   if (typeof crypto !== "undefined" && crypto.getRandomValues) {
     crypto.getRandomValues(bytes);
   } else {
-    for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+    throw new Error(
+      "Secure sharing requires a browser with cryptographic randomness.",
+    );
   }
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
@@ -292,16 +320,20 @@ export async function revokeShareLink(id: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function getShareByToken(token: string): Promise<BiodataShareLink | null> {
-  const { data, error } = await supabase
-    .from("biodata_share_links")
-    .select("*")
-    .eq("token", token)
-    .maybeSingle();
+export async function getShareByToken(
+  token: string,
+): Promise<BiodataShareLink | null> {
+  if (!/^[A-Za-z0-9_-]{32,128}$/.test(token)) return null;
+  const { data, error } = await supabase.rpc("resolve_biodata_share", {
+    p_token: token,
+  });
   if (error) throw error;
-  const link = mapShareLink(data as Row | null);
+  const link = mapShareLink(
+    (Array.isArray(data) ? data[0] : data) as Row | null,
+  );
   if (!link) return null;
   if (link.revokedAt) return null;
-  if (link.expiresAt && new Date(link.expiresAt).getTime() <= Date.now()) return null;
+  if (link.expiresAt && new Date(link.expiresAt).getTime() <= Date.now())
+    return null;
   return link;
 }

@@ -1,78 +1,91 @@
 "use client";
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Eye, Users } from "lucide-react";
+import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
-
-// Mock data for now
-const mockViewers = [
-  { id: "viewer1", name: "Priya Sharma", avatarUrl: "https://placehold.co/80x80.png?text=PS", dataAiHint: "person female", viewedAt: "2 hours ago", profileLink: "/profile/viewer1" },
-  { id: "viewer2", name: "Raj Patel", avatarUrl: "https://placehold.co/80x80.png?text=RP", dataAiHint: "person male", viewedAt: "Yesterday", profileLink: "/profile/viewer2" },
-  { id: "viewer3", name: "Anjali Singh", avatarUrl: "https://placehold.co/80x80.png?text=AS", dataAiHint: "person female", viewedAt: "3 days ago", profileLink: "/profile/viewer3" },
-  { id: "viewer4", name: "Vikram Reddy", avatarUrl: "https://placehold.co/80x80.png?text=VR", dataAiHint: "person male", viewedAt: "Last week", profileLink: "/profile/viewer4" },
-];
-
-export default function ProfileViewsPage() {
-  const viewers = mockViewers;
-
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAdminResource } from "@/components/admin/use-admin-resource";
+import { ResourceState, Pager } from "@/components/admin/workspace-ui";
+type Visitor = {
+  id: string;
+  display_name: string;
+  photo_url: string | null;
+  viewed_at: string;
+};
+export default function ProfileViews() {
+  const [page, setPage] = useState(1);
+  const { data, error, loading, refresh } = useAdminResource<{
+    locked: boolean;
+    viewers: Visitor[];
+    total: number;
+  }>(`/api/members/activity?page=${page}`);
   return (
-    <PageFrame>
-      <PageHero
-        eyebrow="Profile activity"
-        title={
-          <span className="inline-flex items-center gap-2">
-            <Eye className="h-7 w-7 text-primary" aria-hidden />
-            Who viewed your profile
-          </span>
-        }
-        description="See who’s been checking you out. Keep your profile engaging to attract more visitors."
-      />
-
-      <Card className="rounded-2xl border-[#eadde7] shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-6 w-6 text-primary" /> Recent viewers
-          </CardTitle>
-          <CardDescription>
-            {viewers.length > 0
-              ? "Here are the latest profiles that viewed yours."
-              : "No one has viewed your profile recently."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {viewers.length > 0 ? (
-            <ul className="space-y-3">
-              {viewers.map((viewer) => (
-                <li
-                  key={viewer.id}
-                  className="flex items-center justify-between rounded-xl bg-[#fff8fb] p-3 transition-colors hover:bg-[#f8eef7]"
+    <div className="space-y-6">
+      <div className="flex flex-wrap justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold">Who viewed your profile</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+            Recent member visits from the last 90 days. Private browsing, staff
+            review visits and blocked members are excluded.
+          </p>
+        </div>
+        <Button variant="outline" onClick={() => void refresh()}>
+          Refresh
+        </Button>
+      </div>
+      <ResourceState loading={loading} error={error} empty={false} />
+      {!loading &&
+        !error &&
+        data &&
+        (data.locked ? (
+          <section className="space-y-4 rounded-2xl border bg-white p-6">
+            <h2 className="text-xl font-bold">
+              Profile visitors is a Premium feature
+            </h2>
+            <p className="text-sm text-slate-500">
+              An active Premium membership or introductory trial lets you see
+              recent visitors.
+            </p>
+            <Button asChild>
+              <Link href="/pricing">View membership options</Link>
+            </Button>
+          </section>
+        ) : (
+          <>
+            <ResourceState
+              loading={false}
+              error=""
+              empty={!data.viewers.length}
+            />
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {data.viewers.map((v) => (
+                <article
+                  key={v.id}
+                  className="flex items-center gap-3 rounded-2xl border bg-white p-5"
                 >
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12 border border-[#eadce5]">
-                      <AvatarImage src={viewer.avatarUrl} alt={viewer.name} data-ai-hint={viewer.dataAiHint} />
-                      <AvatarFallback>{viewer.name.substring(0, 1).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <Link href={viewer.profileLink} className="font-semibold text-[#351532] hover:text-primary">
-                        {viewer.name}
-                      </Link>
-                      <p className="text-xs text-[#9b668f]">Viewed: {viewer.viewedAt}</p>
-                    </div>
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage src={v.photo_url || undefined} alt="" />
+                    <AvatarFallback>
+                      {(v.display_name || "M").slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/profile/${v.id}`}
+                      className="font-semibold text-violet-800"
+                    >
+                      {v.display_name || "Member"}
+                    </Link>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Last visited{" "}
+                      {new Date(v.viewed_at).toLocaleString("en-GB")}
+                    </p>
                   </div>
-                  <Button variant="outline" size="sm" className="rounded-xl border-[#dcc9d8]" asChild>
-                    <Link href={viewer.profileLink}>View</Link>
-                  </Button>
-                </li>
+                </article>
               ))}
-            </ul>
-          ) : (
-            <p className="py-8 text-center text-sm text-[#745d70]">No recent profile views yet.</p>
-          )}
-        </CardContent>
-      </Card>
-    </PageFrame>
+            </div>
+            <Pager page={page} total={data.total} size={20} onPage={setPage} />
+          </>
+        ))}
+    </div>
   );
 }

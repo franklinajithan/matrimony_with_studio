@@ -12,13 +12,19 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      # Regenerate the stale lockfile in CI until the refreshed lockfile is committed.
-      - run: npm install --package-lock-only --ignore-scripts
       - run: npm ci
+      - run: npm run audit:critical
       - run: npm run test:admin
+      - run: npm run test:project:database
+      - run: npm run test:providers
+      - run: npm run test:oauth
+      - run: npm run test:foundation
+      - run: npm run test:domain
+      - run: npm run test:site
       - run: npx tsc --noEmit
       - run: npm run build
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
 
+      - run: npm run test:site:http

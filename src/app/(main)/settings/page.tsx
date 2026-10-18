@@ -6,30 +6,67 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { User, Image as ImageIcon, Info, Loader2, MapPin, Briefcase, Cake } from 'lucide-react';
+import {
+  User,
+  Image as ImageIcon,
+  Info,
+  Loader2,
+  MapPin,
+  Briefcase,
+  Cake,
+} from "lucide-react";
 import { useState, useEffect } from "react";
-import { auth, updateProfile } from "@/lib/supabase/auth";
-import { extractStoragePath, mediaPathForUser, resolveMediaUrl, uploadFile } from "@/lib/supabase/storage";
+import { auth, onAuthStateChanged, updateProfile } from "@/lib/supabase/auth";
+import {
+  extractStoragePath,
+  mediaPathForUser,
+  resolveMediaUrl,
+  uploadFile,
+} from "@/lib/supabase/storage";
 import { getProfile, updateUserProfile } from "@/lib/supabase/profiles";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import { AccountControls } from "@/components/account/AccountControls";
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters."),
-  bio: z.string().min(10, "Bio must be at least 10 characters.").max(500, "Bio cannot exceed 500 characters."),
+  bio: z
+    .string()
+    .min(10, "Bio must be at least 10 characters.")
+    .max(500, "Bio cannot exceed 500 characters."),
   location: z.string().min(1, "Location is required"),
   profession: z.string().min(1, "Profession is required"),
   dob: z.string().min(1, "Date of birth is required"),
   profilePhoto: z
     .instanceof(File, { message: "Please select a file." })
     .optional()
-    .refine(file => !file || file.size <= 5 * 1024 * 1024, `Max file size is 5MB.`)
     .refine(
-      file => !file || ["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type),
-      ".jpg, .jpeg, .png and .webp files are accepted."
+      (file) => !file || file.size <= 5 * 1024 * 1024,
+      `Max file size is 5MB.`,
+    )
+    .refine(
+      (file) =>
+        !file ||
+        ["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(
+          file.type,
+        ),
+      ".jpg, .jpeg, .png and .webp files are accepted.",
     ),
 });
 
@@ -80,7 +117,11 @@ export default function SettingsPage() {
       }
     };
 
-    loadUserProfile();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) void loadUserProfile();
+      else setIsLoading(false);
+    });
+    return () => unsubscribe();
   }, [form, toast]);
 
   async function onSubmit(values: z.infer<typeof profileSchema>) {
@@ -88,21 +129,28 @@ export default function SettingsPage() {
     const user = auth.currentUser;
 
     if (!user) {
-      toast({ 
-        title: "Error", 
-        description: "No authenticated user found. Please sign in again.", 
-        variant: "destructive" 
+      toast({
+        title: "Error",
+        description: "No authenticated user found. Please sign in again.",
+        variant: "destructive",
       });
       setIsSaving(false);
       return;
     }
 
     try {
-      let finalPhotoURL = extractStoragePath(currentPhotoURL) || currentPhotoURL;
-      let finalDataAiHint = currentPhotoURL ? "social profile" : "person placeholder";
+      let finalPhotoURL =
+        extractStoragePath(currentPhotoURL) || currentPhotoURL;
+      let finalDataAiHint = currentPhotoURL
+        ? "social profile"
+        : "person placeholder";
 
       if (values.profilePhoto) {
-        const filePath = mediaPathForUser(user.uid, values.profilePhoto.name, "profile_photo");
+        const filePath = mediaPathForUser(
+          user.uid,
+          values.profilePhoto.name,
+          "profile_photo",
+        );
         finalPhotoURL = await uploadFile(values.profilePhoto, filePath);
         finalDataAiHint = "profile photo";
       }
@@ -135,7 +183,9 @@ export default function SettingsPage() {
       console.error("Profile update error:", error);
       toast({
         title: "Update Failed",
-        description: error.message || "An unexpected error occurred while updating your profile.",
+        description:
+          error.message ||
+          "An unexpected error occurred while updating your profile.",
         variant: "destructive",
       });
     } finally {
@@ -153,7 +203,20 @@ export default function SettingsPage() {
 
   return (
     <div className="container max-w-2xl py-8 space-y-4">
-      <Card><CardHeader><CardTitle>Profile verification</CardTitle><CardDescription>Request review and track your verification status.</CardDescription></CardHeader><CardContent><Button asChild variant="outline"><Link href="/verification">Manage verification request</Link></Button></CardContent></Card>
+      <AccountControls />
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile verification</CardTitle>
+          <CardDescription>
+            Request review and track your verification status.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="outline">
+            <Link href="/verification">Manage verification request</Link>
+          </Button>
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Edit Profile</CardTitle>
@@ -204,7 +267,11 @@ export default function SettingsPage() {
                       Full Name
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="Your full name" {...field} disabled={isSaving} />
+                      <Input
+                        placeholder="Your full name"
+                        {...field}
+                        disabled={isSaving}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -244,7 +311,11 @@ export default function SettingsPage() {
                       Location
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="Your current location" {...field} disabled={isSaving} />
+                      <Input
+                        placeholder="Your current location"
+                        {...field}
+                        disabled={isSaving}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -261,7 +332,11 @@ export default function SettingsPage() {
                       Profession
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="Your profession" {...field} disabled={isSaving} />
+                      <Input
+                        placeholder="Your profession"
+                        {...field}
+                        disabled={isSaving}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -301,4 +376,4 @@ export default function SettingsPage() {
       </Card>
     </div>
   );
-} 
+}

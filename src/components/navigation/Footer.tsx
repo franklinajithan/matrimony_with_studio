@@ -90,7 +90,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/#faq" className={linkClass}>
+                <Link href="/faq" className={linkClass}>
                   FAQ
                 </Link>
               </li>

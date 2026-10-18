@@ -15,6 +15,9 @@ import { formatPhotoPrivacy } from "@/lib/onboarding/readiness";
 import { useToast } from "@/hooks/use-toast";
 import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
 
+import {ActivityPrivacy} from '@/components/profile/ActivityPrivacy';
+import {BlockedMembers} from '@/components/safety/BlockedMembers';
+
 const PHOTO_OPTIONS = [
   { id: "members", label: "Visible to members after I publish" },
   { id: "connections", label: "Visible to accepted connections only" },
@@ -45,6 +48,7 @@ export default function PrivacyPage() {
         setIsPublished(Boolean(profile.isPublished));
         setPhotoPrivacy(draft.photoPrivacy || "members");
       })
+      .catch(()=>{if(active)toast({title:"Privacy settings unavailable",description:"Please refresh and try again.",variant:"destructive"});})
       .finally(() => {
         if (active) setLoading(false);
       });
@@ -193,6 +197,7 @@ export default function PrivacyPage() {
           </Button>
         </CardContent>
       </Card>
-    </PageFrame>
+    <ActivityPrivacy/><BlockedMembers/>
+      </PageFrame>
   );
 }

@@ -3,7 +3,7 @@ import { requireServerAdmin } from "@/lib/auth/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
-  const admin = await requireServerAdmin();
+  const admin = await requireServerAdmin("moderation");
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   let body: unknown;
   try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }

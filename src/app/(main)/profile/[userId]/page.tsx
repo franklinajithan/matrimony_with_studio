@@ -60,6 +60,8 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ShareProfileButton } from "@/components/profile/ShareProfileButton";
+import { ReportMemberButton } from "@/components/safety/ReportMemberButton";
+import { BlockMemberButton } from "@/components/safety/BlockMemberButton";
 
 interface StoredPhoto {
   id: string;
@@ -122,6 +124,11 @@ export default function ProfilePage() {
   const [isLoadingAiAnalysis, setIsLoadingAiAnalysis] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentFirebaseUser, setCurrentFirebaseUser] = useState<FirebaseUser | null>(null);
+
+  useEffect(()=>{
+    if(!currentFirebaseUser?.uid||!viewedUserProfile?.userId||currentFirebaseUser.uid===viewedUserProfile.userId)return;
+    void fetch('/api/members/activity',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({memberId:viewedUserProfile.userId})}).catch(()=>undefined);
+  },[currentFirebaseUser?.uid,viewedUserProfile?.userId]);
 
   const [mainPageImage, setMainPageImage] = useState<StoredPhoto | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -685,6 +692,12 @@ export default function ProfilePage() {
                 <ShareProfileButton compact />
               ) : null}
               {renderActionButtons()}
+              {currentFirebaseUser && currentFirebaseUser.uid !== viewedUserProfile.userId ? (
+                <div id="safety" className="flex items-center gap-1">
+                  <ReportMemberButton memberId={viewedUserProfile.userId} memberName={viewedUserProfile.name} />
+                  <BlockMemberButton memberId={viewedUserProfile.userId} memberName={viewedUserProfile.name} />
+                </div>
+              ) : null}
             </div>
           </div>
         </div>

@@ -3,7 +3,7 @@ import { requireServerAdmin } from "@/lib/auth/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export async function POST(request:Request){
- if(!await requireServerAdmin())return NextResponse.json({error:"Forbidden"},{status:403});
+ if(!await requireServerAdmin("moderation"))return NextResponse.json({error:"Forbidden"},{status:403});
  let body:unknown;try{body=await request.json();}catch{return NextResponse.json({error:"Invalid request"},{status:400});}
  if(!body||typeof body!=="object"||Array.isArray(body))return NextResponse.json({error:"Invalid request"},{status:400});
  const {memberId,suspend,reason}=body as Record<string,unknown>;
@@ -16,7 +16,7 @@ export async function POST(request:Request){
 }
 
 export async function GET(request:Request){
- if(!await requireServerAdmin())return NextResponse.json({error:"Forbidden"},{status:403});
+ if(!await requireServerAdmin("moderation"))return NextResponse.json({error:"Forbidden"},{status:403});
  const memberId=new URL(request.url).searchParams.get("memberId");
  if(!memberId||!uuid.test(memberId))return NextResponse.json({error:"Invalid member"},{status:400});
  const supabase=await createSupabaseServerClient();

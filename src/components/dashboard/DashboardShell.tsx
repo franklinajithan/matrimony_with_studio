@@ -1,4 +1,5 @@
 "use client";
+import {CallPanel}from"@/components/communication/CallPanel";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -48,6 +49,8 @@ import {
   titleForDashboardPath,
   type DashboardNavItem,
 } from "@/components/dashboard/nav";
+
+import {useAdminResource} from '@/components/admin/use-admin-resource';
 
 type NavBadges = {
   interests: number;
@@ -188,7 +191,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   useLoginWelcomeToast();
 
-  const headerUnread = badges.interests + badges.connections + badges.messages;
+  const {data:notices}=useAdminResource<{notices:{read_at:string|null}[]}>('/api/members/notices');
+  const noticeUnread=notices?.notices.filter(n=>!n.read_at).length??0;
+  const headerUnread = badges.interests + badges.connections + badges.messages+noticeUnread;
 
   const connectionsSeenKey = useCallback(
     (userId: string) => `cupidmatch:connections-seen:${userId}`,
@@ -423,6 +428,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-64">
                     <DropdownMenuLabel>{dt.notifications}</DropdownMenuLabel>
+                    <DropdownMenuItem asChild><Link href="/notifications" className="flex w-full items-center gap-2"><Bell className="h-4 w-4"/>Service notices<CountPill count={noticeUnread}/></Link></DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link href="/interests" className="flex w-full items-center gap-2">
@@ -496,7 +502,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             )}
           >
             <DashboardChromeProvider value={chromeValue}>
-              {children}
+              <CallPanel/>{children}
             </DashboardChromeProvider>
           </main>
         </div>

@@ -3,8 +3,9 @@ import Link from "next/link";
 import { CheckCircle2, MapPin, Briefcase } from "lucide-react";
 import { resolveSharedProfile } from "@/lib/supabase/profile-share";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/shared/Logo";
 
-export const robots = { index: false, follow: false };
+const robots = { index: false, follow: false };
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -38,7 +39,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 function ExpiredSharePage() {
   return <main className="mx-auto flex min-h-[100svh] max-w-lg flex-col items-center justify-center px-6 text-center">
-    <img src="/images/cupidmatch-logo.png" alt="CupidMatch" className="h-16 w-auto object-contain" />
+    <Logo />
     <h1 className="mt-6 text-2xl font-semibold tracking-tight text-[#351532]">This shared profile link has expired.</h1>
     <p className="mt-3 text-sm leading-6 text-[#745d70]">For privacy, shared profile links are available for 2 days only. Ask the person who shared it to create a new link.</p>
     <Button asChild className="mt-8 rounded-xl px-6"><Link href="/">Visit CupidMatch</Link></Button>
@@ -53,7 +54,7 @@ export default async function SharedProfilePage({ params }: PageProps) {
   const initials = name.slice(0, 2).toUpperCase();
   return <main className="min-h-[100svh] bg-[linear-gradient(180deg,#fffaf4_0%,#f8eef7_45%,#fff_100%)]">
     <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-10 sm:py-14">
-      <div className="text-center"><img src="/images/cupidmatch-logo.png" alt="CupidMatch" className="mx-auto h-16 w-auto object-contain"/><h1 className="mt-2 text-sm font-medium text-[#745d70]">A profile shared privately with you</h1></div>
+      <div className="text-center"><Logo /><h1 className="mt-2 text-sm font-medium text-[#745d70]">A profile shared privately with you</h1></div>
       <article className="overflow-hidden rounded-[28px] border border-[#eadce5] bg-white shadow-[0_14px_40px_rgba(67,31,61,0.08)]">
         <div className="bg-[radial-gradient(circle_at_80%_0%,rgba(184,113,172,0.18),transparent_42%),linear-gradient(135deg,#fffaf4,#f8eef7)] px-6 pb-6 pt-8 text-center">
           <div className="mx-auto h-32 w-32 overflow-hidden rounded-full border-4 border-white shadow-md">{shared.photoURL ? <img src={shared.photoURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer"/> : <div className="flex h-full w-full items-center justify-center bg-[#f1ecff] text-2xl font-semibold text-[#713c78]">{initials}</div>}</div>

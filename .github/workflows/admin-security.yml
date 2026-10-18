@@ -7,6 +7,13 @@ on:
       - 'src/app/api/admin/**'
       - 'src/lib/auth/admin.ts'
       - 'scripts/admin-security.test.cjs'
+      - 'scripts/admin-database.test.cjs'
+      - 'scripts/website-database.test.cjs'
+      - 'src/app/api/support/**'
+      - 'src/app/api/members/**'
+      - 'src/components/support/**'
+      - 'src/components/admin/**'
+      - 'supabase/migrations/**'
       - '.github/workflows/admin-security.yml'
   pull_request:
     paths:
@@ -14,6 +21,13 @@ on:
       - 'src/app/api/admin/**'
       - 'src/lib/auth/admin.ts'
       - 'scripts/admin-security.test.cjs'
+      - 'scripts/admin-database.test.cjs'
+      - 'scripts/website-database.test.cjs'
+      - 'src/app/api/support/**'
+      - 'src/app/api/members/**'
+      - 'src/components/support/**'
+      - 'src/components/admin/**'
+      - 'supabase/migrations/**'
 jobs:
   admin-tests:
     runs-on: ubuntu-latest
@@ -25,8 +39,8 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      # Keep consistent with Verify until the repository lockfile is refreshed.
-      - run: npm install --package-lock-only --ignore-scripts
       - run: npm ci
       - run: npm run test:admin
+      - run: npm run test:project:database
+      - run: npm run test:providers
       - run: npx tsc --noEmit

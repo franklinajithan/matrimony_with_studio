@@ -80,6 +80,7 @@ const isFile = (value: unknown): value is File => typeof File !== "undefined" &&
 
 const editProfileSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters."),
+  gender: z.enum(["male", "female"], { errorMap: () => ({ message: "Gender is required. Please select Male or Female." }) }),
   bio: z
     .string()
     .max(500, "Bio cannot exceed 500 characters.")
@@ -129,6 +130,7 @@ const editProfileSchema = z.object({
 
 const defaultFirestoreProfile = {
   fullName: "",
+  gender: "" as "male" | "female",
   bio: "",
   profilePhotoUrl: "https://placehold.co/128x128.png",
   dataAiHint: "person placeholder",
@@ -169,7 +171,7 @@ const religionOptions = [
   { value: "Prefer not to say", label: "Prefer not to say" },
 ];
 
-const ABOUT_FIELDS = ["fullName", "bio", "location", "profession", "height", "dob", "religion", "caste", "language", "educationLevel", "smokingHabits", "drinkingHabits"];
+const ABOUT_FIELDS = ["fullName", "gender", "bio", "location", "profession", "height", "dob", "religion", "caste", "language", "educationLevel", "smokingHabits", "drinkingHabits"];
 const PHOTO_FIELDS = ["profilePhoto", "additionalPhotos"];
 const INTEREST_FIELDS = ["hobbies", "favoriteMovies", "favoriteMusic"];
 
@@ -220,6 +222,7 @@ export default function EditProfilePage() {
           form.reset({
             fullName: data.displayName || currentUser.displayName || defaultFirestoreProfile.fullName,
             bio: data.bio || defaultFirestoreProfile.bio,
+            gender: data.gender === "male" || data.gender === "female" ? data.gender : defaultFirestoreProfile.gender,
             location: data.location || defaultFirestoreProfile.location,
             profession: data.profession || defaultFirestoreProfile.profession,
             height: toHeightString(data.height) || defaultFirestoreProfile.height,
@@ -369,6 +372,7 @@ export default function EditProfilePage() {
     try {
       const dataToSave: any = {
         displayName: values.fullName,
+        gender: values.gender,
         bio: values.bio,
         location: values.location,
         profession: values.profession,
@@ -739,6 +743,28 @@ export default function EditProfilePage() {
                   <CardDescription>Your essential details that help others get to know you better.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="gender"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Gender <span className="text-destructive" aria-hidden="true">*</span></FormLabel>
+                        <Select value={field.value || undefined} onValueChange={field.onChange} disabled={isSaving || anyEnhancementLoading}>
+                          <FormControl>
+                            <SelectTrigger aria-required="true" aria-label="Gender (required)">
+                              <SelectValue placeholder="Select gender" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>Required for accurate partner matching.</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="bio"

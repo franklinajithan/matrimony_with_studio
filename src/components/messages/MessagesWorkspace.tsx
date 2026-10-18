@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -30,7 +36,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { useDashboardChrome } from "@/components/dashboard/chrome-context";
 import { cn } from "@/lib/utils";
@@ -40,6 +50,7 @@ import { getProfile } from "@/lib/supabase/profiles";
 import {
   createChatDocument,
   getChat,
+  listMessages,
   markMessagesRead,
   sendMessage,
   subscribeToChats,
@@ -47,8 +58,22 @@ import {
 } from "@/lib/supabase/chats";
 import { resolveMediaUrl } from "@/lib/supabase/storage";
 import { areConnected, listConnections } from "@/lib/supabase/connections";
+import { Flag } from "lucide-react";
 
-const QUICK_EMOJIS = ["😀", "😂", "🥰", "😊", "🙏", "👍", "❤️", "🎉", "🔥", "✨", "😢", "👏"];
+const QUICK_EMOJIS = [
+  "😀",
+  "😂",
+  "🥰",
+  "😊",
+  "🙏",
+  "👍",
+  "❤️",
+  "🎉",
+  "🔥",
+  "✨",
+  "😢",
+  "👏",
+];
 
 type Conversation = {
   id: string;
@@ -65,6 +90,8 @@ type Conversation = {
 type ChatMessage = {
   id: string;
   text: string;
+  attachmentId?: string | null;
+  attachmentName?: string | null;
   senderId: string;
   timestamp: Timestamp | null;
   isRead: boolean;
@@ -92,15 +119,21 @@ function dateChipLabel(date: Date): string {
 }
 
 function initials(name: string): string {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() || "")
-    .join("") || "?";
+  return (
+    name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() || "")
+      .join("") || "?"
+  );
 }
 
-export function MessagesWorkspace({ initialChatId }: { initialChatId?: string }) {
+export function MessagesWorkspace({
+  initialChatId,
+}: {
+  initialChatId?: string;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -111,19 +144,50 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [olderMessages, setOlderMessages] = useState<ChatMessage[]>([]);
+  const [hasEarlier, setHasEarlier] = useState(true);
+  const [loadingEarlier, setLoadingEarlier] = useState(false);
+  const allMessages = useMemo(
+    () =>
+      Array.from(
+        new Map([...olderMessages, ...messages].map((m) => [m.id, m])).values(),
+      ).sort(
+        (a, b) =>
+          (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0) ||
+          a.id.localeCompare(b.id),
+      ),
+    [messages, olderMessages],
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [draft, setDraft] = useState("");
   const [isLoadingChats, setIsLoadingChats] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
-  const [fallbackConversation, setFallbackConversation] = useState<Conversation | null>(null);
+  const [fallbackConversation, setFallbackConversation] =
+    useState<Conversation | null>(null);
   const [authorizedChatId, setAuthorizedChatId] = useState<string | null>(null);
 
+  const attachmentInput = useRef<HTMLInputElement>(null);
+  const attachmentUpload = useRef<AbortController | null>(null);
+  const activeChatRef = useRef(selectedChatId);
+  const [attachment, setAttachment] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [uploading, setUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const setUnreadRef = useRef(setUnread);
   const toastRef = useRef(toast);
+  useEffect(() => {
+    activeChatRef.current = selectedChatId;
+    attachmentUpload.current?.abort();
+    attachmentUpload.current = null;
+    setUploading(false);
+    setAttachment(null);
+    return () => attachmentUpload.current?.abort();
+  }, [selectedChatId]);
 
   useEffect(() => {
     setUnreadRef.current = setUnread;
@@ -155,9 +219,11 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
         await Promise.all(
           connections.map(async (connection) => {
             const otherUserId =
-              connection.memberAId === userId ? connection.memberBId : connection.memberAId;
+              connection.memberAId === userId
+                ? connection.memberBId
+                : connection.memberAId;
             if (otherUserId) await createChatDocument(userId, otherUserId);
-          })
+          }),
         );
       } catch (error) {
         console.error("Could not reconcile connected chats:", error);
@@ -176,14 +242,16 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
               const cached = chat.participantDetails?.[otherUserId];
               let otherUserName = cached?.displayName || "Member";
               let otherUserAvatar =
-                resolveMediaUrl(cached?.photoURL) || "https://placehold.co/100x100.png";
+                resolveMediaUrl(cached?.photoURL) ||
+                "https://placehold.co/100x100.png";
 
               if (!cached?.displayName) {
                 try {
                   const profile = await getProfile(otherUserId);
                   if (profile) {
                     otherUserName = profile.displayName || otherUserName;
-                    otherUserAvatar = resolveMediaUrl(profile.photoURL) || otherUserAvatar;
+                    otherUserAvatar =
+                      resolveMediaUrl(profile.photoURL) || otherUserAvatar;
                   }
                 } catch {
                   // keep fallbacks
@@ -201,18 +269,21 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                 timestampLabel: formatListTime(chat.lastMessageTimestamp),
                 originalTimestamp: chat.lastMessageTimestamp,
               } satisfies Conversation;
-            })
+            }),
           );
 
           const next = mapped
             .filter(Boolean)
             .sort(
               (a, b) =>
-                (b!.originalTimestamp?.toMillis() || 0) - (a!.originalTimestamp?.toMillis() || 0)
+                (b!.originalTimestamp?.toMillis() || 0) -
+                (a!.originalTimestamp?.toMillis() || 0),
             ) as Conversation[];
 
           setConversations(next);
-          setUnreadRef.current(next.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0));
+          setUnreadRef.current(
+            next.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0),
+          );
         } finally {
           setIsLoadingChats(false);
         }
@@ -224,7 +295,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
           variant: "destructive",
         });
         setIsLoadingChats(false);
-      }
+      },
     );
 
     return unsubscribe;
@@ -238,6 +309,9 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
     }
 
     let cancelled = false;
+    setAttachment(null);
+    setOlderMessages([]);
+    setHasEarlier(true);
     setIsLoadingMessages(true);
 
     const unsubscribe = subscribeToMessages(
@@ -251,7 +325,9 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
             senderId: row.senderId,
             timestamp: row.timestamp,
             isRead: row.isRead,
-          }))
+            attachmentId: row.attachmentId,
+            attachmentName: row.attachmentName,
+          })),
         );
         setIsLoadingMessages(false);
       },
@@ -263,16 +339,20 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
           variant: "destructive",
         });
         setIsLoadingMessages(false);
-      }
+      },
     );
 
     setConversations((prev) => {
-      const hadUnread = prev.some((chat) => chat.id === selectedChatId && chat.unreadCount > 0);
+      const hadUnread = prev.some(
+        (chat) => chat.id === selectedChatId && chat.unreadCount > 0,
+      );
       if (!hadUnread) return prev;
       const next = prev.map((chat) =>
-        chat.id === selectedChatId ? { ...chat, unreadCount: 0 } : chat
+        chat.id === selectedChatId ? { ...chat, unreadCount: 0 } : chat,
       );
-      setUnreadRef.current(next.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0));
+      setUnreadRef.current(
+        next.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0),
+      );
       return next;
     });
 
@@ -309,13 +389,15 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
         const cached = chat.participantDetails?.[otherUserId];
         let otherUserName = cached?.displayName || "Member";
         let otherUserAvatar =
-          resolveMediaUrl(cached?.photoURL) || "https://placehold.co/100x100.png";
+          resolveMediaUrl(cached?.photoURL) ||
+          "https://placehold.co/100x100.png";
         if (!cached?.displayName) {
           try {
             const profile = await getProfile(otherUserId);
             if (profile) {
               otherUserName = profile.displayName || otherUserName;
-              otherUserAvatar = resolveMediaUrl(profile.photoURL) || otherUserAvatar;
+              otherUserAvatar =
+                resolveMediaUrl(profile.photoURL) || otherUserAvatar;
             }
           } catch {
             // keep fallbacks
@@ -347,14 +429,21 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
   useEffect(() => {
     let cancelled = false;
     setAuthorizedChatId(null);
-    if (!selectedChatId || !userId) return () => { cancelled = true; };
+    if (!selectedChatId || !userId)
+      return () => {
+        cancelled = true;
+      };
 
-    const candidateOtherUserId = selectedChatId.split("_").find((id) => id !== userId);
+    const candidateOtherUserId = selectedChatId
+      .split("_")
+      .find((id) => id !== userId);
     const expectedChatId = candidateOtherUserId
       ? [userId, candidateOtherUserId].sort().join("_")
       : null;
     if (!candidateOtherUserId || expectedChatId !== selectedChatId) {
-      return () => { cancelled = true; };
+      return () => {
+        cancelled = true;
+      };
     }
 
     void areConnected(userId, candidateOtherUserId)
@@ -363,7 +452,9 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
       })
       .catch(() => undefined);
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [selectedChatId, userId]);
 
   useEffect(() => {
@@ -381,7 +472,9 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
     if (!selectedChatId || authorizedChatId !== selectedChatId) return null;
     return (
       conversations.find((c) => c.id === selectedChatId) ||
-      (fallbackConversation?.id === selectedChatId ? fallbackConversation : null)
+      (fallbackConversation?.id === selectedChatId
+        ? fallbackConversation
+        : null)
     );
   }, [authorizedChatId, conversations, fallbackConversation, selectedChatId]);
 
@@ -391,7 +484,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
     return conversations.filter(
       (c) =>
         c.otherUserName.toLowerCase().includes(q) ||
-        c.lastMessage.toLowerCase().includes(q)
+        c.lastMessage.toLowerCase().includes(q),
     );
   }, [conversations, searchTerm]);
 
@@ -399,21 +492,78 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
     (chatId: string) => {
       router.push(`/messages?chat=${chatId}`);
     },
-    [router]
+    [router],
   );
+
+  const latestIncomingId = messages
+    .filter((m) => m.senderId !== userId)
+    .at(-1)?.id;
+  useEffect(() => {
+    if (!selectedChatId || !userId) return;
+    const read = () => {
+      if (document.visibilityState === "visible")
+        void markMessagesRead(selectedChatId, userId).catch(() => {});
+    };
+    read();
+    document.addEventListener("visibilitychange", read);
+    return () => document.removeEventListener("visibilitychange", read);
+  }, [selectedChatId, userId, latestIncomingId]);
 
   const closeChat = useCallback(() => {
     router.push("/messages");
   }, [router]);
 
+  const uploadAttachment = async (file: File, chatId: string) => {
+    attachmentUpload.current?.abort();
+    const controller = new AbortController();
+    attachmentUpload.current = controller;
+    setUploading(true);
+    try {
+      if (file.size > 5242880) throw new Error("Maximum file size is 5MB");
+      const form = new FormData();
+      form.set("file", file);
+      form.set("chatId", chatId);
+      const response = await fetch("/api/communication/attachments", {
+        method: "POST",
+        body: form,
+        signal: controller.signal,
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Upload failed");
+      if (!controller.signal.aborted && activeChatRef.current === chatId)
+        setAttachment(data);
+    } catch (error) {
+      if (!controller.signal.aborted)
+        toast({
+          title: "Attachment failed",
+          description: (error as Error).message,
+          variant: "destructive",
+        });
+    } finally {
+      if (attachmentUpload.current === controller) {
+        attachmentUpload.current = null;
+        setUploading(false);
+      }
+    }
+  };
   const handleSend = async () => {
     const text = draft.trim();
-    if (!text || !currentUser || !selectedChatId || !selectedConversation || isSending) return;
+    if (
+      (!text && !attachment) ||
+      uploading ||
+      !currentUser ||
+      !selectedChatId ||
+      !selectedConversation ||
+      isSending
+    )
+      return;
 
     const optimisticId = `local-${Date.now()}`;
     const optimistic: ChatMessage = {
       id: optimisticId,
       text,
+      attachmentId: attachment?.id,
+      attachmentName: attachment?.name,
       senderId: currentUser.uid,
       timestamp: Timestamp.now(),
       isRead: false,
@@ -430,15 +580,22 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
         senderId: currentUser.uid,
         otherUserId: selectedConversation.otherUserId,
         text,
+        attachmentId: attachment?.id,
       });
+      if (activeChatRef.current === selectedChatId) setAttachment(null);
     } catch (error) {
-      setMessages((prev) =>
-        prev.map((m) => (m.id === optimisticId ? { ...m, pending: false, failed: true } : m))
-      );
-      setDraft(text);
+      if (activeChatRef.current === selectedChatId) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === optimisticId ? { ...m, pending: false, failed: true } : m,
+          ),
+        );
+        setDraft(text);
+      }
       toast({
         title: "Message not sent",
-        description: error instanceof Error ? error.message : "Please try again.",
+        description:
+          error instanceof Error ? error.message : "Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -447,7 +604,9 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
     }
   };
 
-  const onComposerKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const onComposerKeyDown = (
+    event: React.KeyboardEvent<HTMLTextAreaElement>,
+  ) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       void handleSend();
@@ -475,14 +634,18 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
         <aside
           className={cn(
             "flex w-full flex-col border-r border-border/70 bg-background md:w-[340px] lg:w-[360px]",
-            selectedChatId ? "hidden md:flex" : "flex"
+            selectedChatId ? "hidden md:flex" : "flex",
           )}
         >
           <div className="border-b border-border/60 bg-background px-4 pb-3 pt-4">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">Chats</h1>
-                <p className="mt-0.5 text-xs text-muted-foreground">Your CupidMatch conversations</p>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                  Chats
+                </h1>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Your CupidMatch conversations
+                </p>
               </div>
               <Button
                 asChild
@@ -490,7 +653,11 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                 size="icon"
                 className="h-10 w-10 rounded-full bg-primary/10 text-primary hover:bg-primary/15"
               >
-                <Link href="/discover" aria-label="Find people" title="Find people">
+                <Link
+                  href="/discover"
+                  aria-label="Find people"
+                  title="Find people"
+                >
                   <Plus className="h-5 w-5" />
                 </Link>
               </Button>
@@ -515,7 +682,9 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
             ) : filteredConversations.length === 0 ? (
               <div className="px-6 py-16 text-center">
                 <MessageCircle className="mx-auto h-12 w-12 text-muted-foreground/60" />
-                <p className="mt-4 text-sm font-medium text-foreground">No chats yet</p>
+                <p className="mt-4 text-sm font-medium text-foreground">
+                  No chats yet
+                </p>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Accept an interest or open a connection to start messaging.
                 </p>
@@ -539,21 +708,29 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                     onClick={() => openChat(convo.id)}
                     className={cn(
                       "relative flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted/60",
-                      active && "bg-primary/[0.08]"
+                      active && "bg-primary/[0.08]",
                     )}
                   >
-                    {active ? <span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-primary" /> : null}
+                    {active ? (
+                      <span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-primary" />
+                    ) : null}
                     <Avatar className="h-14 w-14 border border-border/50">
                       <AvatarImage src={convo.otherUserAvatar} alt="" />
-                      <AvatarFallback>{initials(convo.otherUserName)}</AvatarFallback>
+                      <AvatarFallback>
+                        {initials(convo.otherUserName)}
+                      </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline justify-between gap-2">
-                        <p className="truncate font-semibold text-foreground">{convo.otherUserName}</p>
+                        <p className="truncate font-semibold text-foreground">
+                          {convo.otherUserName}
+                        </p>
                         <span
                           className={cn(
                             "shrink-0 text-[11px]",
-                            convo.unreadCount > 0 ? "font-semibold text-primary" : "text-muted-foreground"
+                            convo.unreadCount > 0
+                              ? "font-semibold text-primary"
+                              : "text-muted-foreground",
                           )}
                         >
                           {convo.timestampLabel}
@@ -565,7 +742,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                             "truncate text-sm",
                             convo.unreadCount > 0
                               ? "font-medium text-foreground"
-                              : "text-muted-foreground"
+                              : "text-muted-foreground",
                           )}
                         >
                           {preview}
@@ -588,7 +765,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
         <section
           className={cn(
             "relative flex min-w-0 flex-1 flex-col",
-            !selectedChatId ? "hidden md:flex" : "flex"
+            !selectedChatId ? "hidden md:flex" : "flex",
           )}
         >
           {!selectedConversation ? (
@@ -606,7 +783,9 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                     >
                       <ArrowLeft className="h-5 w-5" />
                     </Button>
-                    <p className="text-sm text-muted-foreground">Opening chat…</p>
+                    <p className="text-sm text-muted-foreground">
+                      Opening chat…
+                    </p>
                   </header>
                   <div className="flex flex-1 items-center justify-center">
                     <Loader2 className="h-7 w-7 animate-spin text-primary" />
@@ -618,9 +797,12 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                     <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/20">
                       <MessageCircle className="h-10 w-10 text-white" />
                     </div>
-                    <h2 className="mt-5 text-2xl font-bold tracking-tight">Your conversations</h2>
+                    <h2 className="mt-5 text-2xl font-bold tracking-tight">
+                      Your conversations
+                    </h2>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      Choose a connection from the left to start a private conversation.
+                      Choose a connection from the left to start a private
+                      conversation.
                     </p>
                     <Button asChild className="mt-6 rounded-full px-6">
                       <Link href="/discover">Discover people</Link>
@@ -647,35 +829,82 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                   className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-1 py-1 hover:bg-black/5"
                 >
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={selectedConversation.otherUserAvatar} alt="" />
-                    <AvatarFallback>{initials(selectedConversation.otherUserName)}</AvatarFallback>
+                    <AvatarImage
+                      src={selectedConversation.otherUserAvatar}
+                      alt=""
+                    />
+                    <AvatarFallback>
+                      {initials(selectedConversation.otherUserName)}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 text-left">
                     <p className="truncate font-semibold text-foreground">
                       {selectedConversation.otherUserName}
                     </p>
-                    <p className="truncate text-xs text-muted-foreground">CupidMatch connection · View profile</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      CupidMatch connection · View profile
+                    </p>
                   </div>
                 </Link>
                 <div className="flex items-center gap-0.5">
-                  <Button variant="ghost" size="icon" className="hidden rounded-full text-primary sm:inline-flex" disabled title="Video calling coming soon">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full text-primary"
+                    aria-label="Start video call"
+                    onClick={() =>
+                      window.dispatchEvent(
+                        new CustomEvent("cupid-call", {
+                          detail: { chatId: selectedChatId, kind: "video" },
+                        }),
+                      )
+                    }
+                  >
                     <Video className="h-5 w-5" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="hidden rounded-full text-primary sm:inline-flex" disabled title="Voice calling coming soon">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full text-primary"
+                    aria-label="Start voice call"
+                    onClick={() =>
+                      window.dispatchEvent(
+                        new CustomEvent("cupid-call", {
+                          detail: { chatId: selectedChatId, kind: "voice" },
+                        }),
+                      )
+                    }
+                  >
                     <Phone className="h-5 w-5" />
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" aria-label="Chat options">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Chat options"
+                      >
                         <Info className="h-5 w-5 text-primary" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
-                        <Link href={`/profile/${selectedConversation.otherUserId}`}>View profile</Link>
+                        <Link
+                          href={`/profile/${selectedConversation.otherUserId}`}
+                        >
+                          View profile
+                        </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link href="/connections">All connections</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href={`/profile/${selectedConversation.otherUserId}#safety`}
+                        >
+                          <Flag className="mr-2 h-4 w-4" />
+                          Report or block member
+                        </Link>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -687,21 +916,56 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                   <div className="flex h-full items-center justify-center">
                     <Loader2 className="h-7 w-7 animate-spin text-primary" />
                   </div>
-                ) : messages.length === 0 ? (
+                ) : allMessages.length === 0 ? (
                   <div className="mx-auto mt-10 max-w-sm rounded-3xl bg-muted/60 px-5 py-7 text-center">
-                    <p className="text-sm font-medium text-foreground">No messages yet</p>
+                    <p className="text-sm font-medium text-foreground">
+                      No messages yet
+                    </p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       Say hello and start a warm conversation.
                     </p>
                   </div>
                 ) : (
                   <div className="flex w-full flex-col gap-0.5">
-                    {messages.map((message, index) => {
+                    {hasEarlier && allMessages.length >= 100 && (
+                      <Button
+                        variant="outline"
+                        disabled={loadingEarlier}
+                        onClick={async () => {
+                          const first = allMessages[0];
+                          if (!selectedChatId || !first?.timestamp) return;
+                          setLoadingEarlier(true);
+                          try {
+                            const rows = await listMessages(selectedChatId, {
+                              before: first.timestamp.toDate().toISOString(),
+                              beforeId: first.id,
+                            });
+                            setOlderMessages((old) => [...rows, ...old]);
+                            setHasEarlier(rows.length === 100);
+                          } catch (error) {
+                            toast({
+                              title: "Could not load earlier messages",
+                              description: (error as Error).message,
+                              variant: "destructive",
+                            });
+                          } finally {
+                            setLoadingEarlier(false);
+                          }
+                        }}
+                      >
+                        {loadingEarlier
+                          ? "Loading history…"
+                          : "Load earlier messages"}
+                      </Button>
+                    )}
+                    {allMessages.map((message, index) => {
                       const mine = message.senderId === currentUser.uid;
-                      const prev = messages[index - 1];
+                      const prev = allMessages[index - 1];
                       const next = messages[index + 1];
-                      const startsGroup = !prev || prev.senderId !== message.senderId;
-                      const endsGroup = !next || next.senderId !== message.senderId;
+                      const startsGroup =
+                        !prev || prev.senderId !== message.senderId;
+                      const endsGroup =
+                        !next || next.senderId !== message.senderId;
                       const showDate =
                         !prev?.timestamp ||
                         !message.timestamp ||
@@ -721,17 +985,27 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                             className={cn(
                               "flex w-full items-end gap-2",
                               mine ? "justify-end" : "justify-start",
-                              startsGroup && "mt-2"
+                              startsGroup && "mt-2",
                             )}
                           >
                             {!mine ? (
                               endsGroup ? (
                                 <Avatar className="h-7 w-7 shrink-0">
-                                  <AvatarImage src={selectedConversation.otherUserAvatar} alt="" />
-                                  <AvatarFallback className="text-[9px]">{initials(selectedConversation.otherUserName)}</AvatarFallback>
+                                  <AvatarImage
+                                    src={selectedConversation.otherUserAvatar}
+                                    alt=""
+                                  />
+                                  <AvatarFallback className="text-[9px]">
+                                    {initials(
+                                      selectedConversation.otherUserName,
+                                    )}
+                                  </AvatarFallback>
                                 </Avatar>
                               ) : (
-                                <span className="h-7 w-7 shrink-0" aria-hidden="true" />
+                                <span
+                                  className="h-7 w-7 shrink-0"
+                                  aria-hidden="true"
+                                />
                               )
                             ) : null}
                             <div
@@ -742,12 +1016,37 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                                   : "bg-[#f0f2f5] text-[#050505]",
                                 mine && endsGroup && "rounded-br-md",
                                 !mine && endsGroup && "rounded-bl-md",
-                                message.failed && "opacity-70 ring-1 ring-destructive/40"
+                                message.failed &&
+                                  "opacity-70 ring-1 ring-destructive/40",
                               )}
                             >
-                              <p className="whitespace-pre-wrap break-words">{message.text}</p>
-                              <div className={cn("mt-1 items-center justify-end gap-1", endsGroup ? "flex" : "hidden")}>
-                                <span className={cn("text-[10px]", mine ? "text-white/75" : "text-muted-foreground")}>
+                              <p className="whitespace-pre-wrap break-words">
+                                {message.text}
+                              </p>
+                              {message.attachmentId && (
+                                <a
+                                  className="block underline"
+                                  href={`/api/communication/attachments/${message.attachmentId}?chatId=${encodeURIComponent(selectedChatId || "")}`}
+                                  download
+                                >
+                                  {message.attachmentName ||
+                                    "Download attachment"}
+                                </a>
+                              )}
+                              <div
+                                className={cn(
+                                  "mt-1 items-center justify-end gap-1",
+                                  endsGroup ? "flex" : "hidden",
+                                )}
+                              >
+                                <span
+                                  className={cn(
+                                    "text-[10px]",
+                                    mine
+                                      ? "text-white/75"
+                                      : "text-muted-foreground",
+                                  )}
+                                >
                                   {message.pending
                                     ? "Sending…"
                                     : message.failed
@@ -756,9 +1055,15 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                                 </span>
                                 {mine && !message.pending && !message.failed ? (
                                   message.isRead ? (
-                                    <CheckCheck className="h-3.5 w-3.5 text-white/90" aria-label="Read" />
+                                    <CheckCheck
+                                      className="h-3.5 w-3.5 text-white/90"
+                                      aria-label="Read"
+                                    />
                                   ) : (
-                                    <Check className="h-3.5 w-3.5 text-white/75" aria-label="Sent" />
+                                    <Check
+                                      className="h-3.5 w-3.5 text-white/75"
+                                      aria-label="Sent"
+                                    />
                                   )
                                 ) : null}
                               </div>
@@ -774,19 +1079,14 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
 
               <footer className="shrink-0 border-t border-border/60 bg-background px-2 py-2 sm:px-4 lg:px-6">
                 <div className="flex w-full items-end gap-1.5 sm:gap-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="mb-0.5 hidden shrink-0 rounded-full text-primary sm:inline-flex"
-                    disabled
-                    title="Attachments coming soon"
-                  >
-                    <Plus className="h-5 w-5" />
-                  </Button>
                   <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
                     <PopoverTrigger asChild>
-                      <Button type="button" variant="ghost" size="icon" className="mb-0.5 shrink-0 rounded-full text-primary">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="mb-0.5 shrink-0 rounded-full text-primary"
+                      >
                         <Smile className="h-5 w-5" />
                       </Button>
                     </PopoverTrigger>
@@ -810,14 +1110,45 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="mb-0.5 hidden shrink-0 rounded-full text-primary sm:inline-flex"
-                    disabled
-                    title="Photo sharing coming soon"
+                    className="mb-0.5 shrink-0 rounded-full text-primary"
+                    disabled={uploading || isSending}
+                    aria-label="Attach image or PDF"
+                    onClick={() => attachmentInput.current?.click()}
                   >
                     <ImageIcon className="h-5 w-5" />
                   </Button>
 
+                  <input
+                    ref={attachmentInput}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,application/pdf"
+                    className="sr-only"
+                    aria-label="Choose attachment"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      e.target.value = "";
+                      if (file && selectedChatId)
+                        void uploadAttachment(file, selectedChatId);
+                    }}
+                  />
                   <div className="relative min-w-0 flex-1">
+                    {uploading && (
+                      <p role="status" className="text-xs">
+                        Uploading…
+                      </p>
+                    )}
+                    {attachment && (
+                      <p className="text-xs">
+                        {attachment.name}{" "}
+                        <button
+                          type="button"
+                          className="underline"
+                          onClick={() => setAttachment(null)}
+                        >
+                          Remove
+                        </button>
+                      </p>
+                    )}
                     <Textarea
                       ref={textareaRef}
                       data-testid="message-composer"
@@ -833,13 +1164,15 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                   <Button
                     type="button"
                     size="icon"
-                    variant={draft.trim() ? "default" : "ghost"}
+                    variant={draft.trim() || attachment ? "default" : "ghost"}
                     className={cn(
                       "mb-0.5 h-11 w-11 shrink-0 rounded-full",
-                      draft.trim() && "bg-primary hover:bg-primary/90"
+                      draft.trim() && "bg-primary hover:bg-primary/90",
                     )}
                     onClick={() => void handleSend()}
-                    disabled={!draft.trim() || isSending}
+                    disabled={
+                      (!draft.trim() && !attachment) || isSending || uploading
+                    }
                     data-testid="message-send"
                     aria-label="Send message"
                   >

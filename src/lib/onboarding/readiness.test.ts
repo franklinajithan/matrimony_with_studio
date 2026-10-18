@@ -4,6 +4,7 @@ import { computeProfileReadiness, isProfileComplete } from "@/lib/onboarding/rea
 
 const completeDraft = {
   displayName: "Amina Perera",
+  gender: "female" as const,
   dob: "1995-03-12",
   confirmedAdult: true,
   country: "Sri Lanka",

@@ -5,12 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Users, CreditCard, LockKeyhole, ShieldAlert } from "lucide-react";
 
+import {useAdminResource} from '@/components/admin/use-admin-resource';
+
 type Connection = { id: string; memberId: string; displayName: string; connectedAt: string };
 type Subscription = { id: string; plan_code: string; status: string; provider: string | null; current_period_start: string | null; current_period_end: string | null; cancel_at_period_end: boolean; created_at: string };
-type Operations = { connections: Connection[]; subscriptions: Subscription[]; connectionsShown: number; connectionsLimit: number; paymentHistoryAvailable: boolean };
+type Operations = { connections: Connection[]; subscriptions: Subscription[]; connectionsShown: number; connectionsLimit: number; subscriptionHistoryAvailable: boolean; paymentHistoryAvailable: boolean };
 const date = (value: string | null) => value ? new Date(value).toLocaleDateString("en-GB") : "Not available";
 
 export function MemberOperations({ memberId }: { memberId: string }) {
+  const {data:access}=useAdminResource<{permissions:string[]}>('/api/admin/workspace-access');
   const [data, setData] = useState<Operations | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -69,14 +72,14 @@ export function MemberOperations({ memberId }: { memberId: string }) {
       </CardContent>
     </Card>
     <div className="space-y-4">
-      <Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardHeader><CardTitle className="flex items-center gap-2"><CreditCard className="h-5 w-5 text-violet-700" />Subscription status</CardTitle><CardDescription>Recorded subscription periods; this is not a payment receipt.</CardDescription></CardHeader><CardContent>
+      {data.subscriptionHistoryAvailable&&<Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardHeader><CardTitle className="flex items-center gap-2"><CreditCard className="h-5 w-5 text-violet-700" />Subscription status</CardTitle><CardDescription>Recorded subscription periods; this is not a payment receipt.</CardDescription></CardHeader><CardContent>
         {active ? <div className="space-y-2 text-sm"><p className="text-lg font-bold capitalize">{active.plan_code} · {active.status}</p><p>Period start: {date(active.current_period_start)}</p><p>Period end: {date(active.current_period_end)}</p><p>Renewal: {active.cancel_at_period_end ? "Set to cancel at period end" : "Not marked for cancellation"}</p></div> : <p className="text-sm text-slate-500">No active subscription recorded.</p>}
         <h3 className="mt-5 border-t pt-4 text-sm font-semibold">Subscription history</h3>
         {data.subscriptions.length === 0 ? <p className="mt-2 text-sm text-slate-500">No subscription records.</p> :
           <ul className="mt-2 divide-y">{data.subscriptions.map(s => <li key={s.id} className="py-3 text-sm"><p className="font-semibold capitalize">{s.plan_code} · {s.status}</p><p className="text-xs text-slate-500">{date(s.current_period_start)} – {date(s.current_period_end)}</p></li>)}</ul>}
         <p className="mt-3 text-xs text-slate-500">Payment transactions, amounts paid and total paid months require verified payment-provider records. Subscription periods alone do not prove payment.</p>
-      </CardContent></Card>
-      <Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardHeader><CardTitle className="flex items-center gap-2"><LockKeyhole className="h-5 w-5 text-violet-700" />Account security</CardTitle></CardHeader><CardContent><p className="text-sm text-slate-600">Passwords cannot be viewed or edited here. Use a reset email rather than changing or viewing a member password.</p><Button variant="outline" className="mt-3" disabled={resetting} onClick={() => void sendReset()}>{resetting ? "Requesting…" : "Send password reset email"}</Button>{resetMessage && <p role="status" className="mt-2 text-sm">{resetMessage}</p>}</CardContent></Card>
+      </CardContent></Card>}
+      {access?.permissions.includes("manage")&&<Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardHeader><CardTitle className="flex items-center gap-2"><LockKeyhole className="h-5 w-5 text-violet-700" />Account security</CardTitle></CardHeader><CardContent><p className="text-sm text-slate-600">Passwords cannot be viewed or edited here. Use a reset email rather than changing or viewing a member password.</p><Button variant="outline" className="mt-3" disabled={resetting} onClick={() => void sendReset()}>{resetting ? "Requesting…" : "Send password reset email"}</Button>{resetMessage && <p role="status" className="mt-2 text-sm">{resetMessage}</p>}</CardContent></Card>}
     </div>
   </div>;
 }

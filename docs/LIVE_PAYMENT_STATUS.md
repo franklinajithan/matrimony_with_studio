@@ -1,1 +1,1 @@
-Live payment status: **disabled**. Subscription foundation: **implemented**. This distinction is deliberate so deployment can proceed safely without pretending Stripe is connected.
+Live payments are disabled. Test-only checkout, portal, cancellation, webhook and audited refund adapters are implemented. Credentials, six validated GBP Price IDs, server database key and actual Stripe sandbox acceptance remain outstanding. No charge or refund was made during development.

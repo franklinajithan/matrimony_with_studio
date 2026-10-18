@@ -1,1 +1,23 @@
-import { NextResponse } from 'next/server';import { billingConfigured,stripePriceId } from '@/lib/subscriptions/checkout';export async function GET(){const prices=['premium','premium_plus'].every(p=>['monthly','three_months','six_months'].every(t=>Boolean(stripePriceId(p as 'premium'|'premium_plus',t as 'monthly'|'three_months'|'six_months'))));return NextResponse.json({secrets:billingConfigured(),prices,providerImplementation:false,ready:false},{headers:{'Cache-Control':'no-store'}});}
+import { NextResponse } from "next/server";
+import { billingConfigured, stripePriceId } from "@/lib/subscriptions/checkout";
+export async function GET() {
+  const prices = ["premium", "premium_plus"].every((p) =>
+    ["monthly", "three_months", "six_months"].every((t) =>
+      Boolean(
+        stripePriceId(
+          p as "premium" | "premium_plus",
+          t as "monthly" | "three_months" | "six_months",
+        ),
+      ),
+    ),
+  );
+  return NextResponse.json(
+    {
+      secrets: billingConfigured(),
+      prices,
+      providerImplementation: true,
+      ready: billingConfigured() && prices,
+    },
+    { headers: { "Cache-Control": "no-store" } },
+  );
+}

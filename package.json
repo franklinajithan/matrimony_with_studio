@@ -12,7 +12,18 @@
     "seed:demo:cleanup": "tsx scripts/seed-demo-profiles.ts --cleanup",
     "test:admin": "node --test scripts/admin-security.test.cjs",
     "test:e2e": "playwright test",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e:headed": "playwright test --headed",
+    "test:admin:database": "node scripts/admin-database.test.cjs",
+    "typecheck": "tsc --noEmit",
+    "test:website:database": "node scripts/website-database.test.cjs",
+    "test:project:database": "node scripts/release-database.test.cjs",
+    "test:providers": "node --test scripts/provider-routes.test.cjs scripts/account-export.test.cjs scripts/directory.test.cjs scripts/release-routes.test.cjs",
+    "test:oauth": "node --test scripts/oauth.test.cjs",
+    "test:site": "node --test scripts/site-regressions.test.cjs",
+    "test:site:http": "node scripts/site-http-audit.cjs",
+    "test:foundation": "vitest run",
+    "test:domain": "node scripts/run-domain-tests.cjs",
+    "audit:critical": "npm audit --omit=dev --audit-level=critical"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.28.0",
@@ -46,16 +57,19 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.469.0",
-    "next": "^15.3.9",
+    "next": "15.5.28",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-easy-crop": "^6.2.3",
     "react-hook-form": "^7.88.0",
+    "stripe": "23.0.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.10",
+    "@playwright/test": "^1.55.0",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -65,6 +79,6 @@
     "tailwindcss": "^3.4.1",
     "tsx": "^4.19.2",
     "typescript": "^5",
-    "@playwright/test": "^1.55.0"
+    "vitest": "5.0.5"
   }
 }

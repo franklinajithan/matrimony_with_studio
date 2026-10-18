@@ -57,7 +57,10 @@ export type Profile = {
   isVerified: boolean;
   lastSeenLikeNotificationsTimestamp: Timestamp | null;
   lastSeenCommentNotificationsTimestamp: Timestamp | null;
-  commentNotifications: Record<string, { count: number; lastSeen: Timestamp | null }>;
+  commentNotifications: Record<
+    string,
+    { count: number; lastSeen: Timestamp | null }
+  >;
   extra: Record<string, unknown>;
   createdAt: Timestamp | null;
   updatedAt: Timestamp | null;
@@ -67,7 +70,11 @@ export type MatchRequestRow = {
   id: string;
   senderUid: string;
   receiverUid: string;
-  status: "pending" | "accepted" | "declined_by_sender" | "declined_by_receiver";
+  status:
+    | "pending"
+    | "accepted"
+    | "declined_by_sender"
+    | "declined_by_receiver";
   createdAt: Timestamp | null;
   updatedAt: Timestamp | null;
 };
@@ -87,6 +94,8 @@ export type ChatRow = {
 };
 
 export type MessageRow = {
+  attachmentId?: string | null;
+  attachmentName?: string | null;
   id: string;
   chatId: string;
   senderId: string;
@@ -117,7 +126,10 @@ export type PostRow = {
   commentList: PostComment[];
   lastLikedAt: Timestamp | null;
   lastCommentedAt: Timestamp | null;
-  commentNotifications: Record<string, { count: number; lastSeen: Timestamp | null }>;
+  commentNotifications: Record<
+    string,
+    { count: number; lastSeen: Timestamp | null }
+  >;
   timestamp: Timestamp | null;
 };
 

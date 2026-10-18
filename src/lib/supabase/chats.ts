@@ -33,12 +33,18 @@ function mapMessage(row: Row | null): MessageRow | null {
     senderId: row.sender_id,
     text: row.text,
     isRead: Boolean(row.is_read),
+    attachmentId: row.attachment_id || null,
+    attachmentName: row.attachment_name || null,
     timestamp: Timestamp.fromISO(row.created_at),
   };
 }
 
 export async function getChat(chatId: string): Promise<ChatRow | null> {
-  const { data, error } = await supabase.from("chats").select("*").eq("id", chatId).maybeSingle();
+  const { data, error } = await supabase
+    .from("chats")
+    .select("*")
+    .eq("id", chatId)
+    .maybeSingle();
   if (error) throw error;
   return mapChat(data);
 }
@@ -54,7 +60,10 @@ export async function listChatsForUser(userId: string): Promise<ChatRow[]> {
 }
 
 export function unreadMessageCount(chats: ChatRow[], userId: string): number {
-  return chats.reduce((sum, chat) => sum + Number(chat.unreadBy?.[userId] || 0), 0);
+  return chats.reduce(
+    (sum, chat) => sum + Number(chat.unreadBy?.[userId] || 0),
+    0,
+  );
 }
 
 export async function countUnreadMessages(userId: string): Promise<number> {
@@ -62,16 +71,22 @@ export async function countUnreadMessages(userId: string): Promise<number> {
   return unreadMessageCount(chats, userId);
 }
 
-export async function createChatDocument(user1Uid: string, user2Uid: string): Promise<string> {
+export async function createChatDocument(
+  user1Uid: string,
+  user2Uid: string,
+): Promise<string> {
   const chatId = getCompositeId(user1Uid, user2Uid);
   // Never reset an existing conversation when members reconnect or acceptance is retried.
   const existing = await getChat(chatId);
   if (existing) return chatId;
 
-  const [user1, user2] = await Promise.all([getProfile(user1Uid), getProfile(user2Uid)]);
+  const [user1, user2] = await Promise.all([
+    getProfile(user1Uid),
+    getProfile(user2Uid),
+  ]);
   if (!user1 || !user2) {
     throw new Error(
-      `One or both user profiles not found for chat creation. User1 (${user1Uid}) exists: ${Boolean(user1)}, User2 (${user2Uid}) exists: ${Boolean(user2)}`
+      `One or both user profiles not found for chat creation. User1 (${user1Uid}) exists: ${Boolean(user1)}, User2 (${user2Uid}) exists: ${Boolean(user2)}`,
     );
   }
 
@@ -80,17 +95,23 @@ export async function createChatDocument(user1Uid: string, user2Uid: string): Pr
   const participantDetails = {
     [user1Uid]: {
       displayName: user1.displayName || "User",
-      photoURL: resolveMediaUrl(user1.photoURL) || "https://placehold.co/100x100.png",
+      photoURL:
+        resolveMediaUrl(user1.photoURL) || "https://placehold.co/100x100.png",
       dataAiHint:
         user1.dataAiHint ||
-        (user1.photoURL && !user1.photoURL.includes("placehold.co") ? "person avatar" : "person placeholder"),
+        (user1.photoURL && !user1.photoURL.includes("placehold.co")
+          ? "person avatar"
+          : "person placeholder"),
     },
     [user2Uid]: {
       displayName: user2.displayName || "User",
-      photoURL: resolveMediaUrl(user2.photoURL) || "https://placehold.co/100x100.png",
+      photoURL:
+        resolveMediaUrl(user2.photoURL) || "https://placehold.co/100x100.png",
       dataAiHint:
         user2.dataAiHint ||
-        (user2.photoURL && !user2.photoURL.includes("placehold.co") ? "person avatar" : "person placeholder"),
+        (user2.photoURL && !user2.photoURL.includes("placehold.co")
+          ? "person avatar"
+          : "person placeholder"),
     },
   };
 
@@ -105,7 +126,7 @@ export async function createChatDocument(user1Uid: string, user2Uid: string): Pr
       last_message_at: new Date().toISOString(),
       unread_by: { [user1Uid]: 0, [user2Uid]: 0 },
     },
-    { onConflict: "id", ignoreDuplicates: true }
+    { onConflict: "id", ignoreDuplicates: true },
   );
   if (error) throw error;
   return chatId;
@@ -114,7 +135,7 @@ export async function createChatDocument(user1Uid: string, user2Uid: string): Pr
 export async function updateChatParticipantDetails(
   chatId: string,
   userId: string,
-  details: { displayName: string; photoURL: string; dataAiHint?: string }
+  details: { displayName: string; photoURL: string; dataAiHint?: string },
 ) {
   const chat = await getChat(chatId);
   if (!chat) return;
@@ -130,35 +151,29 @@ export async function updateChatParticipantDetails(
   if (error) throw error;
 }
 
-export async function clearUnread(chatId: string, userId: string) {
-  const chat = await getChat(chatId);
-  if (!chat) return;
-  const { error } = await supabase
-    .from("chats")
-    .update({
-      unread_by: { ...chat.unreadBy, [userId]: 0 },
-    })
-    .eq("id", chatId);
+export async function clearUnread(chatId: string, _userId: string) {
+  const { error } = await supabase.rpc("communication", {
+    p_action: "read",
+    p_payload: { chatId },
+  });
   if (error) throw error;
 }
 
-export async function listMessages(chatId: string, options?: { limit?: number; before?: string }): Promise<MessageRow[]> {
-  let query = supabase
-    .from("messages")
-    .select("*")
-    .eq("chat_id", chatId)
-    .order("created_at", { ascending: false })
-    .limit(options?.limit ?? 100);
-
-  if (options?.before) {
-    query = query.lt("created_at", options.before);
-  }
-
-  const { data, error } = await query;
+export async function listMessages(
+  chatId: string,
+  options?: { limit?: number; before?: string; beforeId?: string },
+): Promise<MessageRow[]> {
+  const { data, error } = await supabase.rpc("communication", {
+    p_action: "messages",
+    p_payload: {
+      chatId,
+      ...(options?.before
+        ? { before: options.before, beforeId: options.beforeId }
+        : {}),
+    },
+  });
   if (error) throw error;
-  return (data || [])
-    .map((row) => mapMessage(row)!)
-    .sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
+  return (data?.messages || []).map((row: Row) => mapMessage(row)!);
 }
 
 export async function sendMessage(params: {
@@ -166,47 +181,28 @@ export async function sendMessage(params: {
   senderId: string;
   otherUserId: string;
   text: string;
+  attachmentId?: string;
+  requestId?: string;
 }) {
-  const { error: messageError } = await supabase.from("messages").insert({
-    chat_id: params.chatId,
-    sender_id: params.senderId,
-    text: params.text,
-    is_read: false,
+  const { error } = await supabase.rpc("communication", {
+    p_action: "send",
+    p_payload: {
+      chatId: params.chatId,
+      text: params.text,
+      attachmentId: params.attachmentId || null,
+      requestId: params.requestId || crypto.randomUUID(),
+    },
   });
-  if (messageError) throw messageError;
-
-  const chat = await getChat(params.chatId);
-  const unreadBy = { ...(chat?.unreadBy || {}) };
-  unreadBy[params.otherUserId] = Number(unreadBy[params.otherUserId] || 0) + 1;
-  unreadBy[params.senderId] = 0;
-
-  const { error: chatError } = await supabase
-    .from("chats")
-    .update({
-      last_message_text: params.text,
-      last_message_sender_id: params.senderId,
-      last_message_at: new Date().toISOString(),
-      unread_by: unreadBy,
-    })
-    .eq("id", params.chatId);
-  if (chatError) throw chatError;
+  if (error) throw error;
 }
-
 export async function markMessagesRead(chatId: string, userId: string) {
   await clearUnread(chatId, userId);
-  const { error } = await supabase
-    .from("messages")
-    .update({ is_read: true })
-    .eq("chat_id", chatId)
-    .eq("is_read", false)
-    .neq("sender_id", userId);
-  if (error) throw error;
 }
 
 export function subscribeToChats(
   userId: string,
   onChange: (chats: ChatRow[]) => void,
-  onError?: (error: Error) => void
+  onError?: (error: Error) => void,
 ): () => void {
   const load = async () => {
     try {
@@ -217,14 +213,20 @@ export function subscribeToChats(
   };
 
   void load();
+  const poll = setInterval(() => void load(), 5000);
   const channel = supabase
     .channel(`chats:${userId}`)
-    .on("postgres_changes", { event: "*", schema: "public", table: "chats" }, () => {
-      void load();
-    })
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "chats" },
+      () => {
+        void load();
+      },
+    )
     .subscribe();
 
   return () => {
+    clearInterval(poll);
     void supabase.removeChannel(channel);
   };
 }
@@ -232,7 +234,7 @@ export function subscribeToChats(
 export function subscribeToMessages(
   chatId: string,
   onChange: (messages: MessageRow[]) => void,
-  onError?: (error: Error) => void
+  onError?: (error: Error) => void,
 ): () => void {
   const load = async () => {
     try {
@@ -243,18 +245,25 @@ export function subscribeToMessages(
   };
 
   void load();
+  const poll = setInterval(() => void load(), 5000);
   const channel = supabase
     .channel(`messages:${chatId}`)
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: "messages", filter: `chat_id=eq.${chatId}` },
+      {
+        event: "*",
+        schema: "public",
+        table: "messages",
+        filter: `chat_id=eq.${chatId}`,
+      },
       () => {
         void load();
-      }
+      },
     )
     .subscribe();
 
   return () => {
+    clearInterval(poll);
     void supabase.removeChannel(channel);
   };
 }

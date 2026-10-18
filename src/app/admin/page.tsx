@@ -1,17 +1,8 @@
+import {AdminDashboardModules} from './dashboard-modules';
 import { getAdminDashboardMetrics, type AdminDashboardMetrics } from "@/lib/admin/dashboard";
 import { requireAdminPage } from "@/app/admin/guard";
 import { Users, Activity, RefreshCw, UserCheck, BookHeart, CreditCard, BadgePoundSterling, Shield, ArrowUpRight, ArrowRight, LayoutDashboard, Sparkles, ShieldAlert } from "lucide-react";
 import Link from "next/link";
-
-const modules = [
-  { title: "Member management", detail: "Member directory, profiles and account review", icon: Users, href: "/admin/users", tint: "bg-violet-50 text-violet-700", category: "COMMUNITY" },
-  { title: "Verification centre", detail: "Review submitted requests and profile status", icon: UserCheck, href: "/admin/verifications", tint: "bg-blue-50 text-blue-700", category: "TRUST & SAFETY" },
-  { title: "Subscriptions", detail: "View memberships and subscription records", icon: CreditCard, href: "/admin/subscriptions", tint: "bg-emerald-50 text-emerald-700", category: "REVENUE" },
-  { title: "Invitation codes", detail: "Generate, disable and track special launch offers", icon: Sparkles, href: "/admin/promo-codes", tint: "bg-purple-50 text-purple-700", category: "GROWTH" },
-  { title: "Plans & pricing", detail: "Review plan pricing and feature entitlements", icon: BadgePoundSterling, href: "/admin/plans", tint: "bg-amber-50 text-amber-700", category: "REVENUE" },
-  { title: "Success stories", detail: "View community stories and submissions", icon: BookHeart, href: "/admin/success-stories", tint: "bg-rose-50 text-rose-700", category: "CONTENT" },
-  { title: "Security & audit", detail: "Review recorded administrative activity", icon: Shield, href: "/admin/security", tint: "bg-slate-100 text-slate-700", category: "SYSTEM" },
-] as const;
 
 export default async function AdminDashboardPage() {
   await requireAdminPage();
@@ -21,6 +12,7 @@ export default async function AdminDashboardPage() {
   const stats = [
     { title: "Total members", value: metrics?.members, icon: Users, description: "Registered members excluding admins", href: "/admin/users", tint: "bg-violet-50 text-violet-700" },
     { title: "Active members", value: metrics?.activeUsers, icon: Activity, description: "Signed in within the last 30 days", href: "/admin/users", tint: "bg-emerald-50 text-emerald-700" },
+    { title: "Open reports", value: metrics?.openReports, icon: ShieldAlert, description: "Member safety reports awaiting review", href: "/admin/reports", tint: "bg-red-50 text-red-700" },
     { title: "Unverified profiles", value: metrics?.pendingVerification, icon: ShieldAlert, description: "Published profiles awaiting verification", href: "/admin/verifications", tint: "bg-amber-50 text-amber-700" },
   ];
 
@@ -61,11 +53,7 @@ export default async function AdminDashboardPage() {
 
     <section className="space-y-4">
       <div><p className="mb-1 text-xs font-bold uppercase tracking-[0.14em] text-violet-700">WORKSPACE</p><h2 className="text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">Management tools</h2><p className="mt-1 text-sm text-slate-500">Choose an area to view and manage.</p></div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{modules.map(({ title, detail, icon: Icon, href, tint, category }) =>
-        <Link href={href} key={title} className="group flex min-h-[155px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_2px_14px_rgba(15,23,42,0.035)] transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md">
-          <div className="flex items-start justify-between"><span className={`flex h-11 w-11 items-center justify-center rounded-xl ${tint}`}><Icon className="h-5 w-5" /></span><ArrowUpRight className="h-4 w-4 text-slate-400 transition group-hover:text-violet-600" /></div>
-          <div className="mt-5"><p className="mb-1 text-[10px] font-bold tracking-widest text-slate-400">{category}</p><h3 className="text-base font-bold text-slate-900">{title}</h3><p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p></div>
-        </Link>)}</div>
+      <AdminDashboardModules />
     </section>
   </div>;
 }
