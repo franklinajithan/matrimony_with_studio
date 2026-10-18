@@ -61,6 +61,7 @@ import {
   PhotoGalleryEditor,
   type GalleryPhotoItem,
 } from "@/components/profile/PhotoGalleryEditor";
+import { readProfileGender, profileGenderPatch } from "@/lib/profile-gender";
 import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -80,6 +81,7 @@ const isFile = (value: unknown): value is File => typeof File !== "undefined" &&
 
 const editProfileSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters."),
+  gender: z.enum(["", "male", "female", "non-binary"]),
   bio: z
     .string()
     .max(500, "Bio cannot exceed 500 characters.")
@@ -128,6 +130,7 @@ const editProfileSchema = z.object({
 });
 
 const defaultFirestoreProfile = {
+  gender: "" as "" | "male" | "female" | "non-binary",
   fullName: "",
   bio: "",
   profilePhotoUrl: "https://placehold.co/128x128.png",
@@ -169,7 +172,7 @@ const religionOptions = [
   { value: "Prefer not to say", label: "Prefer not to say" },
 ];
 
-const ABOUT_FIELDS = ["fullName", "bio", "location", "profession", "height", "dob", "religion", "caste", "language", "educationLevel", "smokingHabits", "drinkingHabits"];
+const ABOUT_FIELDS = ["fullName", "gender", "bio", "location", "profession", "height", "dob", "religion", "caste", "language", "educationLevel", "smokingHabits", "drinkingHabits"];
 const PHOTO_FIELDS = ["profilePhoto", "additionalPhotos"];
 const INTEREST_FIELDS = ["hobbies", "favoriteMovies", "favoriteMusic"];
 
@@ -219,6 +222,7 @@ export default function EditProfilePage() {
         if (data) {
           form.reset({
             fullName: data.displayName || currentUser.displayName || defaultFirestoreProfile.fullName,
+            gender: readProfileGender(data),
             bio: data.bio || defaultFirestoreProfile.bio,
             location: data.location || defaultFirestoreProfile.location,
             profession: data.profession || defaultFirestoreProfile.profession,
@@ -261,6 +265,7 @@ export default function EditProfilePage() {
           setUserDocExists(false);
           form.reset({
             fullName: currentUser.displayName || defaultFirestoreProfile.fullName,
+            gender: defaultFirestoreProfile.gender,
             bio: defaultFirestoreProfile.bio,
             location: defaultFirestoreProfile.location,
             profession: defaultFirestoreProfile.profession,
@@ -367,7 +372,10 @@ export default function EditProfilePage() {
     }
 
     try {
+      // Merge the latest JSON fields so saving gender preserves other profile details.
+      const latestProfile = values.gender ? await getProfile(user.uid) : null;
       const dataToSave: any = {
+        ...profileGenderPatch(latestProfile || {}, values.gender),
         displayName: values.fullName,
         bio: values.bio,
         location: values.location,
@@ -739,6 +747,27 @@ export default function EditProfilePage() {
                   <CardDescription>Your essential details that help others get to know you better.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="gender"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Gender</FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange} disabled={isSaving}>
+                          <FormControl>
+                            <SelectTrigger className="min-h-12"><SelectValue placeholder="Select your gender" /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="non-binary">Non-binary</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>Your gender helps CupidMatch suggest relevant profiles. Save your changes below.</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="bio"
