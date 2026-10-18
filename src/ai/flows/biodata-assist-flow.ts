@@ -51,4 +51,11 @@ export async function rewriteBiodataText(input: {
   instruction: string;
   text: string;
 }): Promise<{ proposedText: string }> {
-  // This exported server action is callable independently of the HTTP route.\n  // No durable, per-member AI quota exists yet, so block provider execution\n  // until a database-enforced quota and abuse limit are implemented.\n  const { getServerAuthUser } = await import('@/lib/supabase/server');\n  const user = await getServerAuthUser();\n  if (!user) throw new Error('Authentication required.');\n  BiodataAssistInputSchema.parse(input);\n  throw new Error('AI biodata assistance is temporarily unavailable.');\n}
+  // This exported server action is callable independently of the HTTP route.
+  // No durable, per-member AI quota exists yet, so block provider execution
+  // until a database-enforced quota and abuse limit are implemented.
+  const { getServerAuthUser } = await import('@/lib/supabase/server');
+  const user = await getServerAuthUser();
+  if (!user) throw new Error('Authentication required.');
+  BiodataAssistInputSchema.parse(input);
+  throw new Error('AI biodata assistance is temporarily unavailable.');\n}
