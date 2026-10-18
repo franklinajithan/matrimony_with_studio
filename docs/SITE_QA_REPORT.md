@@ -2,7 +2,7 @@
 
 ## Result and scope
 
-Broad regression pass on PR #40, extending published baseline `2eaced07669e2482f839803067f9ad4b5a703532`. Nine defect groups fixed in code; two confirmed gaps remain open below. This is **not full signed-in or live-provider acceptance**, and the project is not release-ready. No live member records were changed, no charge/refund/email was sent, and no production migration or promotion was performed.
+Broad regression pass on PR #40, extending published baseline `2eaced07669e2482f839803067f9ad4b5a703532`. Nine defect groups fixed in code; functional gaps, dependency advisories and a server-action authorization finding remain open below. This is **not full signed-in or live-provider acceptance**, and the project is not release-ready. No live member records were changed, no charge/refund/email was sent, and no production migration or promotion was performed.
 
 ## Findings
 
@@ -20,7 +20,20 @@ Broad regression pass on PR #40, extending published baseline `2eaced07669e2482f
 | QA-10 | P1 OPEN | `sendInterest` writes interests without atomic quota consumption. Live `pg_proc` inspection found no `consume_subscription_usage` RPC, although the consume API references it. Historical SQL accepts a caller-supplied limit. | **Do not enable metered billing.** Add an authoritative database-enforced operation using server-derived entitlements, idempotency and concurrent-limit tests; deploy only the missing compatible migration. No exploit or live mutation attempted. |
 | QA-11 | P2 OPEN | Choosing Tamil translated navigation, but About/Contact body content stayed English. Reproduced through the browser. | Full public-page localization and language-specific content/validation acceptance remain. Locale restored to English after the check. |
 
+**QA-13 / P1 OPEN (code review, no live exploit test):** legacy AI server actions such as `enhanceBio` in `src/ai/flows/enhance-bio-flow.ts` call the provider flow without an authentication check inside the action, and their text schemas have no maximum input length. The dashboard caller being protected is insufficient authorization for an exported server action. The biodata assist HTTP API has its own authentication check; it does not protect these separate exports. Add authoritative checks inside every callable action, bounded input, provider availability and persistent abuse/cost limits before enabling AI credentials. No provider invocation or paid request was attempted. This is a source-level finding; practical endpoint reachability and configured-provider behavior remain unverified.
+
 Additional hardening: protected story-submission middleware, private/no-store identity responses and consistent shared-profile branding. Tests now run source auth/onboarding and subscription suites that the previous CI omitted. Fixtures include the current gender requirement; publishing without gender remains rejected.
+
+## Dependency security audit
+
+The initial `npm audit --omit=dev --json` reported **79 affected package entries: 2 critical, 19 high, 57 moderate and 1 low**. These are advisory/package matches, including propagated dependencies, not 79 demonstrated exploits.
+
+- Updated Next.js **15.3.9 → 15.5.28** within the existing major version, pinned in package.json/lockfile. Advisory references include https://github.com/advisories/GHSA-2xp9-vwfh-vxw4 and https://github.com/advisories/GHSA-mcj8-r9mp-w47p.
+- Updated transitive Handlebars **4.7.9 → 4.7.10** using its compatible patch range. Reference: https://github.com/advisories/GHSA-8r5x-fm3f-whwj.
+- After these changes, the audit reports **0 critical, 19 high, 58 moderate and 1 low (78 package entries)**. No forced major upgrades or downgrades were applied. High/moderate findings remain **QA-12 / OPEN** and require reachability review and compatible remediation, especially the existing Genkit/OpenTelemetry, Sharp/PostCSS and build-tool chains. Zero critical advisories does not mean the dependencies are fully secure.
+- Added an explicit critical-advisory CI gate. Real attack payloads were not sent to production.
+
+Follow-up browser verification on QA preview commit `048b3a9` confirmed `/faq`, Enter-key accordion expansion with accurate optional-ID/SMS copy, and malformed biodata “Link unavailable” recovery. It also caught stale pricing language; country-display/GBP and safety-tool wording was corrected across the six existing pricing dictionaries. Full public-page localization is still QA-11.
 
 ## Validation
 

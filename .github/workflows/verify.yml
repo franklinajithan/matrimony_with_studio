@@ -13,6 +13,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run audit:critical
       - run: npm run test:admin
       - run: npm run test:project:database
       - run: npm run test:providers

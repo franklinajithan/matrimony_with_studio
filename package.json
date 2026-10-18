@@ -22,7 +22,8 @@
     "test:site": "node --test scripts/site-regressions.test.cjs",
     "test:site:http": "node scripts/site-http-audit.cjs",
     "test:foundation": "vitest run",
-    "test:domain": "node scripts/run-domain-tests.cjs"
+    "test:domain": "node scripts/run-domain-tests.cjs",
+    "audit:critical": "npm audit --omit=dev --audit-level=critical"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.28.0",
@@ -56,7 +57,7 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.469.0",
-    "next": "^15.3.9",
+    "next": "15.5.28",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-easy-crop": "^6.2.3",

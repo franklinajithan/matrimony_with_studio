@@ -1,6 +1,6 @@
 # CupidMatch completion checklist — 18 October 2026
 
-Latest broad QA findings and coverage: [SITE_QA_REPORT.md](SITE_QA_REPORT.md). Nine defect groups fixed in code; atomic interest quotas and complete public-page localization remain open. Paid billing must stay disabled pending quota enforcement and actual provider acceptance.
+Latest broad QA findings and coverage: [SITE_QA_REPORT.md](SITE_QA_REPORT.md). Nine defect groups fixed in code; atomic interest quotas and complete public-page localization remain open. Paid billing must stay disabled pending quota enforcement and actual provider acceptance. Critical dependency advisories were patched; remaining high/moderate audit findings also need review before release.
 
 Code completion, isolated tests, preview deployment and live acceptance are separate. PR #40 preserves current main `5805c47baca3447ed7bfe6dd385308492226beaa`, including the latest gender eligibility fix. Production deployment `dpl_G9VRoCpF3Y8uhZVpAoGHdU76idL2` is READY on that main commit. The 17 October completion target was missed; this project is not yet fully released. No production migrations were applied during this pass.
 
