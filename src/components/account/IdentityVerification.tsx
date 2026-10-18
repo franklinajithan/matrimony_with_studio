@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 type State = {
+  enabled?: boolean;
   status: string;
   identityVerified: boolean;
   testMode?: boolean;
@@ -48,7 +49,9 @@ export function IdentityVerification() {
   }
   return (
     <section className="space-y-4 rounded-xl border p-5">
-      <h2 className="text-xl font-semibold">Government-ID verification</h2>
+      <h2 className="text-xl font-semibold">Optional government-ID verification</h2>
+      <p className="text-sm">Government-ID verification is optional during setup. It is not required for registration, matching or messages.</p>
+      {data && !data.enabled && <p role="status">Provider verification is currently unavailable. You can continue using your account.</p>}
       <p className="text-sm text-muted-foreground">
         Separate from profile review and mobile verification. Stripe Identity
         handles document and selfie collection. CupidMatch stores the session
@@ -78,6 +81,7 @@ export function IdentityVerification() {
       <label className="flex items-start gap-2 text-sm">
         <input
           type="checkbox"
+          disabled={!data?.enabled || busy}
           checked={consent}
           onChange={(e) => setConsent(e.target.checked)}
         />
@@ -88,6 +92,7 @@ export function IdentityVerification() {
         <Button
           disabled={
             busy ||
+            !data?.enabled ||
             !consent ||
             data?.status === "processing" ||
             data?.status === "verified"

@@ -1,4 +1,6 @@
 import { BillingActions } from "@/components/account/BillingActions";
+import { BillingHistory } from "@/components/account/BillingHistory";
+import { CheckoutResult } from "@/components/account/CheckoutResult";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -27,6 +29,7 @@ export default async function MembershipPage() {
           availability is shown below.
         </p>
       </div>
+      <CheckoutResult />
       <section className="rounded-3xl border border-violet-100 bg-gradient-to-br from-violet-50 to-white p-7 shadow-sm">
         <p className="text-sm font-semibold text-violet-700">Current access</p>
         <h2 className="mt-2 text-3xl font-bold text-slate-900">{plan.name}</h2>
@@ -57,12 +60,13 @@ export default async function MembershipPage() {
           </p>
         ) : (
           <p className="mt-3 text-slate-600">
-            No launch offer is active. Verify your mobile number to activate
-            your introductory offer.
+            No introductory offer is active. Phone verification is deferred and is not required to use your account.
           </p>
         )}
       </section>
-      <BillingActions hasProvider={!!subscription?.provider_customer_id} />
+      {subscription && <section className="space-y-2 rounded-xl border p-5"><h2 className="font-semibold">Subscription status</h2><p>{subscription.status.replaceAll("_", " ")}{subscription.cancel_at_period_end ? " · Renewal cancelled" : ""}</p>{subscription.current_period_end && <p>Current period ends {new Date(subscription.current_period_end).toLocaleDateString("en-GB")}</p>}{subscription.status === "past_due" && <p role="alert">Your payment needs attention. Update your payment method in the billing portal.</p>}</section>}
+      <BillingActions hasProvider={!!subscription?.provider_customer_id} cancelling={!!subscription?.cancel_at_period_end} />
+      {!!subscription?.provider_customer_id && <BillingHistory />}
       <div className="grid gap-3 sm:grid-cols-2">
         <Link
           className="rounded-xl border bg-white p-4 font-semibold text-violet-700 hover:bg-violet-50"
@@ -72,17 +76,14 @@ export default async function MembershipPage() {
         </Link>
         <Link
           className="rounded-xl border bg-white p-4 font-semibold text-violet-700 hover:bg-violet-50"
-          href={auth.user.phone_confirmed_at ? "/dashboard" : "/verify-phone"}
+          href="/dashboard"
         >
-          {auth.user.phone_confirmed_at
-            ? "Back to dashboard"
-            : "Verify mobile number"}{" "}
+          Back to dashboard{" "}
           →
         </Link>
       </div>
       <p className="text-sm text-slate-500">
-        No automatic charges. Membership prices are a preview while payments are
-        being prepared.
+        Stripe checkout is restricted to authorised test accounts. No live payments or payouts are available. Subscriptions recur for the selected period until renewal is cancelled.
       </p>
     </main>
   );

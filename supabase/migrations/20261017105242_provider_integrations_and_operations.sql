@@ -254,8 +254,8 @@ grant execute on function public.media_reference_allowed(text)to anon,authentica
 create table public.email_outbox(
  id uuid primary key default gen_random_uuid(),member_id uuid not null references public.profiles(id)on delete cascade,
  category text not null check(category in('messages','interests','support')),source_id text not null,
- status text not null default 'pending'check(status in('pending','sending','sent','failed','skipped')),attempts integer not null default 0,
- provider_id text,locked_at timestamptz,created_at timestamptz not null default now(),updated_at timestamptz not null default now(),unique(category,source_id,member_id)
+ status text not null default 'pending'check(status in('pending','sending','sent','failed','skipped','delivered','bounced','complained')),attempts integer not null default 0,
+ provider_id text,provider_updated_at timestamptz,locked_at timestamptz,created_at timestamptz not null default now(),updated_at timestamptz not null default now(),unique(category,source_id,member_id)
 );
 create index email_outbox_pending on public.email_outbox(status,created_at);
 alter table public.email_outbox enable row level security;
@@ -278,8 +278,9 @@ create trigger queue_notice_email after insert on public.member_notices for each
 create function public.claim_email_jobs()returns jsonb language plpgsql security invoker set search_path=''as $$
 declare v_result jsonb;begin
  update public.email_outbox set status='skipped',updated_at=now()where status in('pending','sending')and created_at<now()-interval '23 hours';
+ update public.email_outbox set status='failed',updated_at=now()where attempts>=5 and(status='pending'or(status='sending'and locked_at<now()-interval '5 minutes'));
  with picked as(select id from public.email_outbox where(status='pending'or(status='sending'and locked_at<now()-interval '5 minutes'))and attempts<5 order by created_at for update skip locked limit 5),claimed as(update public.email_outbox j set status='sending',locked_at=now(),attempts=attempts+1,updated_at=now()from picked where j.id=picked.id returning j.*)
- select coalesce(jsonb_agg(jsonb_build_object('id',c.id,'category',c.category,'email',u.email,'eligible',u.email_confirmed_at is not null and public.member_is_active(c.member_id)and a.notification_preferences->>'email'='true'and a.notification_preferences->>c.category='true')),'[]')into v_result from claimed c join auth.users u on u.id=c.member_id left join public.member_account_controls a on a.member_id=c.member_id;return v_result;
+ select coalesce(jsonb_agg(jsonb_build_object('id',c.id,'category',c.category,'email',u.email,'eligible',u.email_confirmed_at is not null and public.member_is_active(c.member_id)and a.notification_preferences->>'email'='true'and a.notification_preferences->>c.category='true'and cupidmatch_admin.email_source_allowed(c.member_id,c.category,c.source_id))),'[]')into v_result from claimed c join auth.users u on u.id=c.member_id left join public.member_account_controls a on a.member_id=c.member_id;return v_result;
 end $$;
 revoke all on function public.claim_email_jobs()from public,anon,authenticated;
 grant execute on function public.claim_email_jobs()to service_role;
@@ -335,3 +336,185 @@ grant execute on function cupidmatch_admin.reserve_account_export()to authentica
 create function public.reserve_account_export()returns boolean language sql security invoker set search_path=''as $$select cupidmatch_admin.reserve_account_export()$$;
 revoke all on function public.reserve_account_export()from public,anon;
 grant execute on function public.reserve_account_export()to authenticated;
+
+-- Stable customer binding and short server-only checkout leases prevent duplicate subscriptions.
+create table cupidmatch_admin.billing_customers(member_id uuid primary key references public.profiles(id) on delete cascade,customer_id text not null unique);
+create table cupidmatch_admin.billing_checkout_locks(member_id uuid primary key references public.profiles(id) on delete cascade,request_id uuid not null,locked_until timestamptz not null);
+alter table cupidmatch_admin.billing_customers enable row level security;
+alter table cupidmatch_admin.billing_checkout_locks enable row level security;
+revoke all on cupidmatch_admin.billing_customers,cupidmatch_admin.billing_checkout_locks from public,anon,authenticated;
+create function cupidmatch_admin.billing_customer(p_member uuid,p_customer text default null)returns text language plpgsql security definer set search_path=''as $$
+declare v_customer text;begin
+ if not public.member_is_active(p_member)then raise exception 'Active member required'using errcode='42501';end if;
+ perform pg_advisory_xact_lock(hashtextextended(p_member::text,827));
+ select customer_id into v_customer from cupidmatch_admin.billing_customers where member_id=p_member;
+ if v_customer is null then select provider_customer_id into v_customer from public.user_subscriptions where user_id=p_member and provider='stripe'and provider_customer_id is not null order by created_at desc limit 1;end if;
+ v_customer:=coalesce(v_customer,p_customer);
+ if v_customer is not null then
+  if v_customer !~ '^cus_[a-zA-Z0-9]+$'then raise exception 'Invalid customer'using errcode='22023';end if;
+  insert into cupidmatch_admin.billing_customers values(p_member,v_customer)on conflict(member_id)do nothing;
+ end if;return v_customer;
+end $$;
+create function public.billing_customer(p_member uuid,p_customer text default null)returns text language sql security invoker set search_path=''as $$select cupidmatch_admin.billing_customer(p_member,p_customer)$$;
+revoke all on function cupidmatch_admin.billing_customer(uuid,text),public.billing_customer(uuid,text)from public,anon,authenticated;
+grant execute on function cupidmatch_admin.billing_customer(uuid,text),public.billing_customer(uuid,text)to service_role;
+create function cupidmatch_admin.billing_checkout_lock(p_member uuid,p_request uuid,p_release boolean default false)returns boolean language plpgsql security definer set search_path=''as $$
+begin
+ if p_member is null or p_request is null then raise exception 'Missing checkout reference'using errcode='22023';end if;
+ if p_release then delete from cupidmatch_admin.billing_checkout_locks where member_id=p_member and request_id=p_request;return true;end if;
+ if not public.member_is_active(p_member)then raise exception 'Active member required'using errcode='42501';end if;
+ insert into cupidmatch_admin.billing_checkout_locks values(p_member,p_request,now()+interval '2 minutes')on conflict(member_id)do update set request_id=excluded.request_id,locked_until=excluded.locked_until where billing_checkout_locks.locked_until<now();
+ return found;
+end $$;
+create function public.billing_checkout_lock(p_member uuid,p_request uuid,p_release boolean default false)returns boolean language sql security invoker set search_path=''as $$select cupidmatch_admin.billing_checkout_lock(p_member,p_request,p_release)$$;
+revoke all on function cupidmatch_admin.billing_checkout_lock(uuid,uuid,boolean),public.billing_checkout_lock(uuid,uuid,boolean)from public,anon,authenticated;
+grant execute on function cupidmatch_admin.billing_checkout_lock(uuid,uuid,boolean),public.billing_checkout_lock(uuid,uuid,boolean)to service_role;
+create function cupidmatch_admin.audit_billing_read(p_member uuid)returns boolean language plpgsql security definer set search_path=''as $$
+begin
+ if not public.admin_has_permission('billing')then raise exception 'Forbidden'using errcode='42501';end if;
+ if not exists(select 1 from public.profiles where id=p_member)then raise exception 'Member not found'using errcode='22023';end if;
+ insert into public.admin_audit_log(actor_id,action,target_type,target_id,metadata)values(auth.uid(),'provider_billing_viewed','member',p_member::text,'{}');return true;
+end $$;
+create function public.audit_billing_read(p_member uuid)returns boolean language sql security invoker set search_path=''as $$select cupidmatch_admin.audit_billing_read(p_member)$$;
+revoke all on function cupidmatch_admin.audit_billing_read(uuid),public.audit_billing_read(uuid)from public,anon;
+grant execute on function cupidmatch_admin.audit_billing_read(uuid),public.audit_billing_read(uuid)to authenticated;
+
+-- Delivery receipts contain provider references and state, never message bodies or addresses.
+create function cupidmatch_admin.record_email_delivery(p_event text,p_provider text,p_status text,p_created timestamptz)returns boolean language plpgsql security definer set search_path=''as $$
+declare v_job public.email_outbox%rowtype;begin
+ if p_event is null or length(p_event)>220 or p_provider is null or p_created is null or p_status not in('delivered','bounced','complained','failed')then raise exception 'Invalid delivery event'using errcode='22023';end if;
+ select * into v_job from public.email_outbox where provider_id=p_provider for update;
+ if not found then raise exception 'Provider acceptance not yet recorded; retry'using errcode='40001';end if;
+ insert into cupidmatch_admin.provider_event_receipts values('resend:'||p_event,'resend',p_status,now())on conflict do nothing;
+ if not found then return false;end if;
+ if v_job.provider_updated_at>p_created or(v_job.status in('bounced','complained')and p_status='delivered')then return false;end if;
+ update public.email_outbox set status=p_status,provider_updated_at=p_created,updated_at=now()where id=v_job.id;
+ if p_status in('bounced','complained')then update public.member_account_controls set notification_preferences=jsonb_set(notification_preferences,'{email}','false'),updated_at=now()where member_id=v_job.member_id;end if;
+ return true;
+end $$;
+create function public.record_email_delivery(p_event text,p_provider text,p_status text,p_created timestamptz)returns boolean language sql security invoker set search_path=''as $$select cupidmatch_admin.record_email_delivery(p_event,p_provider,p_status,p_created)$$;
+revoke all on function cupidmatch_admin.record_email_delivery(text,text,text,timestamptz),public.record_email_delivery(text,text,text,timestamptz)from public,anon,authenticated;
+grant execute on function cupidmatch_admin.record_email_delivery(text,text,text,timestamptz),public.record_email_delivery(text,text,text,timestamptz)to service_role;
+create function cupidmatch_admin.email_delivery_admin(p_page integer default 1)returns jsonb language plpgsql security definer set search_path=''as $$
+declare v_rows jsonb;v_counts jsonb;v_total bigint;begin
+ if not public.admin_has_permission('notifications')then raise exception 'Forbidden'using errcode='42501';end if;
+ if p_page is null or p_page not between 1 and 100000 then raise exception 'Invalid page'using errcode='22023';end if;
+ select count(*)into v_total from public.email_outbox;
+ select coalesce(jsonb_object_agg(status,n),'{}')into v_counts from(select status,count(*)n from public.email_outbox group by status)c;
+ select coalesce(jsonb_agg(to_jsonb(t)),'[]')into v_rows from(select id,member_id,category,status,attempts,created_at,updated_at from public.email_outbox order by created_at desc,id limit 20 offset(p_page-1)*20)t;
+ return jsonb_build_object('items',v_rows,'counts',v_counts,'total',v_total);
+end $$;
+create function public.email_delivery_admin(p_page integer default 1)returns jsonb language sql security invoker set search_path=''as $$select cupidmatch_admin.email_delivery_admin(p_page)$$;
+revoke all on function cupidmatch_admin.email_delivery_admin(integer),public.email_delivery_admin(integer)from public,anon;
+grant execute on function cupidmatch_admin.email_delivery_admin(integer),public.email_delivery_admin(integer)to authenticated;
+
+-- Recheck current blocking, connection and interest state at send time.
+create function cupidmatch_admin.email_source_allowed(p_member uuid,p_category text,p_source text)returns boolean language plpgsql security definer set search_path=''as $$
+declare v_sender uuid;v_one uuid;v_two uuid;begin
+ if p_category='support'then return exists(select 1 from public.member_notices where id::text=p_source and member_id=p_member);end if;
+ if p_category='messages'then
+  select m.sender_id,c.participant_1,c.participant_2 into v_sender,v_one,v_two from public.messages m join public.chats c on c.id=m.chat_id where m.id::text=p_source;
+  return coalesce(p_member in(v_one,v_two)and v_sender<>p_member and cupidmatch_admin.planning_pair_allowed(v_one,v_two)and exists(select 1 from public.connections where(member_a_id=v_one and member_b_id=v_two)or(member_a_id=v_two and member_b_id=v_one)),false);
+ end if;
+ select sender_id into v_sender from public.match_requests where id::text=p_source and receiver_id=p_member and status='pending';
+ return v_sender is not null and cupidmatch_admin.planning_pair_allowed(v_sender,p_member);
+end $$;
+revoke all on function cupidmatch_admin.email_source_allowed(uuid,text,text)from public,anon,authenticated;
+grant execute on function cupidmatch_admin.email_source_allowed(uuid,text,text)to service_role;
+
+-- Erasure stays disabled until the operator approves retention and configures the worker.
+-- No member/staff client can execute erasure stages directly.
+create table cupidmatch_admin.account_deletion_jobs(
+ id uuid primary key default gen_random_uuid(),member_id uuid not null,requested_at timestamptz not null,
+ approved_by uuid references auth.users(id)on delete set null,reason text not null check(length(trim(reason))between 20 and 500),
+ status text not null default 'approved'check(status in('approved','processing','failed','cancelled','complete')),
+ lease uuid,locked_until timestamptz,started_at timestamptz,completed_at timestamptz,records_removed boolean not null default false,
+ attempts integer not null default 0,created_at timestamptz not null default now(),unique(member_id,requested_at)
+);
+alter table cupidmatch_admin.account_deletion_jobs enable row level security;
+revoke all on cupidmatch_admin.account_deletion_jobs from public,anon,authenticated;
+create index account_deletion_jobs_pending on cupidmatch_admin.account_deletion_jobs(status,created_at);
+create function cupidmatch_admin.guard_deletion_cancellation()returns trigger language plpgsql security definer set search_path=''as $$
+begin
+ if old.deletion_requested_at is not null and new.deletion_requested_at is distinct from old.deletion_requested_at then
+  if exists(select 1 from cupidmatch_admin.account_deletion_jobs where member_id=old.member_id and requested_at=old.deletion_requested_at and started_at is not null and status in('processing','failed'))then raise exception 'Erasure processing has started; contact support'using errcode='42501';end if;
+  update cupidmatch_admin.account_deletion_jobs set status='cancelled'where member_id=old.member_id and requested_at=old.deletion_requested_at and status='approved';
+ end if;return new;
+end $$;
+revoke all on function cupidmatch_admin.guard_deletion_cancellation()from public,anon,authenticated;
+create trigger guard_deletion_cancellation before update on public.member_account_controls for each row execute function cupidmatch_admin.guard_deletion_cancellation();
+create function cupidmatch_admin.deletion_hold(p_member uuid)returns boolean language sql security definer set search_path=''as $$
+ select exists(select 1 from public.profiles where id=p_member and is_admin)
+ or exists(select 1 from public.admin_staff where user_id=p_member)
+ or exists(select 1 from public.member_reports where(reporter_id=p_member or reported_member_id=p_member)and status in('open','under_review'))
+ or exists(select 1 from public.member_admin_notes where author_id=p_member)
+$$;
+revoke all on function cupidmatch_admin.deletion_hold(uuid)from public,anon,authenticated;
+create function cupidmatch_admin.approve_account_deletion(p_member uuid,p_requested_at timestamptz,p_reason text)returns jsonb language plpgsql security definer set search_path=''as $$
+declare v_id uuid;begin
+ if not public.is_admin()or p_member=auth.uid()then raise exception 'Super Admin required'using errcode='42501';end if;
+ if p_reason is null or length(trim(p_reason))not between 20 and 500 then raise exception 'Review reason required'using errcode='22023';end if;
+ perform 1 from public.member_account_controls where member_id=p_member and deletion_requested_at=p_requested_at for update;
+ if not found then raise exception 'Deletion request changed; refresh'using errcode='40001';end if;
+ if cupidmatch_admin.deletion_hold(p_member)then raise exception 'Staff account or unresolved safety hold requires manual review'using errcode='42501';end if;
+ insert into cupidmatch_admin.account_deletion_jobs(member_id,requested_at,approved_by,reason)values(p_member,p_requested_at,auth.uid(),trim(p_reason))on conflict(member_id,requested_at)do nothing returning id into v_id;
+ if v_id is null then select id into v_id from cupidmatch_admin.account_deletion_jobs where member_id=p_member and requested_at=p_requested_at;end if;
+ insert into public.admin_audit_log(actor_id,action,target_type,target_id,metadata)values(auth.uid(),'account_erasure_approved','member',p_member::text,jsonb_build_object('job',v_id,'reason',trim(p_reason)));
+ return jsonb_build_object('approved',true,'jobId',v_id);
+end $$;
+create function public.approve_account_deletion(p_member uuid,p_requested_at timestamptz,p_reason text)returns jsonb language sql security invoker set search_path=''as $$select cupidmatch_admin.approve_account_deletion(p_member,p_requested_at,p_reason)$$;
+revoke all on function cupidmatch_admin.approve_account_deletion(uuid,timestamptz,text),public.approve_account_deletion(uuid,timestamptz,text)from public,anon;
+grant execute on function cupidmatch_admin.approve_account_deletion(uuid,timestamptz,text),public.approve_account_deletion(uuid,timestamptz,text)to authenticated;
+create function cupidmatch_admin.claim_account_deletion()returns jsonb language plpgsql security definer set search_path=''as $$
+declare v_job cupidmatch_admin.account_deletion_jobs%rowtype;begin
+ select * into v_job from cupidmatch_admin.account_deletion_jobs where status in('approved','processing','failed')and attempts<10 and(locked_until is null or locked_until<now())order by created_at for update skip locked limit 1;
+ if not found then return null;end if;
+ perform 1 from public.member_account_controls where member_id=v_job.member_id and deletion_requested_at=v_job.requested_at for update;
+ if not found and not v_job.records_removed then update cupidmatch_admin.account_deletion_jobs set status='cancelled'where id=v_job.id;return null;end if;
+ if cupidmatch_admin.deletion_hold(v_job.member_id)then raise exception 'Erasure held for review'using errcode='42501';end if;
+ update cupidmatch_admin.account_deletion_jobs set status='processing',lease=gen_random_uuid(),locked_until=now()+interval '10 minutes',started_at=coalesce(started_at,now()),attempts=attempts+1 where id=v_job.id returning * into v_job;
+ return jsonb_build_object('id',v_job.id,'member_id',v_job.member_id,'lease',v_job.lease);
+end $$;
+create function public.claim_account_deletion()returns jsonb language sql security invoker set search_path=''as $$select cupidmatch_admin.claim_account_deletion()$$;
+revoke all on function cupidmatch_admin.claim_account_deletion(),public.claim_account_deletion()from public,anon,authenticated;
+grant execute on function cupidmatch_admin.claim_account_deletion(),public.claim_account_deletion()to service_role;
+create function cupidmatch_admin.account_deletion_step(p_id uuid,p_lease uuid,p_stage text)returns jsonb language plpgsql security definer set search_path=''as $$
+declare v_job cupidmatch_admin.account_deletion_jobs%rowtype;v_files jsonb;v_pair text[];begin
+ select * into v_job from cupidmatch_admin.account_deletion_jobs where id=p_id and lease=p_lease and status='processing'and locked_until>now()for update;
+ if not found then raise exception 'Invalid or expired erasure lease'using errcode='42501';end if;
+ if p_stage='failed'then update cupidmatch_admin.account_deletion_jobs set status='failed',locked_until=now()+interval '15 minutes'where id=p_id;return jsonb_build_object('retry',true);end if;
+ if p_stage='complete'then
+  if not v_job.records_removed then raise exception 'Application cleanup not recorded'using errcode='22023';end if;
+  if exists(select 1 from auth.users where id=v_job.member_id)or exists(select 1 from public.profiles where id=v_job.member_id)then raise exception 'Account still exists'using errcode='22023';end if;
+  update cupidmatch_admin.account_deletion_jobs set status='complete',completed_at=now(),lease=null,locked_until=null where id=p_id;
+  insert into public.admin_audit_log(actor_id,action,target_type,target_id,metadata)values(v_job.approved_by,'account_erasure_complete','deletion_job',p_id::text,'{"applicationDataRemoved":true}');return jsonb_build_object('complete',true);
+ end if;
+ if cupidmatch_admin.deletion_hold(v_job.member_id)then raise exception 'Erasure held for review'using errcode='42501';end if;
+ if p_stage='inventory'then return jsonb_build_object(
+  'customers',(select coalesce(jsonb_agg(customer),'[]')from(select provider_customer_id as customer from public.user_subscriptions where user_id=v_job.member_id and provider='stripe'and provider_customer_id is not null union select customer_id from cupidmatch_admin.billing_customers where member_id=v_job.member_id)t),
+  'identities',(select coalesce(jsonb_agg(provider_session_id),'[]')from public.identity_sessions where member_id=v_job.member_id));end if;
+ select coalesce(jsonb_agg(jsonb_build_object('bucket',bucket_id,'path',name)),'[]')into v_files from(select o.bucket_id,o.name from storage.objects o where coalesce(to_jsonb(o)->>'owner_id',to_jsonb(o)->>'owner')=v_job.member_id::text or(o.bucket_id='media'and starts_with(o.name,'users/'||v_job.member_id::text||'/'))or(o.bucket_id='message-attachments'and exists(select 1 from public.message_attachments a left join public.chats c on c.id=a.chat_id where a.object_path=o.name and(a.uploader_id=v_job.member_id or v_job.member_id in(c.participant_1,c.participant_2))))order by o.id limit 100)t;
+ if p_stage='files'then return v_files;end if;
+ if p_stage<>'records'then raise exception 'Unknown erasure stage'using errcode='22023';end if;
+ if jsonb_array_length(v_files)>0 then raise exception 'Storage cleanup incomplete'using errcode='22023';end if;
+ -- Remove conversations on both sides; other unrelated members and their files are untouched.
+ delete from public.call_signals where sender_id=v_job.member_id;
+ delete from public.member_calls where v_job.member_id in(caller_id,callee_id);
+ delete from public.messages where sender_id=v_job.member_id or chat_id in(select id from public.chats where v_job.member_id in(participant_1,participant_2));
+ delete from public.message_attachments where uploader_id=v_job.member_id or chat_id in(select id from public.chats where v_job.member_id in(participant_1,participant_2));
+ delete from public.chats where v_job.member_id in(participant_1,participant_2);
+ delete from public.family_activity where author_id=v_job.member_id;
+ delete from public.support_messages where author_id=v_job.member_id;
+ delete from public.match_requests where sender_id=v_job.member_id or receiver_id=v_job.member_id;
+ -- Restrict dynamic identifiers to this fixed, schema-reviewed allowlist.
+ foreach v_pair slice 1 in array array[['promo_redemptions','user_id'],['success_stories','submitted_by_uid'],['connections','member_a_id'],['connections','member_b_id'],['shortlist','user_id'],['shortlist','shortlisted_id'],['biodata_share_links','owner_id'],['biodata_documents','owner_id'],['biodata_template_favourites','owner_id'],['profile_share_links','owner_id'],['member_trials','user_id'],['subscription_usage','user_id'],['user_subscriptions','user_id']]loop
+  if to_regclass('public.'||v_pair[1])is not null then execute format('delete from public.%I where %I=$1',v_pair[1],v_pair[2])using v_job.member_id;end if;
+ end loop;
+ update public.provider_operations set member_id=null where member_id=v_job.member_id;
+ delete from public.profiles where id=v_job.member_id;
+ update cupidmatch_admin.account_deletion_jobs set records_removed=true where id=p_id;
+ return jsonb_build_object('recordsRemoved',true);
+end $$;
+create function public.account_deletion_step(p_id uuid,p_lease uuid,p_stage text)returns jsonb language sql security invoker set search_path=''as $$select cupidmatch_admin.account_deletion_step(p_id,p_lease,p_stage)$$;
+revoke all on function cupidmatch_admin.account_deletion_step(uuid,uuid,text),public.account_deletion_step(uuid,uuid,text)from public,anon,authenticated;
+grant execute on function cupidmatch_admin.account_deletion_step(uuid,uuid,text),public.account_deletion_step(uuid,uuid,text)to service_role;

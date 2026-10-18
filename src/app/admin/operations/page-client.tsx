@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { BillingMemberHistory } from "@/components/admin/BillingMemberHistory";
+import { DeletionApproval } from "@/components/admin/DeletionApproval";
 type Item = {
   id: string;
   member_id: string;
@@ -233,6 +235,7 @@ export function FeatureOperations() {
                       </div>
                     ))}
                   </dl>
+                  {section === "deletion" && scopes.includes("manage") && <DeletionApproval memberId={item.member_id} requestedAt={item.created_at} />}
                   {["family", "plans", "calls", "attachments"].includes(
                     section,
                   ) && (
@@ -325,6 +328,7 @@ export function FeatureOperations() {
               <option value="cancel_subscription">Cancel renewal</option>
             </select>
           </label>
+          <BillingMemberHistory memberId={paymentMember} selectCharge={(id, value) => { setCharge(id); setAmount(value); }} />
           {paymentAction === "refund" && (
             <>
               <label className="block text-sm">

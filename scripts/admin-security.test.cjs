@@ -231,6 +231,7 @@ for (const file of adminPages) {
           SupportThread: "SupportThread",
         },
         "./page-client": { default: "AdminPageClient" },
+        "@/components/admin/EmailDelivery": { EmailDelivery: "EmailDelivery" },
         "./audit-explorer": { default: "AuditExplorer" },
         "@/components/shared/Logo": componentStubs,
         "@/components/admin/IntegrationReadiness": componentStubs,
@@ -295,6 +296,7 @@ for (const file of files("src/app/api/admin", "route.ts")) {
         },
       },
       "@/lib/subscriptions/checkout": { billingConfigured: () => false },
+      "@/lib/providers/billing-history": { billingHistory: () => { throw new Error("Provider read before authorization"); } },
       "@/lib/admin/dashboard": {
         getAdminDashboardMetrics: () => {
           throw new Error("Read before authorization");

@@ -2,6 +2,7 @@
 export function integrationReadiness(env: Record<string, string | undefined>) {
   const present = (name: string) => !!env[name]?.trim();
   const definitions = [
+    { name: "Account erasure", flag: "ACCOUNT_DELETION_ENABLED", requirements: ["SUPABASE_SERVICE_ROLE_KEY", "CRON_SECRET", "RETENTION_POLICY_APPROVED"], tests: "Approved retention, storage/provider cleanup, retry recovery and dedicated-account erasure acceptance" },
     {
       name: "Private media and archives",
       flag: null,
@@ -58,6 +59,7 @@ export function integrationReadiness(env: Record<string, string | undefined>) {
       requirements: [
         "SUPABASE_SERVICE_ROLE_KEY",
         "RESEND_API_KEY",
+        "RESEND_WEBHOOK_SECRET",
         "EMAIL_FROM",
         "CRON_SECRET",
         "EMAIL_TEST_RECIPIENTS",
@@ -69,6 +71,7 @@ export function integrationReadiness(env: Record<string, string | undefined>) {
   return definitions.map((item) => {
     const missing = item.requirements.filter((name) => !present(name)),
       invalid: string[] = [];
+    if (item.flag === "ACCOUNT_DELETION_ENABLED" && env.RETENTION_POLICY_APPROVED !== "true") invalid.push("RETENTION_POLICY_APPROVED must be true after operator review");
     if (
       item.requirements.includes("STRIPE_SECRET_KEY") &&
       present("STRIPE_SECRET_KEY") &&

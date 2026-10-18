@@ -351,6 +351,7 @@ test("TURN credentials are short-lived, user-bound and do not disclose shared se
 });
 test("ordinary members cannot start Stripe sandbox checkout", async () => {
   const api = load("src/app/api/billing/checkout/route.ts", {
+    "@/lib/supabase/service": { serviceClient: () => { throw new Error("Must not access service"); } },
     "@/lib/subscriptions/checkout": {
       billingConfigured: () => true,
       assertBillingConfiguration: () => {},

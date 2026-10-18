@@ -237,6 +237,7 @@ export function AccountControls() {
             </section>
             <section className="space-y-3 border-t pt-4">
               <h3 className="font-semibold">Request account deletion</h3>
+              <p className="text-sm text-muted-foreground">Export your data first. Approved processing removes your profile, uploads, plans, stories and conversations on both sides. Restricted audit records and provider financial records follow the operator’s reviewed retention policy. Deletion is not a refund; manage billing before requesting it. You can cancel until processing starts.</p>
               {data.deletion_requested_at ? (
                 <>
                   <p className="text-sm">

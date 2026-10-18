@@ -187,7 +187,8 @@ export function PreferenceDiscovery() {
         // to the opposite gender until they save an explicit choice.
         const extra = (self.extra || {}) as Record<string, any>;
         const matchDetails = (extra.matchDetails || {}) as Record<string, any>;
-        const ownGender = String(matchDetails.gender || extra.gender || "").toLowerCase();
+        const draft = (self.onboardingDraft || {}) as Record<string, any>;
+        const ownGender = String(matchDetails.gender || extra.gender || draft.gender || "").toLowerCase();
         const chosenGender = String(saved.gender || "").trim();
         const mandatoryGender = chosenGender && !["no preference", "any", "all"].includes(chosenGender.toLowerCase())
           ? chosenGender

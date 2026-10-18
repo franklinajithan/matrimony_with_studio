@@ -2,7 +2,7 @@ const { runRoadmap } = require("./roadmap-database.test.cjs");
 const fs = require("node:fs"),
   path = require("node:path"),
   assert = require("node:assert/strict");
-runRoadmap(async ({ db, ids, as }) => {
+async function runIntegrations(extra) { return runRoadmap(async ({ db, ids, as }) => {
   await db.exec(`reset role;create role service_role bypassrls;grant usage on schema public,auth to service_role;create schema storage;create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text,metadata jsonb);alter table storage.objects enable row level security;grant usage on schema storage to authenticated,anon;grant select,insert on storage.objects to authenticated,anon;
  alter table public.chats add column participant_details jsonb default '{}',add column last_message_text text,add column last_message_sender_id uuid,add column last_message_at timestamptz,add column unread_by jsonb default '{}';
  alter table public.messages add column text text,add column is_read boolean default false,add column created_at timestamptz default now();
@@ -347,7 +347,10 @@ runRoadmap(async ({ db, ids, as }) => {
   console.log(
     `PASS: ${count} communication/provider/privacy PostgreSQL assertions.`,
   );
-}).catch((e) => {
+  if (extra) await extra({ db, ids, as });
+}); }
+module.exports = { runIntegrations };
+if (require.main === module) runIntegrations().catch((e) => {
   console.error(e);
   process.exitCode = 1;
 });

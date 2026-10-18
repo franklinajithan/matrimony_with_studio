@@ -17,6 +17,7 @@ export async function GET(request: Request) {
     process.env.EMAIL_NOTIFICATIONS_ENABLED !== "true" ||
     !process.env.RESEND_API_KEY ||
     !process.env.EMAIL_FROM ||
+    !process.env.RESEND_WEBHOOK_SECRET ||
     !serviceConfigured()
   )
     return NextResponse.json(
@@ -27,7 +28,9 @@ export async function GET(request: Request) {
     .split(",")
     .map((x) => x.trim().toLowerCase())
     .filter(Boolean);
-  if (!allowlist.length)
+  const mode = process.env.EMAIL_DELIVERY_MODE || "test";
+  if (!["test", "live"].includes(mode) || (mode === "live" && process.env.EMAIL_LIVE_DELIVERY_APPROVED !== "true")) return NextResponse.json({ error: "Email delivery mode requires operator configuration" }, { status: 503 });
+  if (mode === "test" && !allowlist.length)
     return NextResponse.json(
       {
         error:
@@ -50,11 +53,12 @@ export async function GET(request: Request) {
     email: string;
     eligible: boolean;
   }[]) {
-    if (!job.eligible || !allowlist.includes(job.email.toLowerCase())) {
-      await db
+    if (!job.eligible || (mode === "test" && !allowlist.includes(job.email.toLowerCase()))) {
+      const skippedUpdate = await db
         .from("email_outbox")
         .update({ status: "skipped", updated_at: new Date().toISOString() })
         .eq("id", job.id);
+      if (skippedUpdate.error) return NextResponse.json({ error: "Email queue update failed" }, { status: 503 });
       skipped++;
       continue;
     }
@@ -89,18 +93,19 @@ export async function GET(request: Request) {
           provider_id: result.id,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", job.id);
+        .eq("id", job.id).eq("status", "sending");
       if (saved.error) throw saved.error;
       sent++;
     } catch {
-      await db
+      const reset = await db
         .from("email_outbox")
         .update({ status: "pending", updated_at: new Date().toISOString() })
-        .eq("id", job.id);
+        .eq("id", job.id).eq("status", "sending");
+      if (reset.error) return NextResponse.json({ error: "Email retry state could not be saved" }, { status: 503 });
     }
   }
   return NextResponse.json(
-    { sent, skipped, testMode: true },
+    { sent, skipped, testMode: mode === "test" },
     { headers: { "Cache-Control": "no-store" } },
   );
 }
