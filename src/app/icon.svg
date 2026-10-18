@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="CupidMatch Cupid bow and heart">
+<rect width="64" height="64" rx="14" fill="#42116d"/>
+<circle cx="32" cy="32" r="27" fill="#fffaf4"/>
+<path d="M20 49 Q9 32 20 15 Q35 11 43 21 Q36 33 20 49Z" fill="none" stroke="#bb882c" stroke-width="3.4" stroke-linejoin="round"/>
+<path d="M20 15 L20 49" stroke="#68228b" stroke-width="2.5"/>
+<path d="M11 32 H51" stroke="#bd8a35" stroke-width="3.3" stroke-linecap="round"/>
+<path d="M49 26 C46 22 40 25 41 30 C42 34 49 38 51 41 C54 38 61 34 61 30 C61 25 55 22 51 26Z" transform="translate(-5 -5) scale(.95)" fill="#681890" stroke="#bd8a35" stroke-width="1.5"/>
+<path d="M13 28 L20 32 L13 36" fill="none" stroke="#bd8a35" stroke-width="2" stroke-linejoin="round"/>
+</svg>
