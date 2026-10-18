@@ -22,7 +22,13 @@ const EnhanceMoviesOutputSchema = z.object({
 export type EnhanceMoviesOutput = z.infer<typeof EnhanceMoviesOutputSchema>;
 
 export async function enhanceMovies(input: EnhanceMoviesInput): Promise<EnhanceMoviesOutput> {
-  return enhanceMoviesFlow(input);
+  // Fail closed until a persistent, atomic per-member AI usage quota exists.
+  // Authentication of a page or another API does not authorize this server action.
+  const {getServerAuthUser} = await import('@/lib/supabase/server');
+  const user = await getServerAuthUser();
+  if (!user) throw new Error('Authentication required.');
+  EnhanceMoviesInputSchema.parse(input);
+  throw new Error('AI enhancement is temporarily unavailable.');
 }
 
 const prompt = ai.definePrompt({
