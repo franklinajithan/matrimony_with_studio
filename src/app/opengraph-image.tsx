@@ -5,7 +5,7 @@ export const alt = 'CupidMatch - Find Your Perfect Match';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-const logoUrl = 'https://matrimony-with-studio.vercel.app/images/cupidmatch-logo.png';
+const logoUrl = 'https://cupidmatch.co.uk/images/cupidmatch-logo-new.png';
 
 export default function Image() {
   return new ImageResponse(
