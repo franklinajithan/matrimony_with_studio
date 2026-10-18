@@ -9,7 +9,7 @@ const productionHost =
   process.env.VERCEL_URL ||
   'cupidmatch.co.uk';
 const siteUrl = productionHost.startsWith('http') ? productionHost : `https://${productionHost}`;
-const SHARE_CARD_VERSION = '3';
+const SHARE_CARD_VERSION = '4';
 const shareCardImage = `/opengraph-image?v=${SHARE_CARD_VERSION}`;
 
 export const metadata: Metadata = {
@@ -18,10 +18,10 @@ export const metadata: Metadata = {
   description: 'Matrimony for Indian and Sri Lankan communities, with profile preferences, introductions, privacy controls and member support.',
   icons: {
     icon: [
-      { url: '/images/cupidmatch-logo.png', type: 'image/png' },
+      { url: '/images/cupidmatch-logo-new.png', type: 'image/png' },
     ],
-    shortcut: '/images/cupidmatch-logo.png',
-    apple: '/images/cupidmatch-logo.png',
+    shortcut: '/images/cupidmatch-logo-new.png',
+    apple: '/images/cupidmatch-logo-new.png',
   },
   openGraph: {
     type: 'website',
