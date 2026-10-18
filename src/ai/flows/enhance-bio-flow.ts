@@ -12,7 +12,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const EnhanceBioInputSchema = z.object({
-  bioText: z.string().describe("The user's current bio text to be enhanced."),
+  bioText: z.string().trim().min(1).max(2000).describe("The user's current bio text to be enhanced."),
 });
 export type EnhanceBioInput = z.infer<typeof EnhanceBioInputSchema>;
 
@@ -22,7 +22,14 @@ const EnhanceBioOutputSchema = z.object({
 export type EnhanceBioOutput = z.infer<typeof EnhanceBioOutputSchema>;
 
 export async function enhanceBio(input: EnhanceBioInput): Promise<EnhanceBioOutput> {
-  return enhanceBioFlow(input);
+  // This legacy server action has no persistent, database-enforced AI usage quota.
+  // Keep it unavailable even to signed-in members until an atomic quota is wired in.
+  // The separately authenticated biodata-assist API is not authorization for this action.
+  const {getServerAuthUser} = await import('@/lib/supabase/server');
+  const user = await getServerAuthUser();
+  if (!user) throw new Error('Authentication required.');
+  EnhanceBioInputSchema.parse(input);
+  throw new Error('Bio enhancement is temporarily unavailable.');
 }
 
 const prompt = ai.definePrompt({
