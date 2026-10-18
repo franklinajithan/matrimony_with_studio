@@ -11,16 +11,15 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: 'CupidMatch | Sri Lankan & Indian Matrimony',
   applicationName: 'CupidMatch',
-  alternates: { canonical: '/' },
   description: 'Find meaningful connections with people who share your values, culture and future goals. Explore profiles and start your journey with CupidMatch.',
   icons: {
-    icon: [
-      { url: '/images/cupidmatch-logo-new.png', type: 'image/png' },
-    ],
-    shortcut: '/images/cupidmatch-logo-new.png',
+    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    shortcut: '/icon.svg',
     apple: '/images/cupidmatch-logo-new.png',
   },
+  robots: { index: true, follow: true },
   openGraph: {
+    url: siteUrl,
     type: 'website',
     siteName: 'CupidMatch',
     title: 'CupidMatch - Find Your Perfect Match',
