@@ -22,7 +22,13 @@ const EnhanceHobbiesOutputSchema = z.object({
 export type EnhanceHobbiesOutput = z.infer<typeof EnhanceHobbiesOutputSchema>;
 
 export async function enhanceHobbies(input: EnhanceHobbiesInput): Promise<EnhanceHobbiesOutput> {
-  return enhanceHobbiesFlow(input);
+  // Fail closed until a persistent, atomic per-member AI usage quota exists.
+  // Authentication of a page or another API does not authorize this server action.
+  const {getServerAuthUser} = await import('@/lib/supabase/server');
+  const user = await getServerAuthUser();
+  if (!user) throw new Error('Authentication required.');
+  EnhanceHobbiesInputSchema.parse(input);
+  throw new Error('AI enhancement is temporarily unavailable.');
 }
 
 const prompt = ai.definePrompt({
