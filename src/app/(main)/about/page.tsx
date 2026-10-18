@@ -1,88 +1,36 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowRight, Globe2, HeartHandshake, ShieldCheck, Users } from "lucide-react";
+import { PublicPage, PublicHero, PublicClosing, primaryLink, secondaryLink } from "@/components/marketing/PublicPage";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Users, Globe, ShieldCheck } from "lucide-react"; // Added ShieldCheck
-import Image from "next/image"; // Added import for Image component
+export const metadata: Metadata = {
+  title: "About CupidMatch | Culture, connection and shared values",
+  description: "Get to know CupidMatch, a matrimony community connecting Sri Lankans around the world through shared values and meaningful introductions.",
+};
+
+const values = [
+  { icon: Users, title: "Culture feels like home", text: "A place where your background, traditions and family values are understood, wherever you live." },
+  { icon: HeartHandshake, title: "Compatibility comes first", text: "Explore introductions around the preferences and life goals that matter to you." },
+  { icon: ShieldCheck, title: "Your pace. Your choice.", text: "Choose what you share, who you connect with and when a conversation feels right." },
+];
 
 export default function AboutUsPage() {
-  return (
-    <div className="space-y-12 py-8">
-      <section className="text-center py-12 bg-gradient-to-br from-rose-50 to-peach-100 rounded-xl shadow-lg">
-        <h1 className="font-headline text-5xl font-bold text-primary mb-6">
-          About MatchCraft
-        </h1>
-        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-          Crafting Connections, Building Futures. We are dedicated to helping you find your perfect life partner within the Indian and Sri Lankan communities.
-        </p>
-      </section>
+  return <PublicPage>
+    <PublicHero eyebrow="Our story · CupidMatch" title="Rooted in culture." accent="Open to possibility."
+      description="Finding a life partner is personal. CupidMatch brings Sri Lankans around the world closer through shared values, thoughtful introductions and room to build something meaningful."
+      image="/images/values/culture.jpg" imageAlt="A couple sharing a moment together">
+      <Link href="/signup" className={primaryLink}>Find your beginning <ArrowRight aria-hidden className="h-4 w-4" /></Link>
+      <Link href="/success-stories" className={secondaryLink}>Our community stories</Link>
+    </PublicHero>
 
-      <section className="grid md:grid-cols-2 gap-8 items-center">
-        <div className="prose lg:prose-lg max-w-none">
-          <h2 className="font-headline text-3xl font-semibold text-gray-800 mb-4">Our Mission</h2>
-          <p className="text-lg text-foreground/80 leading-relaxed mb-6">
-            At MatchCraft, our mission is to provide a safe, secure, and effective platform for individuals from Indian and Sri Lankan backgrounds to connect and find meaningful, long-lasting relationships. We believe in the power of compatibility, tradition, and modern technology to bring people together.
-          </p>
-          <h2 className="font-headline text-3xl font-semibold text-gray-800 mb-4">Our Vision</h2>
-          <p className="text-lg text-foreground/80 leading-relaxed">
-            We envision a world where finding a life partner is a joyful and empowering experience. MatchCraft aims to be the most trusted and preferred matrimonial service, celebrated for creating countless successful love stories and happy families.
-          </p>
-        </div>
-        <div className="flex justify-center items-center">
-           <Image
-            src="https://placehold.co/500x400.png?text=Our+Story"
-            alt="Symbolic image representing connection and community"
-            width={500}
-            height={400}
-            className="rounded-xl shadow-md object-cover"
-            data-ai-hint="community connection"
-          />
-        </div>
-      </section>
+    <section aria-labelledby="purpose" className="grid gap-6 border-y border-[#EADFED] py-8 sm:py-10 md:grid-cols-[1fr_1.4fr] md:gap-12">
+      <div><p className="text-xs font-bold uppercase tracking-[.2em] text-[#846294]">Why we’re here</p><h2 id="purpose" className="mt-3 font-serif text-3xl font-semibold leading-tight sm:text-4xl">A connection that<br className="hidden sm:block" /> understands you.</h2></div>
+      <div className="space-y-4 text-base leading-7 text-[#6B5A78]"><p>We believe that shared culture can be a starting point for a lasting relationship. But a meaningful match also leaves space for your individuality, ambitions and hopes for the future.</p><p>Our purpose is to make those introductions feel more thoughtful, whether you’re close to home or building a life abroad.</p></div>
+    </section>
 
-      <section className="py-10">
-        <h2 className="font-headline text-3xl font-semibold text-gray-800 text-center mb-10">Why Choose MatchCraft?</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          <Card className="shadow-md hover:shadow-lg transition-shadow bg-card">
-            <CardHeader className="items-center text-center">
-              <div className="p-3 bg-primary/10 rounded-full inline-block mb-3">
-                <Users className="h-10 w-10 text-primary" />
-              </div>
-              <CardTitle className="font-headline text-xl text-card-foreground">Community Focused</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-sm text-muted-foreground">Tailored for the unique cultural nuances and preferences of Indian and Sri Lankan communities worldwide.</p>
-            </CardContent>
-          </Card>
-          <Card className="shadow-md hover:shadow-lg transition-shadow bg-card">
-            <CardHeader className="items-center text-center">
-              <div className="p-3 bg-primary/10 rounded-full inline-block mb-3">
-                <Globe className="h-10 w-10 text-primary" />
-              </div>
-              <CardTitle className="font-headline text-xl text-card-foreground">Intelligent Matching</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-sm text-muted-foreground">Leveraging AI and detailed preferences to suggest highly compatible profiles, including horoscope matching.</p>
-            </CardContent>
-          </Card>
-          <Card className="shadow-md hover:shadow-lg transition-shadow bg-card">
-            <CardHeader className="items-center text-center">
-               <div className="p-3 bg-primary/10 rounded-full inline-block mb-3">
-                <ShieldCheck className="h-10 w-10 text-primary" />
-              </div>
-              <CardTitle className="font-headline text-xl text-card-foreground">Safe & Secure</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-sm text-muted-foreground">Prioritizing your privacy and safety with verified profiles and secure communication channels.</p>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+    <section aria-labelledby="values"><p className="text-xs font-bold uppercase tracking-[.2em] text-[#846294]">What matters to us</p><h2 id="values" className="mt-3 font-serif text-3xl font-semibold sm:text-4xl">Built around real connection.</h2><div className="mt-7 grid gap-4 md:grid-cols-3">{values.map(({icon: Icon,title,text})=><article key={title} className="rounded-3xl border border-[#EADFED] bg-white/70 p-6 sm:p-7"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F4EBFA]"><Icon aria-hidden className="h-5 w-5 text-[#7C3AED]" /></span><h3 className="mt-5 font-serif text-xl font-semibold">{title}</h3><p className="mt-3 text-sm leading-6 text-[#6B5A78]">{text}</p></article>)}</div></section>
 
-      <section className="text-center py-10">
-        <Heart className="w-12 h-12 text-primary mx-auto mb-4" />
-        <p className="text-lg text-muted-foreground">
-          Join MatchCraft today and take the first step towards finding your happily ever after.
-        </p>
-      </section>
-    </div>
-  );
+    <section className="flex flex-col gap-5 rounded-3xl border border-[#EADFED] bg-[#FBF5F1] p-7 sm:flex-row sm:items-start sm:p-9"><Globe2 aria-hidden className="h-9 w-9 shrink-0 text-[#A52A8A]" /><div><h2 className="font-serif text-2xl font-semibold sm:text-3xl">Across borders, close to home.</h2><p className="mt-3 max-w-2xl text-base leading-7 text-[#6B5A78]">From Sri Lanka to the UK, Canada, Australia and beyond, CupidMatch is a meeting place for people who want culture and compatibility to be part of their next chapter.</p><Link href="/safety" className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#6D28D9] underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#7C3AED]">Learn about privacy and safety <ArrowRight aria-hidden className="h-4 w-4" /></Link></div></section>
+    <PublicClosing title="Your next chapter starts with a hello." description="Tell your story, share what matters to you and discover people looking for a meaningful connection." href="/signup" label="Create your profile" />
+  </PublicPage>;
 }
