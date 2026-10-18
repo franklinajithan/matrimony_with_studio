@@ -22,7 +22,13 @@ const EnhanceSuccessStoryOutputSchema = z.object({
 export type EnhanceSuccessStoryOutput = z.infer<typeof EnhanceSuccessStoryOutputSchema>;
 
 export async function enhanceSuccessStory(input: EnhanceSuccessStoryInput): Promise<EnhanceSuccessStoryOutput> {
-  return enhanceSuccessStoryFlow(input);
+  // Fail closed until a persistent, atomic per-member AI usage quota exists.
+  // Authentication of a page or another API does not authorize this server action.
+  const {getServerAuthUser} = await import('@/lib/supabase/server');
+  const user = await getServerAuthUser();
+  if (!user) throw new Error('Authentication required.');
+  EnhanceSuccessStoryInputSchema.parse(input);
+  throw new Error('AI enhancement is temporarily unavailable.');
 }
 
 const prompt = ai.definePrompt({
