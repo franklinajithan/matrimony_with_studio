@@ -22,7 +22,13 @@ const EnhanceMusicOutputSchema = z.object({
 export type EnhanceMusicOutput = z.infer<typeof EnhanceMusicOutputSchema>;
 
 export async function enhanceMusic(input: EnhanceMusicInput): Promise<EnhanceMusicOutput> {
-  return enhanceMusicFlow(input);
+  // Fail closed until a persistent, atomic per-member AI usage quota exists.
+  // Authentication of a page or another API does not authorize this server action.
+  const {getServerAuthUser} = await import('@/lib/supabase/server');
+  const user = await getServerAuthUser();
+  if (!user) throw new Error('Authentication required.');
+  EnhanceMusicInputSchema.parse(input);
+  throw new Error('AI enhancement is temporarily unavailable.');
 }
 
 const prompt = ai.definePrompt({
