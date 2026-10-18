@@ -257,7 +257,6 @@ export function DashboardOverview() {
           <h1 className="font-headline text-3xl font-semibold tracking-tight text-[#291039] sm:text-4xl">{t.welcome}, {displayName}</h1>
           <p className="mt-1 text-sm text-[#786d7e]">{t.journey}</p>
         </div>
-        <MemberAvatar name={profile.displayName} photoURL={profile.photoURL || draft.photoURL} className="h-12 w-12 shrink-0 border-2 border-[#c3a05c]" />
       </header>
       <section className="relative isolate overflow-hidden rounded-3xl bg-[#30123f] p-6 text-white sm:p-8">
         <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-32 -z-10 h-96 w-96 rounded-full border border-[#c3a05c]/50" />
