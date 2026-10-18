@@ -88,11 +88,12 @@ const getPostData = async (slug: string) => {
 };
 
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export default async function BlogPostPage({ params }: PageProps) {
-  const post = await getPostData(params.slug);
+  const { slug } = await params;
+  const post = await getPostData(slug);
 
   if (!post) {
     return (
