@@ -19,7 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MemberAvatar } from "@/components/dashboard/MemberAvatar";
-import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
+import { PageFrame } from "@/components/dashboard/PageHero";
 import { auth, onAuthStateChanged } from "@/lib/supabase/auth";
 import {
   loadDashboardOverview,
@@ -77,22 +77,22 @@ function DiscoveryCard({
     <article className="group flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#eadde7] bg-white shadow-[0_8px_22px_rgba(75,32,67,0.07)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(75,32,67,0.12)]">
       <Link
         href={`/profile/${person.id}`}
-        className="block bg-gradient-to-br from-[#f8e9f0] via-[#f3eef8] to-[#fff8f1] p-1.5 sm:p-2.5"
+        className="block bg-[#f4eef5]"
       >
-        <div className="relative mx-auto aspect-square w-full max-w-[9.5rem] overflow-hidden rounded-xl sm:max-w-[11rem] sm:rounded-2xl">
+        <div className="relative aspect-[4/5] w-full overflow-hidden">
           <MemberAvatar
             name={person.displayName}
             photoURL={person.photoURL}
-            className="h-full w-full rounded-xl border-2 border-white text-base shadow-sm sm:rounded-2xl sm:text-lg"
+            className="h-full w-full rounded-none border-0 text-lg"
             alt={`Profile photo of ${person.displayName}`}
           />
         </div>
       </Link>
-      <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-2 sm:gap-2 sm:p-3">
+      <div className="flex min-w-0 flex-1 flex-col gap-2 p-3 sm:p-4">
         <div className="min-w-0">
           <Link
             href={`/profile/${person.id}`}
-            className="block truncate text-[13px] font-semibold leading-tight text-[#3b1837] hover:text-primary sm:text-sm"
+            className="block truncate text-base font-semibold leading-tight text-[#3b1837] hover:text-primary sm:text-sm"
           >
             <span className="truncate">{person.displayName}</span>
             {person.age ? (
@@ -252,26 +252,37 @@ export function DashboardOverview() {
 
   return (
     <PageFrame>
-      <PageHero
-        eyebrow={t.journey}
-        title={`${t.welcome}, ${displayName}`}
-        description={t.hero}
-        leading={
-          <MemberAvatar
-            name={profile.displayName || "Member"}
-            photoURL={profile.photoURL || draft.photoURL}
-            className="h-20 w-20 border-4 border-white text-lg shadow-md"
-          />
-        }
-        actions={
-          <Button asChild size="lg" className="min-h-12 rounded-xl px-5 shadow-sm">
-            <Link href="/discover">
-              {t.discover}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-        }
-      />
+      <header className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="font-headline text-3xl font-semibold tracking-tight text-[#291039] sm:text-4xl">{t.welcome}, {displayName}</h1>
+          <p className="mt-1 text-sm text-[#786d7e]">{t.journey}</p>
+        </div>
+        <MemberAvatar name={profile.displayName} photoURL={profile.photoURL || draft.photoURL} className="h-12 w-12 shrink-0 border-2 border-[#c3a05c]" />
+      </header>
+      <section className="relative isolate overflow-hidden rounded-3xl bg-[#30123f] p-6 text-white sm:p-8">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-32 -z-10 h-96 w-96 rounded-full border border-[#c3a05c]/50" />
+        <Sparkles aria-hidden="true" className="absolute right-6 top-6 h-6 w-6 text-[#dbc184]" />
+        <h2 className="max-w-sm pr-6 font-headline text-2xl font-semibold leading-tight sm:text-3xl">Make a meaningful <span className="text-[#e1c88f]">connection</span></h2>
+        <p className="mt-3 max-w-lg text-sm leading-relaxed text-[#e3d7e9]">{t.hero}</p>
+        <Button asChild className="mt-5 min-h-11 rounded-xl bg-[#fff8e9] px-5 text-[#30123f] hover:bg-[#f0dfbb]">
+          <Link href="/discover">{t.discover}<ArrowRight className="ml-2 h-4 w-4" /></Link>
+        </Button>
+      </section>
+
+      <section aria-label="Your activity" className="grid grid-cols-3 gap-2 sm:gap-4">
+        <Link href="/dashboard/interests" className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-[#eae3dc] bg-white p-3 transition hover:bg-[#faf6ff] sm:flex-row sm:items-center sm:gap-3 sm:p-4">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-[#faedf3] text-[#9a4f78]"><Heart className="h-4 w-4" /></span>
+          <span><strong className="block text-lg text-[#351532]">{countText(data.receivedInterests)}</strong><span className="text-xs text-[#745d70]">{t.received}</span></span>
+        </Link>
+        <Link href="/connections" className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-[#eae3dc] bg-white p-3 transition hover:bg-[#faf6ff] sm:flex-row sm:items-center sm:gap-3 sm:p-4">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-[#f1edfb] text-[#7254a1]"><Users className="h-4 w-4" /></span>
+          <span><strong className="block text-lg text-[#351532]">{countText(data.connections)}</strong><span className="text-xs text-[#745d70]">{t.connections}</span></span>
+        </Link>
+        <Link href="/messages" className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-[#eae3dc] bg-white p-3 transition hover:bg-[#faf6ff] sm:flex-row sm:items-center sm:gap-3 sm:p-4">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-[#edf8f4] text-[#367b66]"><MessageCircle className="h-4 w-4" /></span>
+          <span><strong className="block text-lg text-[#351532]">{countText(data.unreadMessages)}</strong><span className="text-xs text-[#745d70]">{t.unread}</span></span>
+        </Link>
+      </section>
 
       <section aria-labelledby="matches-heading" className="space-y-4">
         <div className="flex items-end justify-between gap-3">
@@ -279,7 +290,7 @@ export function DashboardOverview() {
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#9b668f]">{t.chosen}</p>
             <h2 id="matches-heading" className="mt-1 text-2xl font-semibold text-[#351532]">{t.suggested}</h2>
           </div>
-          <Button asChild variant="ghost" className="hidden sm:inline-flex"><Link href="/discover">{t.exploreAll}<ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
+          <Button asChild variant="ghost" className="inline-flex shrink-0 px-0 text-xs sm:px-3 sm:text-sm"><Link href="/discover">{t.exploreAll}<ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
         </div>
 
         {data.discovery.status === "ok" ? (
@@ -321,20 +332,7 @@ export function DashboardOverview() {
         <Button asChild variant="outline" className="w-full rounded-xl sm:hidden"><Link href="/discover">Explore all profiles</Link></Button>
       </section>
 
-      <section aria-label="Your activity" className="grid overflow-hidden rounded-2xl border border-[#eadde7] bg-white shadow-sm sm:grid-cols-3">
-        <Link href="/dashboard/interests" className="flex items-center gap-3 p-4 hover:bg-[#fff8fb] sm:border-r sm:border-[#eee2ea]">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-[#faedf3] text-[#9a4f78]"><Heart className="h-4 w-4" /></span>
-          <span><strong className="block text-lg text-[#351532]">{countText(data.receivedInterests)}</strong><span className="text-xs text-[#745d70]">{t.received}</span></span>
-        </Link>
-        <Link href="/connections" className="flex items-center gap-3 border-t border-[#eee2ea] p-4 hover:bg-[#fff8fb] sm:border-r sm:border-t-0">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-[#f1edfb] text-[#7254a1]"><Users className="h-4 w-4" /></span>
-          <span><strong className="block text-lg text-[#351532]">{countText(data.connections)}</strong><span className="text-xs text-[#745d70]">{t.connections}</span></span>
-        </Link>
-        <Link href="/messages" className="flex items-center gap-3 border-t border-[#eee2ea] p-4 hover:bg-[#fff8fb] sm:border-t-0">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-[#edf8f4] text-[#367b66]"><MessageCircle className="h-4 w-4" /></span>
-          <span><strong className="block text-lg text-[#351532]">{countText(data.unreadMessages)}</strong><span className="text-xs text-[#745d70]">{t.unread}</span></span>
-        </Link>
-      </section>
+
 
       {conversation ? (
         <section aria-labelledby="conversation-heading" className="rounded-3xl border border-[#eadde7] bg-white p-5 shadow-sm sm:p-6">

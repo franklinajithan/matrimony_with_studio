@@ -512,7 +512,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
       <nav
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 isolate border-t border-violet-700/20 bg-violet-600 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(73,32,140,0.14)] [backface-visibility:hidden] [transform:translateZ(0)] lg:hidden",
+          "fixed inset-x-0 bottom-0 z-50 isolate border-t border-[#e8e0ec] bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(73,32,140,0.14)] [backface-visibility:hidden] [transform:translateZ(0)] lg:hidden",
           drawerOpen && "hidden"
         )}
         aria-label="Primary"
@@ -529,10 +529,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   aria-current={active ? "page" : undefined}
                   aria-label={count > 0 ? `${item.label}, ${count} new` : item.label}
                   className={cn(
-                    "relative flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-white",
+                    "relative flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-violet-600",
                     active
-                      ? "bg-white text-violet-700 shadow-sm"
-                      : "text-white hover:bg-violet-500"
+                      ? "bg-violet-50 text-violet-800"
+                      : "text-[#756b7c] hover:bg-violet-50"
                   )}
                 >
                   <span className="relative">
@@ -541,7 +541,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                       <span
                         className={cn(
                           "absolute -right-2 -top-1 inline-flex min-w-[1rem] items-center justify-center rounded-full px-1 text-[9px] font-bold leading-4",
-                          active ? "bg-violet-600 text-white" : "bg-white text-violet-700"
+                          "bg-violet-700 text-white"
                         )}
                       >
                         {count > 9 ? "9+" : count}
