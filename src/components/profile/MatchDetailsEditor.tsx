@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { auth } from "@/lib/supabase/auth";
 import { getProfile, updateUserProfile } from "@/lib/supabase/profiles";
+import { readProfileGender, profileGenderPatch } from "@/lib/profile-gender";
 import { COUNTRY_OPTIONS, LANGUAGE_OPTIONS } from "@/lib/onboarding/schema";
 
 const ANY = "__empty__";
@@ -38,7 +39,7 @@ export function MatchDetailsEditor() {
       const relationship = record(profile.relationshipIntentions); const settlement = record(profile.settlement); const family = record(profile.culturalFamily); const draft = record(profile.onboardingDraft);
       setExtra(profile.extra || {});
       setDetails({
-        gender: String(saved.gender || record(profile.extra).gender || draft.gender || ""),
+        gender: ({ male: "Man", female: "Woman", "non-binary": "Non-binary", "": "" })[readProfileGender(profile)],
         maritalStatus: String(saved.maritalStatus || relationship.maritalStatus || draft.maritalStatus || ""),
         country: String(saved.country || profile.country || ""),
         languages: Array.isArray(saved.languages) ? saved.languages : (profile.languages || (profile.language ? [profile.language] : [])),
@@ -55,8 +56,12 @@ export function MatchDetailsEditor() {
     const user = auth.currentUser; if (!user) return;
     setSaving(true);
     try {
-      await updateUserProfile(user.uid, { extra: { ...extra, matchDetails: details } });
-      setExtra((v) => ({ ...v, matchDetails: details }));
+      const latest = await getProfile(user.uid);
+      const currentExtra = latest?.extra || extra;
+      const base = { extra: { ...currentExtra, matchDetails: details }, onboardingDraft: latest?.onboardingDraft };
+      const patch = { extra: base.extra, ...profileGenderPatch(base, details.gender) };
+      await updateUserProfile(user.uid, patch);
+      setExtra(patch.extra);
       toast({ title: "Match details saved", description: "These details can now improve your preference match score for other members." });
     } catch (error) { toast({ title: "Could not save match details", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" }); }
     finally { setSaving(false); }
