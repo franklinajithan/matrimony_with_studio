@@ -3,19 +3,16 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 
-const productionHost =
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  process.env.VERCEL_PROJECT_PRODUCTION_URL ||
-  process.env.VERCEL_URL ||
-  'cupidmatch.co.uk';
-const siteUrl = productionHost.startsWith('http') ? productionHost : `https://${productionHost}`;
+const siteUrl = 'https://cupidmatch.co.uk';
 const SHARE_CARD_VERSION = '4';
 const shareCardImage = `/opengraph-image?v=${SHARE_CARD_VERSION}`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: 'CupidMatch - Find Your Perfect Match in India & Sri Lanka',
-  description: 'Matrimony for Indian and Sri Lankan communities, with profile preferences, introductions, privacy controls and member support.',
+  title: 'CupidMatch | Sri Lankan & Indian Matrimony',
+  applicationName: 'CupidMatch',
+  alternates: { canonical: '/' },
+  description: 'Find meaningful connections with people who share your values, culture and future goals. Explore profiles and start your journey with CupidMatch.',
   icons: {
     icon: [
       { url: '/images/cupidmatch-logo-new.png', type: 'image/png' },
