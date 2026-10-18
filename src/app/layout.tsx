@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   description: 'Matrimony site for Indian and Sri Lankan communities, powered by intelligent suggestions and horoscope matching.',
   icons: {
     icon: [
-      { url: CUPIDMATCH_LOGO, type: 'image/jpeg' },
+      { url: CUPIDMATCH_LOGO, type: 'image/png' },
     ],
     shortcut: CUPIDMATCH_LOGO,
     apple: CUPIDMATCH_LOGO,
