@@ -58,4 +58,5 @@ export async function rewriteBiodataText(input: {
   const user = await getServerAuthUser();
   if (!user) throw new Error('Authentication required.');
   BiodataAssistInputSchema.parse(input);
-  throw new Error('AI biodata assistance is temporarily unavailable.');\n}
+  throw new Error('AI biodata assistance is temporarily unavailable.');
+}
