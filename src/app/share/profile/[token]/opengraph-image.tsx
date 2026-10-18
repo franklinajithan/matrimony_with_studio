@@ -1,3 +1,4 @@
+import { CUPIDMATCH_LOGO_URL } from "@/lib/brand";
 import { ImageResponse } from "next/og";
 import { resolveSharedProfile } from "@/lib/supabase/profile-share";
 
@@ -6,7 +7,7 @@ export const alt = "CupidMatch shared profile";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const logoUrl = "https://matrimony-with-studio.vercel.app/images/cupidmatch-logo.png";
+const logoUrl = CUPIDMATCH_LOGO_URL;
 type Props = { params: Promise<{ token: string }> };
 function firstName(displayName: string) { return displayName.trim().split(/\s+/)[0] || "Member"; }
 

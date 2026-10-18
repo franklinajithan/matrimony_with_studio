@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Logo } from "@/components/shared/Logo";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -85,12 +86,7 @@ export function DashboardSidebar({
     <div className={cn("flex h-full flex-col border-r bg-background", className)}>
       {/* Logo */}
       <div className="flex h-16 items-center border-b px-6">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white">
-            <Heart className="h-5 w-5 fill-current" />
-          </div>
-          <span className="text-xl font-semibold">CupidMatch</span>
-        </Link>
+        <Logo href="/dashboard" size="sm" />
       </div>
 
       {/* Navigation */}

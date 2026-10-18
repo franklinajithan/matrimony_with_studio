@@ -1,3 +1,4 @@
+import { CUPIDMATCH_LOGO_URL } from "@/lib/brand";
 import { ImageResponse } from 'next/og';
 import { getShareByToken } from '@/lib/supabase/biodata';
 import type { BiodataContent, BiodataVisibility } from '@/lib/biodata/types';
@@ -7,7 +8,7 @@ export const alt = 'CupidMatch shared biodata';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-const logoUrl = 'https://matrimony-with-studio.vercel.app/images/cupidmatch-logo.png';
+const logoUrl = CUPIDMATCH_LOGO_URL;
 
 type Props = { params: Promise<{ token: string }> };
 

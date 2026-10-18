@@ -1,3 +1,4 @@
+import { CUPIDMATCH_LOGO_URL } from "@/lib/brand";
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
@@ -5,7 +6,7 @@ export const alt = 'CupidMatch - Find Your Perfect Match';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-const logoUrl = 'https://matrimony-with-studio.vercel.app/images/cupidmatch-logo.png';
+const logoUrl = CUPIDMATCH_LOGO_URL;
 
 export default function Image() {
   return new ImageResponse(
@@ -26,7 +27,7 @@ export default function Image() {
         <div style={{ position: 'absolute', width: 430, height: 430, borderRadius: 999, background: '#e9d5ff', opacity: 0.55, top: -180, right: -80 }} />
         <div style={{ position: 'absolute', width: 360, height: 360, borderRadius: 999, background: '#fecdd3', opacity: 0.45, bottom: -190, left: -80 }} />
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '26px 70px' }}>
-          <img src={logoUrl} width="820" height="230" style={{ width: 820, height: 230, objectFit: 'contain' }} />
+          <img src={logoUrl} width="640" height="320" style={{ width: 640, height: 320, objectFit: 'contain' }} />
           <div style={{ marginTop: 2, fontSize: 64, lineHeight: 1.12, fontWeight: 750, color: '#24152f' }}>
             Find Your Perfect Match
           </div>

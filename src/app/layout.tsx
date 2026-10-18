@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { CUPIDMATCH_LOGO } from '@/lib/brand';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
@@ -9,7 +10,7 @@ const productionHost =
   process.env.VERCEL_URL ||
   'matrimony-with-studio.vercel.app';
 const siteUrl = productionHost.startsWith('http') ? productionHost : `https://${productionHost}`;
-const SHARE_CARD_VERSION = '3';
+const SHARE_CARD_VERSION = 'royal-cupid-20261018';
 const shareCardImage = `/opengraph-image?v=${SHARE_CARD_VERSION}`;
 
 export const metadata: Metadata = {
@@ -18,10 +19,10 @@ export const metadata: Metadata = {
   description: 'Matrimony site for Indian and Sri Lankan communities, powered by intelligent suggestions and horoscope matching.',
   icons: {
     icon: [
-      { url: '/images/cupidmatch-logo.png', type: 'image/png' },
+      { url: CUPIDMATCH_LOGO, type: 'image/jpeg' },
     ],
-    shortcut: '/images/cupidmatch-logo.png',
-    apple: '/images/cupidmatch-logo.png',
+    shortcut: CUPIDMATCH_LOGO,
+    apple: CUPIDMATCH_LOGO,
   },
   openGraph: {
     type: 'website',

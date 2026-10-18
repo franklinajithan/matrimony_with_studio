@@ -378,7 +378,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 </SheetContent>
               </Sheet>
 
-              <h1 className="truncate font-headline text-lg font-semibold text-foreground sm:text-xl">
+              <Logo href="/dashboard" size="sm" className="w-[104px] sm:hidden" />
+              <h1 className="sr-only truncate font-headline text-lg font-semibold text-foreground sm:not-sr-only sm:text-xl">
                 {title}
               </h1>
 

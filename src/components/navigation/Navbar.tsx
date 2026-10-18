@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { Logo } from "@/components/shared/Logo";
 import { usePathname, useRouter } from "next/navigation";
 import {
   MessageCircle,
@@ -143,16 +143,7 @@ export function Navbar() {
         <div className="mx-auto flex h-[4.25rem] w-full max-w-[1500px] items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:h-24 lg:px-10 xl:px-14">
           <div className="flex shrink-0 items-center">
             {isMarketingPage ? (
-              <Link href="/" className="relative block h-[48px] w-[190px] sm:h-[56px] sm:w-[225px] lg:h-[70px] lg:w-[280px]" aria-label="CupidMatch home">
-                <Image
-                  src="/images/cupidmatch-logo-new.png?v=1"
-                  alt="CupidMatch — Real People. Meaningful Connections."
-                  fill
-                  priority
-                  sizes="(min-width:1024px) 280px, (min-width:640px) 225px, 190px"
-                  className="object-contain object-left"
-                />
-              </Link>
+              <Logo priority className="w-[120px] sm:w-32 lg:w-44" />
             ) : null}
           </div>
 
