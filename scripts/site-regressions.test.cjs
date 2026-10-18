@@ -156,3 +156,17 @@ test("usage read failure is retryable and never presented as a zero count", asyn
   assert.equal(r.status, 503);
   assert.equal("used" in r.body, false);
 });
+
+test("all primary brand entry points use the one canonical CupidMatch logo", () => {
+  const read = (file) => fs.readFileSync(path.join(__dirname, "..", file), "utf8");
+  const shared = read("src/components/shared/Logo.tsx");
+  const navbar = read("src/components/navigation/Navbar.tsx");
+  const layout = read("src/app/layout.tsx");
+  const social = read("src/app/opengraph-image.tsx");
+  assert.match(shared, /CUPIDMATCH_LOGO = ["']\\/images\\/cupidmatch-logo-new\\.png["']/);
+  assert.match(navbar, /<Logo\\b/);
+  assert.doesNotMatch(navbar, /cupidmatch-logo(?:-new)?\\.png/);
+  assert.equal((layout.match(/\\/images\\/cupidmatch-logo-new\\.png/g) || []).length, 3);
+  assert.match(social, /cupidmatch\\.co\\.uk\\/images\\/cupidmatch-logo-new\\.png/);
+  assert.doesNotMatch(social, /matrimony-with-studio\\.vercel\\.app\\/images/);
+});
