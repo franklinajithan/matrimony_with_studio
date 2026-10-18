@@ -51,7 +51,12 @@ const HoroscopeCompatibilityOutputSchema = z.object({
 export type HoroscopeCompatibilityOutput = z.infer<typeof HoroscopeCompatibilityOutputSchema>;
 
 export async function analyzeHoroscopeCompatibility(input: HoroscopeCompatibilityInput): Promise<HoroscopeCompatibilityOutput> {
-  return horoscopeCompatibilityFlow(input);
+  // Disable this exported action until durable, database-enforced usage limits exist.
+  const {getServerAuthUser} = await import('@/lib/supabase/server');
+  const user = await getServerAuthUser();
+  if (!user) throw new Error('Authentication required.');
+  HoroscopeCompatibilityInputSchema.parse(input);
+  throw new Error('AI assistance is temporarily unavailable.');
 }
 
 const prompt = ai.definePrompt({
