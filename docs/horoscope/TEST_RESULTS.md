@@ -16,8 +16,8 @@ This proves the committed SQL executes and exercises PostgreSQL RLS. It does **n
 
 ## Not executed / not claimed
 
-- Production migration: blocked twice by `Invalid or expired requestState`; post-failure table check returned null.
-- Real authenticated member create/save/share/view comparison through the deployed app: blocked by absent migration.
+- Historical migration failures were resolved on 19 October; see the installed-schema verification below.
+- Real authenticated member create/save/share/view comparison: not completed; feature flags remain off and the live fixture test write request expired.
 - Live Gemini extraction/AI narrative: dedicated credentials/model and vendor privacy approval not configured/verified. No member file was sent to an AI vendor.
 - OCR benchmark: no human-labelled Tamil/English chart corpus supplied; field accuracy is unmeasured.
 - Traditional matching reference cases: no deterministic scoring engine enabled or validated.
@@ -29,3 +29,15 @@ This proves the committed SQL executes and exercises PostgreSQL RLS. It does **n
 Retried the committed migration after the expired approval message. Read access worked, both horoscope tables were absent, and the migration operation again returned `Invalid or expired requestState`. No database change or production release is claimed.
 
 Added real comparison-route tests using isolated database/provider boundaries. Malformed/null requests reject before data access. AI eligibility is checked before charging the daily budget. Tests verify private field exclusion from AI input, permission withdrawal after generation, and rate-limit enforcement before provider calls/report storage. These are local API tests, not real-profile production tests.
+
+## Installed-schema verification — 19 October 2026
+
+- `apply_migration(horoscope_private_studio)` returned success.
+- All eight horoscope tables report RLS enabled.
+- Anonymous horoscope RPC EXECUTE count is zero.
+- Anonymous raw-profile SELECT and authenticated raw-profile UPDATE privileges are false.
+- `horoscope-private` bucket has `public=false`; source maximum 5 MB at storage, 3 MB at validated API.
+- All feature flags remain false; no traditional rule sets enabled.
+- Rollback-only live fixture request expired before a confirmed result. Zero `horoscope-qa-*` users were found afterwards. The script is committed as `scripts/horoscope-live-security.sql` for an authorised test connection; it has not been claimed as passed.
+- Advisor informational notices on audit/restriction tables having no policies are intentional deny-all: raw table grants are revoked. Authenticated SECURITY DEFINER notices correspond to explicitly authorised RPCs with ownership/admin checks. Existing discovery-view and auth advisories remain documented in RELEASE.md.
+- Secure Google login from preview visibly reached the production dashboard. The preview hostname did not retain authentication; no preview screen/save test was claimed.
