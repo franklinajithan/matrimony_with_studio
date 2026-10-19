@@ -17,6 +17,7 @@ function load(relative, mocks = {}) {
   const module = { exports: {} };
   const requireMock = (name) => {
     if (name === 'server-only') return {};
+    if (name === 'zod') return require('zod');
     if (name === 'node:crypto') return require('node:crypto');
     if (Object.hasOwn(mocks, name)) return mocks[name];
     if (name === 'react/jsx-runtime') return {
@@ -124,6 +125,7 @@ for (const file of adminPages) {
         '@/app/admin/guard': guard, './guard': guard,
         '@/lib/admin/dashboard': { getAdminDashboardMetrics: async () => ({ members: 14, activeUsers: 3, pendingVerification: 12, updatedAt: '2026-09-18T10:00:00Z' }) },
         '@/lib/supabase/server': { createSupabaseServerClient: async () => ({ from: table => { assert.equal(table, 'admin_audit_log'); return { select: () => ({ order: () => ({ limit: async () => ({ data: [], error: null }) }) }) }; } }) },
+        './controls': { default: 'HoroscopeControls' },
         './registration-controls': { default: 'RegistrationControls' },
         './page-client': { default: 'AdminPageClient' }, './audit-explorer': { default: 'AuditExplorer' },
         '@/components/shared/Logo': componentStubs, '@/components/ui/card': componentStubs,
@@ -145,6 +147,8 @@ for (const file of files('src/app/api/admin', 'route.ts')) {
       '@/lib/auth/admin': { requireServerAdmin: async () => { checks++; return null; } },
       '@/lib/supabase/server': { createSupabaseServerClient: () => { throw new Error('Protected data accessed before authorization'); } },
       '@/lib/subscriptions': { ADMIN_BILLING_CAPABILITIES: {} },
+      '@/lib/horoscope/server': { context: () => { throw new Error('Protected data accessed before authorization'); }, json: (body,status=200) => ({body,status}) },
+      '@/lib/horoscope/provider': { providerConfigured: () => false },
       '@/lib/registration/server': { getRegistrationStatus: () => { throw new Error('Read before authorization'); } },
       '@/lib/admin/dashboard': { getAdminDashboardMetrics: () => { throw new Error('Read before authorization'); } },
       'next/server': { NextResponse: { json: (body, init) => ({ body, status: init?.status ?? 200 }) } },

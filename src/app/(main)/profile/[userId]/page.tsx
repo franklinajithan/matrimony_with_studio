@@ -690,6 +690,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      <div className="mx-auto max-w-4xl px-4 pt-5"><a className="inline-flex rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 text-sm font-semibold text-purple-900" href={`/profile/${viewedUserId}/horoscope`}>View Horoscope</a></div>
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

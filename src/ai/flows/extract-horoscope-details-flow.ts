@@ -8,7 +8,6 @@
  * - ExtractHoroscopeDetailsOutput - The return type for the extractHoroscopeDetails function.
  */
 
-import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const ExtractHoroscopeDetailsInputSchema = z.object({
@@ -37,57 +36,6 @@ const ExtractHoroscopeDetailsOutputSchema = z.object({
 export type ExtractHoroscopeDetailsOutput = z.infer<typeof ExtractHoroscopeDetailsOutputSchema>;
 
 export async function extractHoroscopeDetails(input: ExtractHoroscopeDetailsInput): Promise<ExtractHoroscopeDetailsOutput> {
-  return extractHoroscopeDetailsFlow(input);
+  void input;
+  throw new Error('This legacy AI tool is retired. Use the private Horoscope Studio.');
 }
-
-const prompt = ai.definePrompt({
-  name: 'extractHoroscopeDetailsPrompt',
-  input: {schema: ExtractHoroscopeDetailsInputSchema},
-  output: {schema: ExtractHoroscopeDetailsOutputSchema},
-  prompt: `You are an expert Vedic Astrologer. Based on the provided Date of Birth, Time of Birth, and Place of Birth, generate a detailed horoscope analysis according to Vedic astrology principles.
-
-Date of Birth: {{{dateOfBirth}}}
-Time of Birth: {{{timeOfBirth}}}
-Place of Birth: {{{placeOfBirth}}}
-
-{{#if horoscopeFileDataUri}}
-You have also been provided with a document (PDF or image) which might contain a pre-generated horoscope chart or details.
-If it is a PDF, focus on any extractable text.
-If it is an image, analyze any visible astrological charts, symbols, or text relevant to Vedic astrology. Describe key elements like planetary placements in signs/houses if clearly depicted.
-Prioritize calculations based on the birth data (DOB, TOB, POB). Use the provided document to corroborate or supplement your findings.
-Horoscope Document: {{media url=horoscopeFileDataUri}}
-{{/if}}
-
-Provide the analysis in the specified JSON format. Ensure all fields in the output schema are addressed to the best of your ability.
-If some specific details (like planetary house positions) cannot be accurately determined without complex calculations or a visual chart you cannot interpret clearly, state that in the relevant output field or omit the optional field.
-Focus on providing accurate Vedic astrological insights. For 'sunSign', provide the Western astrology sun sign. For 'moonSign', 'ascendant', 'nakshatra', and 'planetaryPositions', provide Vedic astrology details.
-`,
-});
-
-const extractHoroscopeDetailsFlow = ai.defineFlow(
-  {
-    name: 'extractHoroscopeDetailsFlow',
-    inputSchema: ExtractHoroscopeDetailsInputSchema,
-    outputSchema: ExtractHoroscopeDetailsOutputSchema,
-  },
-  async input => {
-    try {
-      const {output} = await prompt(input);
-      if (!output) {
-        throw new Error("The AI model did not return an output. Please check the input or try again.");
-      }
-      return output;
-    } catch (error: any) {
-      // Check if the error message indicates a 503 or service unavailable type of error
-      if (error.message && (error.message.includes('503') || error.message.toLowerCase().includes('service unavailable') || error.message.toLowerCase().includes('model is overloaded'))) {
-        console.error("AI Service Overloaded/Unavailable:", error.message); // Log the original error for server-side debugging
-        // Throw a more user-friendly error for the client
-        throw new Error("The AI astrology service is currently experiencing high demand or is temporarily unavailable. Please try again in a few moments.");
-      }
-      // Re-throw other errors or handle them as needed
-      console.error("Error in extractHoroscopeDetailsFlow:", error);
-      throw new Error(error.message || "An unexpected error occurred during horoscope analysis.");
-    }
-  }
-);
-

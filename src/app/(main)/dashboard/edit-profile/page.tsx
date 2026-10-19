@@ -391,10 +391,6 @@ export default function EditProfilePage() {
         educationLevel: values.educationLevel,
         smokingHabits: values.smokingHabits,
         drinkingHabits: values.drinkingHabits,
-        sunSign: values.sunSign,
-        moonSign: values.moonSign,
-        nakshatra: values.nakshatra,
-        horoscopeInfo: values.horoscopeInfo,
         updatedAt: new Date().toISOString(),
       };
 
@@ -416,16 +412,6 @@ export default function EditProfilePage() {
 
       if (user.displayName !== values.fullName) {
         await updateProfile(user, { displayName: values.fullName });
-      }
-
-      if (values.horoscopeFile) {
-        const filePath = mediaPathForUser(user.uid, values.horoscopeFile.name, "horoscope_file");
-        dataToSave.horoscopeFileUrl = await uploadFile(values.horoscopeFile, filePath);
-        dataToSave.horoscopeFileName = values.horoscopeFile.name;
-        setSelectedHoroscopeFileName(values.horoscopeFile.name);
-      } else if (selectedHoroscopeFileName === null && form.getValues("horoscopeFile") === undefined) {
-        dataToSave.horoscopeFileUrl = "";
-        dataToSave.horoscopeFileName = "";
       }
 
       const finalAdditionalPhotos: StoredPhoto[] = [];
@@ -1175,104 +1161,7 @@ export default function EditProfilePage() {
             </TabsContent>
 
             <TabsContent value="horoscope" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center">
-                    <SparklesIcon className="mr-2 h-5 w-5 text-primary" />
-                    Astrological Details
-                  </CardTitle>
-                  <CardDescription>Provide these for more accurate AI-driven horoscope analysis and matching.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="sunSign"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Sun Sign (Western)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g., Aries" {...field} disabled={isSaving || anyEnhancementLoading} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="moonSign"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Moon Sign (Vedic Rasi)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g., Mesha" {...field} disabled={isSaving || anyEnhancementLoading} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <FormField
-                    control={form.control}
-                    name="nakshatra"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nakshatra (Birth Star)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., Ashwini" {...field} disabled={isSaving || anyEnhancementLoading} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="horoscopeInfo"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>General Horoscope Notes</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Enter any additional horoscope details or notes here..." {...field} rows={3} disabled={isSaving || anyEnhancementLoading} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="horoscopeFile"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center justify-between">
-                          <FormLabel className="flex items-center">
-                            <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
-                            Upload Horoscope File
-                          </FormLabel>
-                          {selectedHoroscopeFileName && (
-                            <Button type="button" variant="ghost" size="sm" onClick={clearHoroscopeFileSelection} className="text-xs h-auto p-1 text-destructive" disabled={isSaving || anyEnhancementLoading}>
-                              <XCircle className="h-3 w-3 mr-1" /> Clear
-                            </Button>
-                          )}
-                        </div>
-                        <FormControl>
-                          <Input
-                            type="file"
-                            id="horoscopeFile-input"
-                            accept={ACCEPTED_HOROSCOPE_FILE_TYPES.join(",")}
-                            onChange={(e) => {
-                              field.onChange(e.target.files ? e.target.files[0] : null);
-                              handleHoroscopeFileChange(e);
-                            }}
-                            disabled={isSaving || anyEnhancementLoading}
-                          />
-                        </FormControl>
-                        {selectedHoroscopeFileName && <FormDescription className="text-xs">Current file: {selectedHoroscopeFileName}</FormDescription>}
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </Card>
+              <Card><CardHeader><CardTitle>Private Horoscope Studio</CardTitle><CardDescription>Manage birth details, field visibility, source documents and comparison consent in one private workspace.</CardDescription></CardHeader><CardContent><a href="/dashboard/horoscope" className="inline-flex rounded-xl bg-purple-800 px-5 py-3 font-semibold text-white">Open My Horoscope</a><p className="mt-3 text-sm text-muted-foreground">Legacy public horoscope uploads are no longer accepted here. Existing profile details have not been imported or published into the new studio.</p></CardContent></Card>
             </TabsContent>
           </Tabs>
 
