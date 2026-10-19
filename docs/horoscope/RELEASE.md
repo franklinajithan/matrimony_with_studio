@@ -2,7 +2,7 @@
 
 ## Current release decision
 
-**Do not merge/promote yet.** The Supabase migration connector returned `McpServerError: Invalid or expired requestState` twice. A follow-up read confirmed `public.horoscope_profiles` does not exist. No migration or production horoscope deployment is claimed. Main production remains unchanged by this branch.
+**Do not merge/promote yet.** The Supabase migration connector returned `McpServerError: Invalid or expired requestState` on the initial two attempts and again on 19 October after retrying the expired approval. A follow-up read confirmed `public.horoscope_profiles` does not exist. No migration or production horoscope deployment is claimed. Main production remains unchanged by this branch.
 
 The committed migration is `supabase/migrations/20261018214004_horoscope_private_studio.sql`, created through `supabase migration new`. It is additive and defaults all feature flags OFF. It does not import legacy public horoscope content.
 

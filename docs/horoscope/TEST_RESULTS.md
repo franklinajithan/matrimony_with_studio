@@ -3,7 +3,7 @@
 ## Executed locally
 
 - `npm run test:admin`: 96/96 passed (includes new page/API unauthorized access checks).
-- `npm run test:horoscope`: 33 tests passed: 15 PostgreSQL test nodes (14 policy scenarios plus suite), 14 field/schema/file tests and four prior gender regressions.
+- `npm run test:horoscope`: 45 tests passed: 12 comparison API cases, 15 PostgreSQL test nodes (14 policy scenarios plus suite), 14 field/schema/file tests and four prior gender regressions.
 - `tsc --noEmit`: passed separately; Next build is configured by the existing project to skip TypeScript/lint, so build alone is not treated as a type check.
 - `npm run build`: passed; existing Genkit/OpenTelemetry dynamic-dependency warning remains in the unrelated biodata-assist dependency path.
 - `git diff --check`: passed.
@@ -23,3 +23,9 @@ This proves the committed SQL executes and exercises PostgreSQL RLS. It does **n
 - Traditional matching reference cases: no deterministic scoring engine enabled or validated.
 - Actual mobile Safari, Android and screen-reader tests: not completed. UI uses one-column layouts at narrow widths, 16px controls and responsive grids, but these are implementation choices, not device-test evidence.
 - Physical scheduled cleanup: endpoint implemented; production secrets/schedule and storage deletion propagation require staging verification.
+
+## Continuation — 19 October 2026
+
+Retried the committed migration after the expired approval message. Read access worked, both horoscope tables were absent, and the migration operation again returned `Invalid or expired requestState`. No database change or production release is claimed.
+
+Added real comparison-route tests using isolated database/provider boundaries. Malformed/null requests reject before data access. AI eligibility is checked before charging the daily budget. Tests verify private field exclusion from AI input, permission withdrawal after generation, and rate-limit enforcement before provider calls/report storage. These are local API tests, not real-profile production tests.
