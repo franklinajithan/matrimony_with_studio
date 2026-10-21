@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { BriefcaseBusiness, GraduationCap, Heart, Home, MapPin, MessageCircle, SlidersHorizontal, Sparkles, Users } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, BriefcaseBusiness, ChevronRight, GraduationCap, Heart, Home, MapPin, MessageCircle, SlidersHorizontal, Sparkles, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const clamp = (n: number) => Math.min(1, Math.max(0, n));
@@ -103,57 +104,59 @@ export function CompatibilityStory() {
 }
 
 const steps = [
-  ["Create your profile", "Share your details and preferences.", Home, "/images/values/culture.jpg?v=3"],
-  ["Set your preferences", "Tell CupidMatch what matters to you.", SlidersHorizontal, "/images/values/goals.jpg?v=3"],
-  ["Discover matches", "See compatible introductions.", Sparkles, "/images/values/shared.jpg?v=3"],
-  ["Send an interest", "Connect when it feels right.", Heart, "/images/values/culture.jpg?v=3"],
-  ["Connect and chat", "Start a meaningful conversation.", MessageCircle, "/images/values/goals.jpg?v=3"],
+  { title: "Create your profile", description: "Your story, in your own words.", detail: "Add your photos and biodata so your introduction reflects who you are and the life you want to build.", Icon: Home },
+  { title: "Set your preferences", description: "Start with what matters to you.", detail: "Share your partner preferences, from culture and location to the values you hope to share.", Icon: SlidersHorizontal },
+  { title: "Discover matches", description: "Explore people with shared possibilities.", detail: "Browse profiles and explore the details that help you decide whether someone could be a meaningful match.", Icon: Sparkles },
+  { title: "Send an interest", description: "A small first step toward connection.", detail: "Let someone know you would like to get to know them. Take the next step at a pace that feels comfortable.", Icon: Heart },
+  { title: "Connect and chat", description: "Give a good conversation room to grow.", detail: "Use CupidMatch's chat features to get to know each other and discover what you have in common.", Icon: MessageCircle },
 ] as const;
 
-function DeviceFrame({active}:{active:number}) {
-  return <div className="mx-auto w-full max-w-[360px] md:max-w-[390px] lg:max-w-[720px]">
-    <div className="relative overflow-hidden rounded-[3rem] border-[7px] border-primary-dark bg-primary-dark p-[7px] shadow-[0_28px_80px_rgba(42,24,69,.22)] lg:rounded-[2rem] lg:border-[9px] lg:p-[9px]">
-      <div className="absolute left-1/2 top-0 z-20 h-6 w-28 -translate-x-1/2 rounded-b-[1.2rem] bg-primary-dark md:w-32 lg:hidden" />
-      <div className="hidden lg:absolute lg:left-1/2 lg:top-0 lg:z-20 lg:block lg:h-3 lg:w-20 lg:-translate-x-1/2 lg:rounded-b-xl lg:bg-primary-dark" />
-      <div className="relative overflow-hidden rounded-[2.35rem] bg-background lg:rounded-[1.25rem]">
-        <div className="relative h-[390px] sm:h-[450px] lg:h-[455px]">
-          <Image key={steps[active][3]} src={steps[active][3]} alt="" fill sizes="(min-width:1024px) 720px, 390px" className="object-cover transition-[opacity,transform] duration-300 ease-out motion-safe:animate-[fadeIn_.3s_ease-out]" priority={active===0}/>
-          <div className="absolute inset-x-4 bottom-4 rounded-[1.5rem] bg-white/95 p-4 shadow-elevated backdrop-blur lg:inset-x-6 lg:bottom-6 lg:max-w-[410px] lg:p-5">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-gold-foreground lg:text-xs">{active+1} / 5</p>
-            <p className="mt-1 font-serif text-[1.45rem] font-semibold text-primary-dark lg:text-3xl">{steps[active][0]}</p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground lg:text-sm">{steps[active][1]}</p>
-          </div>
-        </div>
-      </div>
-      <div className="hidden h-4 items-center justify-center lg:flex"><span className="h-1.5 w-1.5 rounded-full bg-white/40"/></div>
-    </div>
-  </div>;
-}
-
 export function StickyHowItWorks() {
-  const { ref, progress } = useSectionProgress();
-  const active = Math.min(4, Math.floor(progress * 5));
+  const [active, setActive] = useState(0);
+  const step = steps[active];
+  const planning = active < 3;
 
   return (
-    <section ref={ref} className="relative h-[240svh] lg:h-[150svh] bg-background scroll-mt-20 [scroll-snap-align:start]">
-      <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-5 py-4">
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-3 sm:gap-7 md:grid-cols-2 lg:gap-24">
-          <div className="text-center md:text-left lg:max-w-xl">
-            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-gold-foreground">How CupidMatch works</p>
-            <h2 className="mt-2 font-serif text-[1.9rem] font-semibold leading-tight text-primary-dark sm:text-5xl lg:text-[4.2rem]">Simple Steps to<br/>Find Your Match</h2><p className="mx-auto mt-5 max-w-md text-sm leading-6 text-muted-foreground md:mx-0 lg:text-lg lg:leading-8">Your profile and preferences guide each introduction, so every step feels intentional.</p><ol className="mt-8 hidden space-y-3 lg:block">{steps.map(([title,description,Icon],i)=><li key={title} className={`flex items-center gap-4 rounded-2xl border px-5 py-4 transition-all duration-500 ${i===active?"translate-x-2 border-border bg-card shadow-[0_14px_35px_hsl(var(--primary)/.10)]":"border-transparent bg-transparent opacity-50"}`}><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${i===active?"bg-primary text-white":"bg-accent text-primary"}`}>{i+1}</span><Icon className="h-5 w-5 shrink-0 text-primary"/><span><strong className="block text-sm text-primary-dark">{title}</strong><span className="text-xs text-muted-foreground">{description}</span></span></li>)}</ol></div>
+    <section id="how-it-works" aria-labelledby="how-it-works-title" className="scroll-mt-28 bg-background px-5 py-12 sm:px-8 sm:py-16 lg:px-12 lg:py-20">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-7 flex flex-col gap-3 sm:mb-10 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[.25em] text-gold-foreground sm:text-xs">How CupidMatch works</p>
+            <h2 id="how-it-works-title" className="mt-3 max-w-xl font-serif text-3xl font-semibold leading-[1.12] text-primary-dark sm:text-4xl lg:text-5xl">A little clarity.<br/><span className="text-primary">A meaningful beginning.</span></h2>
+          </div>
+          <p className="max-w-sm text-sm leading-6 text-muted-foreground lg:pb-1">From your first introduction to your first conversation, take each step in your own time.</p>
+        </div>
 
-          <div className="mx-auto w-full">
-            <DeviceFrame active={active}/>
+        <div className="grid items-start gap-7 lg:grid-cols-[1.08fr_1fr] lg:gap-12">
+          <div className="min-w-0 overflow-hidden rounded-3xl bg-accent">
+            <div className="relative aspect-[3/2] overflow-hidden">
+              <Image src="/images/journey-beginning.webp" alt={planning ? "A Sri Lankan couple exploring a tablet together in an ivory studio setting" : ""} fill sizes="(min-width:1280px) 575px, (min-width:1024px) 50vw, 100vw" className={`object-cover transition-opacity duration-300 motion-reduce:transition-none ${planning ? "opacity-100" : "opacity-0"}`}/>
+              <Image src="/images/journey-conversation.webp" alt={planning ? "" : "A Sri Lankan couple enjoying a conversation over coffee"} fill sizes="(min-width:1280px) 575px, (min-width:1024px) 50vw, 100vw" className={`object-cover transition-opacity duration-300 motion-reduce:transition-none ${planning ? "opacity-0" : "opacity-100"}`}/>
+              <span className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-background/95 px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-primary-dark sm:left-5 sm:top-5"><Heart aria-hidden="true" className="h-3.5 w-3.5 text-primary"/>Your next chapter</span>
+            </div>
+            <div id="journey-step-detail" role="region" aria-live="polite" aria-atomic="true" aria-labelledby={`journey-step-${active}`} className="min-h-[154px] px-5 py-5 sm:px-7 sm:py-6">
+              <p className="text-[10px] font-bold uppercase tracking-[.2em] text-gold-foreground">Step {String(active + 1).padStart(2, "0")} of 05</p>
+              <h3 className="mt-2 font-serif text-2xl font-semibold text-primary-dark">{step.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">{step.detail}</p>
+            </div>
+          </div>
 
-            <ol className="mt-3 space-y-0.5 sm:mt-5 sm:space-y-2 lg:hidden">
-              {steps.map(([title,,Icon], i) => (
-                <li key={title} className={`flex items-center gap-3 rounded-xl px-3 py-1.5 transition-all duration-500 ${i===active ? "translate-x-1 bg-card shadow-[0_8px_24px_hsl(var(--primary)/.08)] opacity-100" : i<active ? "opacity-40" : "opacity-55"}`}>
-                  <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${i===active ? "bg-primary text-white" : "bg-accent text-primary"}`}>{i+1}</span>
-                  <Icon className="h-4 w-4 text-primary" />
-                  <span className="text-xs font-semibold text-primary-dark">{title}</span>
+          <div className="min-w-0">
+            <ol className="divide-y divide-border">
+              {steps.map(({title, description, Icon}, i) => (
+                <li key={title}>
+                  <button id={`journey-step-${i}`} type="button" aria-pressed={active === i} aria-controls="journey-step-detail" onClick={() => setActive(i)} className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none sm:gap-4 sm:py-4 ${active === i ? "bg-accent" : "hover:bg-accent/50"}`}>
+                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${active === i ? "bg-primary text-white" : "bg-card text-gold-foreground ring-1 ring-border"}`}>{String(i + 1).padStart(2, "0")}</span>
+                    <span className="min-w-0 flex-1"><span className="flex items-center gap-2 text-sm font-semibold text-primary-dark sm:text-base"><Icon aria-hidden="true" className="h-4 w-4 shrink-0 text-primary"/>{title}</span><span className="mt-1 block text-xs leading-5 text-muted-foreground sm:text-sm">{description}</span></span>
+                    <ChevronRight aria-hidden="true" className={`h-4 w-4 shrink-0 ${active === i ? "text-primary" : "text-muted-foreground"}`}/>
+                  </button>
                 </li>
               ))}
             </ol>
+            <div className="mt-6 border-t border-border pt-6">
+              <Link href="/signup" className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto">Create Your Profile<ArrowRight aria-hidden="true" className="h-4 w-4"/></Link>
+              <p className="mt-3 text-xs text-muted-foreground">Your story. Your preferences. Your pace.</p>
+            </div>
           </div>
         </div>
       </div>
