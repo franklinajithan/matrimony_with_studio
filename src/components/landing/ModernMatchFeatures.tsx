@@ -79,29 +79,28 @@ export function ModernMatchFeatures() {
   const copy = localized[language];
   const translatedFeatures = featureTranslations[language];
   return (
-    <section id="features" aria-labelledby="features-heading" className="relative overflow-hidden bg-background px-5 py-16 sm:py-20 lg:py-28">
+    <section id="features" aria-labelledby="features-heading" className="relative !min-h-0 overflow-hidden bg-background px-5 py-10 scroll-mt-28 sm:px-8 lg:py-14">
       <div aria-hidden="true" className="pointer-events-none absolute -right-40 top-0 h-96 w-96 rounded-full bg-accent/30 blur-3xl" />
       <div className="relative mx-auto max-w-7xl">
-        <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-card px-4 py-2 text-xs font-bold uppercase tracking-[.15em] text-primary-dark"><Sparkles className="h-4 w-4" /> {copy.eyebrow}</span>
-          <h2 id="features-heading" className="mt-6 font-serif text-4xl font-semibold leading-tight text-primary-dark sm:text-5xl lg:text-6xl">{copy.title} <span className="text-primary">{copy.accent}</span></h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">{copy.description}</p>
+        <div className="grid items-end gap-4 lg:grid-cols-[1.1fr_.9fr] lg:gap-12">
+          <div><span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase leading-5 tracking-[.15em] text-gold-foreground"><Sparkles aria-hidden="true" className="h-4 w-4" /> {copy.eyebrow}</span>
+          <h2 id="features-heading" className="mt-3 font-serif text-3xl font-medium leading-tight tracking-tight text-primary-dark sm:text-4xl [overflow-wrap:anywhere]">{copy.title} <span className="text-primary">{copy.accent}</span></h2></div>
+          <p className="max-w-xl text-sm leading-7 text-muted-foreground">{copy.description}</p>
         </div>
-        <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {features.map(({ title, Icon, label, href }, index) => (
-            <article key={label} className="group flex min-w-0 flex-col rounded-[1.75rem] border border-accent bg-card p-6 shadow-[0_12px_35px_rgba(41,19,63,.05)] transition-shadow hover:shadow-[0_18px_48px_rgba(41,19,63,.12)] sm:p-8">
-              <div className="flex items-center justify-between">
-                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-primary-dark"><Icon aria-hidden="true" className="h-7 w-7" /></span>
-                <span className="text-[10px] font-bold tracking-[.18em] text-gold-foreground">{label}</span>
+        <div className="mt-7 grid gap-x-7 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-9">
+          {features.map(({ Icon, label, href }, index) => (
+            <article key={label} className="group flex min-w-0 items-start gap-3 border-b border-border py-5">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-primary"><Icon aria-hidden="true" className="h-5 w-5 stroke-[1.6]" /></span>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-base font-semibold leading-6 text-primary-dark">{translatedFeatures[index][0]}</h3>
+                <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{translatedFeatures[index][1]}</p>
+                <Link href={href} className="mt-1 inline-flex min-h-11 items-center gap-2 rounded-md text-xs font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">{copy.explore}<ArrowRight aria-hidden="true" className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" /></Link>
               </div>
-              <h3 className="mt-7 font-serif text-2xl font-semibold text-primary-dark">{translatedFeatures[index][0]}</h3>
-              <p className="mt-3 flex-1 text-sm leading-7 text-muted-foreground">{translatedFeatures[index][1]}</p>
-              <Link href={href} className="mt-7 inline-flex w-fit items-center gap-2 rounded-lg py-2 text-sm font-semibold text-primary-dark underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-dark">{copy.explore} <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>
             </article>
           ))}
         </div>
-        <div className="mt-12 flex flex-col items-center justify-between gap-6 rounded-[1.75rem] bg-primary-dark px-6 py-8 text-center text-white sm:px-10 md:flex-row md:text-left">
-          <div className="flex items-start gap-4"><LockKeyhole aria-hidden="true" className="mt-1 h-7 w-7 shrink-0 text-gold-foreground" /><div><h3 className="font-serif text-2xl font-semibold">{copy.privacy}</h3><p className="mt-2 max-w-xl text-sm leading-6 text-white/80">{copy.privacyBody}</p></div></div>
+        <div className="mt-6 flex flex-col items-start justify-between gap-4 rounded-2xl bg-primary-dark px-5 py-5 text-white sm:flex-row sm:items-center lg:px-6">
+          <div className="flex items-start gap-4"><LockKeyhole aria-hidden="true" className="mt-1 h-5 w-5 shrink-0 text-gold" /><div><h3 className="text-base font-semibold">{copy.privacy}</h3><p className="mt-1 max-w-xl text-xs leading-5 text-white/80">{copy.privacyBody}</p></div></div>
           <Link href="/signup" className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-gold px-7 py-3 text-sm font-bold text-primary-dark transition hover:bg-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">{copy.join} <ArrowRight aria-hidden="true" className="h-4 w-4" /></Link>
         </div>
       </div>
