@@ -70,30 +70,44 @@ export function GlobalCommunityStory(){
 }
 
 export function PremiumStories(){
- const [story,setStory]=useState(0); const touchStart=useRef<number|null>(null);
+ const [story,setStory]=useState(0);
+ const touchStart=useRef<number|null>(null);
  const stories=[
-  {image:"/images/values/shared.jpg?v=3",quote:"We started with shared values and a simple conversation.",body:"CupidMatch gave us the space to understand what mattered to each other and move forward at our own pace."},
+  {image:"/images/couple-meaningful-conversation.webp",quote:"We started with shared values and a simple conversation.",body:"CupidMatch gave us the space to understand what mattered to each other and move forward at our own pace."},
   {image:"/images/values/culture.jpg?v=3",quote:"Culture brought familiarity. Conversation created the connection.",body:"Starting with the things we both valued made getting to know each other feel natural and comfortable."},
   {image:"/images/values/goals.jpg?v=3",quote:"Similar goals gave us something meaningful to build on.",body:"We could talk openly about family, the future and what we both wanted from a lasting relationship."}
- ]; const current=stories[story]; const move=(dir:number)=>setStory(v=>(v+dir+stories.length)%stories.length);
+ ];
+ const current=stories[story];
+ const move=(dir:number)=>setStory(v=>(v+dir+stories.length)%stories.length);
  const onTouchStart=(e:React.TouchEvent)=>{touchStart.current=e.touches[0]?.clientX??null};
  const onTouchEnd=(e:React.TouchEvent)=>{if(touchStart.current===null)return;const end=e.changedTouches[0]?.clientX??touchStart.current;const dx=end-touchStart.current;touchStart.current=null;if(Math.abs(dx)>45)move(dx<0?1:-1)};
- return <section className="relative bg-background px-5 py-10 [scroll-snap-align:start] [scroll-snap-stop:always] lg:py-16">
-  <div className="mx-auto w-full max-w-5xl text-center">
-   <p className="text-[10px] font-bold uppercase tracking-[.28em] text-gold-foreground">Illustrative relationship journeys</p>
-   <h2 className="mt-2 font-serif text-[2.3rem] font-semibold leading-tight text-primary-dark lg:text-[4rem]">Shared Values<br/><span className="text-primary">Meaningful Conversations</span></h2>
-   <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-muted-foreground lg:max-w-xl lg:text-base">Illustrative examples of how shared values, culture and goals can shape a meaningful connection.</p>
-   <div className="mx-auto mt-6 max-w-[430px] lg:max-w-[760px]" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-    <article className="overflow-hidden rounded-[2rem] border border-border bg-card text-left shadow-[0_20px_55px_hsl(var(--primary)/.10)] lg:grid lg:grid-cols-[1.08fr_.92fr]">
-     <div className="relative h-[300px] sm:h-[340px] lg:h-[500px]"><Image key={current.image} src={current.image} alt="" fill sizes="(min-width:1024px) 410px,430px" className="object-cover"/></div>
-     <div className="flex min-h-[245px] flex-col justify-center p-6 lg:min-h-0 lg:p-9"><Quote className="h-8 w-8 fill-primary text-primary"/><p className="mt-3 font-serif text-[1.45rem] font-semibold leading-snug text-primary-dark lg:text-[2rem]">“{current.quote}”</p><p className="mt-3 text-sm leading-6 text-muted-foreground">{current.body}</p><p className="mt-5 text-[10px] font-bold uppercase tracking-[.2em] text-gold-foreground">Swipe to read another story</p></div>
-    </article>
+ return <section aria-labelledby="premium-stories-heading" className="relative overflow-hidden bg-background px-4 py-12 sm:px-8 lg:py-20 [scroll-snap-align:start]">
+  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_45%,hsl(var(--gold)/.08),transparent_70%)]" aria-hidden="true"/>
+  <div className="relative mx-auto max-w-6xl">
+   <div className="mx-auto max-w-3xl text-center">
+    <div className="mb-4 flex items-center justify-center gap-3 text-gold-foreground" aria-hidden="true"><span className="h-px w-12 bg-gold/60"/><Heart className="h-5 w-5"/><span className="h-px w-12 bg-gold/60"/></div>
+    <p className="text-[10px] font-bold uppercase tracking-[.24em] text-gold-foreground sm:text-xs">Illustrative relationship journeys</p>
+    <h2 id="premium-stories-heading" className="mt-4 font-serif text-[clamp(2.2rem,5vw,4.5rem)] font-medium leading-[1.09] tracking-tight text-primary-dark">Shared Values<br/><span className="text-primary">Meaningful Conversations</span></h2>
+    <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-muted-foreground sm:text-base">Explore how shared values, culture and life goals can shape a meaningful connection.</p>
    </div>
-   <div className="mx-auto mt-5 flex max-w-[210px] items-center justify-between">
-    <button type="button" onClick={()=>move(-1)} aria-label="Previous story" className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-primary active:scale-95"><ChevronLeft className="h-5 w-5"/></button>
-    <div className="flex gap-2">{stories.map((_,i)=><button type="button" key={i} onClick={()=>setStory(i)} aria-label={`Story ${i+1}`} className={`${i===story?"h-2 w-7 bg-primary":"h-2 w-2 bg-gold-light"} rounded-full transition-all`}/>)}</div>
-    <button type="button" onClick={()=>move(1)} aria-label="Next story" className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-primary active:scale-95"><ChevronRight className="h-5 w-5"/></button>
+   <div className="relative mx-auto mt-8 max-w-5xl lg:mt-12" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+    <div className="relative overflow-hidden rounded-[2rem] border border-gold/25 bg-card shadow-[0_24px_65px_hsl(var(--primary)/.10)] sm:rounded-[2.5rem] lg:overflow-visible lg:rounded-[3rem]">
+     <div className="relative aspect-[5/4] overflow-hidden rounded-t-[2rem] sm:aspect-[16/10] lg:aspect-[16/8] lg:rounded-[3rem]">
+      <Image key={current.image} src={current.image} alt={story===0?"Couple enjoying a meaningful conversation in an elegant lounge":story===1?"Illustration of a relationship shaped by shared culture":"Illustration of partners discussing their future goals"} fill sizes="(min-width:1024px) 1024px,100vw" quality={90} className="object-cover object-center"/>
+      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-background/60 to-transparent"/>
+     </div>
+     <div aria-live="polite" className="relative mx-3 -mt-6 rounded-[1.6rem] border border-gold/35 bg-card p-5 text-left shadow-[0_16px_45px_hsl(var(--primary)/.10)] sm:mx-8 sm:-mt-12 sm:p-8 lg:mx-auto lg:-mt-24 lg:max-w-[82%] lg:rounded-[2.5rem] lg:px-12 lg:py-9">
+      <span className="absolute -top-5 left-5 flex h-12 w-12 items-center justify-center rounded-full border-4 border-background bg-primary text-white shadow-md sm:left-9" aria-hidden="true"><Quote className="h-6 w-6 fill-current"/></span>
+      <p className="mt-3 font-serif text-[clamp(1.4rem,3vw,2.3rem)] font-medium leading-snug text-primary-dark">“{current.quote}”</p>
+      <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">{current.body}</p>
+      <p className="mt-5 text-[10px] font-bold uppercase tracking-[.16em] text-gold-foreground">Illustrative example · Story {story+1} of {stories.length}</p>
+     </div>
+    </div>
+    <button type="button" onClick={()=>move(-1)} aria-label="Previous story" className="absolute left-0 top-[34%] z-10 flex h-11 w-11 -translate-x-1/4 items-center justify-center rounded-full border border-gold/25 bg-card text-primary shadow-lg transition hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-translate-x-1/2"><ChevronLeft className="h-5 w-5"/></button>
+    <button type="button" onClick={()=>move(1)} aria-label="Next story" className="absolute right-0 top-[34%] z-10 flex h-11 w-11 translate-x-1/4 items-center justify-center rounded-full border border-gold/25 bg-card text-primary shadow-lg transition hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:translate-x-1/2"><ChevronRight className="h-5 w-5"/></button>
    </div>
+   <div className="mt-7 flex items-center justify-center gap-3" aria-label="Select a story">{stories.map((_,i)=><button type="button" key={i} onClick={()=>setStory(i)} aria-label={`Show story ${i+1}`} aria-current={story===i?"true":undefined} className={`h-3 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${story===i?"w-7 bg-primary":"w-3 bg-primary/20 hover:bg-primary/40"}`}/>)}</div>
+   <div className="mt-8 text-center"><Link href="/signup" className="inline-flex min-h-12 w-full max-w-sm items-center justify-center gap-3 rounded-full border border-gold/50 bg-primary px-8 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_hsl(var(--primary)/.17)] transition hover:bg-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4 sm:w-auto">Create Your Profile <span aria-hidden="true">→</span></Link></div>
   </div>
  </section>
 }
