@@ -14,7 +14,7 @@ function load(relative, mocks = {}) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
     fileName: filename,
   });
-  const module = { exports: {} };
+  const testModule = { exports: {} };
   const requireMock = (name) => {
     if (name === 'server-only') return {};
     if (name === 'zod') return require('zod');
@@ -25,8 +25,8 @@ function load(relative, mocks = {}) {
     };
     throw new Error(`Unexpected dependency: ${name} in ${relative}`);
   };
-  vm.runInThisContext(`(function(require,module,exports){${outputText}\n})`, { filename })(requireMock, module, module.exports);
-  return module.exports;
+  vm.runInThisContext(`(function(require,module,exports){${outputText}\n})`, { filename })(requireMock, testModule, testModule.exports);
+  return testModule.exports;
 }
 
 const user = { id: 'verified-user', user_metadata: { isAdmin: true } };

@@ -85,7 +85,7 @@ export function CountryMultiSelectInput({ id, value, disabled, className, placeh
         </div>
       </div>
       {open && !disabled && (
-        <div className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-xl border bg-popover p-1.5 text-popover-foreground shadow-lg">
+        <div className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-xl border bg-popover p-1.5 text-popover-foreground shadow-elevated">
           {matches.length ? matches.map((country) => (
             <button key={country} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => add(country)} className="flex min-h-10 w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-accent">
               <span>{country}</span><Check className="h-4 w-4 opacity-0" />

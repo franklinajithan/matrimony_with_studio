@@ -103,14 +103,14 @@ export function DashboardSidebar({
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-violet-50 text-violet-700"
-                  : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                  ? "bg-accent text-primary"
+                  : "text-foreground hover:bg-background hover:text-foreground"
               )}
             >
               <Icon className="h-5 w-5" />
               <span className="flex-1">{item.label}</span>
               {count > 0 && (
-                <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-violet-600 px-1.5 text-xs font-semibold text-white">
+                <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-white">
                   {count}
                 </span>
               )}
@@ -123,7 +123,7 @@ export function DashboardSidebar({
       <div className="border-t p-4">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+          className="w-full justify-start gap-3 text-foreground hover:bg-background hover:text-foreground"
           onClick={handleSignOut}
         >
           <LogOut className="h-5 w-5" />

@@ -99,7 +99,7 @@ export default async function BlogPostPage({ params }: PageProps) {
     return (
       <div className="text-center py-20">
         <h1 className="text-3xl font-bold">Post Not Found</h1>
-        <p className="text-muted-foreground mt-2">Sorry, we couldn't find the blog post you were looking for.</p>
+        <p className="text-muted-foreground mt-2">Sorry, we couldn&apos;t find the blog post you were looking for.</p>
         <Button asChild variant="link" className="mt-4">
           <Link href="/blog">Back to Blog</Link>
         </Button>
@@ -118,7 +118,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             </Link>
           </Button>
           {post.imageUrl && (
-            <div className="relative w-full h-64 md:h-96 rounded-lg overflow-hidden shadow-lg">
+            <div className="relative w-full h-64 md:h-96 rounded-lg overflow-hidden shadow-elevated">
               <Image
                 src={post.imageUrl}
                 alt={post.title}
@@ -174,7 +174,7 @@ export default async function BlogPostPage({ params }: PageProps) {
           <Card>
             <CardContent className="p-6 text-center text-muted-foreground">
               <p>Comments section coming soon!</p>
-              <p className="text-sm">We'd love to hear your thoughts on this post.</p>
+              <p className="text-sm">We&apos;d love to hear your thoughts on this post.</p>
             </CardContent>
           </Card>
         </section>

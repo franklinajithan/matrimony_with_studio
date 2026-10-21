@@ -56,14 +56,14 @@ export function TrustStrip() {
 
   return (
     <section className="relative z-20 -mt-12 px-4 pb-2 sm:-mt-16 sm:px-6 lg:-mt-[4.25rem]" aria-label="Community highlights">
-      <div className="mx-auto max-w-[1100px] rounded-[1.75rem] border border-[#F0E8F6] bg-white px-3 py-5 shadow-[0_18px_50px_rgba(74,32,110,0.08)] sm:px-6 sm:py-6">
-        <ul className="grid grid-cols-2 gap-y-6 lg:grid-cols-4 lg:gap-0 lg:divide-x lg:divide-[#EEE4F4]">
+      <div className="mx-auto max-w-[1100px] rounded-[1.75rem] border border-border bg-card px-3 py-5 shadow-[0_18px_50px_rgba(74,32,110,0.08)] sm:px-6 sm:py-6">
+        <ul className="grid grid-cols-2 gap-y-6 lg:grid-cols-4 lg:gap-0 lg:divide-x lg:divide-[hsl(var(--border))]">
           {items.map((item) => (
             <li key={item.lines.join(" ")} className="flex items-center gap-3 px-3 lg:justify-center lg:px-5">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F3E8FF] text-[#7C3AED]">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-primary">
                 <item.icon className="h-5 w-5 stroke-[1.7]" aria-hidden="true" />
               </span>
-              <span className="text-[13px] font-semibold leading-5 text-[#2A1845] sm:text-sm">
+              <span className="text-[13px] font-semibold leading-5 text-primary-dark sm:text-sm">
                 {item.lines.map((line) => (
                   <span key={line} className="block">
                     {line}
@@ -120,18 +120,18 @@ export function WhyCupidMatch() {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-[#FBF8F4] px-4 pb-20 pt-16 sm:px-6 sm:pt-20" aria-labelledby="why-heading">
+    <section className="relative overflow-hidden bg-background px-4 pb-20 pt-16 sm:px-6 sm:pt-20" aria-labelledby="why-heading">
       <LotusOrnament side="left" className="opacity-80" />
       <LotusOrnament side="right" className="opacity-80" />
       <div className="mx-auto max-w-7xl">
         <div className="relative mb-16 text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#C4A574]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-gold-foreground">
             {t.story}
           </p>
-          <h2 id="why-heading" className="mt-3 font-serif text-3xl font-semibold text-[#2A1845] sm:text-[2.5rem] sm:leading-tight">
-            {t.values} <span className="text-[#C026D3]">{t.future}</span>
+          <h2 id="why-heading" className="mt-3 font-serif text-3xl font-semibold text-primary-dark sm:text-[2.5rem] sm:leading-tight">
+            {t.values} <span className="text-primary">{t.future}</span>
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-base text-[#5C4A66] sm:text-lg">
+          <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground sm:text-lg">
             {t.join}
           </p>
         </div>
@@ -140,7 +140,7 @@ export function WhyCupidMatch() {
           {features.map((feature) => (
             <article
               key={feature.title}
-              className="group overflow-hidden rounded-3xl border border-[#EDE4F5] bg-[#FFFDF9] shadow-[0_10px_30px_rgba(74,32,110,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(74,32,110,0.12)]"
+              className="group overflow-hidden rounded-3xl border border-border bg-background shadow-[0_10px_30px_rgba(74,32,110,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(74,32,110,0.12)]"
             >
               <div className="relative aspect-[4/3] overflow-hidden">
                 <Image
@@ -153,9 +153,9 @@ export function WhyCupidMatch() {
                 />
               </div>
               <div className="p-6">
-                <h3 className="text-lg font-bold text-[#2A1845]">{feature.title}</h3>
-                <p className="mt-1 text-sm font-medium text-[#7C3AED]">{feature.subtitle}</p>
-                <p className="mt-3 text-sm leading-relaxed text-[#6B5A78]">{feature.description}</p>
+                <h3 className="text-lg font-bold text-primary-dark">{feature.title}</h3>
+                <p className="mt-1 text-sm font-medium text-primary">{feature.subtitle}</p>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{feature.description}</p>
               </div>
             </article>
           ))}
@@ -266,16 +266,16 @@ export function FeatureGrid() { const t=useHomeCopy();
   ];
 
   return (
-    <section className="bg-[#FBF8F4] px-4 py-20 sm:px-6" aria-labelledby="features-heading">
+    <section className="bg-background px-4 py-20 sm:px-6" aria-labelledby="features-heading">
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
-          <p className="text-sm font-semibold uppercase tracking-wider text-[#7C3AED]">
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
             {t.platform}
           </p>
-          <h2 id="features-heading" className="mt-2 text-3xl font-bold text-[#2A1845] sm:text-4xl">
+          <h2 id="features-heading" className="mt-2 text-3xl font-bold text-primary-dark sm:text-4xl">
             {t.built}
           </h2>
-          <p className="mx-auto mt-4 max-w-3xl text-lg text-[#5C4A66]">
+          <p className="mx-auto mt-4 max-w-3xl text-lg text-muted-foreground">
             {t.tools}
           </p>
         </div>
@@ -284,24 +284,24 @@ export function FeatureGrid() { const t=useHomeCopy();
           {features.map((feature) => (
             <article
               key={feature.title}
-              className="relative rounded-3xl border border-[#EDE4F5] bg-white p-8 shadow-sm"
+              className="relative rounded-3xl border border-border bg-card p-8 shadow-sm"
             >
               {feature.status === t.coming && (
-                <div className="absolute right-4 top-4 rounded-full bg-[#F3E8FF] px-3 py-1 text-xs font-medium text-[#6D28D9]">
+                <div className="absolute right-4 top-4 rounded-full bg-accent px-3 py-1 text-xs font-medium text-primary">
                   {t.coming}
                 </div>
               )}
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#F3E8FF] text-[#7C3AED]">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent text-primary">
                 <feature.icon className="h-6 w-6" aria-hidden="true" />
               </div>
-              <h3 className="mb-3 text-lg font-bold text-[#2A1845]">{feature.title}</h3>
-              <p className="text-sm leading-relaxed text-[#6B5A78]">{feature.description}</p>
+              <h3 className="mb-3 text-lg font-bold text-primary-dark">{feature.title}</h3>
+              <p className="text-sm leading-relaxed text-muted-foreground">{feature.description}</p>
             </article>
           ))}
         </div>
 
         <div className="mt-12 text-center">
-          <p className="text-sm text-[#6B5A78]">
+          <p className="text-sm text-muted-foreground">
             Features marked &quot;Coming soon&quot; are in development. Only implemented features are shown in member-facing flows.
           </p>
         </div>
@@ -312,24 +312,24 @@ export function FeatureGrid() { const t=useHomeCopy();
 
 export function ProductPreview() {
   return (
-    <section className="bg-[#FBF5F1] px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="preview-heading">
+    <section className="bg-background px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="preview-heading">
       <div className="mx-auto max-w-6xl">
         <div className="max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A52A68]">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-foreground">
             Product experience
           </p>
-          <h2 id="preview-heading" className="mt-3 font-serif text-3xl font-semibold text-[#271624] sm:text-4xl">
+          <h2 id="preview-heading" className="mt-3 font-serif text-3xl font-semibold text-foreground sm:text-4xl">
             Designed for considered introductions
           </h2>
         </div>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
           <aside
-            className="rounded-[1.75rem] border border-[#EADFD6] bg-white p-5 shadow-[0_16px_40px_rgba(48,18,42,0.08)] sm:p-6"
+            className="rounded-[1.75rem] border border-border bg-card p-5 shadow-[0_16px_40px_rgba(48,18,42,0.08)] sm:p-6"
             aria-label="Sample profile preview"
           >
             <div className="mb-4 flex items-center justify-between gap-3">
-              <p className="rounded-full bg-[#F8EAF1] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#4B164C]">
+              <p className="rounded-full bg-accent px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-primary-dark">
                 Sample profile
               </p>
               <span className="inline-flex items-center gap-1 text-xs font-medium text-[#3F6B54]">
@@ -338,14 +338,14 @@ export function ProductPreview() {
               </span>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-[#EADFD6] bg-[#FFFDF9]">
-              <div className="flex items-center gap-4 border-b border-[#EADFD6] p-5">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#D6B56D]/35 font-serif text-xl font-semibold text-[#4B164C]">
+            <div className="overflow-hidden rounded-2xl border border-border bg-background">
+              <div className="flex items-center gap-4 border-b border-border p-5">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gold/35 font-serif text-xl font-semibold text-primary-dark">
                   CM
                 </div>
                 <div>
-                  <p className="font-semibold text-[#271624]">Member preview</p>
-                  <p className="text-sm text-[#725E6D]">Colombo · Tamil · Professionally settled</p>
+                  <p className="font-semibold text-foreground">Member preview</p>
+                  <p className="text-sm text-muted-foreground">Colombo · Tamil · Professionally settled</p>
                 </div>
               </div>
 
@@ -354,22 +354,22 @@ export function ProductPreview() {
                   {["Family-minded", "Values-led", "Open to relocate"].map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full border border-[#EADFD6] bg-white px-3 py-1 text-xs font-medium text-[#4B164C]"
+                      className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-primary-dark"
                     >
                       {tag}
                     </span>
                   ))}
                 </div>
 
-                <div className="rounded-xl border border-[#EADFD6] bg-white p-4">
+                <div className="rounded-xl border border-border bg-card p-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#D6B56D]">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gold-foreground">
                       Profile readiness
                     </p>
-                    <p className="text-xs font-medium text-[#725E6D]">Thoughtfully completed</p>
+                    <p className="text-xs font-medium text-muted-foreground">Thoughtfully completed</p>
                   </div>
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#F8EAF1]">
-                    <div className="h-full w-[82%] rounded-full bg-[#4B164C]" />
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-accent">
+                    <div className="h-full w-[82%] rounded-full bg-primary-dark" />
                   </div>
                 </div>
 
@@ -377,16 +377,16 @@ export function ProductPreview() {
                   <Button
                     asChild
                     variant="outline"
-                    className={`h-11 rounded-xl border-[#EADFD6] text-[#271624] hover:bg-[#FBF5F1] ${focusRing}`}
+                    className={`h-11 rounded-xl border-border text-foreground hover:bg-background ${focusRing}`}
                   >
                     <Link href="/signup">View Profile</Link>
                   </Button>
-                  <Button asChild className={`h-11 rounded-xl bg-[#4B164C] text-white hover:bg-[#742158] ${focusRing}`}>
+                  <Button asChild className={`h-11 rounded-xl bg-primary-dark text-white hover:bg-primary-dark ${focusRing}`}>
                     <Link href="/signup">Connect</Link>
                   </Button>
                 </div>
 
-                <p className="text-xs leading-5 text-[#725E6D]">
+                <p className="text-xs leading-5 text-muted-foreground">
                   Illustrative sample only. This is not a real member profile.
                 </p>
               </div>
@@ -394,21 +394,21 @@ export function ProductPreview() {
           </aside>
 
           <div className="grid gap-5 content-start">
-            <article className="rounded-2xl border border-[#EADFD6] bg-white p-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F8EAF1] text-[#4B164C]">
+            <article className="rounded-2xl border border-border bg-card p-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-primary-dark">
                 <MessageCircle className="h-5 w-5" aria-hidden="true" />
               </div>
-              <h3 className="mt-4 font-semibold text-[#271624]">Secure conversation</h3>
-              <p className="mt-2 text-sm leading-6 text-[#725E6D]">
+              <h3 className="mt-4 font-semibold text-foreground">Secure conversation</h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 Get to know each other inside CupidMatch before sharing contact details.
               </p>
             </article>
-            <article className="rounded-2xl border border-[#EADFD6] bg-white p-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F8EAF1] text-[#4B164C]">
+            <article className="rounded-2xl border border-border bg-card p-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-primary-dark">
                 <Sparkles className="h-5 w-5" aria-hidden="true" />
               </div>
-              <h3 className="mt-4 font-semibold text-[#271624]">Thoughtful compatibility</h3>
-              <p className="mt-2 text-sm leading-6 text-[#725E6D]">
+              <h3 className="mt-4 font-semibold text-foreground">Thoughtful compatibility</h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 Review values, preferences and optional horoscope information in one place.
               </p>
             </article>
@@ -459,17 +459,17 @@ export function PrivacySection() { const t=useHomeCopy();
 export function InternationalRelationships() { const t=useHomeCopy();
   return (
     <section
-      className="overflow-x-hidden bg-[#FBF8F4] px-4 py-20 sm:px-6"
+      className="overflow-x-hidden bg-background px-4 py-20 sm:px-6"
       aria-labelledby="international-heading"
     >
       <div className="mx-auto max-w-7xl text-center">
         <h2
           id="international-heading"
-          className="font-serif text-3xl font-semibold text-[#2A1845] sm:text-4xl"
+          className="font-serif text-3xl font-semibold text-primary-dark sm:text-4xl"
         >
           {t.international}
         </h2>
-        <p className="mx-auto mt-4 max-w-3xl text-base text-[#5C4A66] sm:text-lg">
+        <p className="mx-auto mt-4 max-w-3xl text-base text-muted-foreground sm:text-lg">
           {t.intlDesc}
         </p>
 
@@ -477,7 +477,7 @@ export function InternationalRelationships() { const t=useHomeCopy();
           <CountryCarousel />
         </div>
 
-        <p className="mx-auto mt-10 max-w-2xl text-sm leading-6 text-[#6B5A78] sm:text-base">
+        <p className="mx-auto mt-10 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
           {t.intlFoot}
         </p>
       </div>
@@ -504,18 +504,18 @@ export function CommunitySection() {
   ];
 
   return (
-    <section className="bg-[#F8EAF1] px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="community-heading">
+    <section className="bg-accent px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="community-heading">
       <div className="mx-auto max-w-6xl text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#4B164C]">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-card text-primary-dark">
           <Globe2 className="h-5 w-5" aria-hidden="true" />
         </div>
         <h2
           id="community-heading"
-          className="mt-5 font-serif text-3xl font-semibold text-[#271624] sm:text-4xl"
+          className="mt-5 font-serif text-3xl font-semibold text-foreground sm:text-4xl"
         >
           Made for communities that cross borders
         </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[#725E6D]">
+        <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
           CupidMatch is built for Indian and Sri Lankan communities—with Tamil, Sinhala and English
           preferences—whether you live locally or across the UK and the wider diaspora.
         </p>
@@ -523,13 +523,13 @@ export function CommunitySection() {
           {chips.map((chip) => (
             <li
               key={chip}
-              className="rounded-full border border-[#4B164C]/15 bg-white px-3.5 py-1.5 text-sm text-[#4B164C]"
+              className="rounded-full border border-primary-dark/15 bg-card px-3.5 py-1.5 text-sm text-primary-dark"
             >
               {chip}
             </li>
           ))}
         </ul>
-        <p className="mx-auto mt-5 max-w-xl text-xs leading-5 text-[#725E6D]">
+        <p className="mx-auto mt-5 max-w-xl text-xs leading-5 text-muted-foreground">
           Location labels reflect communities we design for, not claims about current member
           activity in each city.
         </p>
@@ -546,12 +546,12 @@ export function DiscoveryPreview() { const t=useHomeCopy();
     { name: "Vishal, 29", location: "London, UK", image: "/images/profiles/vishal.jpg?v=1", position: "center" },
   ];
   return (
-    <section className="overflow-hidden bg-[#FFFDFB] px-4 pb-14 pt-10 sm:px-6 sm:py-24" aria-labelledby="discovery-heading">
+    <section className="overflow-hidden bg-background px-4 pb-14 pt-10 sm:px-6 sm:py-24" aria-labelledby="discovery-heading">
       <div className="mx-auto max-w-4xl text-center">
         <ScrollReveal>
-          <p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#A078B0]">{t.discovery}</p>
-          <h2 id="discovery-heading" className="mx-auto mt-3 max-w-sm font-serif text-[2.15rem] font-semibold leading-[1.05] text-[#2A1845] sm:max-w-xl sm:text-5xl">Discover<br/><span className="text-[#C026D3]">Compatible Matches</span></h2>
-          <p className="mx-auto mt-4 max-w-sm text-sm leading-6 text-[#6B5A78]">Meet people who share your values, culture and life goals.</p>
+          <p className="text-[10px] font-bold uppercase tracking-[.28em] text-gold-foreground">{t.discovery}</p>
+          <h2 id="discovery-heading" className="mx-auto mt-3 max-w-sm font-serif text-[2.15rem] font-semibold leading-[1.05] text-primary-dark sm:max-w-xl sm:text-5xl">Discover<br/><span className="text-primary">Compatible Matches</span></h2>
+          <p className="mx-auto mt-4 max-w-sm text-sm leading-6 text-muted-foreground">Meet people who share your values, culture and life goals.</p>
         </ScrollReveal>
 
         <div className="relative mx-auto mt-8 h-[480px] max-w-[420px] sm:max-w-[520px]">
@@ -564,12 +564,12 @@ export function DiscoveryPreview() { const t=useHomeCopy();
               "left-1/2 bottom-0 z-10 -translate-x-1/2 rotate-[2deg]",
             ][index];
             return <ScrollReveal key={profile.name} delay={index*100} distance={42} className={`absolute ${position}`}>
-              <article className={`overflow-hidden rounded-[2rem] border-[5px] border-white bg-white shadow-[0_22px_55px_rgba(76,29,149,.16)] ${featured?"w-[220px]":"w-[170px] scale-[.92] opacity-90"}`}>
+              <article className={`overflow-hidden rounded-[2rem] border-[5px] border-white bg-card shadow-[0_22px_55px_hsl(var(--primary)/.16)] ${featured?"w-[220px]":"w-[170px] scale-[.92] opacity-90"}`}>
                 <div className={`relative ${featured?"h-[280px]":"h-[220px]"}`}><Image src={profile.image} alt={profile.name} fill sizes="240px" className="object-cover object-[center_15%]"/></div>
                 <div className="relative px-4 pb-4 pt-3 text-left">
-                  {featured && <span className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white/95 px-3 py-1 text-[11px] font-bold text-[#C026D3] shadow-md">92% Match</span>}
-                  <h3 className="font-serif text-lg font-semibold text-[#2A1845]">{profile.name}</h3>
-                  <p className="mt-0.5 text-xs text-[#6B5A78]">{profile.location}</p>
+                  {featured && <span className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white/95 px-3 py-1 text-[11px] font-bold text-primary shadow-md">92% Match</span>}
+                  <h3 className="font-serif text-lg font-semibold text-primary-dark">{profile.name}</h3>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{profile.location}</p>
                 </div>
               </article>
             </ScrollReveal>
@@ -577,11 +577,11 @@ export function DiscoveryPreview() { const t=useHomeCopy();
         </div>
 
         <div className="mx-auto -mt-2 flex max-w-[260px] items-center justify-between">
-          <button aria-label="Previous profile" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E9D5FF] bg-white text-[#7C3AED] shadow-sm">‹</button>
-          <div className="flex gap-1.5"><span className="h-1.5 w-5 rounded-full bg-[#7C3AED]"/><span className="h-1.5 w-1.5 rounded-full bg-[#DDD0E8]"/><span className="h-1.5 w-1.5 rounded-full bg-[#DDD0E8]"/><span className="h-1.5 w-1.5 rounded-full bg-[#DDD0E8]"/></div>
-          <button aria-label="Next profile" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E9D5FF] bg-white text-[#7C3AED] shadow-sm">›</button>
+          <button aria-label="Previous profile" className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-primary shadow-sm">‹</button>
+          <div className="flex gap-1.5"><span className="h-1.5 w-5 rounded-full bg-primary"/><span className="h-1.5 w-1.5 rounded-full bg-border"/><span className="h-1.5 w-1.5 rounded-full bg-border"/><span className="h-1.5 w-1.5 rounded-full bg-border"/></div>
+          <button aria-label="Next profile" className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-primary shadow-sm">›</button>
         </div>
-        <p className="mx-auto mt-5 max-w-sm text-[11px] leading-5 text-[#8A7893]">{t.sampleNote}</p>
+        <p className="mx-auto mt-5 max-w-sm text-[11px] leading-5 text-muted-foreground">{t.sampleNote}</p>
       </div>
     </section>
   );
@@ -694,18 +694,18 @@ export function FeaturesOverview() {
   ];
 
   return (
-    <section className="bg-[#FBF5F1] px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="features-heading">
+    <section className="bg-background px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="features-heading">
       <div className="mx-auto max-w-6xl">
-        <h2 id="features-heading" className="font-serif text-3xl font-semibold text-[#271624] sm:text-4xl">
+        <h2 id="features-heading" className="font-serif text-3xl font-semibold text-foreground sm:text-4xl">
           Everything you need to begin thoughtfully
         </h2>
         <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {features.map((feature) => (
             <li
               key={feature.label}
-              className="flex items-center gap-3 rounded-2xl border border-[#EADFD6] bg-white px-4 py-4 text-sm font-medium text-[#271624]"
+              className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-4 text-sm font-medium text-foreground"
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F8EAF1] text-[#4B164C]">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-primary-dark">
                 <feature.icon className="h-4 w-4" aria-hidden="true" />
               </span>
               {feature.label}
@@ -808,7 +808,7 @@ export function FaqSection() { const t=useHomeCopy();
 export function FinalCta() { const t=useHomeCopy();
   return (
     <section className="px-4 pb-20 sm:px-6 sm:pb-24" aria-labelledby="cta-heading">
-      <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary to-primary/90 px-6 py-14 text-center text-primary-foreground shadow-xl sm:px-12 sm:py-16">
+      <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary to-primary/90 px-6 py-14 text-center text-primary-foreground shadow-elevated sm:px-12 sm:py-16">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-card/20 text-card">
           <Heart className="h-5 w-5 fill-current" aria-hidden="true" />
         </div>

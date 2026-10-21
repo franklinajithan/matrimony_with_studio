@@ -116,7 +116,7 @@ export default function PrivacyPage() {
         title="Privacy"
         description="Choose how visible you are in Discover and who can see your photos."
       />
-      <Card className="rounded-2xl border-[#eadde7] shadow-sm">
+      <Card className="rounded-2xl border-border shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg">Profile visibility</CardTitle>
           <CardDescription>
@@ -154,7 +154,7 @@ export default function PrivacyPage() {
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-[#eadde7] shadow-sm">
+      <Card className="rounded-2xl border-border shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg">Photo visibility</CardTitle>
           <CardDescription>Choose who can see your photos after you publish.</CardDescription>
@@ -180,7 +180,7 @@ export default function PrivacyPage() {
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-[#eadde7] shadow-sm">
+      <Card className="rounded-2xl border-border shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg">Safety</CardTitle>
         </CardHeader>

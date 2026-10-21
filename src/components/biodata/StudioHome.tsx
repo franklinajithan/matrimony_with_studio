@@ -209,7 +209,7 @@ export function StudioHome() {
   if (loading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#7027E8]" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -233,7 +233,7 @@ export function StudioHome() {
             </Button>
             <Button
               variant="outline"
-              className="rounded-xl border-[#dcc9d8] bg-white/80"
+              className="rounded-xl border-input bg-white/80"
               disabled={creating}
               onClick={() => setTemplatePromptOpen(true)}
             >
@@ -241,7 +241,7 @@ export function StudioHome() {
               Choose template
             </Button>
             {lastDraft ? (
-              <Button variant="outline" className="rounded-xl border-[#dcc9d8] bg-white/80" asChild>
+              <Button variant="outline" className="rounded-xl border-input bg-white/80" asChild>
                 <Link href={`/biodata/${lastDraft.id}/edit`}>Continue last draft</Link>
               </Button>
             ) : null}
@@ -251,10 +251,10 @@ export function StudioHome() {
         </div>
       </PageHero>
 
-      <Card className="w-full rounded-2xl border-[#eadde7] bg-white/80 shadow-sm">
+      <Card className="w-full rounded-2xl border-border bg-white/80 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base text-[#351532]">Privacy</CardTitle>
-          <CardDescription className="text-[#745d70]">
+          <CardTitle className="text-base text-foreground">Privacy</CardTitle>
+          <CardDescription className="text-muted-foreground">
             Studio drafts are private to your account. Before PDF, image, or print export you will
             review which contacts, photo, and sensitive fields to include.
           </CardDescription>
@@ -263,7 +263,7 @@ export function StudioHome() {
 
       {favTemplates.length > 0 ? (
         <section className="space-y-3">
-          <h2 className="text-sm font-medium text-[#7027E8]">Favourite templates</h2>
+          <h2 className="text-sm font-medium text-primary">Favourite templates</h2>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {favTemplates.map((t) =>
               t ? (
@@ -271,7 +271,7 @@ export function StudioHome() {
                   key={t.id}
                   variant="outline"
                   size="sm"
-                  className="shrink-0 border-[#7027E8]/25"
+                  className="shrink-0 border-primary/25"
                   disabled={creating}
                   onClick={() => void createWithTemplate(t.id)}
                 >
@@ -285,14 +285,14 @@ export function StudioHome() {
 
       {recentTemplates.length > 0 ? (
         <section className="space-y-3">
-          <h2 className="text-sm font-medium text-[#7027E8]">Recently used</h2>
+          <h2 className="text-sm font-medium text-primary">Recently used</h2>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {recentTemplates.map((t) =>
               t ? (
                 <Badge
                   key={t.id}
                   variant="outline"
-                  className="cursor-pointer border-[#FF6F72]/40 text-[#1a1a1a]"
+                  className="cursor-pointer border-gold/40 text-foreground"
                   onClick={() => void createWithTemplate(t.id)}
                 >
                   {t.name}
@@ -310,14 +310,14 @@ export function StudioHome() {
         </div>
 
         {docs.length === 0 ? (
-          <Card className="border-dashed border-[#7027E8]/25 bg-[#FBF8F4]">
+          <Card className="border-dashed border-primary/25 bg-background">
             <CardContent className="flex flex-col items-start gap-3 py-10">
               <p className="text-sm text-muted-foreground">
                 No biodata yet. New members can create a draft from their profile in one tap —
                 start with Violet Connection or pick another look from the gallery.
               </p>
               <Button
-                className="bg-[#7027E8] hover:bg-[#5a1ec0]"
+                className="bg-primary hover:bg-primary-dark"
                 disabled={creating}
                 onClick={() => void createWithTemplate(DEFAULT_TEMPLATE)}
               >
@@ -332,7 +332,7 @@ export function StudioHome() {
               return (
                 <li
                   key={doc.id}
-                  className="flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#eadde7] bg-white px-4 py-3 shadow-sm"
+                  className="flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-medium">{doc.title}</p>
@@ -344,7 +344,7 @@ export function StudioHome() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Button size="sm" className="bg-[#7027E8] hover:bg-[#5a1ec0]" asChild>
+                    <Button size="sm" className="bg-primary hover:bg-primary-dark" asChild>
                       <Link href={`/biodata/${doc.id}/edit`}>
                         <Pencil className="mr-1 h-3.5 w-3.5" />
                         Edit
@@ -368,7 +368,7 @@ export function StudioHome() {
                           Duplicate
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          className="text-[#FF6F72]"
+                          className="text-destructive"
                           onClick={() => setDeleteId(doc.id)}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
@@ -385,7 +385,7 @@ export function StudioHome() {
       </section>
 
       <Dialog open={templatePromptOpen} onOpenChange={setTemplatePromptOpen}>
-        <DialogContent className="bg-[#FBF8F4]">
+        <DialogContent className="bg-background">
           <DialogHeader>
             <DialogTitle>Choose a starting template</DialogTitle>
             <DialogDescription>
@@ -414,7 +414,7 @@ export function StudioHome() {
       </Dialog>
 
       <Dialog open={Boolean(deleteId)} onOpenChange={(o) => !o && setDeleteId(null)}>
-        <DialogContent className="bg-[#FBF8F4]">
+        <DialogContent className="bg-background">
           <DialogHeader>
             <DialogTitle>Delete biodata?</DialogTitle>
             <DialogDescription>This cannot be undone.</DialogDescription>
@@ -424,7 +424,7 @@ export function StudioHome() {
               Cancel
             </Button>
             <Button
-              className="bg-[#FF6F72] text-white hover:bg-[#e85f62]"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => void confirmDelete()}
             >
               Delete

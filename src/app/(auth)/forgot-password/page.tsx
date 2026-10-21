@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <Card className="w-full max-w-md shadow-2xl">
+    <Card className="w-full max-w-md shadow-elevated">
       <CardHeader className="text-center">
         <CardTitle className="font-headline text-3xl text-primary">Reset Password</CardTitle>
         <CardDescription>

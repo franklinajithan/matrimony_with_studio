@@ -36,7 +36,7 @@ export function MainChrome({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen flex-col">
       <div className="fixed bottom-4 right-4 z-[70] lg:hidden">
         <DropdownMenu>
-          <DropdownMenuTrigger asChild><Button size="icon" className="h-12 w-12 rounded-full shadow-lg" aria-label="Select language"><Globe className="h-5 w-5" /></Button></DropdownMenuTrigger>
+          <DropdownMenuTrigger asChild><Button size="icon" className="h-12 w-12 rounded-full shadow-elevated" aria-label="Select language"><Globe className="h-5 w-5" /></Button></DropdownMenuTrigger>
           <DropdownMenuContent align="end">{(Object.entries(LANGUAGES) as [LanguageCode,string][]).map(([code,name])=><DropdownMenuItem key={code} onClick={()=>setLanguage(code)} className={language===code?"font-semibold text-primary":""}>{name}</DropdownMenuItem>)}</DropdownMenuContent>
         </DropdownMenu>
       </div>

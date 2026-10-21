@@ -2,7 +2,7 @@ import Link from "next/link";
 export default function Page() {
   return (
     <article className="mx-auto max-w-3xl space-y-5 p-5 pb-28 sm:p-8">
-      <h1 className="font-headline text-3xl text-purple-950">
+      <h1 className="font-headline text-3xl text-primary-dark">
         Horoscope information & your choices
       </h1>
       <p>
@@ -47,7 +47,7 @@ export default function Page() {
         completed.
       </p>
       <Link
-        className="inline-block text-purple-800 underline"
+        className="inline-block text-primary underline"
         href="/dashboard/horoscope"
       >
         Back to My Horoscope

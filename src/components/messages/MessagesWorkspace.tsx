@@ -615,7 +615,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
               ) : (
                 <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
                   <div className="max-w-md px-8 py-10">
-                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/20">
+                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-dark shadow-elevated shadow-violet-500/20">
                       <MessageCircle className="h-10 w-10 text-white" />
                     </div>
                     <h2 className="mt-5 text-2xl font-bold tracking-tight">Your conversations</h2>
@@ -682,7 +682,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                 </div>
               </header>
 
-              <div className="relative flex-1 overflow-y-auto bg-gradient-to-b from-background via-background to-violet-50/30 px-3 py-4 sm:px-5 lg:px-7">
+              <div className="relative flex-1 overflow-y-auto bg-gradient-to-b from-background via-background to-accent/30 px-3 py-4 sm:px-5 lg:px-7">
                 {isLoadingMessages ? (
                   <div className="flex h-full items-center justify-center">
                     <Loader2 className="h-7 w-7 animate-spin text-primary" />
@@ -738,8 +738,8 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                               className={cn(
                                 "relative max-w-[82%] rounded-[20px] px-3.5 py-2 text-[15px] leading-5 sm:max-w-[68%] lg:max-w-[62%]",
                                 mine
-                                  ? "bg-gradient-to-br from-violet-600 to-fuchsia-500 text-white"
-                                  : "bg-[#f0f2f5] text-[#050505]",
+                                  ? "bg-primary text-white"
+                                  : "bg-accent text-foreground",
                                 mine && endsGroup && "rounded-br-md",
                                 !mine && endsGroup && "rounded-bl-md",
                                 message.failed && "opacity-70 ring-1 ring-destructive/40"

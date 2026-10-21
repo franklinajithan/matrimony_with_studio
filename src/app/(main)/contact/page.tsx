@@ -18,20 +18,20 @@ export default function ContactPage() {
 
   return (
     <div className="space-y-12 py-8">
-      <section className="text-center py-12 bg-gradient-to-br from-rose-50 to-peach-100 rounded-xl shadow-lg">
+      <section className="text-center py-12 bg-gradient-to-br from-accent to-peach-100 rounded-xl shadow-elevated">
         <h1 className="font-headline text-5xl font-bold text-primary mb-6">
           Get In Touch
         </h1>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-          We're here to help! Whether you have a question, feedback, or need support, please don't hesitate to reach out.
+          We&apos;re here to help! Whether you have a question, feedback, or need support, please don&apos;t hesitate to reach out.
         </p>
       </section>
 
       <section className="grid md:grid-cols-2 gap-12 items-start">
-        <Card className="shadow-lg">
+        <Card className="shadow-elevated">
           <CardHeader>
             <CardTitle className="font-headline text-2xl">Send Us a Message</CardTitle>
-            <CardDescription>Fill out the form below and we'll respond as soon as possible.</CardDescription>
+            <CardDescription>Fill out the form below and we&apos;ll respond as soon as possible.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -59,7 +59,7 @@ export default function ContactPage() {
         </Card>
 
         <div className="space-y-8">
-          <Card className="shadow-lg">
+          <Card className="shadow-elevated">
             <CardHeader>
               <CardTitle className="font-headline text-2xl">Contact Information</CardTitle>
             </CardHeader>
@@ -95,7 +95,7 @@ export default function ContactPage() {
               </div>
             </CardContent>
           </Card>
-          <div className="rounded-lg overflow-hidden shadow-lg">
+          <div className="rounded-lg overflow-hidden shadow-elevated">
             <Image 
                 src="https://placehold.co/600x400.png?text=Map+to+Our+Office" 
                 alt="Map placeholder showing office location"

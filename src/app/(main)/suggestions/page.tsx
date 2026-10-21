@@ -17,7 +17,7 @@ export default function SuggestionsPage() {
         description="Let our AI help you find compatible matches based on your profile and preferences."
       />
 
-      <Card className="rounded-2xl border-[#eadde7] shadow-sm">
+      <Card className="rounded-2xl border-border shadow-sm">
         <CardHeader>
           <CardTitle className="font-headline text-2xl">Get your suggestions</CardTitle>
           <CardDescription>

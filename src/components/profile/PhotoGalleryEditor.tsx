@@ -153,7 +153,7 @@ export function PhotoGalleryEditor({
                   onCheckedChange={(checked) =>
                     updatePhoto(photo.id, { grayscale: checked === true })
                   }
-                  className="border-white data-[state=checked]:bg-white data-[state=checked]:text-black"
+                  className="border-white data-[state=checked]:bg-card data-[state=checked]:text-black"
                 />
                 <Label htmlFor={`bw-${photo.id}`} className="cursor-pointer text-xs text-white">
                   Black &amp; white

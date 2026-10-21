@@ -333,7 +333,7 @@ export function SuggestionForm() {
         <div className="mt-12 space-y-6">
           <h2 className="font-headline text-3xl text-center text-primary">AI Match Suggestions</h2>
           {suggestions.map((suggestion, index) => (
-            <Card key={index} className="shadow-lg">
+            <Card key={index} className="shadow-elevated">
               <CardHeader>
                 <CardTitle className="font-headline text-xl">Suggested Match: {suggestion.userId}</CardTitle>
                 <CardDescription>Compatibility Score: <strong className="text-primary">{suggestion.compatibilityScore}/100</strong></CardDescription>

@@ -174,7 +174,7 @@ export function ShareProfileButton({
         type="button"
         variant="outline"
         size={compact ? "sm" : "default"}
-        className={cn("rounded-xl border-[#dcc9d8]", className)}
+        className={cn("rounded-xl border-input", className)}
         onClick={() => void openDialog()}
       >
         <Share2 className={cn("h-4 w-4", compact ? "mr-1" : "mr-2")} />
@@ -200,9 +200,9 @@ export function ShareProfileButton({
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="rounded-xl border border-[#eadce5] bg-[#fffaf6] p-3">
-                <p className="break-all text-xs text-[#4a3a48]">{shareUrl}</p>
-                <p className="mt-2 text-[11px] text-[#9b668f]">
+              <div className="rounded-xl border border-border bg-background p-3">
+                <p className="break-all text-xs text-muted-foreground">{shareUrl}</p>
+                <p className="mt-2 text-[11px] text-gold-foreground">
                   Expires{" "}
                   {new Date(created.expiresAt).toLocaleString(undefined, {
                     dateStyle: "medium",

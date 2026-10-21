@@ -382,7 +382,7 @@ export function OnboardingWizard() {
               "inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium",
               saveState === "error"
                 ? "bg-destructive/10 text-destructive"
-                : "bg-white/80 text-[#713c78] border border-[#eadce5]"
+                : "bg-white/80 text-gold-foreground border border-border"
             )}
             aria-live="polite"
           >
@@ -393,7 +393,7 @@ export function OnboardingWizard() {
           </span>
         }
       >
-        <Progress value={progressValue} className="mt-4 h-2.5 bg-[#f0e7ed]" />
+        <Progress value={progressValue} className="mt-4 h-2.5 bg-accent" />
       </PageHero>
 
       {isPublished && (
@@ -428,7 +428,7 @@ export function OnboardingWizard() {
         </Alert>
       )}
 
-      <section className="space-y-6 rounded-2xl border border-[#eadde7] bg-white p-4 shadow-sm sm:p-8">
+      <section className="space-y-6 rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-8">
           {step === 0 && (
             <div className="space-y-5">
               <ChoiceGroup

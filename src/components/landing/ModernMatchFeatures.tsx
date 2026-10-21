@@ -79,30 +79,30 @@ export function ModernMatchFeatures() {
   const copy = localized[language];
   const translatedFeatures = featureTranslations[language];
   return (
-    <section id="features" aria-labelledby="features-heading" className="relative overflow-hidden bg-[#FAF8FC] px-5 py-16 sm:py-20 lg:py-28">
-      <div aria-hidden="true" className="pointer-events-none absolute -right-40 top-0 h-96 w-96 rounded-full bg-purple-200/30 blur-3xl" />
+    <section id="features" aria-labelledby="features-heading" className="relative overflow-hidden bg-background px-5 py-16 sm:py-20 lg:py-28">
+      <div aria-hidden="true" className="pointer-events-none absolute -right-40 top-0 h-96 w-96 rounded-full bg-accent/30 blur-3xl" />
       <div className="relative mx-auto max-w-7xl">
         <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/40 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[.15em] text-[#51217B]"><Sparkles className="h-4 w-4" /> {copy.eyebrow}</span>
-          <h2 id="features-heading" className="mt-6 font-serif text-4xl font-semibold leading-tight text-[#29133F] sm:text-5xl lg:text-6xl">{copy.title} <span className="text-[#7542A1]">{copy.accent}</span></h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[#665872] sm:text-lg">{copy.description}</p>
+          <span className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-card px-4 py-2 text-xs font-bold uppercase tracking-[.15em] text-primary-dark"><Sparkles className="h-4 w-4" /> {copy.eyebrow}</span>
+          <h2 id="features-heading" className="mt-6 font-serif text-4xl font-semibold leading-tight text-primary-dark sm:text-5xl lg:text-6xl">{copy.title} <span className="text-primary">{copy.accent}</span></h2>
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">{copy.description}</p>
         </div>
         <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {features.map(({ title, Icon, label, href }, index) => (
-            <article key={label} className="group flex min-w-0 flex-col rounded-[1.75rem] border border-[#EDE4F3] bg-white p-6 shadow-[0_12px_35px_rgba(41,19,63,.05)] transition-shadow hover:shadow-[0_18px_48px_rgba(41,19,63,.12)] sm:p-8">
+            <article key={label} className="group flex min-w-0 flex-col rounded-[1.75rem] border border-accent bg-card p-6 shadow-[0_12px_35px_rgba(41,19,63,.05)] transition-shadow hover:shadow-[0_18px_48px_rgba(41,19,63,.12)] sm:p-8">
               <div className="flex items-center justify-between">
-                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F3EBF9] text-[#51217B]"><Icon aria-hidden="true" className="h-7 w-7" /></span>
-                <span className="text-[10px] font-bold tracking-[.18em] text-[#9D7C40]">{label}</span>
+                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-primary-dark"><Icon aria-hidden="true" className="h-7 w-7" /></span>
+                <span className="text-[10px] font-bold tracking-[.18em] text-gold-foreground">{label}</span>
               </div>
-              <h3 className="mt-7 font-serif text-2xl font-semibold text-[#29133F]">{translatedFeatures[index][0]}</h3>
-              <p className="mt-3 flex-1 text-sm leading-7 text-[#665872]">{translatedFeatures[index][1]}</p>
-              <Link href={href} className="mt-7 inline-flex w-fit items-center gap-2 rounded-lg py-2 text-sm font-semibold text-[#51217B] underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#51217B]">{copy.explore} <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>
+              <h3 className="mt-7 font-serif text-2xl font-semibold text-primary-dark">{translatedFeatures[index][0]}</h3>
+              <p className="mt-3 flex-1 text-sm leading-7 text-muted-foreground">{translatedFeatures[index][1]}</p>
+              <Link href={href} className="mt-7 inline-flex w-fit items-center gap-2 rounded-lg py-2 text-sm font-semibold text-primary-dark underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-dark">{copy.explore} <ArrowRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>
             </article>
           ))}
         </div>
-        <div className="mt-12 flex flex-col items-center justify-between gap-6 rounded-[1.75rem] bg-[#29133F] px-6 py-8 text-center text-white sm:px-10 md:flex-row md:text-left">
-          <div className="flex items-start gap-4"><LockKeyhole aria-hidden="true" className="mt-1 h-7 w-7 shrink-0 text-[#D4AF37]" /><div><h3 className="font-serif text-2xl font-semibold">{copy.privacy}</h3><p className="mt-2 max-w-xl text-sm leading-6 text-white/80">{copy.privacyBody}</p></div></div>
-          <Link href="/signup" className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-[#D4AF37] px-7 py-3 text-sm font-bold text-[#29133F] transition hover:bg-[#E8C45A] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">{copy.join} <ArrowRight aria-hidden="true" className="h-4 w-4" /></Link>
+        <div className="mt-12 flex flex-col items-center justify-between gap-6 rounded-[1.75rem] bg-primary-dark px-6 py-8 text-center text-white sm:px-10 md:flex-row md:text-left">
+          <div className="flex items-start gap-4"><LockKeyhole aria-hidden="true" className="mt-1 h-7 w-7 shrink-0 text-gold-foreground" /><div><h3 className="font-serif text-2xl font-semibold">{copy.privacy}</h3><p className="mt-2 max-w-xl text-sm leading-6 text-white/80">{copy.privacyBody}</p></div></div>
+          <Link href="/signup" className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-gold px-7 py-3 text-sm font-bold text-primary-dark transition hover:bg-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">{copy.join} <ArrowRight aria-hidden="true" className="h-4 w-4" /></Link>
         </div>
       </div>
     </section>

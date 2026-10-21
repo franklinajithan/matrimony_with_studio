@@ -30,9 +30,9 @@ export function ConnectionPaths({
   }[variant];
 
   const strokeColor = {
-    default: '#7027E8', // Violet
-    subtle: '#6F6979', // Muted gray
-    vibrant: '#FF6F72', // Coral
+    default: 'hsl(var(--primary))', // Violet
+    subtle: 'hsl(var(--muted-foreground))', // Muted gray
+    vibrant: 'hsl(var(--gold))', // Coral
   }[variant];
 
   return (

@@ -34,7 +34,7 @@ export default function HoroscopeChart({
             {sign > 0 && (
               <>
                 <span className="text-muted-foreground">Sign {sign}</span>
-                <div className="break-words font-semibold text-purple-900">
+                <div className="break-words font-semibold text-primary-dark">
                   {data
                     .filter((p) => p.sign === sign)
                     .map(

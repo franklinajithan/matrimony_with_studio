@@ -26,7 +26,7 @@ export default async function HomePage() {
   if (user) redirect("/dashboard");
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#FBF8F4]">
+    <div className="flex min-h-screen flex-col bg-background">
       <Navbar />
       <main id="main-content" className="flex-grow homepage-card-flow">
         <PremiumOpeningStory />

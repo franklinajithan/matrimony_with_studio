@@ -768,8 +768,8 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center bg-[#FBF8F4]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#7027E8]" />
+      <div className="flex min-h-[50vh] items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -777,13 +777,13 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
   if (notFound || loadError) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <h1 className="text-xl font-semibold text-[#1a1a1a]">
+        <h1 className="text-xl font-semibold text-foreground">
           {notFound ? "Biodata not found" : "Could not load biodata"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {loadError || "This document may have been deleted or you may not have access."}
         </p>
-        <Button className="mt-6 bg-[#7027E8] hover:bg-[#5a1ec0]" onClick={() => router.push("/biodata")}>
+        <Button className="mt-6 bg-primary hover:bg-primary-dark" onClick={() => router.push("/biodata")}>
           Back to Studio
         </Button>
       </div>
@@ -800,7 +800,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
         <Input
           value={title}
           onChange={(e) => withHistory(() => setTitle(e.target.value))}
-          className="bg-white"
+          className="bg-card"
         />
       </div>
       <div className="space-y-2">
@@ -817,14 +817,14 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
             withHistory(() => setContent((c) => ({ ...c, introduction: e.target.value })))
           }
           rows={5}
-          className="bg-white"
+          className="bg-card"
         />
       </div>
 
       {sections.map((section, idx) => (
         <div
           key={section.id}
-          className="rounded-lg border border-[#7027E8]/15 bg-white/80 p-3 space-y-3"
+          className="rounded-lg border border-primary/15 bg-white/80 p-3 space-y-3"
         >
           <div className="flex items-start gap-2">
             <div className="flex-1 space-y-2">
@@ -869,7 +869,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
             </div>
           </div>
           {section.fields.map((field) => (
-            <div key={field.id} className="grid gap-2 rounded-md border border-[#7027E8]/10 p-2">
+            <div key={field.id} className="grid gap-2 rounded-md border border-primary/10 p-2">
               <div className="flex items-center gap-2">
                 <Input
                   value={field.label}
@@ -911,7 +911,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
       <div className="space-y-2">
         <Label>Template</Label>
         <Select value={templateId} onValueChange={changeTemplate}>
-          <SelectTrigger className="bg-white">
+          <SelectTrigger className="bg-card">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -997,7 +997,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
             withHistory(() => setDesign((d) => ({ ...d, photoPosition: v })))
           }
         >
-          <SelectTrigger className="bg-white">
+          <SelectTrigger className="bg-card">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -1017,7 +1017,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
             withHistory(() => setDesign((d) => ({ ...d, photoShape: v })))
           }
         >
-          <SelectTrigger className="bg-white">
+          <SelectTrigger className="bg-card">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -1036,7 +1036,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
             withHistory(() => setDesign((d) => ({ ...d, pageSize: v })))
           }
         >
-          <SelectTrigger className="bg-white">
+          <SelectTrigger className="bg-card">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -1070,7 +1070,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
           value={language}
           onValueChange={(v: BiodataLanguage) => withHistory(() => setLanguage(v))}
         >
-          <SelectTrigger className="bg-white">
+          <SelectTrigger className="bg-card">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -1106,7 +1106,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
   const actionBar = (
     <div
       className={cn(
-        "sticky z-30 flex flex-wrap items-center gap-2 border-t border-[#7027E8]/15 bg-[#FBF8F4]/95 px-3 py-2 backdrop-blur",
+        "sticky z-30 flex flex-wrap items-center gap-2 border-t border-primary/15 bg-background/95 px-3 py-2 backdrop-blur",
         "bottom-20 lg:bottom-0"
       )}
       style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
@@ -1114,9 +1114,9 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
       <Badge
         variant="outline"
         className={cn(
-          "border-[#7027E8]/30",
-          saveStatus === "Could not save" && "border-[#FF6F72] text-[#FF6F72]",
-          saveStatus === "Saved" && "text-[#7027E8]"
+          "border-primary/30",
+          saveStatus === "Could not save" && "border-destructive text-destructive",
+          saveStatus === "Saved" && "text-primary"
         )}
       >
         {saveStatus === "Saving" ? (
@@ -1158,7 +1158,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button type="button" size="sm" className="bg-[#7027E8] text-white hover:bg-[#5a1ec0]">
+          <Button type="button" size="sm" className="bg-primary text-white hover:bg-primary-dark">
             <Download className="mr-1 h-3.5 w-3.5" />
             Export
           </Button>
@@ -1181,7 +1181,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
   );
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#FBF8F4] text-[#1a1a1a]">
+    <div className="min-h-[calc(100vh-4rem)] bg-background text-foreground">
       {/* Off-screen full-size renderer for export/print (always mounted, not display:none) */}
       <div
         aria-hidden
@@ -1192,10 +1192,10 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
         </div>
       </div>
 
-      <div className="border-b border-[#7027E8]/10 px-4 py-3">
+      <div className="border-b border-primary/10 px-4 py-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-xs uppercase tracking-wide text-[#7027E8]">Biodata Studio</p>
+            <p className="text-xs uppercase tracking-wide text-primary">Biodata Studio</p>
             <h1 className="break-words text-lg font-semibold">{title || "Untitled biodata"}</h1>
           </div>
           <Button variant="ghost" size="sm" onClick={() => router.push("/biodata")}>
@@ -1206,15 +1206,15 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
 
       {/* Desktop */}
       <div className="hidden lg:grid lg:grid-cols-[240px_minmax(0,1fr)_240px] xl:grid-cols-[280px_minmax(0,1fr)_280px] lg:gap-0">
-        <ScrollArea className="h-[calc(100vh-9rem)] border-r border-[#7027E8]/10">
-          <h2 className="sticky top-0 z-10 bg-[#FBF8F4] px-3 py-2 text-sm font-medium text-[#7027E8]">
+        <ScrollArea className="h-[calc(100vh-9rem)] border-r border-primary/10">
+          <h2 className="sticky top-0 z-10 bg-background px-3 py-2 text-sm font-medium text-primary">
             Content
           </h2>
           {contentPanel}
         </ScrollArea>
-        <ScrollArea className="h-[calc(100vh-9rem)] bg-[#F3EEE8]/60">{preview}</ScrollArea>
-        <ScrollArea className="h-[calc(100vh-9rem)] border-l border-[#7027E8]/10">
-          <h2 className="sticky top-0 z-10 bg-[#FBF8F4] px-3 py-2 text-sm font-medium text-[#7027E8]">
+        <ScrollArea className="h-[calc(100vh-9rem)] bg-accent/60">{preview}</ScrollArea>
+        <ScrollArea className="h-[calc(100vh-9rem)] border-l border-primary/10">
+          <h2 className="sticky top-0 z-10 bg-background px-3 py-2 text-sm font-medium text-primary">
             Design
           </h2>
           {designPanel}
@@ -1225,7 +1225,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
       {/* Mobile */}
       <div className="lg:hidden">
         <Tabs value={mobileTab} onValueChange={setMobileTab} className="w-full">
-          <TabsList className="mx-3 mt-2 grid w-[calc(100%-1.5rem)] grid-cols-3 bg-white">
+          <TabsList className="mx-3 mt-2 grid w-[calc(100%-1.5rem)] grid-cols-3 bg-card">
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="design">Design</TabsTrigger>
             <TabsTrigger value="preview">Preview</TabsTrigger>
@@ -1254,7 +1254,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
       />
 
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
-        <DialogContent className="bg-[#FBF8F4]">
+        <DialogContent className="bg-background">
           <DialogHeader>
             <DialogTitle>Rename biodata</DialogTitle>
             <DialogDescription>Choose a clear title for your draft.</DialogDescription>
@@ -1264,7 +1264,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
             <Button variant="outline" onClick={() => setRenameOpen(false)}>
               Cancel
             </Button>
-            <Button className="bg-[#7027E8] hover:bg-[#5a1ec0]" onClick={() => void handleRename()}>
+            <Button className="bg-primary hover:bg-primary-dark" onClick={() => void handleRename()}>
               Save name
             </Button>
           </DialogFooter>
@@ -1272,7 +1272,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
       </Dialog>
 
       <Dialog open={shareOpen} onOpenChange={setShareOpen}>
-        <DialogContent className="bg-[#FBF8F4] sm:max-w-md">
+        <DialogContent className="bg-background sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Share link</DialogTitle>
             <DialogDescription>
@@ -1328,7 +1328,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
             </Button>
             {!shareUrl ? (
               <Button
-                className="bg-[#7027E8] hover:bg-[#5a1ec0]"
+                className="bg-primary hover:bg-primary-dark"
                 disabled={shareBusy}
                 onClick={() => void handleCreateShareLink()}
               >
@@ -1352,7 +1352,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
       </Dialog>
 
       <Dialog open={refreshOpen} onOpenChange={setRefreshOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto bg-[#FBF8F4] sm:max-w-lg">
+        <DialogContent className="max-h-[90vh] overflow-y-auto bg-background sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Refresh from profile</DialogTitle>
             <DialogDescription>
@@ -1363,7 +1363,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
             {profileDiffs.map((diff) => (
               <label
                 key={diff.key}
-                className="flex cursor-pointer gap-3 rounded-md border border-[#7027E8]/15 bg-white p-3"
+                className="flex cursor-pointer gap-3 rounded-md border border-primary/15 bg-card p-3"
               >
                 <Checkbox
                   checked={selectedDiffs.has(diff.key)}
@@ -1379,7 +1379,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
                 <div className="min-w-0 text-sm">
                   <p className="font-medium">{diff.label}</p>
                   <p className="truncate text-muted-foreground">Current: {diff.current}</p>
-                  <p className="truncate text-[#7027E8]">New: {diff.incoming}</p>
+                  <p className="truncate text-primary">New: {diff.incoming}</p>
                 </div>
               </label>
             ))}
@@ -1388,7 +1388,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
             <Button variant="outline" onClick={() => setRefreshOpen(false)}>
               Cancel
             </Button>
-            <Button className="bg-[#7027E8] hover:bg-[#5a1ec0]" onClick={applySelectedDiffs}>
+            <Button className="bg-primary hover:bg-primary-dark" onClick={applySelectedDiffs}>
               Apply selected
             </Button>
           </DialogFooter>
@@ -1396,7 +1396,7 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
       </Dialog>
 
       <Dialog open={aiOpen} onOpenChange={setAiOpen}>
-        <DialogContent className="bg-[#FBF8F4] sm:max-w-lg">
+        <DialogContent className="bg-background sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>AI assist — introduction</DialogTitle>
             <DialogDescription>
@@ -1432,14 +1432,14 @@ export function BiodataEditor({ documentId }: { documentId: string }) {
             </div>
           ) : null}
           {aiUnavailable ? (
-            <p className="text-sm text-[#FF6F72]">AI unavailable</p>
+            <p className="text-sm text-destructive">AI unavailable</p>
           ) : null}
           {aiProposed ? (
             <div className="space-y-2">
               <Label>Proposed text</Label>
-              <Textarea value={aiProposed} readOnly rows={6} className="bg-white" />
+              <Textarea value={aiProposed} readOnly rows={6} className="bg-card" />
               <Button
-                className="bg-[#7027E8] hover:bg-[#5a1ec0]"
+                className="bg-primary hover:bg-primary-dark"
                 onClick={() => {
                   withHistory(() => setContent((c) => ({ ...c, introduction: aiProposed })));
                   setAiOpen(false);

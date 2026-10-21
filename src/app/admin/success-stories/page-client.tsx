@@ -95,10 +95,10 @@ export default function AdminSuccessStoriesPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h1 className="text-3xl font-bold text-slate-700 flex items-center gap-2">
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
                 <BookHeart className="h-8 w-8 text-primary"/>Manage Success Stories
             </h1>
-            <p className="text-slate-600 mt-1">View submitted love stories. Moderation actions will be enabled after secure, audited server operations are implemented.</p>
+            <p className="text-muted-foreground mt-1">View submitted love stories. Moderation actions will be enabled after secure, audited server operations are implemented.</p>
         </div>
       </div>
       
@@ -145,7 +145,7 @@ export default function AdminSuccessStoriesPage() {
           </TableBody>
         </Table>
         {filteredStories.length === 0 && !isLoading && (
-          <p className="text-center text-slate-500 py-8">
+          <p className="text-center text-muted-foreground py-8">
             {stories.length > 0 && searchTerm ? `No stories found matching "${searchTerm}".` : "No success stories submitted yet."}
           </p>
         )}

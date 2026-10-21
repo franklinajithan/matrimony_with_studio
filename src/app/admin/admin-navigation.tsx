@@ -23,7 +23,7 @@ export function AdminNavigation() {
     {links.map(({ href, label, icon: Icon }) => {
       const active = href === "/admin" ? pathname === href : pathname.startsWith(href);
       return <Link key={href} href={href} aria-current={active ? "page" : undefined}
-        className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-semibold transition sm:text-sm ${active ? "bg-violet-700 text-white shadow-sm" : "text-slate-500 hover:bg-violet-50 hover:text-violet-700"}`}>
+        className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-semibold transition sm:text-sm ${active ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:bg-accent hover:text-primary"}`}>
         <Icon className="h-4 w-4" />{label}
       </Link>;
     })}

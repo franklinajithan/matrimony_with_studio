@@ -332,7 +332,7 @@ export function TemplateGallery() {
   if (loading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#7027E8]" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -344,7 +344,7 @@ export function TemplateGallery() {
         title="Templates"
         description="Browse all 20 looks. Favourites sync to your account. Suggestions use only the style, language, and content length you set — never inferred religion."
         actions={
-          <Button variant="outline" className="rounded-xl border-[#dcc9d8] bg-white/80" asChild>
+          <Button variant="outline" className="rounded-xl border-input bg-white/80" asChild>
             <Link href="/biodata">Back to Studio</Link>
           </Button>
         }
@@ -354,7 +354,7 @@ export function TemplateGallery() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            className="bg-white pl-9"
+            className="bg-card pl-9"
             placeholder="Search by name…"
             value={prefs.search}
             onChange={(e) => setPrefs((p) => ({ ...p, search: e.target.value }))}
@@ -366,7 +366,7 @@ export function TemplateGallery() {
             setPrefs((p) => ({ ...p, stylePref: v }))
           }
         >
-          <SelectTrigger className="w-full bg-white sm:w-48">
+          <SelectTrigger className="w-full bg-card sm:w-48">
             <SelectValue placeholder="Style preference" />
           </SelectTrigger>
           <SelectContent>
@@ -382,7 +382,7 @@ export function TemplateGallery() {
           value={prefs.language}
           onValueChange={(v: BiodataLanguage) => setPrefs((p) => ({ ...p, language: v }))}
         >
-          <SelectTrigger className="w-full bg-white sm:w-36">
+          <SelectTrigger className="w-full bg-card sm:w-36">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -402,8 +402,8 @@ export function TemplateGallery() {
             className={cn(
               "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
               prefs.filter === f.id
-                ? "border-[#7027E8] bg-[#7027E8] text-white"
-                : "border-[#7027E8]/25 bg-white text-[#1a1a1a] hover:bg-[#7027E8]/5"
+                ? "border-primary bg-primary text-white"
+                : "border-primary/25 bg-card text-foreground hover:bg-primary/5"
             )}
           >
             {f.label}
@@ -412,14 +412,14 @@ export function TemplateGallery() {
       </div>
 
       {recommendations.length > 0 && prefs.stylePref !== "any" ? (
-        <section className="space-y-2 rounded-lg border border-[#7027E8]/15 bg-white/70 p-4">
-          <h2 className="text-sm font-semibold text-[#7027E8]">Suggested for you</h2>
+        <section className="space-y-2 rounded-lg border border-primary/15 bg-white/70 p-4">
+          <h2 className="text-sm font-semibold text-primary">Suggested for you</h2>
           <ul className="space-y-2 text-sm">
             {recommendations.map(({ template, reasons }) => (
               <li key={template.id}>
                 <button
                   type="button"
-                  className="font-medium text-[#1a1a1a] underline-offset-2 hover:underline"
+                  className="font-medium text-foreground underline-offset-2 hover:underline"
                   onClick={() => openPreview(template, myContent ? "mine" : "sample")}
                 >
                   {template.name}
@@ -435,7 +435,7 @@ export function TemplateGallery() {
         <Badge variant="outline">{filtered.length} templates</Badge>
         {compareIds.length > 0 ? (
           <>
-            <Badge className="bg-[#FF6F72] hover:bg-[#FF6F72]">
+            <Badge className="bg-gold-soft text-gold-foreground hover:bg-gold-soft">
               Compare {compareIds.length}/3
             </Badge>
             <Button
@@ -498,12 +498,12 @@ export function TemplateGallery() {
 
       {creating ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
-          <Loader2 className="h-8 w-8 animate-spin text-[#7027E8]" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : null}
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-h-[95vh] max-w-3xl overflow-hidden bg-[#FBF8F4]">
+        <DialogContent className="max-h-[95vh] max-w-3xl overflow-hidden bg-background">
           <DialogHeader>
             <DialogTitle>{previewTemplate?.name}</DialogTitle>
             <DialogDescription>
@@ -526,7 +526,7 @@ export function TemplateGallery() {
             </div>
           </ScrollArea>
           <Button
-            className="bg-[#7027E8] hover:bg-[#5a1ec0]"
+            className="bg-primary hover:bg-primary-dark"
             disabled={!previewTemplate || creating}
             onClick={() => previewTemplate && void startWithTemplate(previewTemplate.id)}
           >
@@ -536,7 +536,7 @@ export function TemplateGallery() {
       </Dialog>
 
       <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
-        <DialogContent className="max-h-[95vh] max-w-6xl overflow-hidden bg-[#FBF8F4]">
+        <DialogContent className="max-h-[95vh] max-w-6xl overflow-hidden bg-background">
           <DialogHeader>
             <DialogTitle>Compare templates</DialogTitle>
             <DialogDescription>Side-by-side with sample data</DialogDescription>

@@ -4,56 +4,59 @@
 
 @layer base {
   :root {
-    /* CupidMatch Design Tokens — Light Mode */
-    --background: 40 33% 98%;
-    --foreground: 267 20% 10%;
-
-    --muted: 270 16% 97%;
-    /* Deliberately darker than the original token so small secondary copy meets AA more reliably. */
-    --muted-foreground: 285 12% 32%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 267 20% 10%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 267 20% 10%;
-
-    --border: 270 24% 92%;
-    --input: 270 24% 92%;
-
-    --primary: 263 84% 58%;
+    /* Royal Cupid: HSL channels support Tailwind opacity modifiers.
+       Gold is decorative; gold-foreground is the readable text variant. */
+    --royal-purple: 286.800 43.103% 22.745%; /* #482153 */
+    --dark-purple: 281.143 45.455% 15.098%; /* #2D1538 */
+    --gold: 39.252 48.416% 56.667%; /* #C6A15B */
+    --gold-foreground: 38.182 56.571% 34.314%; /* #896526 */
+    --ivory: 37.500 100.000% 98.431%; /* #FFFCF7 */
+    --lavender: 280.000 33.333% 94.706%; /* #F3EDF6 */
+    --ink: 279.070 46.237% 18.235%; /* #351944 */
+    --muted-ink: 286.364 10.891% 39.608%; /* #6B5A70 */
+    --gold-soft: 40.714 58.333% 90.588%; /* #F5ECD9 */
+    --gold-light: 40.328 57.009% 79.020%; /* #E8D4AB */
+    --brand-border: 285.882 25.373% 86.863%; /* #E2D5E6 */
+    --field-border: 281.667 18.182% 61.176%; /* #A38AAE */
+    --background: var(--ivory);
+    --foreground: var(--ink);
+    --muted: var(--lavender);
+    --muted-foreground: var(--muted-ink);
+    --popover: var(--ivory);
+    --popover-foreground: var(--ink);
+    --card: var(--ivory);
+    --card-foreground: var(--ink);
+    --border: var(--brand-border);
+    --input: var(--field-border);
+    --primary: var(--royal-purple);
+    --secondary: var(--lavender);
+    --secondary-foreground: var(--royal-purple);
+    --accent: var(--lavender);
+    --accent-foreground: var(--royal-purple);
+    --ring: var(--royal-purple);
+    --sidebar-background: var(--ivory);
+    --sidebar-foreground: var(--ink);
+    --sidebar-primary: var(--royal-purple);
+    --sidebar-accent: var(--lavender);
+    --sidebar-accent-foreground: var(--royal-purple);
+    --sidebar-border: var(--brand-border);
+    --sidebar-ring: var(--royal-purple);
+    --chart-1: var(--royal-purple);
+    --chart-2: var(--gold);
+    --chart-3: var(--lavender);
+    --chart-4: var(--muted-ink);
+    --chart-5: var(--dark-purple);
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 40 67% 49%;
-    --secondary-foreground: 0 0% 100%;
-
-    --accent: 262 100% 97%;
-    --accent-foreground: 263 84% 58%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    --ring: 263 84% 58%;
-    --radius: 0.5rem;
-
-    --chart-1: 265 81% 53%;
-    --chart-2: 359 100% 72%;
-    --chart-3: 40 33% 98%;
-    --chart-4: 285 7% 54%;
-    --chart-5: 270 24% 92%;
-
-    --sidebar-background: 40 33% 98%;
-    --sidebar-foreground: 267 20% 10%;
-    --sidebar-primary: 265 81% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 260 100% 96%;
-    --sidebar-accent-foreground: 265 81% 53%;
-    --sidebar-border: 270 24% 92%;
-    --sidebar-ring: 265 81% 53%;
+    --destructive: 0 72% 42%;
+    --destructive-foreground: 0 0% 100%;
+    --radius: 0.875rem;
+    --shadow-card: 0 8px 28px hsl(var(--royal-purple) / 0.06);
+    --shadow-elevated: 0 16px 48px hsl(var(--royal-purple) / 0.12);
   }
 
   .dark {
-    --background: 327 28% 8%;
+    --background: 281 45% 10%;
     --foreground: 40 40% 96%;
     --muted: 327 20% 16%;
     --muted-foreground: 28 20% 76%;
@@ -65,7 +68,7 @@
     --input: 327 16% 20%;
     --primary: 43 55% 63%;
     --primary-foreground: 327 28% 12%;
-    --secondary: 328 40% 40%;
+    --secondary: 285 28% 22%;
     --secondary-foreground: 0 0% 100%;
     --accent: 327 20% 18%;
     --accent-foreground: 40 40% 96%;
@@ -98,6 +101,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    accent-color: hsl(var(--primary));
     min-height: 100svh;
     overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;
@@ -108,6 +112,60 @@
   :where(a, button, input, select, textarea, [tabindex]):focus-visible {
     outline: 3px solid hsl(var(--ring));
     outline-offset: 3px;
+  }
+}
+
+@layer components {
+  /* Desktop allocates 58% to the portrait. The wider frame and gentle crop
+     enlarge the couple about 24% versus the original 50% / contain layout. */
+  .studio-hero {
+    @apply relative isolate grid min-w-0 items-center overflow-hidden bg-background px-5 pt-8;
+    gap: 1.5rem;
+  }
+  .studio-hero-copy { @apply relative z-10 min-w-0; }
+  .studio-hero-portrait {
+    position: relative;
+    width: calc(100% + 2.5rem);
+    margin-inline: -1.25rem;
+    aspect-ratio: 1.12;
+    overflow: hidden;
+  }
+  .studio-hero-image {
+    object-fit: cover;
+    object-position: 58% 12%;
+  }
+  .studio-hero-blend {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(to bottom, hsl(var(--background)), transparent 10%, transparent 90%, hsl(var(--background))),
+      linear-gradient(to right, hsl(var(--background)), transparent 8%, transparent 94%, hsl(var(--background)));
+  }
+  @media (min-width: 640px) and (max-width: 1023px) {
+    .studio-hero { padding-inline: 2rem; }
+    .studio-hero-portrait { width: 100%; margin-inline: 0; aspect-ratio: 1.5; }
+  }
+  @media (min-width: 1024px) {
+    .studio-hero {
+      grid-template-columns: minmax(0, 42fr) minmax(0, 58fr);
+      gap: 0;
+      min-height: min(800px, calc(100svh - 7rem));
+      padding: 2rem max(4vw, 3.5rem);
+    }
+    .studio-hero-copy { padding-block: 1rem; padding-right: 1.25rem; }
+    .studio-hero-portrait {
+      width: calc(100% + max(4vw, 3.5rem));
+      margin: 0;
+      aspect-ratio: 1.4;
+      align-self: center;
+    }
+    .studio-hero-image { object-position: 54% 12%; }
+    .studio-hero-blend {
+      background:
+        linear-gradient(to right, hsl(var(--background)), transparent 15%, transparent 96%, hsl(var(--background))),
+        linear-gradient(to bottom, hsl(var(--background)), transparent 8%, transparent 91%, hsl(var(--background)));
+    }
   }
 }
 

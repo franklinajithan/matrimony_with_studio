@@ -21,9 +21,9 @@ import {
 } from "@/lib/horoscope/schema";
 import HoroscopeChart from "./HoroscopeChart";
 const input =
-  "mt-2 w-full min-w-0 rounded-xl border border-purple-200 bg-background px-3 py-3 text-base text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500";
+  "mt-2 w-full min-w-0 rounded-xl border border-input bg-background px-3 py-3 text-base text-foreground focus:outline-none focus:ring-2 focus:ring-ring";
 const card =
-  "rounded-2xl border border-purple-100 bg-card p-4 shadow-sm sm:p-6";
+  "rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6";
 type Settings = {
   horoscope_enabled: boolean;
   horoscope_upload_enabled: boolean;
@@ -256,12 +256,12 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
     );
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-3 pb-28 pt-5 sm:px-6 sm:pt-8">
-      <header className="rounded-3xl border border-amber-200/70 bg-gradient-to-br from-purple-50 via-background to-amber-50 p-5 sm:p-9">
-        <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-purple-800">
+      <header className="rounded-3xl border border-amber-200/70 bg-gradient-to-br from-accent via-background to-amber-50 p-5 sm:p-9">
+        <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-primary">
           <Sparkles className="h-4 w-4" />
           CupidMatch · ஜாதகம்
         </p>
-        <h1 className="mt-3 font-headline text-3xl text-purple-950 sm:text-5xl">
+        <h1 className="mt-3 font-headline text-3xl text-primary-dark sm:text-5xl">
           {member ? "Member horoscope" : "My Horoscope"}
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
@@ -269,7 +269,7 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
           aid, not a scientific prediction or a guarantee of relationship
           success.
         </p>
-        <p className="mt-3 flex items-start gap-2 text-sm text-purple-900">
+        <p className="mt-3 flex items-start gap-2 text-sm text-primary-dark">
           <ShieldCheck className="h-5 w-5 shrink-0" />
           {member
             ? "Only fields this member permits are shown."
@@ -290,13 +290,13 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
       {message && (
         <p
           role="status"
-          className="rounded-xl bg-purple-50 p-4 text-purple-950"
+          className="rounded-xl bg-accent p-4 text-primary-dark"
         >
           {message}
         </p>
       )}
       {busy && (
-        <p role="status" aria-live="polite" className="text-purple-800">
+        <p role="status" aria-live="polite" className="text-primary">
           {busy}… Please keep this page open.
         </p>
       )}
@@ -381,7 +381,7 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
                   .map(([key, label]) => (
                     <div
                       key={key}
-                      className="min-w-0 rounded-xl bg-purple-50/50 p-3"
+                      className="min-w-0 rounded-xl bg-accent/50 p-3"
                     >
                       <dt className="text-xs font-semibold text-muted-foreground">
                         {label}
@@ -699,7 +699,7 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
                     <label key={key} className="flex items-start gap-3 text-sm">
                       <input
                         type="checkbox"
-                        className="mt-1 h-4 w-4 shrink-0 accent-purple-700"
+                        className="mt-1 h-4 w-4 shrink-0 accent-primary"
                         checked={shared.includes(key)}
                         onChange={(e) => {
                           setShared((prev) =>
@@ -717,7 +717,7 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
                 <label className="mt-6 flex items-start gap-3 text-sm">
                   <input
                     type="checkbox"
-                    className="mt-1 h-4 w-4 shrink-0 accent-purple-700"
+                    className="mt-1 h-4 w-4 shrink-0 accent-primary"
                     checked={compareConsent}
                     onChange={(e) => {
                       setCompareConsent(e.target.checked);
@@ -730,7 +730,7 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
                 <label className="mt-4 flex items-start gap-3 text-sm">
                   <input
                     type="checkbox"
-                    className="mt-1 h-4 w-4 shrink-0 accent-purple-700"
+                    className="mt-1 h-4 w-4 shrink-0 accent-primary"
                     checked={aiConsent}
                     onChange={(e) => {
                       setAiConsent(e.target.checked);
@@ -757,7 +757,7 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
                 <label className="flex items-start gap-3 text-sm">
                   <input
                     type="checkbox"
-                    className="mt-1 h-4 w-4 shrink-0 accent-purple-700"
+                    className="mt-1 h-4 w-4 shrink-0 accent-primary"
                     checked={reviewed}
                     onChange={(e) => setReviewed(e.target.checked)}
                     disabled={!!busy || !settings?.horoscope_enabled}
@@ -767,7 +767,7 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
                   this does not certify astrological accuracy.
                 </label>
                 <Button
-                  className="mt-4 w-full bg-purple-800 hover:bg-purple-900 sm:w-auto"
+                  className="mt-4 w-full bg-primary-dark hover:bg-primary-dark sm:w-auto"
                   disabled={!!busy || !reviewed || !settings?.horoscope_enabled}
                 >
                   <Save className="mr-2 h-4 w-4" />
@@ -815,7 +815,7 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
               <label className="mt-5 flex items-start gap-3 text-sm">
                 <input
                   type="checkbox"
-                  className="mt-1 h-4 w-4 shrink-0 accent-purple-700"
+                  className="mt-1 h-4 w-4 shrink-0 accent-primary"
                   checked={processingConsent}
                   onChange={(e) => setProcessingConsent(e.target.checked)}
                 />
@@ -908,7 +908,7 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
                       href={sourceUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-sm text-purple-800 underline"
+                      className="text-sm text-primary underline"
                     >
                       Open private source (link expires in 60 seconds)
                     </a>

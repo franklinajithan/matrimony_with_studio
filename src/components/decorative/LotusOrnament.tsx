@@ -11,7 +11,7 @@ export function LotusOrnament({
     <svg
       viewBox="0 0 220 240"
       className={cn(
-        "pointer-events-none absolute h-[240px] w-[220px] text-[#E6C7A4]",
+        "pointer-events-none absolute h-[240px] w-[220px] text-gold-foreground",
         side === "left" ? "-left-2 top-4 sm:left-6" : "-right-2 top-4 sm:right-6",
         className
       )}

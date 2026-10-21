@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { focusRing } from "@/components/landing/brand";
 
 const selectClassName =
-  "h-12 w-full rounded-xl border border-[#EADFD6] bg-[#FFFDF9] px-3 text-sm text-[#271624] outline-none transition hover:border-[#D6B56D] focus-visible:border-[#4B164C] focus-visible:ring-2 focus-visible:ring-[#4B164C]/30";
+  "h-12 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none transition hover:border-gold focus-visible:border-primary-dark focus-visible:ring-2 focus-visible:ring-primary-dark/30";
 
 export function MatchSearchPanel() {
   const router = useRouter();
@@ -23,17 +23,17 @@ export function MatchSearchPanel() {
 
   return (
     <section className="relative z-10 -mt-12 px-4 sm:-mt-14 sm:px-6 lg:-mt-16" aria-labelledby="search-heading">
-      <div className="mx-auto w-full max-w-6xl rounded-3xl border border-[#EADFD6] bg-white p-5 shadow-[0_20px_50px_rgba(48,18,42,0.12)] sm:p-7 lg:p-8">
+      <div className="mx-auto w-full max-w-6xl rounded-3xl border border-border bg-card p-5 shadow-[0_20px_50px_rgba(48,18,42,0.12)] sm:p-7 lg:p-8">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 id="search-heading" className="font-serif text-2xl font-semibold text-[#271624] sm:text-3xl">
+            <h2 id="search-heading" className="font-serif text-2xl font-semibold text-foreground sm:text-3xl">
               Start your search
             </h2>
-            <p className="mt-1 text-sm text-[#725E6D]">Tell us who you would like to meet.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Tell us who you would like to meet.</p>
           </div>
           <Link
             href="/login"
-            className={`text-sm font-medium text-[#4B164C] underline-offset-4 hover:underline ${focusRing} rounded`}
+            className={`text-sm font-medium text-primary-dark underline-offset-4 hover:underline ${focusRing} rounded`}
           >
             Already a member? Sign in
           </Link>
@@ -41,7 +41,7 @@ export function MatchSearchPanel() {
 
         <form onSubmit={handleSubmit} className="mt-5 grid gap-4 md:grid-cols-4 md:items-end lg:mt-6">
           <div>
-            <label htmlFor="looking-for" className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-[#725E6D]">
+            <label htmlFor="looking-for" className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               I&apos;m looking for
             </label>
             <select
@@ -58,7 +58,7 @@ export function MatchSearchPanel() {
           </div>
 
           <div>
-            <label htmlFor="age-range" className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-[#725E6D]">
+            <label htmlFor="age-range" className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Age
             </label>
             <select
@@ -76,7 +76,7 @@ export function MatchSearchPanel() {
           </div>
 
           <div>
-            <label htmlFor="community" className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-[#725E6D]">
+            <label htmlFor="community" className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Community
             </label>
             <select
@@ -96,15 +96,15 @@ export function MatchSearchPanel() {
 
           <Button
             type="submit"
-            className={`h-12 rounded-xl bg-[#4B164C] text-white hover:bg-[#742158] ${focusRing}`}
+            className={`h-12 rounded-xl bg-primary-dark text-white hover:bg-primary-dark ${focusRing}`}
           >
             Find matches
             <Compass className="ml-1 h-4 w-4" aria-hidden="true" />
           </Button>
         </form>
 
-        <p className="mt-4 flex items-start gap-2 text-sm text-[#725E6D] sm:mt-5">
-          <Shield className="mt-0.5 h-4 w-4 shrink-0 text-[#D6B56D]" aria-hidden="true" />
+        <p className="mt-4 flex items-start gap-2 text-sm text-muted-foreground sm:mt-5">
+          <Shield className="mt-0.5 h-4 w-4 shrink-0 text-gold-foreground" aria-hidden="true" />
           Joining is free. You remain in control of your profile and privacy.
         </p>
       </div>

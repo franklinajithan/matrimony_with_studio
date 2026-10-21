@@ -13,11 +13,11 @@ function CupidMark() {
   return (
     <span className="relative ml-2 inline-flex h-12 w-16 shrink-0 items-center justify-center sm:h-14 sm:w-20" aria-hidden="true">
       <svg viewBox="0 0 86 56" className="absolute inset-0 h-full w-full overflow-visible">
-        <path d="M6 43C23 25 39 27 51 31c11 4 18 1 28-12" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" className="text-fuchsia-400"/>
-        <path d="M69 12l11 7-12 5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="text-violet-500"/>
+        <path d="M6 43C23 25 39 27 51 31c11 4 18 1 28-12" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" className="text-gold-foreground"/>
+        <path d="M69 12l11 7-12 5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="text-primary"/>
       </svg>
-      <Heart className="relative h-7 w-7 -translate-y-1 fill-fuchsia-500 text-fuchsia-500 drop-shadow-[0_5px_12px_rgba(217,70,239,.25)] sm:h-8 sm:w-8" strokeWidth={1.5}/>
-      <Sparkles className="absolute right-0 top-0 h-4 w-4 text-violet-500 motion-safe:animate-pulse" strokeWidth={1.8}/>
+      <Heart className="relative h-7 w-7 -translate-y-1 fill-gold text-primary drop-shadow-[0_5px_12px_rgba(217,70,239,.25)] sm:h-8 sm:w-8" strokeWidth={1.5}/>
+      <Sparkles className="absolute right-0 top-0 h-4 w-4 text-primary motion-safe:animate-pulse" strokeWidth={1.8}/>
     </span>
   );
 }
@@ -71,31 +71,31 @@ export function LandingHero() {
   }, []);
   const highlights = [{ icon: Users, label: t.verified }, { icon: Shield, label: t.safe }, { icon: Heart, label: t.compatibility }];
   return (
-    <section ref={heroRef} className="relative min-h-[calc(100svh-4.25rem)] overflow-hidden bg-[#FBF8F4] pt-0 sm:pt-2">
+    <section ref={heroRef} className="relative min-h-[calc(100svh-4.25rem)] overflow-hidden bg-background pt-0 sm:pt-2">
       <div className="relative mx-auto grid max-w-[1240px] items-start gap-4 px-5 pb-0 sm:px-8 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] lg:items-stretch lg:gap-4 lg:px-10 lg:pb-10">
         <div className="relative z-10 flex max-w-xl flex-col pt-4 will-change-transform transition-[opacity,transform] duration-1000 ease-out lg:pt-1" style={{ opacity: (heroEntered ? 1 : 0) * (1 - scrollProgress * 0.72), transform: `translate3d(0,${heroEntered ? scrollProgress * -46 : 24}px,0) scale(${heroEntered ? 1-scrollProgress*0.045 : .98})` }}>
-          <p className="text-[11px] font-semibold uppercase leading-5 tracking-[0.26em] text-[#A078B0] sm:text-xs sm:leading-6">
+          <p className="text-[11px] font-semibold uppercase leading-5 tracking-[0.26em] text-gold-foreground sm:text-xs sm:leading-6">
             {t.eyebrow}
             <span className="block">{t.eyebrow2}</span>
           </p>
-          <h1 className="mt-3 font-serif text-[2.45rem] font-semibold leading-[1.08] tracking-tight text-[#2A1845] sm:text-5xl lg:text-[3.65rem] lg:leading-[1.05]">
+          <h1 className="mt-3 font-serif text-[2.45rem] font-semibold leading-[1.08] tracking-tight text-primary-dark sm:text-5xl lg:text-[3.65rem] lg:leading-[1.05]">
             {t.title}
-            <span className="mt-1 flex items-center gap-2 text-[#C026D3] sm:mt-1.5">
+            <span className="mt-1 flex items-center gap-2 text-primary sm:mt-1.5">
               {t.titleAccent}
               <span className="motion-safe:[animation:cupidMarkFloat_3.8s_ease-in-out_infinite]"><CupidMark /></span>
             </span>
           </h1>
-          <p className="mt-3 max-w-[30rem] text-[13px] leading-7 text-[#5C4A66] sm:text-lg sm:leading-8">
+          <p className="mt-3 max-w-[30rem] text-[13px] leading-7 text-muted-foreground sm:text-lg sm:leading-8">
             {t.description}
           </p>
 
           <ul className="mt-5 flex justify-between gap-3 sm:gap-10">
             {highlights.map((item) => (
               <li key={item.label} className="flex w-[4.75rem] flex-col items-center text-center sm:w-24">
-                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#F3E8FF] text-[#8B5CF6]">
+                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent text-primary">
                   <item.icon className="h-6 w-6 stroke-[1.6]" aria-hidden="true" />
                 </span>
-                <span className="mt-2.5 text-[11px] font-semibold leading-[1.25] text-[#4C3A5C] sm:text-xs">
+                <span className="mt-2.5 text-[11px] font-semibold leading-[1.25] text-muted-foreground sm:text-xs">
                   {item.label}
                 </span>
               </li>
@@ -105,7 +105,7 @@ export function LandingHero() {
           <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:items-center">
             <Button
               asChild
-              className="h-11 rounded-full bg-[#7C3AED] px-7 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(124,58,237,0.28)] hover:bg-[#6D28D9]"
+              className="h-11 rounded-full bg-primary px-7 text-sm font-semibold text-white shadow-[0_8px_20px_hsl(var(--primary)/0.28)] hover:bg-primary-dark"
             >
               <Link href="/signup">
                 {t.create}
@@ -115,19 +115,19 @@ export function LandingHero() {
             <Button
               asChild
               variant="outline"
-              className="h-11 rounded-full border-[#E4D4F5] bg-white px-7 text-sm font-semibold text-[#5B21B6] shadow-sm hover:bg-white hover:text-[#5B21B6]"
+              className="h-11 rounded-full border-border bg-card px-7 text-sm font-semibold text-primary shadow-sm hover:bg-card hover:text-primary"
             >
               <Link href="/discover">{t.explore}</Link>
             </Button>
           </div>
 
           <p
-            className="hidden pt-5 mt-10 font-script text-[1.85rem] leading-[1.15] text-[#D946EF] sm:mt-12 sm:text-[2.15rem] lg:mt-auto lg:mb-24"
+            className="hidden pt-5 mt-10 font-script text-[1.85rem] leading-[1.15] text-primary sm:mt-12 sm:text-[2.15rem] lg:mt-auto lg:mb-24"
             aria-hidden="true"
           >
             Good people
             <span className="block">Brighter futures</span>
-            <ScriptHeart className="mt-1 h-4 w-4 text-[#D946EF]" />
+            <ScriptHeart className="mt-1 h-4 w-4 text-primary" />
           </p>
         </div>
 
@@ -135,35 +135,35 @@ export function LandingHero() {
           <figure className="relative overflow-hidden rounded-[1.75rem] shadow-[0_22px_50px_rgba(74,32,110,0.18)] lg:rounded-[2rem] motion-safe:[animation:heroBreath_7s_ease-in-out_infinite]">
             <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
               <div className="cupid-orbit absolute inset-[5%] rounded-[2.4rem]">
-                <span className="cupid-flyer absolute left-0 top-1/2 flex h-12 w-12 items-center justify-center rounded-full border border-fuchsia-200 bg-white/90 shadow-[0_8px_24px_rgba(192,38,211,.28)]">
-                  <Heart className="h-6 w-6 fill-fuchsia-500 text-fuchsia-500" />
-                  <ArrowRight className="absolute -right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-violet-600" strokeWidth={2.4}/>
+                <span className="cupid-flyer absolute left-0 top-1/2 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-white/90 shadow-[0_8px_24px_rgba(192,38,211,.28)]">
+                  <Heart className="h-6 w-6 fill-gold text-primary" />
+                  <ArrowRight className="absolute -right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-primary" strokeWidth={2.4}/>
                 </span>
               </div>
               <div className="cupid-ribbon absolute left-[5%] right-[5%] top-[47%] h-[90px]">
                 <svg viewBox="0 0 700 90" className="h-full w-full overflow-visible">
                   <path d="M5 60 C120 5 220 84 340 42 S555 8 695 50" fill="none" stroke="rgba(255,255,255,.92)" strokeWidth="7" strokeLinecap="round"/>
-                  <path d="M5 60 C120 5 220 84 340 42 S555 8 695 50" fill="none" stroke="#d946ef" strokeWidth="3" strokeLinecap="round" strokeDasharray="10 12"/>
+                  <path d="M5 60 C120 5 220 84 340 42 S555 8 695 50" fill="none" stroke="hsl(var(--primary))" strokeWidth="3" strokeLinecap="round" strokeDasharray="10 12"/>
                 </svg>
               </div>
-              <Heart className="hero-particle hero-particle-a absolute left-[7%] top-[76%] h-6 w-6 fill-pink-400/65 text-pink-400/65" />
-              <Heart className="hero-particle hero-particle-b absolute left-[30%] top-[88%] h-4 w-4 fill-fuchsia-400/55 text-fuchsia-400/55" />
-              <Heart className="hero-particle hero-particle-c absolute right-[8%] top-[72%] h-7 w-7 fill-pink-300/60 text-pink-300/60" />
+              <Heart className="hero-particle hero-particle-a absolute left-[7%] top-[76%] h-6 w-6 fill-gold/65 text-gold-foreground/65" />
+              <Heart className="hero-particle hero-particle-b absolute left-[30%] top-[88%] h-4 w-4 fill-gold/55 text-gold-foreground/55" />
+              <Heart className="hero-particle hero-particle-c absolute right-[8%] top-[72%] h-7 w-7 fill-gold/60 text-gold-foreground/60" />
               <Sparkles className="hero-sparkle absolute right-[20%] top-[12%] h-7 w-7 text-white drop-shadow-[0_0_10px_rgba(255,255,255,.95)]" />
             </div>
-            <div className="pointer-events-none absolute -right-10 -top-12 z-20 h-32 w-32 rounded-full bg-fuchsia-300/20 blur-2xl motion-safe:animate-pulse" />
+            <div className="pointer-events-none absolute -right-10 -top-12 z-20 h-32 w-32 rounded-full bg-gold/20 blur-2xl motion-safe:animate-pulse" />
             <div className="pointer-events-none absolute left-[8%] top-[12%] z-20 h-2 w-2 rounded-full bg-white/90 shadow-[0_0_18px_5px_rgba(255,255,255,.7)] motion-safe:animate-pulse" />
             <div className="hidden pointer-events-none absolute left-[-8%] top-[48%] z-40 w-[116%] opacity-100">
               <svg viewBox="0 0 800 120" className="h-auto w-full overflow-visible">
                 <path d="M8 80 C150 12 250 104 390 54 S620 24 782 64" fill="none" stroke="rgba(217,70,239,.92)" strokeWidth="3.2" strokeLinecap="round" strokeDasharray="7 10" className="motion-safe:[animation:cupidDash_8s_linear_infinite]" />
                 <g className="motion-safe:[animation:cupidFly_8s_ease-in-out_infinite]">
                   <circle cx="10" cy="80" r="13" fill="rgba(255,255,255,.9)" />
-                  <path d="M4 79c4-7 10-3 10 2 0 5-10 10-10 10S-6 86-6 81c0-5 6-9 10-2Z" fill="#d946ef" transform="translate(6 -6) scale(.55)" />
-                  <path d="M1 80h23m-5-5 6 5-6 5" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M4 79c4-7 10-3 10 2 0 5-10 10-10 10S-6 86-6 81c0-5 6-9 10-2Z" fill="hsl(var(--primary))" transform="translate(6 -6) scale(.55)" />
+                  <path d="M1 80h23m-5-5 6 5-6 5" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </g>
               </svg>
             </div>
-            <div className="pointer-events-none absolute right-[14%] top-[20%] z-20 h-1.5 w-1.5 rounded-full bg-fuchsia-200 shadow-[0_0_16px_4px_rgba(244,114,182,.5)] motion-safe:animate-pulse" />
+            <div className="pointer-events-none absolute right-[14%] top-[20%] z-20 h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_16px_4px_rgba(244,114,182,.5)] motion-safe:animate-pulse" />
             <div className="relative h-[42svh] min-h-[330px] w-full sm:h-auto sm:aspect-[3/4] lg:aspect-auto lg:min-h-[700px] lg:h-[min(74vh,760px)]">
               <Image
                 src={HERO_IMAGE}

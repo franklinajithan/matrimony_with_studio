@@ -47,7 +47,7 @@ export default function PricingPage() {
 
     <div className="mt-12 grid gap-6 lg:grid-cols-3">{(Object.keys(PLANS) as PlanCode[]).map(code => {
       const plan=PLANS[code]; const Icon=icons[code]; const prices=MARKET_PRICES[market][code];
-      return <Card key={code} className={`relative flex flex-col overflow-hidden rounded-3xl ${plan.highlighted?'border-primary shadow-xl ring-1 ring-primary':'shadow-sm'}`}>
+      return <Card key={code} className={`relative flex flex-col overflow-hidden rounded-3xl ${plan.highlighted?'border-primary shadow-elevated ring-1 ring-primary':'shadow-sm'}`}>
         {plan.highlighted && <div className="bg-primary py-2 text-center text-xs font-bold uppercase tracking-[.18em] text-primary-foreground">{t.popular}</div>}
         <CardHeader className="space-y-4 p-7">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Icon className="h-5 w-5"/></div>

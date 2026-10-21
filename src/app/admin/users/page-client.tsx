@@ -111,9 +111,9 @@ export default function UserManagementPage() {
   return <div className="space-y-7 pb-12" data-testid="admin-member-management">
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-violet-700"><LayoutGrid className="h-4 w-4" /> MEMBER OPERATIONS</div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Member management</h1>
-        <p className="mt-2 max-w-2xl text-sm text-slate-500">Search, filter and review CupidMatch accounts in one place.</p>
+        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-primary"><LayoutGrid className="h-4 w-4" /> MEMBER OPERATIONS</div>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Member management</h1>
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Search, filter and review CupidMatch accounts in one place.</p>
       </div>
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" asChild><Link href="/admin/verifications"><ClipboardList className="mr-2 h-4 w-4" />Verification queue</Link></Button>
@@ -129,24 +129,24 @@ export default function UserManagementPage() {
         { label: "Unverified", count: counts.unverified, icon: ShieldAlert, target: "unverified" },
         { label: "Administrators", count: counts.admins, icon: UserCog, target: "admins" },
       ] as const).map(stat => <button key={stat.label} onClick={() => chooseFilter(stat.target)}
-        className="rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-violet-300 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-600">
-        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-700"><stat.icon className="h-5 w-5" /></div>
-        <p className="text-xs font-medium text-slate-500">{stat.label}</p>
-        <p className="mt-1 text-3xl font-bold text-slate-900">{loading ? "—" : stat.count.toLocaleString()}</p>
+        className="rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition hover:border-input hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-600">
+        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-primary"><stat.icon className="h-5 w-5" /></div>
+        <p className="text-xs font-medium text-muted-foreground">{stat.label}</p>
+        <p className="mt-1 text-3xl font-bold text-foreground">{loading ? "—" : stat.count.toLocaleString()}</p>
       </button>)}
     </div>
 
-    <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <section className="space-y-4 rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
         <div className="relative min-w-0 flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input aria-label="Search members" data-testid="admin-member-search" value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
-            placeholder="Search name, email or member ID" className="h-11 rounded-xl border-slate-200 pl-10" />
+            placeholder="Search name, email or member ID" className="h-11 rounded-xl border-border pl-10" />
         </div>
-        <label className="flex items-center gap-2 text-sm text-slate-600"><ArrowUpDown className="h-4 w-4" />Sort
+        <label className="flex items-center gap-2 text-sm text-muted-foreground"><ArrowUpDown className="h-4 w-4" />Sort
           <select aria-label="Sort members" value={sort} onChange={e => { setSort(e.target.value as Sort); setPage(1); }}
-            className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-slate-800">
+            className="h-11 rounded-xl border border-border bg-card px-3 text-foreground">
             <option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="name">Name A–Z</option>
           </select>
         </label>
@@ -154,31 +154,31 @@ export default function UserManagementPage() {
       <div className="flex flex-wrap gap-2" aria-label="Filter members">
         {filters.map(item => <button key={item.value} onClick={() => chooseFilter(item.value)}
           aria-pressed={filter === item.value}
-          className={`rounded-full border px-3 py-2 text-xs font-semibold transition sm:text-sm ${filter === item.value ? "border-violet-700 bg-violet-700 text-white" : "border-slate-200 bg-white text-slate-600 hover:border-violet-300"}`}>
+          className={`rounded-full border px-3 py-2 text-xs font-semibold transition sm:text-sm ${filter === item.value ? "border-primary bg-primary text-white" : "border-border bg-card text-muted-foreground hover:border-input"}`}>
           {item.label} <span className="ml-1 opacity-70">{counts[item.value]}</span>
         </button>)}
       </div>
-      <p className="text-xs text-slate-500">{loading ? "Loading members…" : `Showing ${filtered.length.toLocaleString()} of ${members.length.toLocaleString()} loaded members`}</p>
+      <p className="text-xs text-muted-foreground">{loading ? "Loading members…" : `Showing ${filtered.length.toLocaleString()} of ${members.length.toLocaleString()} loaded members`}</p>
     </section>
 
-    {loading ? <div className="rounded-2xl border bg-white p-12 text-center text-slate-500" role="status">Loading member directory…</div> :
-      visible.length === 0 ? <div className="rounded-2xl border bg-white p-12 text-center"><Users className="mx-auto mb-3 h-8 w-8 text-slate-400" /><h2 className="font-semibold">No matching members</h2><p className="mt-2 text-sm text-slate-500">Try another search or filter.</p><Button className="mt-4" variant="outline" onClick={() => { setSearch(""); chooseFilter("all"); }}>Clear filters</Button></div> :
+    {loading ? <div className="rounded-2xl border bg-card p-12 text-center text-muted-foreground" role="status">Loading member directory…</div> :
+      visible.length === 0 ? <div className="rounded-2xl border bg-card p-12 text-center"><Users className="mx-auto mb-3 h-8 w-8 text-muted-foreground" /><h2 className="font-semibold">No matching members</h2><p className="mt-2 text-sm text-muted-foreground">Try another search or filter.</p><Button className="mt-4" variant="outline" onClick={() => { setSearch(""); chooseFilter("all"); }}>Clear filters</Button></div> :
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" data-testid="admin-member-grid">
-        {visible.map(member => <article key={member.id} className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+        {visible.map(member => <article key={member.id} className="min-w-0 rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:shadow-md">
           <div className="flex items-start gap-3">
-            <Avatar className="h-14 w-14 border border-slate-100"><AvatarImage src={member.photoURL || undefined} alt="" /><AvatarFallback className="bg-violet-100 font-bold text-violet-700">{(member.displayName || member.email || "M").slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+            <Avatar className="h-14 w-14 border border-border"><AvatarImage src={member.photoURL || undefined} alt="" /><AvatarFallback className="bg-accent font-bold text-primary">{(member.displayName || member.email || "M").slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
             <div className="min-w-0 flex-1">
-              <h2 className="truncate font-bold text-slate-900" title={member.displayName}>{member.displayName || "Unnamed member"}</h2>
-              <p className="mt-1 truncate text-xs text-slate-500" title={member.email}>{member.email || "No email available"}</p>
-              <p className="mt-1 truncate font-mono text-[11px] text-slate-400" title={member.id}>ID: {member.id}</p>
+              <h2 className="truncate font-bold text-foreground" title={member.displayName}>{member.displayName || "Unnamed member"}</h2>
+              <p className="mt-1 truncate text-xs text-muted-foreground" title={member.email}>{member.email || "No email available"}</p>
+              <p className="mt-1 truncate font-mono text-[11px] text-muted-foreground" title={member.id}>ID: {member.id}</p>
             </div>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             <Badge variant="outline" className={member.isVerified ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}>{member.isVerified ? "Verified" : "Unverified"}</Badge>
-            <Badge variant="outline" className={member.isPublished ? "border-sky-200 bg-sky-50 text-sky-700" : "border-slate-200 text-slate-600"}>{member.isPublished ? "Published" : "Unpublished"}</Badge>
-            {member.isAdmin && <Badge className="bg-violet-700 text-white">Admin</Badge>}
+            <Badge variant="outline" className={member.isPublished ? "border-sky-200 bg-sky-50 text-sky-700" : "border-border text-muted-foreground"}>{member.isPublished ? "Published" : "Unpublished"}</Badge>
+            {member.isAdmin && <Badge className="bg-primary text-white">Admin</Badge>}
           </div>
-          <div className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-500">Joined: {memberDate(member.createdAt) ? new Date(memberDate(member.createdAt)).toLocaleDateString("en-GB") : "Not available"}</div>
+          <div className="mt-4 border-t border-border pt-3 text-xs text-muted-foreground">Joined: {memberDate(member.createdAt) ? new Date(memberDate(member.createdAt)).toLocaleDateString("en-GB") : "Not available"}</div>
           <div className="mt-4 flex gap-2">
             <Button className="flex-1 rounded-xl" asChild><Link href={`/admin/users/edit/${member.id}`}>Manage member</Link></Button>
             {!member.isAdmin && <Button variant="outline" className="rounded-xl" asChild><Link href={`/admin/subscriptions?memberId=${member.id}`}>Membership</Link></Button>}
@@ -189,9 +189,9 @@ export default function UserManagementPage() {
 
     {!loading && filtered.length > PAGE_SIZE && <div className="flex flex-wrap items-center justify-center gap-3">
       <Button variant="outline" disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)}><ChevronLeft className="mr-1 h-4 w-4" />Previous</Button>
-      <span className="text-sm text-slate-600">Page {currentPage} of {pages}</span>
+      <span className="text-sm text-muted-foreground">Page {currentPage} of {pages}</span>
       <Button variant="outline" disabled={currentPage >= pages} onClick={() => setPage(currentPage + 1)}>Next<ChevronRight className="ml-1 h-4 w-4" /></Button>
     </div>}
-    <p className="text-xs text-slate-500">Membership grants and extensions use the audited Subscription Control Centre. Directory counts reflect currently loaded profiles.</p>
+    <p className="text-xs text-muted-foreground">Membership grants and extensions use the audited Subscription Control Centre. Directory counts reflect currently loaded profiles.</p>
   </div>;
 }

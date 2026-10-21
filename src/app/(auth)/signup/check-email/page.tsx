@@ -62,7 +62,7 @@ function CheckEmailContent() {
         : "Resend confirmation email";
 
   return (
-    <Card className="w-full max-w-md shadow-2xl">
+    <Card className="w-full max-w-md shadow-elevated">
       <CardHeader className="text-center">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Mail className="h-6 w-6" />

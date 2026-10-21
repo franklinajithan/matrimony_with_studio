@@ -113,9 +113,9 @@ export function PrivacyReview({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto border-[#7027E8]/15 bg-[#FBF8F4] sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto border-primary/15 bg-background sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-[#1a1a1a]">Privacy review</DialogTitle>
+          <DialogTitle className="text-foreground">Privacy review</DialogTitle>
           <DialogDescription>
             Choose which sensitive details to include before exporting. You can
             still edit these later in Studio.
@@ -126,18 +126,18 @@ export function PrivacyReview({
           {SENSITIVE_OPTIONS.map((opt) => (
             <div
               key={opt.key}
-              className="flex items-start gap-3 rounded-md border border-[#7027E8]/10 bg-white/70 p-3"
+              className="flex items-start gap-3 rounded-md border border-primary/10 bg-white/70 p-3"
             >
               <Checkbox
                 id={`privacy-${opt.key}`}
                 checked={draft[opt.key]}
                 onCheckedChange={(v) => setFlag(opt.key, v === true)}
-                className="mt-0.5 border-[#7027E8] data-[state=checked]:bg-[#7027E8] data-[state=checked]:text-white"
+                className="mt-0.5 border-primary data-[state=checked]:bg-primary data-[state=checked]:text-white"
               />
               <div className="grid gap-1">
                 <Label
                   htmlFor={`privacy-${opt.key}`}
-                  className="cursor-pointer text-sm font-medium text-[#1a1a1a]"
+                  className="cursor-pointer text-sm font-medium text-foreground"
                 >
                   {opt.label}
                 </Label>
@@ -150,7 +150,7 @@ export function PrivacyReview({
         <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
           <Button
             type="button"
-            className="w-full bg-[#7027E8] text-white hover:bg-[#5a1ec0]"
+            className="w-full bg-primary text-white hover:bg-primary-dark"
             onClick={() => {
               onContinueExport(draft);
               onOpenChange(false);
@@ -161,7 +161,7 @@ export function PrivacyReview({
           <Button
             type="button"
             variant="outline"
-            className="w-full border-[#FF6F72]/40 text-[#FF6F72] hover:bg-[#FF6F72]/10 hover:text-[#FF6F72]"
+            className="w-full border-gold/40 text-gold-foreground hover:bg-gold/10 hover:text-gold-foreground"
             onClick={() => {
               const next = privateVisibility(draft);
               setDraft(next);

@@ -107,12 +107,12 @@ export function Navbar() {
 
   const marketingLinkClass = (href: string) =>
     cn(
-      "relative h-11 rounded-none bg-transparent px-3.5 text-[15px] font-medium text-[#5C4A66] shadow-none hover:bg-transparent hover:text-[#2A1845]",
-      pathname === href && "text-[#2A1845] after:absolute after:inset-x-1 after:-bottom-0.5 after:h-[3px] after:rounded-full after:bg-gradient-to-r after:from-[#7C3AED] after:to-[#C99532]"
+      "relative h-11 rounded-none bg-transparent px-3.5 text-[15px] font-medium text-muted-foreground shadow-none hover:bg-transparent hover:text-primary-dark",
+      pathname === href && "text-primary-dark after:absolute after:inset-x-1 after:-bottom-0.5 after:h-[3px] after:rounded-full after:bg-gradient-to-r after:from-primary after:to-gold"
     );
 
   const signUpButtonClass =
-    "rounded-full bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] px-6 font-semibold text-white hover:from-[#6D28D9] hover:to-[#5B21B6] shadow-[0_8px_24px_rgba(124,58,237,.22)] transition-all";
+    "rounded-full bg-primary px-6 font-semibold text-white hover:bg-primary-dark shadow-[0_8px_24px_hsl(var(--primary)/.22)] transition-all";
 
   const authActions = (
     <div className="ml-auto hidden items-center gap-3 lg:flex">
@@ -127,7 +127,7 @@ export function Navbar() {
         </>
       ) : (
         <>
-          <Button variant="outline" asChild className="h-10 rounded-full border-[#D6C6F5] bg-white px-5 font-semibold text-[#6D28D9] hover:bg-white hover:text-[#6D28D9]">
+          <Button variant="outline" asChild className="h-10 rounded-full border-border bg-card px-5 font-semibold text-primary hover:bg-card hover:text-primary">
             <Link href="/login">Log In</Link>
           </Button>
           <Button asChild className={signUpButtonClass}>
@@ -140,7 +140,7 @@ export function Navbar() {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <header className="sticky top-0 z-50 w-full border-b border-[#EEE6F7] bg-[#FFFBF5]/95 backdrop-blur supports-[backdrop-filter]:bg-[#FFFBF5]/90">
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90">
         <div className="mx-auto flex h-[4.25rem] w-full max-w-[1500px] items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:h-24 lg:px-10 xl:px-14">
           <div className="flex shrink-0 items-center">
             {isMarketingPage ? (
@@ -170,10 +170,10 @@ export function Navbar() {
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      className="h-10 gap-1.5 rounded-full border border-[#E9DDF8] bg-white px-3.5 text-[#5C4A66] hover:bg-white"
+                      className="h-10 gap-1.5 rounded-full border border-border bg-card px-3.5 text-muted-foreground hover:bg-card"
                       aria-label="Select language"
                     >
-                      <Globe className="h-4 w-4 text-[#7C3AED]" />
+                      <Globe className="h-4 w-4 text-primary" />
                       <span className="text-sm font-medium">
                         {language === 'en' && 'English'}
                         {language === 'si' && 'සිංහල'}
@@ -242,7 +242,7 @@ export function Navbar() {
 
           {isLoadingAuth ? (
             <div className="ml-auto hidden items-center gap-3 lg:flex">
-              <Button variant="outline" asChild className="h-10 rounded-full border-[#D6C6F5] bg-white px-5 font-semibold text-[#6D28D9] hover:bg-white hover:text-[#6D28D9]">
+              <Button variant="outline" asChild className="h-10 rounded-full border-border bg-card px-5 font-semibold text-primary hover:bg-card hover:text-primary">
                 <Link href="/login">Log In</Link>
               </Button>
               <Button asChild className={signUpButtonClass}>

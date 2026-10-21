@@ -31,7 +31,7 @@ export default function ProfileViewsPage() {
         description="See who’s been checking you out. Keep your profile engaging to attract more visitors."
       />
 
-      <Card className="rounded-2xl border-[#eadde7] shadow-sm">
+      <Card className="rounded-2xl border-border shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-6 w-6 text-primary" /> Recent viewers
@@ -48,28 +48,28 @@ export default function ProfileViewsPage() {
               {viewers.map((viewer) => (
                 <li
                   key={viewer.id}
-                  className="flex items-center justify-between rounded-xl bg-[#fff8fb] p-3 transition-colors hover:bg-[#f8eef7]"
+                  className="flex items-center justify-between rounded-xl bg-background p-3 transition-colors hover:bg-accent"
                 >
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12 border border-[#eadce5]">
+                    <Avatar className="h-12 w-12 border border-border">
                       <AvatarImage src={viewer.avatarUrl} alt={viewer.name} data-ai-hint={viewer.dataAiHint} />
                       <AvatarFallback>{viewer.name.substring(0, 1).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <Link href={viewer.profileLink} className="font-semibold text-[#351532] hover:text-primary">
+                      <Link href={viewer.profileLink} className="font-semibold text-foreground hover:text-primary">
                         {viewer.name}
                       </Link>
-                      <p className="text-xs text-[#9b668f]">Viewed: {viewer.viewedAt}</p>
+                      <p className="text-xs text-gold-foreground">Viewed: {viewer.viewedAt}</p>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" className="rounded-xl border-[#dcc9d8]" asChild>
+                  <Button variant="outline" size="sm" className="rounded-xl border-input" asChild>
                     <Link href={viewer.profileLink}>View</Link>
                   </Button>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="py-8 text-center text-sm text-[#745d70]">No recent profile views yet.</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">No recent profile views yet.</p>
           )}
         </CardContent>
       </Card>

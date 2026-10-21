@@ -104,7 +104,7 @@ export default async function SharedBiodataPage({ params }: PageProps) {
   if (!link) {
     return (
       <main className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-4 text-center">
-        <h1 className="text-2xl font-semibold text-[#1a1a1a]">Link unavailable</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Link unavailable</h1>
         <p className="mt-3 text-sm text-muted-foreground">
           This biodata share link is no longer available. It may have been revoked, expired, or
           the address may be incorrect.
@@ -131,9 +131,9 @@ export default async function SharedBiodataPage({ params }: PageProps) {
     (typeof snap.watermark === "string" ? snap.watermark : undefined);
 
   return (
-    <main className="min-h-screen bg-[#FBF8F4] px-4 py-8">
+    <main className="min-h-screen bg-background px-4 py-8">
       <div className="mx-auto mb-6 max-w-3xl text-center">
-        <p className="text-xs uppercase tracking-wide text-[#7027E8]">Shared biodata</p>
+        <p className="text-xs uppercase tracking-wide text-primary">Shared biodata</p>
         {link.recipientLabel ? (
           <p className="mt-1 text-sm text-muted-foreground">For {link.recipientLabel}</p>
         ) : null}

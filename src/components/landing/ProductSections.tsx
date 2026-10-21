@@ -40,18 +40,18 @@ export function IntelligenceSection() {
     <section id="matching" className="scroll-mt-24 px-4 py-16 sm:px-6 sm:py-20">
       <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6D28D9]">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
             Beyond basic filters
           </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[#17151C] sm:text-4xl">
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
             Matching built around real life
           </h2>
-          <p className="mt-4 text-base leading-7 text-[#6F6A76]">
+          <p className="mt-4 text-base leading-7 text-muted-foreground">
             CupidMatch considers multiple compatibility dimensions—values, personality, lifestyle,
             communication, family expectations and future plans—instead of only age, job and
             location.
           </p>
-          <Button asChild className={`mt-7 rounded-full bg-[#6D28D9] px-6 text-white hover:bg-[#8B5CF6] ${focusRing}`}>
+          <Button asChild className={`mt-7 rounded-full bg-primary px-6 text-white hover:bg-primary-dark ${focusRing}`}>
             <Link href="/suggestions">
               See why a profile was suggested
               <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
@@ -62,21 +62,21 @@ export function IntelligenceSection() {
         <div className="relative mx-auto aspect-square w-full max-w-md">
           <div
             aria-hidden="true"
-            className="cupid-orbit absolute inset-[12%] rounded-full border border-dashed border-[#8B5CF6]/35"
+            className="cupid-orbit absolute inset-[12%] rounded-full border border-dashed border-primary/35"
           />
           <div
             aria-hidden="true"
-            className="absolute inset-[26%] rounded-full border border-[#E8E6EE] bg-gradient-to-br from-[#F1ECFF] to-[#FFF0EE]"
+            className="absolute inset-[26%] rounded-full border border-border bg-gradient-to-br from-accent to-accent"
           />
-          <div className="absolute left-1/2 top-1/2 z-10 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full bg-white shadow-[0_12px_40px_rgba(109,40,217,0.18)]">
-            <Sparkles className="h-5 w-5 text-[#6D28D9]" aria-hidden="true" />
-            <span className="mt-1 text-[11px] font-semibold text-[#17151C]">Fit</span>
+          <div className="absolute left-1/2 top-1/2 z-10 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full bg-card shadow-[0_12px_40px_hsl(var(--primary)/0.18)]">
+            <Sparkles className="h-5 w-5 text-primary" aria-hidden="true" />
+            <span className="mt-1 text-[11px] font-semibold text-foreground">Fit</span>
           </div>
           {orbitNodes.map((node) => (
             <span
               key={node.label}
               className={cn(
-                "absolute rounded-full border border-[#E8E6EE] bg-white px-3 py-1.5 text-xs font-medium text-[#17151C] shadow-sm",
+                "absolute rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-sm",
                 node.className
               )}
             >
@@ -91,24 +91,24 @@ export function IntelligenceSection() {
 
 export function BentoFeatures() {
   return (
-    <section className="bg-[#F7F5FB] px-4 py-16 sm:px-6 sm:py-20">
+    <section className="bg-accent px-4 py-16 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-6xl">
-        <h2 className="max-w-xl text-3xl font-semibold tracking-tight text-[#17151C] sm:text-4xl">
+        <h2 className="max-w-xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           Designed like a product, not a brochure
         </h2>
         <div className="mt-10 grid gap-4 md:grid-cols-6 md:grid-rows-2">
-          <article className="cupid-card rounded-3xl border border-[#E8E6EE] bg-white p-6 md:col-span-3">
-            <Sparkles className="h-5 w-5 text-[#6D28D9]" aria-hidden="true" />
-            <h3 className="mt-4 text-lg font-semibold text-[#17151C]">Understand every suggestion</h3>
-            <p className="mt-2 text-sm leading-6 text-[#6F6A76]">
+          <article className="cupid-card rounded-3xl border border-border bg-card p-6 md:col-span-3">
+            <Sparkles className="h-5 w-5 text-primary" aria-hidden="true" />
+            <h3 className="mt-4 text-lg font-semibold text-foreground">Understand every suggestion</h3>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
               See meaningful reasons a profile may fit—shared goals, lifestyle alignment and
               communication style.
             </p>
-            <div className="mt-5 space-y-2 rounded-2xl bg-[#F1ECFF]/70 p-4">
+            <div className="mt-5 space-y-2 rounded-2xl bg-accent/70 p-4">
               {["Shared life goals", "Similar communication style", "Lifestyle compatibility"].map(
                 (item) => (
-                  <div key={item} className="flex items-center gap-2 text-sm text-[#17151C]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#6D28D9]" />
+                  <div key={item} className="flex items-center gap-2 text-sm text-foreground">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                     {item}
                   </div>
                 )
@@ -116,8 +116,8 @@ export function BentoFeatures() {
             </div>
           </article>
 
-          <article className="cupid-card rounded-3xl border border-[#E8E6EE] bg-[#17151C] p-6 text-white md:col-span-3">
-            <Lock className="h-5 w-5 text-[#FF6B6B]" aria-hidden="true" />
+          <article className="cupid-card rounded-3xl border border-border bg-foreground p-6 text-white md:col-span-3">
+            <Lock className="h-5 w-5 text-gold-foreground" aria-hidden="true" />
             <h3 className="mt-4 text-lg font-semibold">Privacy that adapts</h3>
             <p className="mt-2 text-sm leading-6 text-white/70">
               Control profile visibility, photo permissions and when contact details become
@@ -132,26 +132,26 @@ export function BentoFeatures() {
             </div>
           </article>
 
-          <article className="cupid-card rounded-3xl border border-[#E8E6EE] bg-white p-6 md:col-span-2">
-            <MessageCircle className="h-5 w-5 text-[#FF6B6B]" aria-hidden="true" />
-            <h3 className="mt-4 text-lg font-semibold text-[#17151C]">Conversations with context</h3>
-            <p className="mt-2 text-sm leading-6 text-[#6F6A76]">
+          <article className="cupid-card rounded-3xl border border-border bg-card p-6 md:col-span-2">
+            <MessageCircle className="h-5 w-5 text-gold-foreground" aria-hidden="true" />
+            <h3 className="mt-4 text-lg font-semibold text-foreground">Conversations with context</h3>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
               Secure messaging with optional prompts shaped by shared interests.
             </p>
           </article>
 
-          <article className="cupid-card rounded-3xl border border-[#E8E6EE] bg-[#FFF0EE] p-6 md:col-span-2">
-            <Languages className="h-5 w-5 text-[#6D28D9]" aria-hidden="true" />
-            <h3 className="mt-4 text-lg font-semibold text-[#17151C]">Culture when it matters</h3>
-            <p className="mt-2 text-sm leading-6 text-[#6F6A76]">
+          <article className="cupid-card rounded-3xl border border-border bg-accent p-6 md:col-span-2">
+            <Languages className="h-5 w-5 text-primary" aria-hidden="true" />
+            <h3 className="mt-4 text-lg font-semibold text-foreground">Culture when it matters</h3>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
               Language, community and optional horoscope preferences—without stereotypes.
             </p>
           </article>
 
-          <article className="cupid-card rounded-3xl border border-[#E8E6EE] bg-white p-6 md:col-span-2">
+          <article className="cupid-card rounded-3xl border border-border bg-card p-6 md:col-span-2">
             <BadgeCheck className="h-5 w-5 text-[#0F7A4A]" aria-hidden="true" />
-            <h3 className="mt-4 text-lg font-semibold text-[#17151C]">Profile authenticity</h3>
-            <p className="mt-2 text-sm leading-6 text-[#6F6A76]">
+            <h3 className="mt-4 text-lg font-semibold text-foreground">Profile authenticity</h3>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
               Clear verification signals and profile-quality cues based on platform features.
             </p>
           </article>
@@ -164,19 +164,19 @@ export function BentoFeatures() {
 const sampleProfiles = [
   {
     initials: "A",
-    gradient: "from-[#8B5CF6] to-[#6D28D9]",
+    gradient: "from-primary to-primary",
     meta: "Manchester · Creative professional",
     tags: ["Tamil", "Family goals", "Travel"],
   },
   {
     initials: "B",
-    gradient: "from-[#FF6B6B] to-[#8B5CF6]",
+    gradient: "from-gold to-primary",
     meta: "Colombo · Technology",
     tags: ["Sinhala", "English", "Ambition"],
   },
   {
     initials: "C",
-    gradient: "from-[#6D28D9] to-[#FF6B6B]",
+    gradient: "from-primary to-gold",
     meta: "Toronto · Healthcare",
     tags: ["Values-led", "Local", "Communication"],
   },
@@ -188,10 +188,10 @@ export function DiscoveryPreview() {
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6D28D9]">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
               Product preview — sample profiles
             </p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-[#17151C] sm:text-4xl">
+            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
               Discover with clarity
             </h2>
           </div>
@@ -202,8 +202,8 @@ export function DiscoveryPreview() {
                 className={cn(
                   "rounded-full border px-3 py-1.5 text-xs font-medium",
                   i === 0
-                    ? "border-[#6D28D9] bg-[#F1ECFF] text-[#6D28D9]"
-                    : "border-[#E8E6EE] bg-white text-[#6F6A76]"
+                    ? "border-primary bg-accent text-primary"
+                    : "border-border bg-card text-muted-foreground"
                 )}
               >
                 {pill}
@@ -216,7 +216,7 @@ export function DiscoveryPreview() {
           {sampleProfiles.map((profile) => (
             <article
               key={profile.initials}
-              className="cupid-card min-w-[260px] flex-1 rounded-3xl border border-[#E8E6EE] bg-white p-5 shadow-sm"
+              className="cupid-card min-w-[260px] flex-1 rounded-3xl border border-border bg-card p-5 shadow-sm"
             >
               <div className="flex items-start justify-between">
                 <div
@@ -230,16 +230,16 @@ export function DiscoveryPreview() {
                 <button
                   type="button"
                   aria-label="Shortlist sample profile"
-                  className={`rounded-full border border-[#E8E6EE] p-2 text-[#6F6A76] hover:bg-[#F1ECFF] hover:text-[#6D28D9] ${focusRing}`}
+                  className={`rounded-full border border-border p-2 text-muted-foreground hover:bg-accent hover:text-primary ${focusRing}`}
                 >
                   <Bookmark className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
-              <p className="mt-4 text-sm font-medium text-[#17151C]">Sample profile</p>
-              <p className="mt-1 text-sm text-[#6F6A76]">{profile.meta}</p>
+              <p className="mt-4 text-sm font-medium text-foreground">Sample profile</p>
+              <p className="mt-1 text-sm text-muted-foreground">{profile.meta}</p>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {profile.tags.map((tag) => (
-                  <span key={tag} className="rounded-full bg-[#FAFAF8] px-2.5 py-1 text-[11px] text-[#6F6A76]">
+                  <span key={tag} className="rounded-full bg-background px-2.5 py-1 text-[11px] text-muted-foreground">
                     {tag}
                   </span>
                 ))}
@@ -282,23 +282,23 @@ const steps = [
 
 export function HowItWorksModern() {
   return (
-    <section id="how-it-works" className="scroll-mt-24 bg-[#F7F5FB] px-4 py-16 sm:px-6 sm:py-20">
+    <section id="how-it-works" className="scroll-mt-24 bg-accent px-4 py-16 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-6xl">
-        <h2 className="text-3xl font-semibold tracking-tight text-[#17151C] sm:text-4xl">
+        <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           How CupidMatch works
         </h2>
         <ol className="mt-10 space-y-4">
           {steps.map((step, index) => (
             <li
               key={step.title}
-              className="relative flex gap-4 rounded-3xl border border-[#E8E6EE] bg-white p-5 sm:gap-6 sm:p-6"
+              className="relative flex gap-4 rounded-3xl border border-border bg-card p-5 sm:gap-6 sm:p-6"
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#F1ECFF] text-sm font-semibold text-[#6D28D9]">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent text-sm font-semibold text-primary">
                 {String(index + 1).padStart(2, "0")}
               </span>
               <div>
-                <h3 className="text-lg font-semibold text-[#17151C]">{step.title}</h3>
-                <p className="mt-1 text-sm leading-6 text-[#6F6A76]">{step.text}</p>
+                <h3 className="text-lg font-semibold text-foreground">{step.title}</h3>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">{step.text}</p>
               </div>
             </li>
           ))}
@@ -313,45 +313,45 @@ export function ConversationPreview() {
     <section className="px-4 py-16 sm:px-6 sm:py-20">
       <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2">
         <div>
-          <h2 className="text-3xl font-semibold tracking-tight text-[#17151C] sm:text-4xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
             Better conversations start with context
           </h2>
-          <p className="mt-4 text-base leading-7 text-[#6F6A76]">
+          <p className="mt-4 text-base leading-7 text-muted-foreground">
             CupidMatch helps both people move beyond “hello” with shared interests and meaningful
             prompts.
           </p>
         </div>
 
-        <div className="rounded-3xl border border-[#E8E6EE] bg-white p-5 shadow-[0_16px_40px_rgba(23,21,28,0.06)] sm:p-6">
-          <div className="flex items-center justify-between border-b border-[#E8E6EE] pb-4">
+        <div className="rounded-3xl border border-border bg-card p-5 shadow-[0_16px_40px_rgba(23,21,28,0.06)] sm:p-6">
+          <div className="flex items-center justify-between border-b border-border pb-4">
             <div>
-              <p className="text-sm font-semibold text-[#17151C]">Secure conversation</p>
-              <p className="text-xs text-[#6F6A76]">Match context · Sample preview</p>
+              <p className="text-sm font-semibold text-foreground">Secure conversation</p>
+              <p className="text-xs text-muted-foreground">Match context · Sample preview</p>
             </div>
             <button
               type="button"
-              className={`rounded-full border border-[#E8E6EE] px-3 py-1.5 text-xs text-[#6F6A76] hover:bg-[#FFF0EE] ${focusRing}`}
+              className={`rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent ${focusRing}`}
               aria-label="Safety menu"
             >
               Safety
             </button>
           </div>
 
-          <div className="mt-4 rounded-2xl bg-[#F1ECFF]/60 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#6D28D9]">
+          <div className="mt-4 rounded-2xl bg-accent/60 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
               Shared interest
             </p>
-            <p className="mt-1 text-sm text-[#17151C]">Both value family goals and open communication.</p>
+            <p className="mt-1 text-sm text-foreground">Both value family goals and open communication.</p>
           </div>
 
           <div className="mt-4 space-y-2">
-            <p className="text-xs font-medium text-[#6F6A76]">Conversation starters</p>
+            <p className="text-xs font-medium text-muted-foreground">Conversation starters</p>
             {["What does a typical weekend look like for you?", "What are you looking for in the next five years?"].map(
               (prompt) => (
                 <button
                   key={prompt}
                   type="button"
-                  className={`block w-full rounded-2xl border border-[#E8E6EE] bg-[#FAFAF8] px-4 py-3 text-left text-sm text-[#17151C] transition hover:border-[#8B5CF6]/40 hover:bg-[#F1ECFF]/40 ${focusRing}`}
+                  className={`block w-full rounded-2xl border border-border bg-background px-4 py-3 text-left text-sm text-foreground transition hover:border-primary/40 hover:bg-accent/40 ${focusRing}`}
                 >
                   {prompt}
                 </button>
@@ -359,12 +359,12 @@ export function ConversationPreview() {
             )}
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-2 text-xs text-[#6F6A76]">
+          <div className="mt-5 flex flex-wrap gap-2 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1 rounded-full bg-[#DDF8EA] px-2.5 py-1 text-[#0F7A4A]">
               <Lock className="h-3 w-3" aria-hidden="true" />
               Contact details protected
             </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#FFF0EE] px-2.5 py-1 text-[#B42318]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-[#B42318]">
               <Ban className="h-3 w-3" aria-hidden="true" />
               Block & report available
             </span>
@@ -387,16 +387,16 @@ export function SafetyCentre() {
   ];
 
   return (
-    <section id="safety" className="scroll-mt-24 bg-[#F7F5FB] px-4 py-16 sm:px-6 sm:py-20">
+    <section id="safety" className="scroll-mt-24 bg-accent px-4 py-16 sm:px-6 sm:py-20">
       <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-2 lg:items-center">
         <div>
-          <h2 className="text-3xl font-semibold tracking-tight text-[#17151C] sm:text-4xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
             Designed to protect your choices
           </h2>
           <ul className="mt-6 space-y-3">
             {items.map((item) => (
-              <li key={item} className="flex items-center gap-3 text-sm text-[#17151C]">
-                <Shield className="h-4 w-4 shrink-0 text-[#6D28D9]" aria-hidden="true" />
+              <li key={item} className="flex items-center gap-3 text-sm text-foreground">
+                <Shield className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                 {item}
               </li>
             ))}
@@ -404,14 +404,14 @@ export function SafetyCentre() {
           <Button
             asChild
             variant="outline"
-            className={`mt-8 rounded-full border-[#E8E6EE] bg-white ${focusRing}`}
+            className={`mt-8 rounded-full border-border bg-card ${focusRing}`}
           >
             <Link href="/#faq">Explore safety</Link>
           </Button>
         </div>
 
-        <div className="rounded-3xl border border-[#E8E6EE] bg-white p-5 shadow-sm sm:p-6">
-          <p className="text-sm font-semibold text-[#17151C]">Settings preview</p>
+        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-6">
+          <p className="text-sm font-semibold text-foreground">Settings preview</p>
           <div className="mt-4 space-y-3">
             {[
               { icon: Eye, label: "Who can view my profile", value: "Compatible matches" },
@@ -420,13 +420,13 @@ export function SafetyCentre() {
             ].map((row) => (
               <div
                 key={row.label}
-                className="flex items-center justify-between rounded-2xl border border-[#E8E6EE] bg-[#FAFAF8] px-4 py-3"
+                className="flex items-center justify-between rounded-2xl border border-border bg-background px-4 py-3"
               >
                 <div className="flex items-center gap-3">
-                  <row.icon className="h-4 w-4 text-[#6D28D9]" aria-hidden="true" />
-                  <span className="text-sm text-[#17151C]">{row.label}</span>
+                  <row.icon className="h-4 w-4 text-primary" aria-hidden="true" />
+                  <span className="text-sm text-foreground">{row.label}</span>
                 </div>
-                <span className="text-xs text-[#6F6A76]">{row.value}</span>
+                <span className="text-xs text-muted-foreground">{row.value}</span>
               </div>
             ))}
           </div>
@@ -450,16 +450,16 @@ export function CulturalPrefs() {
 
   return (
     <section className="px-4 py-16 sm:px-6 sm:py-20">
-      <div className="mx-auto max-w-6xl overflow-hidden rounded-3xl border border-[#E8E6EE] bg-white p-8 sm:p-10">
+      <div className="mx-auto max-w-6xl overflow-hidden rounded-3xl border border-border bg-card p-8 sm:p-10">
         <div className="relative max-w-2xl">
           <div
             aria-hidden="true"
             className="cupid-weave pointer-events-none absolute -right-16 -top-10 hidden h-28 w-28 rounded-3xl opacity-40 md:block"
           />
-          <h2 className="text-3xl font-semibold tracking-tight text-[#17151C] sm:text-4xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
             Culture when it matters. Choice at every step.
           </h2>
-          <p className="mt-4 text-base leading-7 text-[#6F6A76]">
+          <p className="mt-4 text-base leading-7 text-muted-foreground">
             Include language, community and tradition in your preferences—or focus entirely on
             personality, lifestyle and future goals.
           </p>
@@ -468,14 +468,14 @@ export function CulturalPrefs() {
           {chips.map((chip) => (
             <li
               key={chip}
-              className="rounded-full border border-[#E8E6EE] bg-[#FAFAF8] px-3.5 py-2 text-sm text-[#17151C]"
+              className="rounded-full border border-border bg-background px-3.5 py-2 text-sm text-foreground"
             >
               {chip}
             </li>
           ))}
         </ul>
-        <p className="mt-4 inline-flex items-center gap-2 text-sm text-[#6F6A76]">
-          <MoonStar className="h-4 w-4 text-[#6D28D9]" aria-hidden="true" />
+        <p className="mt-4 inline-flex items-center gap-2 text-sm text-muted-foreground">
+          <MoonStar className="h-4 w-4 text-primary" aria-hidden="true" />
           Horoscope matching is optional and never required.
         </p>
       </div>
@@ -485,23 +485,23 @@ export function CulturalPrefs() {
 
 export function SuccessInvite() {
   return (
-    <section className="bg-[#F7F5FB] px-4 py-16 sm:px-6 sm:py-20">
-      <div className="mx-auto max-w-6xl rounded-3xl border border-[#E8E6EE] bg-white p-8 sm:p-12">
-        <h2 className="max-w-2xl text-3xl font-semibold tracking-tight text-[#17151C] sm:text-4xl">
+    <section className="bg-accent px-4 py-16 sm:px-6 sm:py-20">
+      <div className="mx-auto max-w-6xl rounded-3xl border border-border bg-card p-8 sm:p-12">
+        <h2 className="max-w-2xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           Every meaningful connection has a beginning.
         </h2>
-        <p className="mt-4 max-w-xl text-base leading-7 text-[#6F6A76]">
+        <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground">
           We only share genuine stories when couples choose to. Until then, explore the space or
           submit your own when you are ready.
         </p>
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-          <Button asChild className={`rounded-full bg-[#6D28D9] px-6 text-white hover:bg-[#8B5CF6] ${focusRing}`}>
+          <Button asChild className={`rounded-full bg-primary px-6 text-white hover:bg-primary-dark ${focusRing}`}>
             <Link href="/success-stories">Explore success stories</Link>
           </Button>
           <Button
             asChild
             variant="outline"
-            className={`rounded-full border-[#E8E6EE] ${focusRing}`}
+            className={`rounded-full border-border ${focusRing}`}
           >
             <Link href="/success-stories/submit">Share your story</Link>
           </Button>
@@ -514,7 +514,7 @@ export function SuccessInvite() {
 export function PricingPreview() {
   return (
     <section className="px-4 py-16 sm:px-6 sm:py-20">
-      <div className="mx-auto max-w-6xl rounded-3xl border border-[#E8E6EE] bg-[#17151C] p-8 text-white sm:p-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
+      <div className="mx-auto max-w-6xl rounded-3xl border border-border bg-foreground p-8 text-white sm:p-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
         <div className="max-w-2xl">
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
             Start free. Upgrade when it feels useful.
@@ -526,7 +526,7 @@ export function PricingPreview() {
         </div>
         <Button
           asChild
-          className={`mt-6 h-12 shrink-0 rounded-full bg-white px-7 text-[#17151C] hover:bg-[#F1ECFF] lg:mt-0 ${focusRing}`}
+          className={`mt-6 h-12 shrink-0 rounded-full bg-card px-7 text-foreground hover:bg-accent lg:mt-0 ${focusRing}`}
         >
           <Link href="/pricing">Compare plans</Link>
         </Button>
@@ -568,16 +568,16 @@ export function FaqModern() {
   ];
 
   return (
-    <section id="faq" className="scroll-mt-24 bg-[#F7F5FB] px-4 py-16 sm:px-6 sm:py-20">
+    <section id="faq" className="scroll-mt-24 bg-accent px-4 py-16 sm:px-6 sm:py-20">
       <div className="mx-auto max-w-3xl">
-        <h2 className="text-3xl font-semibold tracking-tight text-[#17151C] sm:text-4xl">FAQ</h2>
-        <Accordion type="single" collapsible className="mt-8 rounded-3xl border border-[#E8E6EE] bg-white px-5">
+        <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">FAQ</h2>
+        <Accordion type="single" collapsible className="mt-8 rounded-3xl border border-border bg-card px-5">
           {faqs.map((item, index) => (
-            <AccordionItem key={item.q} value={`faq-${index}`} className="border-[#E8E6EE]">
-              <AccordionTrigger className="text-left text-[#17151C] hover:no-underline hover:text-[#6D28D9] focus-visible:ring-2 focus-visible:ring-[#6D28D9]">
+            <AccordionItem key={item.q} value={`faq-${index}`} className="border-border">
+              <AccordionTrigger className="text-left text-foreground hover:no-underline hover:text-primary focus-visible:ring-2 focus-visible:ring-primary">
                 {item.q}
               </AccordionTrigger>
-              <AccordionContent className="leading-6 text-[#6F6A76]">{item.a}</AccordionContent>
+              <AccordionContent className="leading-6 text-muted-foreground">{item.a}</AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
@@ -591,7 +591,7 @@ export function FinalCtaModern() {
     <section className="px-4 pb-20 sm:px-6 sm:pb-24">
       <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] px-6 py-14 text-center sm:px-12 sm:py-16">
         <div aria-hidden="true" className="cupid-mesh absolute inset-0" />
-        <div className="absolute inset-0 bg-gradient-to-br from-[#6D28D9] via-[#8B5CF6] to-[#FF6B6B] opacity-95" aria-hidden="true" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-gold opacity-95" aria-hidden="true" />
         <div className="relative">
           <UserRound className="mx-auto h-8 w-8 text-white/90" aria-hidden="true" />
           <h2 className="mx-auto mt-4 max-w-3xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
@@ -603,7 +603,7 @@ export function FinalCtaModern() {
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button
               asChild
-              className={`h-12 rounded-full bg-white px-8 text-[#6D28D9] hover:bg-[#F1ECFF] ${focusRingOnDark}`}
+              className={`h-12 rounded-full bg-card px-8 text-primary hover:bg-accent ${focusRingOnDark}`}
             >
               <Link href="/signup">Create my profile</Link>
             </Button>

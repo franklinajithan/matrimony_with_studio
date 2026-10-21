@@ -24,9 +24,9 @@ export function ExtendedMemberProfile({memberId,profile}:{memberId:string;profil
    if(!response.ok)throw new Error("Unable to save member details");setOriginal({...form});setSuccess("Extended profile saved and audited.");
   }catch{setError("Unable to save extended profile. Please retry.");}finally{setSaving(false);}
  }
- return <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
+ return <Card className="rounded-2xl border-border bg-card shadow-sm">
  <CardHeader><CardTitle>Extended member profile</CardTitle><CardDescription>Assist members with additional profile details. Only changed fields are submitted and logged. Identity and subscription permissions are excluded.</CardDescription></CardHeader>
- <CardContent>{!profile?<p className="text-sm text-slate-500">Loading member details…</p>:<form onSubmit={save} className="space-y-4">
+ <CardContent>{!profile?<p className="text-sm text-muted-foreground">Loading member details…</p>:<form onSubmit={save} className="space-y-4">
  <div className="grid gap-4 sm:grid-cols-2">{fields.map(f=><label key={f.key} className="block text-sm font-medium"><span className="mb-1 block">{f.label}</span><Input value={form[f.key]} maxLength={500} onChange={event=>setForm(previous=>({...previous,[f.key]:event.target.value}))}/></label>)}</div>
  {error&&<p role="alert" className="text-sm text-red-700">{error}</p>}{success&&<p role="status" className="text-sm text-emerald-700">{success}</p>}
  <Button type="submit" disabled={saving||fields.every(f=>form[f.key]===original[f.key])}>{saving?"Saving…":"Save extended details"}</Button>

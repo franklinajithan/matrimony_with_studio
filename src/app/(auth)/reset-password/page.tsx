@@ -71,7 +71,7 @@ export default function ResetPasswordPage() {
 
   if (!authChecked) {
     return (
-      <Card className="w-full max-w-md shadow-2xl">
+      <Card className="w-full max-w-md shadow-elevated">
         <CardContent className="flex items-center justify-center py-12 text-muted-foreground">
           <Loader2 className="mr-2 h-5 w-5 animate-spin" />
           Checking reset link...
@@ -82,7 +82,7 @@ export default function ResetPasswordPage() {
 
   if (!hasRecoverySession) {
     return (
-      <Card className="w-full max-w-md shadow-2xl">
+      <Card className="w-full max-w-md shadow-elevated">
         <CardHeader className="text-center">
           <CardTitle className="font-headline text-3xl text-primary">Link expired</CardTitle>
           <CardDescription>This password reset link is invalid or has expired.</CardDescription>
@@ -105,7 +105,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <Card className="w-full max-w-md shadow-2xl">
+    <Card className="w-full max-w-md shadow-elevated">
       <CardHeader className="text-center">
         <CardTitle className="font-headline text-3xl text-primary">Choose a new password</CardTitle>
         <CardDescription>Enter a new password for your CupidMatch account.</CardDescription>

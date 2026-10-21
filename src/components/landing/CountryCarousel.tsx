@@ -99,8 +99,8 @@ export function CountryCarousel() {
           disabled={!canPrev}
           aria-label="Show previous countries"
           className={cn(
-            "hidden h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#E4D4F5] bg-white text-[#7C3AED] shadow-[0_8px_24px_rgba(74,32,110,0.1)] transition-all md:inline-flex lg:h-14 lg:w-14",
-            "hover:bg-[#F5F0FF] disabled:cursor-not-allowed disabled:opacity-35"
+            "hidden h-12 w-12 shrink-0 items-center justify-center rounded-full border border-border bg-card text-primary shadow-[0_8px_24px_rgba(74,32,110,0.1)] transition-all md:inline-flex lg:h-14 lg:w-14",
+            "hover:bg-accent disabled:cursor-not-allowed disabled:opacity-35"
           )}
         >
           <ChevronLeft className="h-6 w-6" aria-hidden="true" />
@@ -112,7 +112,7 @@ export function CountryCarousel() {
           role="region"
           aria-roledescription="carousel"
           aria-label="Sri Lankan communities by country"
-          className="min-w-0 flex-1 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory scroll-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] focus-visible:ring-offset-2 [&::-webkit-scrollbar]:hidden"
+          className="min-w-0 flex-1 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory scroll-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 [&::-webkit-scrollbar]:hidden"
         >
           <div className="flex gap-4 sm:gap-5">
             {DIASPORA_COUNTRIES.map((country) => (
@@ -132,8 +132,8 @@ export function CountryCarousel() {
           disabled={!canNext}
           aria-label="Show next countries"
           className={cn(
-            "hidden h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#E4D4F5] bg-white text-[#7C3AED] shadow-[0_8px_24px_rgba(74,32,110,0.1)] transition-all md:inline-flex lg:h-14 lg:w-14",
-            "hover:bg-[#F5F0FF] disabled:cursor-not-allowed disabled:opacity-35"
+            "hidden h-12 w-12 shrink-0 items-center justify-center rounded-full border border-border bg-card text-primary shadow-[0_8px_24px_rgba(74,32,110,0.1)] transition-all md:inline-flex lg:h-14 lg:w-14",
+            "hover:bg-accent disabled:cursor-not-allowed disabled:opacity-35"
           )}
         >
           <ChevronRight className="h-6 w-6" aria-hidden="true" />
@@ -152,8 +152,8 @@ export function CountryCarousel() {
             className={cn(
               "h-2.5 rounded-full transition-all",
               index === page
-                ? "w-7 bg-gradient-to-r from-[#7C3AED] to-[#FB7185]"
-                : "w-2.5 bg-[#E4D4F5] hover:bg-[#C4B0E8]"
+                ? "w-7 bg-gradient-to-r from-primary to-gold"
+                : "w-2.5 bg-border hover:bg-gold-light"
             )}
           />
         ))}

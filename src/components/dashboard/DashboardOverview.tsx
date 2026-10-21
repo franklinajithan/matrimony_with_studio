@@ -74,10 +74,10 @@ function DiscoveryCard({
   const meta = [person.profession, person.location].filter(Boolean).join(" · ");
 
   return (
-    <article className="group flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[#eadde7] bg-white shadow-[0_8px_22px_rgba(75,32,67,0.07)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(75,32,67,0.12)]">
+    <article className="group flex w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[0_8px_22px_hsl(var(--primary)/0.07)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_hsl(var(--primary)/0.12)]">
       <Link
         href={`/profile/${person.id}`}
-        className="block bg-[#f4eef5]"
+        className="block bg-accent"
       >
         <div className="relative aspect-[4/5] w-full overflow-hidden">
           <MemberAvatar
@@ -92,25 +92,25 @@ function DiscoveryCard({
         <div className="min-w-0">
           <Link
             href={`/profile/${person.id}`}
-            className="block truncate text-base font-semibold leading-tight text-[#3b1837] hover:text-primary sm:text-sm"
+            className="block truncate text-base font-semibold leading-tight text-foreground hover:text-primary sm:text-sm"
           >
             <span className="truncate">{person.displayName}</span>
             {person.age ? (
-              <span className="font-normal text-[#745d70]">, {person.age}</span>
+              <span className="font-normal text-muted-foreground">, {person.age}</span>
             ) : null}
           </Link>
           {person.isVerified ? (
-            <p className="mt-0.5 flex items-center gap-0.5 text-[10px] text-[#6d5b69] sm:text-[11px]">
+            <p className="mt-0.5 flex items-center gap-0.5 text-[10px] text-muted-foreground sm:text-[11px]">
               <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" aria-hidden="true" />
               <span className="truncate">{labels.verified}</span>
             </p>
           ) : null}
         </div>
-        <p className="line-clamp-2 min-h-0 text-[11px] leading-snug text-[#745d70] sm:min-h-[2.25rem] sm:text-xs">
+        <p className="line-clamp-2 min-h-0 text-[11px] leading-snug text-muted-foreground sm:min-h-[2.25rem] sm:text-xs">
           {meta || "View profile for more"}
         </p>
         {person.sharedPreference ? (
-          <p className="hidden truncate rounded-full bg-[#f5eafa] px-2 py-0.5 text-[10px] font-medium text-[#713c78] sm:inline-flex">
+          <p className="hidden truncate rounded-full bg-accent px-2 py-0.5 text-[10px] font-medium text-gold-foreground sm:inline-flex">
             {person.sharedPreference}
           </p>
         ) : null}
@@ -119,7 +119,7 @@ function DiscoveryCard({
             asChild
             variant="outline"
             size="sm"
-            className="h-8 min-w-0 rounded-lg border-[#dcc9d8] bg-white px-1.5 text-[11px] sm:h-9 sm:px-2 sm:text-xs"
+            className="h-8 min-w-0 rounded-lg border-input bg-card px-1.5 text-[11px] sm:h-9 sm:px-2 sm:text-xs"
           >
             <Link href={`/profile/${person.id}`}>{labels.view}</Link>
           </Button>
@@ -254,40 +254,40 @@ export function DashboardOverview() {
     <PageFrame>
       <header className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="font-headline text-3xl font-semibold tracking-tight text-[#291039] sm:text-4xl">{t.welcome}, {displayName}</h1>
-          <p className="mt-1 text-sm text-[#786d7e]">{t.journey}</p>
+          <h1 className="font-headline text-3xl font-semibold tracking-tight text-primary-dark sm:text-4xl">{t.welcome}, {displayName}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t.journey}</p>
         </div>
       </header>
-      <section className="relative isolate overflow-hidden rounded-3xl bg-[#30123f] p-6 text-white sm:p-8">
-        <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-32 -z-10 h-96 w-96 rounded-full border border-[#c3a05c]/50" />
-        <Sparkles aria-hidden="true" className="absolute right-6 top-6 h-6 w-6 text-[#dbc184]" />
-        <h2 className="max-w-sm pr-6 font-headline text-2xl font-semibold leading-tight sm:text-3xl">Make a meaningful <span className="text-[#e1c88f]">connection</span></h2>
-        <p className="mt-3 max-w-lg text-sm leading-relaxed text-[#e3d7e9]">{t.hero}</p>
-        <Button asChild className="mt-5 min-h-11 rounded-xl bg-[#fff8e9] px-5 text-[#30123f] hover:bg-[#f0dfbb]">
+      <section className="relative isolate overflow-hidden rounded-3xl bg-primary-dark p-6 text-white sm:p-8">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-32 -z-10 h-96 w-96 rounded-full border border-gold/50" />
+        <Sparkles aria-hidden="true" className="absolute right-6 top-6 h-6 w-6 text-gold-light" />
+        <h2 className="max-w-sm pr-6 font-headline text-2xl font-semibold leading-tight sm:text-3xl">Make a meaningful <span className="text-gold-light">connection</span></h2>
+        <p className="mt-3 max-w-lg text-sm leading-relaxed text-gold-light">{t.hero}</p>
+        <Button asChild className="mt-5 min-h-11 rounded-xl bg-gold-soft px-5 text-primary-dark hover:bg-gold-light">
           <Link href="/discover">{t.discover}<ArrowRight className="ml-2 h-4 w-4" /></Link>
         </Button>
       </section>
 
       <section aria-label="Your activity" className="grid grid-cols-3 gap-2 sm:gap-4">
-        <Link href="/dashboard/interests" className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-[#eae3dc] bg-white p-3 transition hover:bg-[#faf6ff] sm:flex-row sm:items-center sm:gap-3 sm:p-4">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-[#faedf3] text-[#9a4f78]"><Heart className="h-4 w-4" /></span>
-          <span><strong className="block text-lg text-[#351532]">{countText(data.receivedInterests)}</strong><span className="text-xs text-[#745d70]">{t.received}</span></span>
+        <Link href="/dashboard/interests" className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-border bg-card p-3 transition hover:bg-accent sm:flex-row sm:items-center sm:gap-3 sm:p-4">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-gold-foreground"><Heart className="h-4 w-4" /></span>
+          <span><strong className="block text-lg text-foreground">{countText(data.receivedInterests)}</strong><span className="text-xs text-muted-foreground">{t.received}</span></span>
         </Link>
-        <Link href="/connections" className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-[#eae3dc] bg-white p-3 transition hover:bg-[#faf6ff] sm:flex-row sm:items-center sm:gap-3 sm:p-4">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-[#f1edfb] text-[#7254a1]"><Users className="h-4 w-4" /></span>
-          <span><strong className="block text-lg text-[#351532]">{countText(data.connections)}</strong><span className="text-xs text-[#745d70]">{t.connections}</span></span>
+        <Link href="/connections" className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-border bg-card p-3 transition hover:bg-accent sm:flex-row sm:items-center sm:gap-3 sm:p-4">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-gold-foreground"><Users className="h-4 w-4" /></span>
+          <span><strong className="block text-lg text-foreground">{countText(data.connections)}</strong><span className="text-xs text-muted-foreground">{t.connections}</span></span>
         </Link>
-        <Link href="/messages" className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-[#eae3dc] bg-white p-3 transition hover:bg-[#faf6ff] sm:flex-row sm:items-center sm:gap-3 sm:p-4">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-[#edf8f4] text-[#367b66]"><MessageCircle className="h-4 w-4" /></span>
-          <span><strong className="block text-lg text-[#351532]">{countText(data.unreadMessages)}</strong><span className="text-xs text-[#745d70]">{t.unread}</span></span>
+        <Link href="/messages" className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-border bg-card p-3 transition hover:bg-accent sm:flex-row sm:items-center sm:gap-3 sm:p-4">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-gold-foreground"><MessageCircle className="h-4 w-4" /></span>
+          <span><strong className="block text-lg text-foreground">{countText(data.unreadMessages)}</strong><span className="text-xs text-muted-foreground">{t.unread}</span></span>
         </Link>
       </section>
 
       <section aria-labelledby="matches-heading" className="space-y-4">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#9b668f]">{t.chosen}</p>
-            <h2 id="matches-heading" className="mt-1 text-2xl font-semibold text-[#351532]">{t.suggested}</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-foreground">{t.chosen}</p>
+            <h2 id="matches-heading" className="mt-1 text-2xl font-semibold text-foreground">{t.suggested}</h2>
           </div>
           <Button asChild variant="ghost" className="inline-flex shrink-0 px-0 text-xs sm:px-3 sm:text-sm"><Link href="/discover">{t.exploreAll}<ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
         </div>
@@ -306,25 +306,25 @@ export function DashboardOverview() {
             ))}
           </div>
         ) : data.discovery.status === "unpublished" ? (
-          <div className="rounded-3xl border border-[#eadde7] bg-white px-6 py-8 text-center shadow-sm">
-            <Sparkles className="mx-auto h-8 w-8 text-[#9b668f]" />
-            <h3 className="mt-3 text-lg font-semibold text-[#351532]">Complete your profile to meet the right people</h3>
-            <p className="mx-auto mt-2 max-w-lg text-sm text-[#745d70]">Your profile stays private until you publish it. Once ready, we can show real members who fit your preferences.</p>
+          <div className="rounded-3xl border border-border bg-card px-6 py-8 text-center shadow-sm">
+            <Sparkles className="mx-auto h-8 w-8 text-gold-foreground" />
+            <h3 className="mt-3 text-lg font-semibold text-foreground">Complete your profile to meet the right people</h3>
+            <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">Your profile stays private until you publish it. Once ready, we can show real members who fit your preferences.</p>
             <Button asChild className="mt-5 rounded-xl"><Link href={readiness.primaryAction.href}>{t.continueProfile}</Link></Button>
           </div>
         ) : data.discovery.status === "empty" ? (
-          <div className="rounded-3xl border border-[#eadde7] bg-[linear-gradient(135deg,#fff,#fbf2f7)] px-6 py-8 text-center shadow-sm">
-            <Heart className="mx-auto h-8 w-8 text-[#a56b97]" />
-            <h3 className="mt-3 text-lg font-semibold text-[#351532]">{t.noMatches}</h3>
-            <p className="mx-auto mt-2 max-w-lg text-sm text-[#745d70]">We won’t invent profiles to fill this space. Widen a preference or explore the community to see more real members.</p>
+          <div className="rounded-3xl border border-border bg-[linear-gradient(135deg,hsl(var(--background)),hsl(var(--accent)))] px-6 py-8 text-center shadow-sm">
+            <Heart className="mx-auto h-8 w-8 text-gold-foreground" />
+            <h3 className="mt-3 text-lg font-semibold text-foreground">{t.noMatches}</h3>
+            <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">We won’t invent profiles to fill this space. Widen a preference or explore the community to see more real members.</p>
             <div className="mt-5 flex flex-wrap justify-center gap-2">
               <Button asChild className="rounded-xl"><Link href="/onboarding?step=2">Adjust preferences</Link></Button>
               <Button asChild variant="outline" className="rounded-xl"><Link href="/discover">Explore all profiles</Link></Button>
             </div>
           </div>
         ) : (
-          <div className="rounded-3xl border border-[#eadde7] bg-white px-6 py-8 text-center">
-            <p className="text-sm text-[#745d70]">Matches could not be loaded right now.</p>
+          <div className="rounded-3xl border border-border bg-card px-6 py-8 text-center">
+            <p className="text-sm text-muted-foreground">Matches could not be loaded right now.</p>
             <Button variant="outline" className="mt-4 rounded-xl" onClick={() => void load()}><RefreshCw className="mr-2 h-4 w-4" />Try again</Button>
           </div>
         )}
@@ -334,12 +334,12 @@ export function DashboardOverview() {
 
 
       {conversation ? (
-        <section aria-labelledby="conversation-heading" className="rounded-3xl border border-[#eadde7] bg-white p-5 shadow-sm sm:p-6">
+        <section aria-labelledby="conversation-heading" className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#9b668f]">Keep the connection moving</p>
-              <h2 id="conversation-heading" className="mt-1 text-xl font-semibold text-[#351532]">Continue your conversation</h2>
-              <p className="mt-1 text-sm text-[#745d70]">{conversation.title}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-foreground">Keep the connection moving</p>
+              <h2 id="conversation-heading" className="mt-1 text-xl font-semibold text-foreground">Continue your conversation</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{conversation.title}</p>
             </div>
             <Button asChild className="rounded-xl"><Link href={conversation.href}>Open conversation<ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
           </div>
@@ -347,32 +347,32 @@ export function DashboardOverview() {
       ) : null}
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_330px]">
-        <section className="rounded-3xl border border-[#eadde7] bg-white p-5 shadow-sm sm:p-6">
+        <section className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#9b668f]">Small improvements, better introductions</p>
-              <h2 className="mt-1 text-xl font-semibold text-[#351532]">{t.profileComplete.replace("{percent}", String(readiness.percent))}</h2>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-foreground">Small improvements, better introductions</p>
+              <h2 className="mt-1 text-xl font-semibold text-foreground">{t.profileComplete.replace("{percent}", String(readiness.percent))}</h2>
             </div>
             <Button asChild variant="outline" size="sm" className="rounded-xl"><Link href={readiness.primaryAction.href}>{readiness.primaryAction.label}</Link></Button>
           </div>
-          <Progress value={readiness.percent} className="mt-5 h-2.5 bg-[#f0e7ed]" aria-label="Profile completion" />
-          <p className="mt-3 text-sm text-[#745d70]">
+          <Progress value={readiness.percent} className="mt-5 h-2.5 bg-accent" aria-label="Profile completion" />
+          <p className="mt-3 text-sm text-muted-foreground">
             {readiness.isPublished ? "Your profile is published and ready to be discovered." : "Finish the most useful details, then publish when you’re comfortable."}
           </p>
         </section>
 
-        <aside className="rounded-3xl border border-[#eadde7] bg-[#fffaf6] p-5 shadow-sm">
+        <aside className="rounded-3xl border border-border bg-background p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="flex items-center gap-2 font-semibold text-[#351532]"><SlidersHorizontal className="h-4 w-4 text-[#9b668f]" />{t.preferences}</h2>
+            <h2 className="flex items-center gap-2 font-semibold text-foreground"><SlidersHorizontal className="h-4 w-4 text-gold-foreground" />{t.preferences}</h2>
             <Link href="/onboarding?step=2" className="text-sm font-medium text-primary hover:underline">{t.edit}</Link>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {[lookingFor, countries, languages, relocation].filter(Boolean).map((value) => (
-              <span key={value} className="max-w-full truncate rounded-full border border-[#e5d4df] bg-white px-3 py-1.5 text-xs text-[#634f60]">{value}</span>
+              <span key={value} className="max-w-full truncate rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground">{value}</span>
             ))}
-            {![lookingFor, countries, languages, relocation].some(Boolean) ? <span className="text-sm text-[#745d70]">{t.none}</span> : null}
+            {![lookingFor, countries, languages, relocation].some(Boolean) ? <span className="text-sm text-muted-foreground">{t.none}</span> : null}
           </div>
-          <div className="mt-5 flex items-center gap-2 border-t border-[#eadde7] pt-4 text-xs text-[#745d70]">
+          <div className="mt-5 flex items-center gap-2 border-t border-border pt-4 text-xs text-muted-foreground">
             <ShieldCheck className="h-4 w-4 text-emerald-600" /> {t.privacy}
           </div>
         </aside>

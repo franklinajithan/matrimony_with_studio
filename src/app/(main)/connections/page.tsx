@@ -203,13 +203,13 @@ export default function ConnectionsPage() {
       />
 
         {connections.length === 0 ? (
-          <Card className="rounded-2xl border-[#eadde7] shadow-sm">
+          <Card className="rounded-2xl border-border shadow-sm">
             <CardContent className="py-12 text-center">
-              <Users className="mx-auto h-12 w-12 text-[#d4c0ce]" />
-              <p className="mt-4 text-[#745d70]">
+              <Users className="mx-auto h-12 w-12 text-border" />
+              <p className="mt-4 text-muted-foreground">
                 No connections yet
               </p>
-              <p className="mt-2 text-sm text-[#9b668f]">
+              <p className="mt-2 text-sm text-gold-foreground">
                 When you accept an interest, you&apos;ll see them here.
               </p>
               <Button className="mt-4 rounded-xl" asChild>
@@ -220,27 +220,27 @@ export default function ConnectionsPage() {
         ) : (
           <div className="min-w-0 space-y-4 overflow-x-hidden">
             {connections.map((connection) => (
-              <Card key={connection.id} className="min-w-0 overflow-hidden rounded-2xl border-[#eadde7] shadow-sm">
+              <Card key={connection.id} className="min-w-0 overflow-hidden rounded-2xl border-border shadow-sm">
                 <CardContent className="flex min-w-0 flex-col gap-4 p-4 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                     <Avatar className="h-14 w-14 shrink-0 sm:h-16 sm:w-16">
                       <AvatarImage src={connection.profile?.photoURL || ""} />
-                      <AvatarFallback className="bg-[#f5eafa] text-[#713c78]">
+                      <AvatarFallback className="bg-accent text-gold-foreground">
                         {connection.profile?.displayName.charAt(0).toUpperCase() || "U"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <h3 className="break-words font-semibold text-[#351532]">
+                      <h3 className="break-words font-semibold text-foreground">
                         {connection.profile?.displayName || "User"}
                         {connection.profile?.ageYears && `, ${connection.profile.ageYears}`}
                       </h3>
                       {connection.profile?.profession && (
-                        <p className="text-sm text-[#745d70]">{connection.profile.profession}</p>
+                        <p className="text-sm text-muted-foreground">{connection.profile.profession}</p>
                       )}
                       {connection.profile?.location && (
-                        <p className="text-sm text-[#9b668f]">{connection.profile.location}</p>
+                        <p className="text-sm text-gold-foreground">{connection.profile.location}</p>
                       )}
-                      <p className="mt-1 text-xs text-[#b09aaa]">
+                      <p className="mt-1 text-xs text-muted-foreground">
                         Connected {formatDistanceToNow(connection.connectedAt, { addSuffix: true })}
                       </p>
                     </div>
@@ -259,7 +259,7 @@ export default function ConnectionsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="min-w-0 rounded-xl border-[#dcc9d8]"
+                      className="min-w-0 rounded-xl border-input"
                       asChild
                     >
                       <Link href={`/profile/${connection.otherUserId}`}>

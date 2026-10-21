@@ -214,7 +214,7 @@ export default function BiodataPreviewPage() {
   if (loading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#7027E8]" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -223,7 +223,7 @@ export default function BiodataPreviewPage() {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
         <h1 className="text-xl font-semibold">Biodata not found</h1>
-        <Button className="mt-4 bg-[#7027E8] hover:bg-[#5a1ec0]" asChild>
+        <Button className="mt-4 bg-primary hover:bg-primary-dark" asChild>
           <Link href="/biodata">Back to Studio</Link>
         </Button>
       </div>
@@ -238,7 +238,7 @@ export default function BiodataPreviewPage() {
         description="Review layout and privacy before you export or share."
         actions={
           <div className="flex flex-wrap gap-2">
-          <Button variant="outline" className="rounded-xl border-[#dcc9d8] bg-white/80" asChild>
+          <Button variant="outline" className="rounded-xl border-input bg-white/80" asChild>
             <Link href={`/biodata/${doc.id}/edit`}>Edit</Link>
           </Button>
           <DropdownMenu>
@@ -254,11 +254,11 @@ export default function BiodataPreviewPage() {
               <DropdownMenuItem onClick={() => startExport("jpeg")}>JPEG</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" className="rounded-xl border-[#dcc9d8] bg-white/80" onClick={openShareDialog}>
+          <Button variant="outline" className="rounded-xl border-input bg-white/80" onClick={openShareDialog}>
             <Link2 className="mr-1 h-4 w-4" />
             Share link
           </Button>
-          <Button variant="outline" className="rounded-xl border-[#dcc9d8] bg-white/80" onClick={() => startExport("print")}>
+          <Button variant="outline" className="rounded-xl border-input bg-white/80" onClick={() => startExport("print")}>
             <Printer className="mr-1 h-4 w-4" />
             Print
           </Button>
@@ -266,7 +266,7 @@ export default function BiodataPreviewPage() {
         }
       />
 
-      <div className="min-w-0 rounded-lg border border-[#7027E8]/15 bg-[#F3EEE8]/50 p-2 sm:p-4">
+      <div className="min-w-0 rounded-lg border border-primary/15 bg-accent/50 p-2 sm:p-4">
         <ResponsiveDocumentPreview pageSize={doc.design.pageSize}>
           <DocumentRenderer {...doc} visibility={visibility} />
         </ResponsiveDocumentPreview>
@@ -294,7 +294,7 @@ export default function BiodataPreviewPage() {
       />
 
       <Dialog open={shareOpen} onOpenChange={setShareOpen}>
-        <DialogContent className="bg-[#FBF8F4] sm:max-w-md">
+        <DialogContent className="bg-background sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Share link</DialogTitle>
             <DialogDescription>
@@ -350,7 +350,7 @@ export default function BiodataPreviewPage() {
             </Button>
             {!shareUrl ? (
               <Button
-                className="bg-[#7027E8] hover:bg-[#5a1ec0]"
+                className="bg-primary hover:bg-primary-dark"
                 disabled={shareBusy}
                 onClick={() => void handleCreateShareLink()}
               >

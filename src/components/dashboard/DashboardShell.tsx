@@ -69,7 +69,7 @@ function CountPill({ count, dark = false }: { count: number; dark?: boolean }) {
     <span
       className={cn(
         "ml-auto inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none",
-        dark ? "bg-white text-violet-700" : "bg-primary text-primary-foreground"
+        dark ? "bg-card text-primary" : "bg-primary text-primary-foreground"
       )}
     >
       {count > 99 ? "99+" : count}
@@ -512,7 +512,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
       <nav
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 isolate border-t border-[#e8e0ec] bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(73,32,140,0.14)] [backface-visibility:hidden] [transform:translateZ(0)] lg:hidden",
+          "fixed inset-x-0 bottom-0 z-50 isolate border-t border-border bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_hsl(var(--primary)/0.14)] [backface-visibility:hidden] [transform:translateZ(0)] lg:hidden",
           drawerOpen && "hidden"
         )}
         aria-label="Primary"
@@ -529,10 +529,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   aria-current={active ? "page" : undefined}
                   aria-label={count > 0 ? `${item.label}, ${count} new` : item.label}
                   className={cn(
-                    "relative flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-violet-600",
+                    "relative flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                     active
-                      ? "bg-violet-50 text-violet-800"
-                      : "text-[#756b7c] hover:bg-violet-50"
+                      ? "bg-accent text-primary"
+                      : "text-muted-foreground hover:bg-accent"
                   )}
                 >
                   <span className="relative">
@@ -541,7 +541,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                       <span
                         className={cn(
                           "absolute -right-2 -top-1 inline-flex min-w-[1rem] items-center justify-center rounded-full px-1 text-[9px] font-bold leading-4",
-                          "bg-violet-700 text-white"
+                          "bg-primary text-white"
                         )}
                       >
                         {count > 9 ? "9+" : count}

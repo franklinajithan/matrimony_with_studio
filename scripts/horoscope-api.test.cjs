@@ -10,7 +10,7 @@ function load(file, mocks) {
       target: ts.ScriptTarget.ES2022,
     },
   }).outputText;
-  const module = { exports: {} };
+  const testModule = { exports: {} };
   vm.runInThisContext(`(function(require,module,exports){${source}\n})`, {
     filename: file,
   })(
@@ -19,10 +19,10 @@ function load(file, mocks) {
       if (Object.hasOwn(mocks, name)) return mocks[name];
       throw new Error("Unexpected dependency: " + name);
     },
-    module,
-    module.exports,
+    testModule,
+    testModule.exports,
   );
-  return module.exports;
+  return testModule.exports;
 }
 const own = "10000000-0000-4000-8000-000000000001",
   other = "10000000-0000-4000-8000-000000000002";

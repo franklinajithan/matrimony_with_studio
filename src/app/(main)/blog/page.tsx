@@ -34,7 +34,7 @@ const mockBlogPosts = [
 export default function BlogPage() {
   return (
     <div className="space-y-12 py-8">
-      <section className="text-center py-12 bg-gradient-to-br from-rose-50 to-peach-100 rounded-xl shadow-lg">
+      <section className="text-center py-12 bg-gradient-to-br from-accent to-peach-100 rounded-xl shadow-elevated">
         <div className="flex justify-center mb-4">
           <BookText className="h-16 w-16 text-primary" />
         </div>
@@ -48,7 +48,7 @@ export default function BlogPage() {
 
       <section className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         {mockBlogPosts.map((post) => (
-          <Card key={post.slug} className="flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out overflow-hidden rounded-lg bg-card">
+          <Card key={post.slug} className="flex flex-col shadow-elevated hover:shadow-elevated transition-shadow duration-300 ease-in-out overflow-hidden rounded-lg bg-card">
             <CardHeader className="pb-3">
               <Link href={`/blog/${post.slug}`} className="block hover:text-primary transition-colors">
                 <CardTitle className="font-headline text-2xl text-card-foreground ">{post.title}</CardTitle>

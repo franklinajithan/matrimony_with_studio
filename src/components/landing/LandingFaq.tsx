@@ -47,19 +47,19 @@ export function LandingFaq() {
   const { language } = useI18n();
   const copy = faqCopy[language];
   return (
-    <section id="faq" aria-labelledby="faq-heading" className="scroll-mt-24 bg-[#FFFDFB] px-5 py-16 sm:py-20 lg:py-24">
+    <section id="faq" aria-labelledby="faq-heading" className="scroll-mt-24 bg-background px-5 py-16 sm:py-20 lg:py-24">
       <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[.8fr_1.2fr] lg:gap-16">
         <div>
-          <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.18em] text-[#8556A3]"><HelpCircle aria-hidden="true" className="h-4 w-4" /> {copy.eyebrow}</span>
-          <h2 id="faq-heading" className="mt-4 font-serif text-4xl font-semibold leading-tight text-[#29133F] sm:text-5xl">{copy.title}</h2>
-          <p className="mt-5 max-w-md text-base leading-7 text-[#665872]">{copy.intro}</p>
-          <Link href="/contact" className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#51217B] underline-offset-4 hover:underline">{copy.contact} <ArrowRight aria-hidden="true" className="h-4 w-4" /></Link>
+          <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.18em] text-gold-foreground"><HelpCircle aria-hidden="true" className="h-4 w-4" /> {copy.eyebrow}</span>
+          <h2 id="faq-heading" className="mt-4 font-serif text-4xl font-semibold leading-tight text-primary-dark sm:text-5xl">{copy.title}</h2>
+          <p className="mt-5 max-w-md text-base leading-7 text-muted-foreground">{copy.intro}</p>
+          <Link href="/contact" className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary-dark underline-offset-4 hover:underline">{copy.contact} <ArrowRight aria-hidden="true" className="h-4 w-4" /></Link>
         </div>
         <div className="space-y-3">
           {copy.questions.map(([question,answer]) => (
-            <details key={question} className="group rounded-2xl border border-[#EDE4F3] bg-white px-5 py-4 shadow-sm open:border-[#D8BCEB] sm:px-6">
-              <summary className="flex min-h-8 cursor-pointer list-none items-center justify-between gap-4 font-semibold text-[#29133F] focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#51217B] [&::-webkit-details-marker]:hidden">{question}<span aria-hidden="true" className="shrink-0 text-xl text-[#8556A3] group-open:rotate-45">+</span></summary>
-              <p className="mt-3 pr-6 text-sm leading-7 text-[#665872]">{answer}</p>
+            <details key={question} className="group rounded-2xl border border-accent bg-card px-5 py-4 shadow-sm open:border-gold-light sm:px-6">
+              <summary className="flex min-h-8 cursor-pointer list-none items-center justify-between gap-4 font-semibold text-primary-dark focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-dark [&::-webkit-details-marker]:hidden">{question}<span aria-hidden="true" className="shrink-0 text-xl text-gold-foreground group-open:rotate-45">+</span></summary>
+              <p className="mt-3 pr-6 text-sm leading-7 text-muted-foreground">{answer}</p>
             </details>
           ))}
         </div>

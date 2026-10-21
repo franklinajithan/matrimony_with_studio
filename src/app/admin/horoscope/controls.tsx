@@ -61,7 +61,7 @@ export default function Controls() {
       )}
       {settings && (
         <form
-          className="space-y-5 rounded-2xl border bg-white p-5"
+          className="space-y-5 rounded-2xl border bg-card p-5"
           onSubmit={(e) => {
             e.preventDefault();
             void save(settings);
@@ -132,7 +132,7 @@ export default function Controls() {
         </form>
       )}
       <form
-        className="space-y-3 rounded-2xl border bg-white p-5"
+        className="space-y-3 rounded-2xl border bg-card p-5"
         onSubmit={(e) => {
           e.preventDefault();
           void save({ member, restricted });
@@ -158,7 +158,7 @@ export default function Controls() {
         </label>
         <Button disabled={busy}>Apply restriction</Button>
       </form>
-      <section className="rounded-2xl border bg-white p-5">
+      <section className="rounded-2xl border bg-card p-5">
         <h2 className="font-semibold">Aggregate activity</h2>
         <dl className="mt-4 grid gap-4 sm:grid-cols-2">
           {Object.entries(metrics).map(([key, value]) => (

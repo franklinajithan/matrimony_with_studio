@@ -47,8 +47,8 @@ export function PairedOrbit({
     >
       <defs>
         <linearGradient id="orbit-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style={{ stopColor: '#7027E8', stopOpacity: 0.15 }} />
-          <stop offset="100%" style={{ stopColor: '#FF6F72', stopOpacity: 0.15 }} />
+          <stop offset="0%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 0.15 }} />
+          <stop offset="100%" style={{ stopColor: 'hsl(var(--gold))', stopOpacity: 0.15 }} />
         </linearGradient>
       </defs>
 
@@ -81,7 +81,7 @@ export function PairedOrbit({
         cx={cx}
         cy={cy}
         r="3"
-        fill="#7027E8"
+        fill="hsl(var(--primary))"
         opacity="0.3"
       />
 
@@ -90,7 +90,7 @@ export function PairedOrbit({
         cx={cx + r1 * 0.7}
         cy={cy}
         r="2"
-        fill="#FF6F72"
+        fill="hsl(var(--gold))"
         opacity="0.4"
         className={animate ? "cupid-orbit-pulse" : ""}
       />
@@ -98,7 +98,7 @@ export function PairedOrbit({
         cx={cx}
         cy={cy - r2 * 0.7}
         r="2"
-        fill="#7027E8"
+        fill="hsl(var(--primary))"
         opacity="0.4"
         className={animate ? "cupid-orbit-pulse" : ""}
         style={{ animationDelay: '1s' }}

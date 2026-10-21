@@ -115,14 +115,14 @@ export default function SubmitSuccessStoryPage() {
       <div className="mx-auto max-w-5xl">
         <Link href="/success-stories" className={`${secondaryLink} mb-7`}><ArrowLeft aria-hidden className="h-4 w-4" /> Back to stories</Link>
         <header className="max-w-2xl">
-          <p className="text-xs font-bold uppercase tracking-[.22em] text-[#846294]">Your CupidMatch journey</p>
-          <h1 className="mt-4 font-serif text-[2.5rem] font-semibold leading-[1.1] tracking-tight sm:text-5xl">A story only <span className="text-[#A52A8A]">you can tell.</span></h1>
-          <p className="mt-5 text-base leading-7 text-[#6B5A78]">From the first hello to your next chapter together, share the moments that made your connection meaningful.</p>
+          <p className="text-xs font-bold uppercase tracking-[.22em] text-muted-foreground">Your CupidMatch journey</p>
+          <h1 className="mt-4 font-serif text-[2.5rem] font-semibold leading-[1.1] tracking-tight sm:text-5xl">A story only <span className="text-primary">you can tell.</span></h1>
+          <p className="mt-5 text-base leading-7 text-muted-foreground">From the first hello to your next chapter together, share the moments that made your connection meaningful.</p>
         </header>
         <div className="mt-8 grid items-start gap-7 lg:grid-cols-[minmax(0,1fr)_270px] lg:gap-8">
-        <section aria-labelledby="story-form-title" className="min-w-0 rounded-3xl border border-[#EADFED] bg-white/80 p-5 sm:p-8">
+        <section aria-labelledby="story-form-title" className="min-w-0 rounded-3xl border border-border bg-white/80 p-5 sm:p-8">
           <h2 id="story-form-title" className="font-serif text-2xl font-semibold">Tell us your story</h2>
-          <p className="mb-7 mt-2 text-sm leading-6 text-[#6B5A78]">Names, your story and sharing consent are required. A photo and email are optional.</p>
+          <p className="mb-7 mt-2 text-sm leading-6 text-muted-foreground">Names, your story and sharing consent are required. A photo and email are optional.</p>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" aria-busy={isSubmitting}>
               <FormField
@@ -130,9 +130,9 @@ export default function SubmitSuccessStoryPage() {
                 name="coupleNames"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center text-sm font-semibold leading-6 text-[#2A1845]"><Users className="mr-2 h-4 w-4 text-[#846294]" aria-hidden />Your Names (e.g., Priya & Rohan)</FormLabel>
+                    <FormLabel className="flex items-center text-sm font-semibold leading-6 text-primary-dark"><Users className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden />Your Names (e.g., Priya & Rohan)</FormLabel>
                     <FormControl>
-                      <Input className="h-12 rounded-xl border-[#DDD0E7] bg-[#FFFDF9] text-base" autoComplete="name" placeholder="Enter both names" {...field} disabled={isSubmitting} />
+                      <Input className="h-12 rounded-xl border-border bg-background text-base" autoComplete="name" placeholder="Enter both names" {...field} disabled={isSubmitting} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -143,9 +143,9 @@ export default function SubmitSuccessStoryPage() {
                 name="storyText"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center text-sm font-semibold leading-6 text-[#2A1845]"><BookOpen className="mr-2 h-4 w-4 text-[#846294]" aria-hidden />Your Success Story</FormLabel>
+                    <FormLabel className="flex items-center text-sm font-semibold leading-6 text-primary-dark"><BookOpen className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden />Your Success Story</FormLabel>
                     <FormControl>
-                      <Textarea className="min-h-48 rounded-xl border-[#DDD0E7] bg-[#FFFDF9] text-base leading-7" placeholder="Tell us how you met, your journey, and what makes your connection special..." {...field} rows={8} disabled={isSubmitting} />
+                      <Textarea className="min-h-48 rounded-xl border-border bg-background text-base leading-7" placeholder="Tell us how you met, your journey, and what makes your connection special..." {...field} rows={8} disabled={isSubmitting} />
                     </FormControl>
                     <FormDescription>Write 50–5,000 characters. You might start with how you met and what you hope to build together.</FormDescription>
                     <FormMessage />
@@ -157,10 +157,10 @@ export default function SubmitSuccessStoryPage() {
                 name="photo"
                 render={({ field: { onChange, onBlur, name, ref } }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center text-sm font-semibold leading-6 text-[#2A1845]"><ImageIcon className="mr-2 h-4 w-4 text-[#846294]" aria-hidden />Share a Photo (Optional)</FormLabel>
+                    <FormLabel className="flex items-center text-sm font-semibold leading-6 text-primary-dark"><ImageIcon className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden />Share a Photo (Optional)</FormLabel>
                     <FormControl>
                       <Input 
-                        className="h-auto min-h-12 max-w-full rounded-xl border-dashed border-[#CDB9DE] bg-[#FBF7FE] p-3 text-sm file:mr-3 file:rounded-full file:bg-[#F0E5FC] file:px-3 file:py-1 file:text-[#6D28D9]"
+                        className="h-auto min-h-12 max-w-full rounded-xl border-dashed border-border bg-accent p-3 text-sm file:mr-3 file:rounded-full file:bg-accent file:px-3 file:py-1 file:text-primary"
                         type="file" 
                         accept={ACCEPTED_IMAGE_TYPES.join(',')}
                         onChange={(e) => {
@@ -184,9 +184,9 @@ export default function SubmitSuccessStoryPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center text-sm font-semibold leading-6 text-[#2A1845]"><Mail className="mr-2 h-4 w-4 text-[#846294]" aria-hidden />Your Email (Optional, for verification)</FormLabel>
+                    <FormLabel className="flex items-center text-sm font-semibold leading-6 text-primary-dark"><Mail className="mr-2 h-4 w-4 text-muted-foreground" aria-hidden />Your Email (Optional, for verification)</FormLabel>
                     <FormControl>
-                      <Input className="h-12 rounded-xl border-[#DDD0E7] bg-[#FFFDF9] text-base" autoComplete="email" type="email" placeholder="you@example.com" {...field} disabled={isSubmitting} />
+                      <Input className="h-12 rounded-xl border-border bg-background text-base" autoComplete="email" type="email" placeholder="you@example.com" {...field} disabled={isSubmitting} />
                     </FormControl>
                     <FormDescription>We may contact you to verify your story. This will not be published.</FormDescription>
                     <FormMessage />
@@ -197,7 +197,7 @@ export default function SubmitSuccessStoryPage() {
                 control={form.control}
                 name="consent"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-2xl border border-[#EADFED] bg-[#F8F1FC] p-4">
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-2xl border border-border bg-accent p-4">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
@@ -206,7 +206,7 @@ export default function SubmitSuccessStoryPage() {
                       />
                     </FormControl>
                     <div className="min-w-0 space-y-2 leading-6">
-                      <FormLabel className="cursor-pointer text-sm leading-6 text-[#51435C]">
+                      <FormLabel className="cursor-pointer text-sm leading-6 text-muted-foreground">
                         I consent to CupidMatch sharing my story and photo (if provided) on their website and promotional materials.
                       </FormLabel>
                       <FormMessage />
@@ -214,20 +214,20 @@ export default function SubmitSuccessStoryPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="min-h-12 w-full rounded-full bg-[#7C3AED] px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-[#6D28D9]" disabled={isSubmitting}>
+              <Button type="submit" className="min-h-12 w-full rounded-full bg-primary px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-primary-dark" disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Send className="mr-2 h-5 w-5" />}
                 Submit Your Story
               </Button>
             </form>
           </Form>
-          <p className="mt-5 text-center text-xs leading-5 text-[#6B5A78]">By submitting, you confirm you have the rights to share the story and photo.</p>
+          <p className="mt-5 text-center text-xs leading-5 text-muted-foreground">By submitting, you confirm you have the rights to share the story and photo.</p>
         </section>
-        <aside className="space-y-5 rounded-3xl bg-[#F3EBFA] p-6 sm:p-7">
-          <Heart aria-hidden className="h-7 w-7 text-[#A52A8A]" />
+        <aside className="space-y-5 rounded-3xl bg-accent p-6 sm:p-7">
+          <Heart aria-hidden className="h-7 w-7 text-primary" />
           <h2 className="font-serif text-2xl font-semibold">The little moments matter.</h2>
-          <p className="text-sm leading-6 text-[#6B5A78]">You don’t need the perfect words. Here are a few places to start:</p>
-          <ul className="list-disc space-y-3 pl-4 text-sm leading-6 text-[#51435C]"><li>What made you send that first hello?</li><li>Which values brought you closer?</li><li>What would you tell someone just starting out?</li></ul>
-          <div className="border-t border-[#DED0EA] pt-5"><ShieldCheck aria-hidden className="mb-3 h-5 w-5 text-[#7C3AED]" /><h3 className="text-sm font-semibold">Shared with care</h3><p className="mt-2 text-sm leading-6 text-[#6B5A78]">Our team reviews submissions before they’re featured. Your email is only for verification and won’t be published.</p></div>
+          <p className="text-sm leading-6 text-muted-foreground">You don’t need the perfect words. Here are a few places to start:</p>
+          <ul className="list-disc space-y-3 pl-4 text-sm leading-6 text-muted-foreground"><li>What made you send that first hello?</li><li>Which values brought you closer?</li><li>What would you tell someone just starting out?</li></ul>
+          <div className="border-t border-border pt-5"><ShieldCheck aria-hidden className="mb-3 h-5 w-5 text-primary" /><h3 className="text-sm font-semibold">Shared with care</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">Our team reviews submissions before they’re featured. Your email is only for verification and won’t be published.</p></div>
         </aside>
         </div>
       </div>

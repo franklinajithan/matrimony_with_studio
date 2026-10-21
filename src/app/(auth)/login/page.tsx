@@ -116,7 +116,7 @@ function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-md shadow-2xl">
+    <Card className="w-full max-w-md shadow-elevated">
       <CardHeader className="text-center">
         <CardTitle className="font-headline text-3xl text-primary">{t.loginTitle}</CardTitle>
         <CardDescription>{t.loginDescription}</CardDescription>

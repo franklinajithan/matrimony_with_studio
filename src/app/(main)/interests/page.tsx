@@ -312,11 +312,11 @@ export default function InterestsPage() {
             {receivedInterests.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center">
-                  <Heart className="mx-auto h-12 w-12 text-gray-300" />
-                  <p className="mt-4 text-gray-600">
+                  <Heart className="mx-auto h-12 w-12 text-muted-foreground" />
+                  <p className="mt-4 text-muted-foreground">
                     No pending interests
                   </p>
-                  <p className="mt-2 text-sm text-gray-500">
+                  <p className="mt-2 text-sm text-muted-foreground">
                     When someone sends you an interest, it will appear here.
                   </p>
                 </CardContent>
@@ -329,22 +329,22 @@ export default function InterestsPage() {
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         <Avatar className="h-14 w-14 sm:h-16 sm:w-16 shrink-0">
                           <AvatarImage src={interest.profile?.photoURL || ""} />
-                          <AvatarFallback className="bg-violet-100 text-violet-700">
+                          <AvatarFallback className="bg-accent text-primary">
                             {interest.profile?.displayName.charAt(0).toUpperCase() || "U"}
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold text-gray-900 truncate">
+                          <h3 className="font-semibold text-foreground truncate">
                             {interest.profile?.displayName || "User"}
                             {interest.profile?.ageYears && `, ${interest.profile.ageYears}`}
                           </h3>
                           {interest.profile?.profession && (
-                            <p className="text-sm text-gray-600 truncate">{interest.profile.profession}</p>
+                            <p className="text-sm text-muted-foreground truncate">{interest.profile.profession}</p>
                           )}
                           {interest.profile?.location && (
-                            <p className="text-sm text-gray-500 truncate">{interest.profile.location}</p>
+                            <p className="text-sm text-muted-foreground truncate">{interest.profile.location}</p>
                           )}
-                          <p className="mt-1 text-xs text-gray-400">
+                          <p className="mt-1 text-xs text-muted-foreground">
                             Received {formatDistanceToNow(interest.createdAt, { addSuffix: true })}
                           </p>
                         </div>
@@ -378,7 +378,7 @@ export default function InterestsPage() {
                           data-testid={`interest-${interest.senderUid}-accept`}
                           onClick={() => handleAccept(interest.id, interest.senderUid)}
                           disabled={processingAction[interest.id]}
-                          className="bg-violet-600 hover:bg-violet-700"
+                          className="bg-primary hover:bg-primary-dark"
                         >
                           {processingAction[interest.id] ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -398,12 +398,12 @@ export default function InterestsPage() {
             {sentInterests.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center">
-                  <Send className="mx-auto h-12 w-12 text-gray-300" />
-                  <p className="mt-4 text-gray-600">
+                  <Send className="mx-auto h-12 w-12 text-muted-foreground" />
+                  <p className="mt-4 text-muted-foreground">
                     No sent interests
                   </p>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Send interests to people you'd like to connect with.
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Send interests to people you&apos;d like to connect with.
                   </p>
                   <Button className="mt-4" asChild>
                     <Link href="/discover">Browse Profiles</Link>
@@ -418,23 +418,23 @@ export default function InterestsPage() {
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         <Avatar className="h-14 w-14 sm:h-16 sm:w-16 shrink-0">
                           <AvatarImage src={interest.profile?.photoURL || ""} />
-                          <AvatarFallback className="bg-violet-100 text-violet-700">
+                          <AvatarFallback className="bg-accent text-primary">
                             {interest.profile?.displayName.charAt(0).toUpperCase() || "U"}
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold text-gray-900 truncate">
+                          <h3 className="font-semibold text-foreground truncate">
                             {interest.profile?.displayName || "User"}
                             {interest.profile?.ageYears && `, ${interest.profile.ageYears}`}
                           </h3>
                           {interest.profile?.profession && (
-                            <p className="text-sm text-gray-600 truncate">{interest.profile.profession}</p>
+                            <p className="text-sm text-muted-foreground truncate">{interest.profile.profession}</p>
                           )}
                           <div className="mt-1 flex items-center gap-2 flex-wrap">
                             <Badge variant={interest.status === "pending" ? "secondary" : "outline"} className="shrink-0">
                               {interest.status}
                             </Badge>
-                            <p className="text-xs text-gray-400 truncate">
+                            <p className="text-xs text-muted-foreground truncate">
                               {formatDistanceToNow(interest.createdAt, { addSuffix: true })}
                             </p>
                           </div>

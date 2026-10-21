@@ -526,7 +526,7 @@ export default function ProfilePage() {
             onClick={handleSendRequest} 
             disabled={isProcessingRequest} 
             size="icon"
-            className="h-9 w-9 shrink-0 bg-violet-600 hover:bg-violet-700 text-white sm:h-10 sm:w-auto sm:px-4"
+            className="h-9 w-9 shrink-0 bg-primary hover:bg-primary-dark text-white sm:h-10 sm:w-auto sm:px-4"
           >
             {isProcessingRequest ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -595,7 +595,7 @@ export default function ProfilePage() {
           <Button 
             asChild 
             size="icon"
-            className="h-9 w-9 shrink-0 bg-violet-600 hover:bg-violet-700 text-white sm:h-10 sm:w-auto sm:px-4" 
+            className="h-9 w-9 shrink-0 bg-primary hover:bg-primary-dark text-white sm:h-10 sm:w-auto sm:px-4"
             disabled={isProcessingRequest}
           >
             <Link href={`/messages/${getCompositeId(currentFirebaseUser.uid, viewedUserProfile.userId)}`} className="flex items-center">
@@ -611,7 +611,7 @@ export default function ProfilePage() {
   if (isLoadingViewedProfile || isLoadingLoggedInUser) {
     return (
       <div className="max-w-4xl mx-auto p-4 space-y-6">
-        <Card className="shadow-xl overflow-hidden">
+        <Card className="shadow-elevated overflow-hidden">
           <div className="md:flex">
             <div className="md:w-1/2">
               <Skeleton className="h-[400px] md:h-full w-full" />
@@ -624,7 +624,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </Card>
-        <Card className="shadow-lg">
+        <Card className="shadow-elevated">
           <CardHeader>
             <Skeleton className="h-8 w-1/2" />
           </CardHeader>
@@ -690,7 +690,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-4xl px-4 pt-5"><a className="inline-flex rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 text-sm font-semibold text-purple-900" href={`/profile/${viewedUserId}/horoscope`}>View Horoscope</a></div>
+      <div className="mx-auto max-w-4xl px-4 pt-5"><a className="inline-flex rounded-xl border border-border bg-accent px-4 py-3 text-sm font-semibold text-primary-dark" href={`/profile/${viewedUserId}/horoscope`}>View Horoscope</a></div>
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

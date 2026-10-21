@@ -62,8 +62,8 @@ export function TemplateCard({
   return (
     <Card
       className={cn(
-        "overflow-hidden border-[#7027E8]/15 bg-[#FBF8F4] transition-shadow hover:shadow-md",
-        selected && "ring-2 ring-[#7027E8] ring-offset-2",
+        "overflow-hidden border-primary/15 bg-background transition-shadow hover:shadow-md",
+        selected && "ring-2 ring-primary ring-offset-2",
         className
       )}
     >
@@ -73,7 +73,7 @@ export function TemplateCard({
         onClick={() => onSelect?.(template.id)}
         aria-pressed={selected}
       >
-        <div className="relative h-44 overflow-hidden bg-[#FBF8F4]">
+        <div className="relative h-44 overflow-hidden bg-background">
           <div className="pointer-events-none absolute left-1/2 top-2 origin-top -translate-x-1/2 scale-[0.22]">
             <DocumentRenderer
               content={content}
@@ -84,18 +84,18 @@ export function TemplateCard({
               className="gap-0"
             />
           </div>
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#FBF8F4] to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-background to-transparent" />
         </div>
       </button>
 
       <CardHeader className="space-y-2 p-4 pb-2">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-base text-[#1a1a1a]">{template.name}</CardTitle>
+          <CardTitle className="text-base text-foreground">{template.name}</CardTitle>
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="h-8 w-8 shrink-0 text-[#7027E8] hover:bg-[#7027E8]/10 hover:text-[#7027E8]"
+            className="h-8 w-8 shrink-0 text-primary hover:bg-primary/10 hover:text-primary"
             aria-label={isFavourite ? "Remove from favourites" : "Add to favourites"}
             aria-pressed={isFavourite}
             onClick={(e) => {
@@ -104,7 +104,7 @@ export function TemplateCard({
             }}
           >
             <Heart
-              className={cn("h-4 w-4", isFavourite && "fill-[#FF6F72] text-[#FF6F72]")}
+              className={cn("h-4 w-4", isFavourite && "fill-gold text-gold-foreground")}
             />
           </Button>
         </div>
@@ -121,7 +121,7 @@ export function TemplateCard({
             <Badge
               key={cat}
               variant="outline"
-              className="border-[#7027E8]/25 bg-white text-[10px] font-medium text-[#7027E8]"
+              className="border-primary/25 bg-card text-[10px] font-medium text-primary"
             >
               {cat}
             </Badge>
@@ -133,7 +133,7 @@ export function TemplateCard({
         <Button
           type="button"
           size="sm"
-          className="w-full bg-[#7027E8] text-white hover:bg-[#5a1ec0]"
+          className="w-full bg-primary text-white hover:bg-primary-dark"
           onClick={() => onSelect?.(template.id)}
         >
           Use template

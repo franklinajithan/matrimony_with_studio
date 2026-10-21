@@ -17,7 +17,18 @@ export default {
         script: ['"Great Vibes"', 'cursive'],
         code: ['monospace'],
       },
+      boxShadow: {
+        card: 'var(--shadow-card)',
+        elevated: 'var(--shadow-elevated)',
+      },
       colors: {
+        'primary-dark': 'hsl(var(--dark-purple))',
+        gold: {
+          DEFAULT: 'hsl(var(--gold))',
+          foreground: 'hsl(var(--gold-foreground))',
+          soft: 'hsl(var(--gold-soft))',
+          light: 'hsl(var(--gold-light))',
+        },
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

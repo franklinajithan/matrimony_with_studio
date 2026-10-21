@@ -19,12 +19,12 @@ const featuresData = [
     icon: <FileText className="h-8 w-8" />,
     title: "Comprehensive Profiles",
     description: "Detailed profiles with multiple photos, AI-enhanced bio, preferences, and horoscope PDF uploads.",
-    borderColor: "border-purple-500",
+    borderColor: "border-primary",
   },
   { icon: <MessageSquareText className="h-8 w-8" />, title: "Secure Real-time Chat", description: "Chat safely via our encrypted system with typing indicators and photo sharing.", borderColor: "border-orange-500" },
   { icon: <UserCheckIcon className="h-8 w-8" />, title: "Verified Profiles", description: "Connect with genuine users through admin approval with ID proof for a verified badge.", borderColor: "border-cyan-500" },
   { icon: <Palette className="h-8 w-8" />, title: "Easy Profile Setup", description: "Step-by-Step Profile Setup after sign-in with AI assistance for bio and interests.", borderColor: "border-lime-500" },
-  { icon: <ListFilter className="h-8 w-8" />, title: "Custom Match Preferences", description: "Refine criteria to find your ideal match, e.g. only show verified / premium users.", borderColor: "border-pink-500" },
+  { icon: <ListFilter className="h-8 w-8" />, title: "Custom Match Preferences", description: "Refine criteria to find your ideal match, e.g. only show verified / premium users.", borderColor: "border-primary" },
   { icon: <SmartphoneNfc className="h-8 w-8" />, title: "Subscription & Notifications", description: "Premium plans with Razorpay/Stripe, push notifications for matches, messages, and profile views.", borderColor: "border-rose-500" },
   { icon: <Languages className="h-8 w-8" />, title: "Cultural Preferences", description: "Specify religion, caste, language (Tamil, Sinhala, etc.), height, age and more.", borderColor: "border-amber-500" },
   { icon: <Maximize className="h-8 w-8" />, title: "Event Invites & Moderation", description: "Invite to marriage expos, profile flagging, and user moderation system.", borderColor: "border-teal-500" },
@@ -34,7 +34,7 @@ const featuresData = [
 export default function FeaturesPage() {
   return (
     <div className="space-y-12 py-8">
-      <section className="text-center py-12 bg-gradient-to-br from-rose-50 to-peach-100 rounded-xl shadow-lg">
+      <section className="text-center py-12 bg-gradient-to-br from-accent to-peach-100 rounded-xl shadow-elevated">
         <h1 className="font-headline text-5xl font-bold text-primary mb-6">
           Features of MatchCraft
         </h1>
@@ -45,7 +45,7 @@ export default function FeaturesPage() {
 
       <section className="grid md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">
         {featuresData.map((feature) => (
-          <Card key={feature.title} className={`flex flex-col shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out bg-card border-t-4 ${feature.borderColor} rounded-b-lg rounded-t-sm h-full`}>
+          <Card key={feature.title} className={`flex flex-col shadow-md hover:shadow-elevated transition-shadow duration-300 ease-in-out bg-card border-t-4 ${feature.borderColor} rounded-b-lg rounded-t-sm h-full`}>
             <CardHeader className="items-center text-center pt-6 pb-3">
               <div className={`p-3 rounded-full bg-muted mb-3 text-${feature.borderColor.replace("border-", "text-")}`}>
                 {React.cloneElement(feature.icon, { className: `${feature.icon.props.className || ''} h-10 w-10` })}

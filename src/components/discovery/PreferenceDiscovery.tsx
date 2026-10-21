@@ -135,12 +135,12 @@ export function PreferenceDiscovery() {
   };
 
   const FilterPanel = () => <div className="space-y-5 pb-8">
-    <div className="rounded-2xl bg-violet-50 p-4 text-sm text-violet-950"><p className="font-semibold">Filter profiles independently of your saved preferences</p><p className="mt-1 text-violet-700">Changes here filter the results. Your saved preferences are used to rank matches; Reset shows all available profiles.</p></div>
+    <div className="rounded-2xl bg-accent p-4 text-sm text-primary-dark"><p className="font-semibold">Filter profiles independently of your saved preferences</p><p className="mt-1 text-primary">Changes here filter the results. Your saved preferences are used to rank matches; Reset shows all available profiles.</p></div>
     <div><Label>{t.age}</Label><div className="mt-2 grid grid-cols-2 gap-2"><Input type="number" min={18} placeholder={t.min} value={filters.ageMin || ""} onChange={(e) => setFilters((f) => ({ ...f, ageMin: e.target.value ? Number(e.target.value) : undefined }))}/><Input type="number" min={18} placeholder={t.max} value={filters.ageMax || ""} onChange={(e) => setFilters((f) => ({ ...f, ageMax: e.target.value ? Number(e.target.value) : undefined }))}/></div></div>
     <Choice label={t.country} value={first(filters.countries)} values={options.countries} onChange={(v) => setFilters((f) => ({ ...f, countries: list(v) }))}/><Choice label={t.language} value={first(filters.languages)} values={options.languages} onChange={(v) => setFilters((f) => ({ ...f, languages: list(v) }))}/><Choice label={t.religion} value={first(filters.religions)} values={options.religions} onChange={(v) => setFilters((f) => ({ ...f, religions: list(v) }))}/>
     <div><Label>{t.profession}</Label><Input className="mt-2" placeholder="e.g. Engineer" value={filters.professions[0] || ""} onChange={(e) => setFilters((f) => ({ ...f, professions: e.target.value ? [e.target.value] : [] }))}/></div>
     <Choice label={t.smoking} value={first(filters.smoking)} values={["Never", "Occasionally", "Socially"]} onChange={(v) => setFilters((f) => ({ ...f, smoking: list(v) }))}/><Choice label={t.drinking} value={first(filters.drinking)} values={["Never", "Occasionally", "Socially"]} onChange={(v) => setFilters((f) => ({ ...f, drinking: list(v) }))}/>
-    <div className="border-t border-violet-100 pt-4"><p className="mb-3 text-sm font-semibold text-violet-950">More partner preferences</p><div className="space-y-4">
+    <div className="border-t border-border pt-4"><p className="mb-3 text-sm font-semibold text-primary-dark">More partner preferences</p><div className="space-y-4">
       <Choice testId="discover-filter-gender" label="Gender" value={requiredGender || filters.gender || "all"} values={options.genders} onChange={(v) => setFilters((f) => ({ ...f, gender: v === "all" ? undefined : v }))}/>
       <Choice testId="discover-filter-marital-status" label="Marital status" value={first(filters.maritalStatuses || [])} values={options.maritalStatuses} onChange={(v) => setFilters((f) => ({ ...f, maritalStatuses: list(v) }))}/>
       <div><Label>Height (cm)</Label><div className="mt-2 grid grid-cols-2 gap-2"><Input data-testid="discover-filter-height-min" inputMode="numeric" placeholder="Min" value={filters.heightMin || ""} onChange={(e) => setFilters((f) => ({ ...f, heightMin: e.target.value }))}/><Input data-testid="discover-filter-height-max" inputMode="numeric" placeholder="Max" value={filters.heightMax || ""} onChange={(e) => setFilters((f) => ({ ...f, heightMax: e.target.value }))}/></div></div>
@@ -157,19 +157,19 @@ export function PreferenceDiscovery() {
 
   return <PageFrame>
     <PageHero eyebrow={t.eyebrow} title={t.title} description={t.description}/>
-    <Card className="overflow-hidden border-violet-100"><CardContent className="p-4 sm:p-5"><div className="flex flex-col gap-3 lg:flex-row lg:items-center"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/><Input className="pl-10" placeholder={t.search} value={filters.query} onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))}/></div><div className="flex gap-2"><Sheet open={sheet} onOpenChange={setSheet}><SheetTrigger asChild><Button data-testid="discover-filters-open" variant="outline" className="flex-1 lg:flex-none"><SlidersHorizontal className="mr-2 h-4 w-4"/>{t.filters} {activeCount ? `(${activeCount})` : ""}</Button></SheetTrigger><SheetContent className="w-[92vw] overflow-y-auto sm:max-w-md"><SheetHeader><SheetTitle>{t.matchFilters}</SheetTitle></SheetHeader><div className="mt-5"><FilterPanel/></div></SheetContent></Sheet>{hasSaved && <Button variant="ghost" onClick={reset}><RotateCcw className="mr-2 h-4 w-4"/>{t.showAll}</Button>}</div></div>
-      <div className={`mt-4 flex items-center gap-2 rounded-xl px-3 py-2 text-sm ${hasSaved ? "bg-[#fbf8ff] text-violet-800" : "bg-amber-50 text-amber-800"}`}><Sparkles className="h-4 w-4 shrink-0"/><span>{hasSaved ? <><strong>Preference match %</strong> compares each member with your saved Partner Preferences.</> : <><strong>Match % is waiting for your preferences.</strong> Set Partner Preferences to activate personalised scores.</>}</span>{!hasSaved && <Button size="sm" variant="outline" className="ml-auto" onClick={() => router.push(PREFERENCES_ROUTE)}>Set preferences</Button>}</div>
+    <Card className="overflow-hidden border-border"><CardContent className="p-4 sm:p-5"><div className="flex flex-col gap-3 lg:flex-row lg:items-center"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/><Input className="pl-10" placeholder={t.search} value={filters.query} onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))}/></div><div className="flex gap-2"><Sheet open={sheet} onOpenChange={setSheet}><SheetTrigger asChild><Button data-testid="discover-filters-open" variant="outline" className="flex-1 lg:flex-none"><SlidersHorizontal className="mr-2 h-4 w-4"/>{t.filters} {activeCount ? `(${activeCount})` : ""}</Button></SheetTrigger><SheetContent className="w-[92vw] overflow-y-auto sm:max-w-md"><SheetHeader><SheetTitle>{t.matchFilters}</SheetTitle></SheetHeader><div className="mt-5"><FilterPanel/></div></SheetContent></Sheet>{hasSaved && <Button variant="ghost" onClick={reset}><RotateCcw className="mr-2 h-4 w-4"/>{t.showAll}</Button>}</div></div>
+      <div className={`mt-4 flex items-center gap-2 rounded-xl px-3 py-2 text-sm ${hasSaved ? "bg-accent text-primary" : "bg-amber-50 text-amber-800"}`}><Sparkles className="h-4 w-4 shrink-0"/><span>{hasSaved ? <><strong>Preference match %</strong> compares each member with your saved Partner Preferences.</> : <><strong>Match % is waiting for your preferences.</strong> Set Partner Preferences to activate personalised scores.</>}</span>{!hasSaved && <Button size="sm" variant="outline" className="ml-auto" onClick={() => router.push(PREFERENCES_ROUTE)}>Set preferences</Button>}</div>
     </CardContent></Card>
     <div className="flex items-center justify-between"><p className="text-sm text-muted-foreground"><strong className="text-foreground">{results.length}</strong> {t.potential}</p></div>
-    {!results.length ? <Card><CardContent className="py-14 text-center"><Heart className="mx-auto h-10 w-10 text-violet-300"/><h2 className="mt-3 text-lg font-semibold">{t.none}</h2><p className="mt-1 text-sm text-muted-foreground">{t.broaden}</p><Button className="mt-4" variant="outline" onClick={clear}>{t.showAll}</Button></CardContent></Card> :
+    {!results.length ? <Card><CardContent className="py-14 text-center"><Heart className="mx-auto h-10 w-10 text-gold-foreground"/><h2 className="mt-3 text-lg font-semibold">{t.none}</h2><p className="mt-1 text-sm text-muted-foreground">{t.broaden}</p><Button className="mt-4" variant="outline" onClick={clear}>{t.showAll}</Button></CardContent></Card> :
     <div className="grid grid-cols-2 items-stretch gap-3 md:grid-cols-3 lg:gap-5 xl:grid-cols-4">
       {results.map((person) => {
       const score = preferences ? preferenceScore(person, preferences) : null;
       const showScore = Boolean(hasSaved && score && score.total > 0);
       return (
-        <Card key={person.id} data-testid={`discover-profile-${person.id}`} className="flex h-full flex-col overflow-hidden rounded-2xl border-[#eadde7] shadow-sm">
+        <Card key={person.id} data-testid={`discover-profile-${person.id}`} className="flex h-full flex-col overflow-hidden rounded-2xl border-border shadow-sm">
           {/* Fixed photo height so every card aligns */}
-          <div className="relative h-44 w-full shrink-0 overflow-hidden bg-violet-50 sm:h-52 md:h-56">
+          <div className="relative h-44 w-full shrink-0 overflow-hidden bg-accent sm:h-52 md:h-56">
             {person.photoURL ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -178,13 +178,13 @@ export function PreferenceDiscovery() {
                 className={`h-full w-full object-cover ${person.profilePhotoGrayscale ? "grayscale" : ""}`}
               />
             ) : (
-              <div className="flex h-full items-center justify-center text-4xl font-semibold text-violet-500">
+              <div className="flex h-full items-center justify-center text-4xl font-semibold text-primary">
                 {person.displayName?.[0] || "?"}
               </div>
             )}
 
             {showScore ? (
-              <div className="absolute left-2 top-2 rounded-full border border-white/80 bg-white/95 px-2.5 py-1 text-[11px] font-bold text-violet-700 shadow-sm">
+              <div className="absolute left-2 top-2 rounded-full border border-white/80 bg-white/95 px-2.5 py-1 text-[11px] font-bold text-primary shadow-sm">
                 {score!.percentage}% {t.preferenceMatch}
               </div>
             ) : (
@@ -207,16 +207,16 @@ export function PreferenceDiscovery() {
               {busy[`s-${person.id}`] ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Bookmark className={`h-4 w-4 ${person.isShortlisted ? "fill-violet-600 text-violet-600" : ""}`} />
+                <Bookmark className={`h-4 w-4 ${person.isShortlisted ? "fill-primary text-primary" : ""}`} />
               )}
             </Button>
           </div>
 
           <CardContent className="flex flex-1 flex-col gap-2 p-3 sm:p-4">
             <div className="min-w-0">
-              <h2 className="truncate text-sm font-semibold leading-tight text-[#351532] sm:text-base">
+              <h2 className="truncate text-sm font-semibold leading-tight text-foreground sm:text-base">
                 {person.displayName}
-                {person.nameIsAlias ? <span className="ml-1 rounded-full bg-violet-50 px-1.5 py-0.5 text-[9px] font-medium text-violet-700 align-middle">CupidMatch alias</span> : null}
+                {person.nameIsAlias ? <span className="ml-1 rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-medium text-primary align-middle">CupidMatch alias</span> : null}
                 {person.ageYears ? (
                   <span className="font-normal text-muted-foreground">, {person.ageYears}</span>
                 ) : null}
@@ -234,23 +234,23 @@ export function PreferenceDiscovery() {
             {/* Fixed-height preference panel keeps footers aligned */}
             <div className="mt-auto h-[4.25rem] shrink-0">
               {showScore ? (
-                <div className="flex h-full flex-col justify-center rounded-xl bg-violet-50 px-2.5 py-2">
+                <div className="flex h-full flex-col justify-center rounded-xl bg-accent px-2.5 py-2">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-xs font-semibold text-violet-900">
+                    <p className="truncate text-xs font-semibold text-primary-dark">
                       {score!.percentage}% {t.preferenceMatch}
                     </p>
-                    <span className="shrink-0 text-[10px] text-violet-600">
+                    <span className="shrink-0 text-[10px] text-primary">
                       {score!.matched}/{score!.total}
                     </span>
                   </div>
-                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-violet-100">
+                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-accent">
                     <div
-                      className="h-full rounded-full bg-violet-600"
+                      className="h-full rounded-full bg-primary"
                       style={{ width: `${score!.percentage}%` }}
                     />
                   </div>
                   {score!.reasons[0] ? (
-                    <p className="mt-1 truncate text-[10px] text-violet-700">✓ {score!.reasons[0]}</p>
+                    <p className="mt-1 truncate text-[10px] text-primary">✓ {score!.reasons[0]}</p>
                   ) : null}
                 </div>
               ) : hasSaved ? (
@@ -261,7 +261,7 @@ export function PreferenceDiscovery() {
                 <button
                   type="button"
                   onClick={() => router.push(PREFERENCES_ROUTE)}
-                  className="flex h-full w-full items-center rounded-xl bg-violet-50 px-2.5 py-2 text-left text-[11px] font-medium leading-snug text-violet-800 hover:bg-violet-100"
+                  className="flex h-full w-full items-center rounded-xl bg-accent px-2.5 py-2 text-left text-[11px] font-medium leading-snug text-primary hover:bg-accent"
                 >
                   Set Partner Preferences to unlock your match %.
                 </button>
@@ -269,7 +269,7 @@ export function PreferenceDiscovery() {
             </div>
           </CardContent>
 
-          <CardFooter className="mt-auto grid shrink-0 grid-cols-3 gap-1.5 border-t border-[#eee2ea] p-2 sm:gap-2 sm:p-3">
+          <CardFooter className="mt-auto grid shrink-0 grid-cols-3 gap-1.5 border-t border-border p-2 sm:gap-2 sm:p-3">
             <Button
               size="sm"
               variant="outline"

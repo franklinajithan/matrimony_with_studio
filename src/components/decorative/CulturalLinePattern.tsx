@@ -52,7 +52,7 @@ export function CulturalLinePattern({
       style={{ transform: `rotate(${rotation}deg)` }}
     >
       {variant === 'textile' && (
-        <g stroke="#7027E8" strokeWidth="1.5">
+        <g stroke="hsl(var(--primary))" strokeWidth="1.5">
           {/* Concentric squares */}
           <rect x="20" y="20" width="160" height="160" rx="4" />
           <rect x="40" y="40" width="120" height="120" rx="3" />
@@ -67,7 +67,7 @@ export function CulturalLinePattern({
       )}
 
       {variant === 'botanical' && (
-        <g stroke="#7027E8" strokeWidth="1.5">
+        <g stroke="hsl(var(--primary))" strokeWidth="1.5">
           {/* Leaf-like patterns */}
           <path d="M100,20 Q120,60 100,100 Q80,60 100,20" />
           <path d="M100,100 Q120,140 100,180 Q80,140 100,100" />
@@ -81,7 +81,7 @@ export function CulturalLinePattern({
       )}
 
       {variant === 'geometric' && (
-        <g stroke="#7027E8" strokeWidth="1.5">
+        <g stroke="hsl(var(--primary))" strokeWidth="1.5">
           {/* Geometric diamonds */}
           <path d="M100,20 L140,100 L100,180 L60,100 Z" />
           <path d="M100,40 L130,100 L100,160 L70,100 Z" />

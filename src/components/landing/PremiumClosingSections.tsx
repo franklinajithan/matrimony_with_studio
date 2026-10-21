@@ -28,20 +28,20 @@ export function GlobalCommunityStory(){
   [18,28],[22,32],[27,30],[31,36],[35,42],[41,31],[45,35],[49,40],[54,33],[58,37],[62,31],[67,35],[72,39],[76,31],[81,35],
   [24,48],[29,52],[35,49],[42,53],[48,47],[55,51],[61,47],[68,52],[74,48],[80,52],[34,61],[42,64],[51,60],[60,64],[69,61]
  ];
- return <section ref={ref} className="relative h-[190svh] lg:h-[125svh] bg-[#FFFDFB] [scroll-snap-align:start] [scroll-snap-stop:always]">
+ return <section ref={ref} className="relative h-[190svh] lg:h-[125svh] bg-background [scroll-snap-align:start] [scroll-snap-stop:always]">
   <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-5 py-5">
    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_58%,rgba(216,180,254,.25),transparent_45%),radial-gradient(circle_at_12%_72%,rgba(244,114,182,.10),transparent_28%)]"/>
    <div className="relative mx-auto w-full max-w-xl text-center lg:max-w-6xl" style={{opacity:.55+enter*.45,transform:`translateY(${(1-enter)*28}px)`}}>
-    <p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#A078B0]">Across borders, close to home</p>
-    <h2 className="mx-auto mt-3 font-serif text-[2.25rem] font-semibold leading-[1.05] text-[#2A1845] lg:text-[4rem]">A Global Community<br/><span className="text-[#C026D3]">Connected by Culture</span></h2>
-    <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[#6B5A78] lg:max-w-xl lg:text-base">Sri Lankans around the world, finding meaningful connections.</p>
+    <p className="text-[10px] font-bold uppercase tracking-[.28em] text-gold-foreground">Across borders, close to home</p>
+    <h2 className="mx-auto mt-3 font-serif text-[2.25rem] font-semibold leading-[1.05] text-primary-dark lg:text-[4rem]">A Global Community<br/><span className="text-primary">Connected by Culture</span></h2>
+    <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-muted-foreground lg:max-w-xl lg:text-base">Sri Lankans around the world, finding meaningful connections.</p>
     <div className="relative mx-auto mt-5 h-[430px] max-w-[390px] lg:mt-8 lg:h-[500px] lg:max-w-[900px]">
      <svg className="absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 900 500" fill="none" aria-hidden="true">
       <defs>
-       <pattern id="cmMapDots" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="2.2" cy="2.2" r="1.75" fill="#A78BFA"/></pattern>
+       <pattern id="cmMapDots" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="2.2" cy="2.2" r="1.75" fill="hsl(var(--gold-light))"/></pattern>
        <filter id="cmMapGlow" x="-20%" y="-30%" width="140%" height="160%"><feGaussianBlur stdDeviation="18"/></filter>
       </defs>
-      <ellipse cx="450" cy="250" rx="340" ry="145" fill="#C084FC" opacity=".10" filter="url(#cmMapGlow)"/>
+      <ellipse cx="450" cy="250" rx="340" ry="145" fill="hsl(var(--gold-light))" opacity=".10" filter="url(#cmMapGlow)"/>
       <g fill="url(#cmMapDots)" opacity=".78">
        <path d="M72 127l30-26 40-14 38 7 24-15 42 10 25 23 39 5 23 20-9 24-31 12-13 27-34 9-22-10-20 18-34-7-18-21-35-8-27-25-20-17 22-32z"/>
        <path d="M245 177l27 8 23 31-2 38-17 29-9 44-22 48-21-14-8-37-15-31 10-39-10-35 19-28 25-14z"/>
@@ -52,18 +52,18 @@ export function GlobalCommunityStory(){
        <path d="M743 322l35-18 44 5 31 28-6 35-35 21-44-8-30-30 5-33z"/>
        <path d="M845 352l18 6 10 18-10 13-18-7-6-17 6-13z"/>
       </g>
-      <g stroke="#9333EA" strokeWidth="2" strokeLinecap="round" opacity=".58">
+      <g stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" opacity=".58">
        <path d="M450 250 C360 177 273 151 183 145" strokeDasharray="2 10"/>
        <path d="M450 250 C560 176 651 160 756 167" strokeDasharray="2 10"/>
        <path d="M450 250 C360 322 276 355 190 368" strokeDasharray="2 10"/>
        <path d="M450 250 C563 323 660 354 756 368" strokeDasharray="2 10"/>
       </g>
-      {[ [183,145],[756,167],[190,368],[756,368] ].map(([x,y],i)=><g key={i}><circle cx={x} cy={y} r="8" fill="#FFFDFB" stroke="#7C3AED" strokeWidth="2"/><circle cx={x} cy={y} r="3" fill="#D946EF"/></g>)}
+      {[ [183,145],[756,167],[190,368],[756,368] ].map(([x,y],i)=><g key={i}><circle cx={x} cy={y} r="8" fill="hsl(var(--background))" stroke="hsl(var(--primary))" strokeWidth="2"/><circle cx={x} cy={y} r="3" fill="hsl(var(--primary))"/></g>)}
      </svg>
-     {countries.map(([name,img],i)=>{const pos=["left-0 top-5","right-0 top-12","left-1 bottom-8","right-0 bottom-2"][i];const desktop=["lg:left-[8%] lg:top-[7%]","lg:right-[7%] lg:top-[11%]","lg:left-[10%] lg:bottom-[3%]","lg:right-[8%] lg:bottom-[1%]"][i];const delay=i*.12;const x=clamp((enter-delay)/(1-delay));return <div key={name} className={`absolute ${pos} ${desktop} w-[120px] overflow-hidden rounded-[1.35rem] border-4 border-white bg-white shadow-[0_18px_45px_rgba(76,29,149,.14)] lg:w-[155px]`} style={{opacity:x,transform:`translateY(${(1-x)*(i<2?-28:28)}px) scale(${.9+x*.1})`}}><div className="relative aspect-[4/3]"><Image src={img} alt={name} fill sizes="(min-width:1024px) 155px,120px" className="object-cover"/></div><div className="flex items-center justify-center gap-1 py-2 text-xs font-bold text-[#2A1845] lg:text-sm"><MapPin className="h-3.5 w-3.5 text-[#7C3AED]"/>{name}</div></div>})}
-     <div className="absolute left-1/2 top-1/2 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5EDFF]/95 px-4 py-5 shadow-lg backdrop-blur lg:w-44 lg:py-7"><Heart className="mx-auto h-7 w-7 fill-[#D946EF] text-[#D946EF]"/><p className="mt-2 font-serif text-lg font-semibold text-[#2A1845] lg:text-2xl">CupidMatch</p><p className="mt-1 text-[10px] leading-4 text-[#6B5A78] lg:text-xs">Culture connects us wherever life takes us.</p></div>
+     {countries.map(([name,img],i)=>{const pos=["left-0 top-5","right-0 top-12","left-1 bottom-8","right-0 bottom-2"][i];const desktop=["lg:left-[8%] lg:top-[7%]","lg:right-[7%] lg:top-[11%]","lg:left-[10%] lg:bottom-[3%]","lg:right-[8%] lg:bottom-[1%]"][i];const delay=i*.12;const x=clamp((enter-delay)/(1-delay));return <div key={name} className={`absolute ${pos} ${desktop} w-[120px] overflow-hidden rounded-[1.35rem] border-4 border-white bg-card shadow-[0_18px_45px_hsl(var(--primary)/.14)] lg:w-[155px]`} style={{opacity:x,transform:`translateY(${(1-x)*(i<2?-28:28)}px) scale(${.9+x*.1})`}}><div className="relative aspect-[4/3]"><Image src={img} alt={name} fill sizes="(min-width:1024px) 155px,120px" className="object-cover"/></div><div className="flex items-center justify-center gap-1 py-2 text-xs font-bold text-primary-dark lg:text-sm"><MapPin className="h-3.5 w-3.5 text-primary"/>{name}</div></div>})}
+     <div className="absolute left-1/2 top-1/2 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/95 px-4 py-5 shadow-elevated backdrop-blur lg:w-44 lg:py-7"><Heart className="mx-auto h-7 w-7 fill-primary text-primary"/><p className="mt-2 font-serif text-lg font-semibold text-primary-dark lg:text-2xl">CupidMatch</p><p className="mt-1 text-[10px] leading-4 text-muted-foreground lg:text-xs">Culture connects us wherever life takes us.</p></div>
     </div>
-    <div className="mx-auto grid max-w-sm grid-cols-3 divide-x divide-[#E9D5FF] lg:max-w-xl"><div><strong className="block text-xl text-[#7C3AED] lg:text-3xl">Global</strong><span className="text-[10px] text-[#6B5A78] lg:text-xs">Outlook</span></div><div><strong className="block text-lg text-[#7C3AED] lg:text-2xl">Worldwide</strong><span className="text-[10px] text-[#6B5A78] lg:text-xs">Community</span></div><div><strong className="block text-xl text-[#7C3AED] lg:text-3xl">Real</strong><span className="text-[10px] text-[#6B5A78] lg:text-xs">Connections</span></div></div>
+    <div className="mx-auto grid max-w-sm grid-cols-3 divide-x divide-[hsl(var(--border))] lg:max-w-xl"><div><strong className="block text-xl text-primary lg:text-3xl">Global</strong><span className="text-[10px] text-muted-foreground lg:text-xs">Outlook</span></div><div><strong className="block text-lg text-primary lg:text-2xl">Worldwide</strong><span className="text-[10px] text-muted-foreground lg:text-xs">Community</span></div><div><strong className="block text-xl text-primary lg:text-3xl">Real</strong><span className="text-[10px] text-muted-foreground lg:text-xs">Connections</span></div></div>
    </div>
   </div>
  </section>
@@ -78,26 +78,26 @@ export function PremiumStories(){
  ]; const current=stories[story]; const move=(dir:number)=>setStory(v=>(v+dir+stories.length)%stories.length);
  const onTouchStart=(e:React.TouchEvent)=>{touchStart.current=e.touches[0]?.clientX??null};
  const onTouchEnd=(e:React.TouchEvent)=>{if(touchStart.current===null)return;const end=e.changedTouches[0]?.clientX??touchStart.current;const dx=end-touchStart.current;touchStart.current=null;if(Math.abs(dx)>45)move(dx<0?1:-1)};
- return <section className="relative bg-[#FBF8F4] px-5 py-10 [scroll-snap-align:start] [scroll-snap-stop:always] lg:py-16">
+ return <section className="relative bg-background px-5 py-10 [scroll-snap-align:start] [scroll-snap-stop:always] lg:py-16">
   <div className="mx-auto w-full max-w-5xl text-center">
-   <p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#A078B0]">Illustrative relationship journeys</p>
-   <h2 className="mt-2 font-serif text-[2.3rem] font-semibold leading-tight text-[#2A1845] lg:text-[4rem]">Shared Values<br/><span className="text-[#C026D3]">Meaningful Conversations</span></h2>
-   <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[#6B5A78] lg:max-w-xl lg:text-base">Illustrative examples of how shared values, culture and goals can shape a meaningful connection.</p>
+   <p className="text-[10px] font-bold uppercase tracking-[.28em] text-gold-foreground">Illustrative relationship journeys</p>
+   <h2 className="mt-2 font-serif text-[2.3rem] font-semibold leading-tight text-primary-dark lg:text-[4rem]">Shared Values<br/><span className="text-primary">Meaningful Conversations</span></h2>
+   <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-muted-foreground lg:max-w-xl lg:text-base">Illustrative examples of how shared values, culture and goals can shape a meaningful connection.</p>
    <div className="mx-auto mt-6 max-w-[430px] lg:max-w-[760px]" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-    <article className="overflow-hidden rounded-[2rem] border border-[#EEE4F5] bg-white text-left shadow-[0_20px_55px_rgba(76,29,149,.10)] lg:grid lg:grid-cols-[1.08fr_.92fr]">
+    <article className="overflow-hidden rounded-[2rem] border border-border bg-card text-left shadow-[0_20px_55px_hsl(var(--primary)/.10)] lg:grid lg:grid-cols-[1.08fr_.92fr]">
      <div className="relative h-[300px] sm:h-[340px] lg:h-[500px]"><Image key={current.image} src={current.image} alt="" fill sizes="(min-width:1024px) 410px,430px" className="object-cover"/></div>
-     <div className="flex min-h-[245px] flex-col justify-center p-6 lg:min-h-0 lg:p-9"><Quote className="h-8 w-8 fill-[#D946EF] text-[#D946EF]"/><p className="mt-3 font-serif text-[1.45rem] font-semibold leading-snug text-[#2A1845] lg:text-[2rem]">“{current.quote}”</p><p className="mt-3 text-sm leading-6 text-[#6B5A78]">{current.body}</p><p className="mt-5 text-[10px] font-bold uppercase tracking-[.2em] text-[#A078B0]">Swipe to read another story</p></div>
+     <div className="flex min-h-[245px] flex-col justify-center p-6 lg:min-h-0 lg:p-9"><Quote className="h-8 w-8 fill-primary text-primary"/><p className="mt-3 font-serif text-[1.45rem] font-semibold leading-snug text-primary-dark lg:text-[2rem]">“{current.quote}”</p><p className="mt-3 text-sm leading-6 text-muted-foreground">{current.body}</p><p className="mt-5 text-[10px] font-bold uppercase tracking-[.2em] text-gold-foreground">Swipe to read another story</p></div>
     </article>
    </div>
    <div className="mx-auto mt-5 flex max-w-[210px] items-center justify-between">
-    <button type="button" onClick={()=>move(-1)} aria-label="Previous story" className="flex h-11 w-11 items-center justify-center rounded-full border border-[#E9D5FF] bg-white text-[#7C3AED] active:scale-95"><ChevronLeft className="h-5 w-5"/></button>
-    <div className="flex gap-2">{stories.map((_,i)=><button type="button" key={i} onClick={()=>setStory(i)} aria-label={`Story ${i+1}`} className={`${i===story?"h-2 w-7 bg-[#7C3AED]":"h-2 w-2 bg-[#D8CCE2]"} rounded-full transition-all`}/>)}</div>
-    <button type="button" onClick={()=>move(1)} aria-label="Next story" className="flex h-11 w-11 items-center justify-center rounded-full border border-[#E9D5FF] bg-white text-[#7C3AED] active:scale-95"><ChevronRight className="h-5 w-5"/></button>
+    <button type="button" onClick={()=>move(-1)} aria-label="Previous story" className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-primary active:scale-95"><ChevronLeft className="h-5 w-5"/></button>
+    <div className="flex gap-2">{stories.map((_,i)=><button type="button" key={i} onClick={()=>setStory(i)} aria-label={`Story ${i+1}`} className={`${i===story?"h-2 w-7 bg-primary":"h-2 w-2 bg-gold-light"} rounded-full transition-all`}/>)}</div>
+    <button type="button" onClick={()=>move(1)} aria-label="Next story" className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-primary active:scale-95"><ChevronRight className="h-5 w-5"/></button>
    </div>
   </div>
  </section>
 }
 export function PremiumFinalCta(){
  const {ref,p}=useCardProgress();const enter=clamp(p/.3);
- return <section ref={ref} className="relative h-[175svh] lg:h-[115svh] bg-[#5B21B6] [scroll-snap-align:start] [scroll-snap-stop:always]"><div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-5 py-8 text-white"><div className="absolute inset-0 bg-gradient-to-b from-[#8B3DFF] via-[#7027E8] to-[#541CB5]" style={{opacity:.65+enter*.35}}/><div className="pointer-events-none absolute inset-0 opacity-20"><Heart className="absolute left-[8%] top-[18%] h-12 w-12"/><Heart className="absolute bottom-[18%] right-[9%] h-16 w-16"/><div className="absolute -bottom-20 left-1/2 h-56 w-[130%] -translate-x-1/2 rounded-[50%] border-[18px] border-white/10"/></div><div className="relative mx-auto max-w-xl text-center" style={{opacity:.4+enter*.6,transform:`translateY(${(1-enter)*38}px) scale(${.95+enter*.05})`}}><Heart className="mx-auto h-9 w-9"/><h2 className="mt-6 font-serif text-[2.65rem] font-semibold leading-[1.05]">Ready to Find<br/>Your Perfect Match?</h2><p className="mx-auto mt-5 max-w-sm text-sm leading-6 text-white/85">Create your profile and start your journey toward a meaningful connection.</p><div className="mx-auto mt-7 w-fit space-y-2 text-left text-sm">{["Verified profiles","Safe & secure","Meaningful connections"].map((x,i)=><p key={x} className="flex items-center gap-2" style={{opacity:clamp((enter-i*.12)*1.8)}}><span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-[#7C3AED]"><Check className="h-3.5 w-3.5"/></span>{x}</p>)}</div><div className="mx-auto mt-9 flex max-w-[330px] flex-col gap-3"><Link href="/signup" className="rounded-full bg-white px-6 py-3.5 text-sm font-bold text-[#6D28D9] shadow-xl">Create Your Profile →</Link><Link href="/discover" className="rounded-full border border-white/60 px-6 py-3.5 text-sm font-semibold text-white">Explore Matches</Link></div></div></div></section>
+ return <section ref={ref} className="relative h-[175svh] lg:h-[115svh] bg-primary [scroll-snap-align:start] [scroll-snap-stop:always]"><div className="sticky top-0 flex h-[100svh] items-center overflow-hidden px-5 py-8 text-white"><div className="absolute inset-0 bg-gradient-to-b from-primary via-primary to-primary" style={{opacity:.65+enter*.35}}/><div className="pointer-events-none absolute inset-0 opacity-20"><Heart className="absolute left-[8%] top-[18%] h-12 w-12"/><Heart className="absolute bottom-[18%] right-[9%] h-16 w-16"/><div className="absolute -bottom-20 left-1/2 h-56 w-[130%] -translate-x-1/2 rounded-[50%] border-[18px] border-white/10"/></div><div className="relative mx-auto max-w-xl text-center" style={{opacity:.4+enter*.6,transform:`translateY(${(1-enter)*38}px) scale(${.95+enter*.05})`}}><Heart className="mx-auto h-9 w-9"/><h2 className="mt-6 font-serif text-[2.65rem] font-semibold leading-[1.05]">Ready to Find<br/>Your Perfect Match?</h2><p className="mx-auto mt-5 max-w-sm text-sm leading-6 text-white/85">Create your profile and start your journey toward a meaningful connection.</p><div className="mx-auto mt-7 w-fit space-y-2 text-left text-sm">{["Verified profiles","Safe & secure","Meaningful connections"].map((x,i)=><p key={x} className="flex items-center gap-2" style={{opacity:clamp((enter-i*.12)*1.8)}}><span className="flex h-5 w-5 items-center justify-center rounded-full bg-card text-primary"><Check className="h-3.5 w-3.5"/></span>{x}</p>)}</div><div className="mx-auto mt-9 flex max-w-[330px] flex-col gap-3"><Link href="/signup" className="rounded-full bg-card px-6 py-3.5 text-sm font-bold text-primary shadow-elevated">Create Your Profile →</Link><Link href="/discover" className="rounded-full border border-white/60 px-6 py-3.5 text-sm font-semibold text-white">Explore Matches</Link></div></div></div></section>
 }

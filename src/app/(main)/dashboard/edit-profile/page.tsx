@@ -596,7 +596,7 @@ export default function EditProfilePage() {
   if (!profileDataLoaded) {
     return (
       <div className="space-y-8 max-w-2xl mx-auto">
-        <Card className="shadow-xl">
+        <Card className="shadow-elevated">
           <CardHeader>
             <Skeleton className="h-8 w-3/4" />
           </CardHeader>
@@ -631,7 +631,7 @@ export default function EditProfilePage() {
               <div className="relative group shrink-0">
                 <Avatar className="h-20 w-20 border-4 border-white text-lg shadow-md sm:h-24 sm:w-24">
                   <AvatarImage src={profilePhotoPreview || currentProfilePhotoUrl || defaultFirestoreProfile.profilePhotoUrl} alt={form.getValues("fullName") || "User"} data-ai-hint={profilePhotoPreview ? "new upload preview" : currentDataAiHint} />
-                  <AvatarFallback className="text-2xl text-[#713c78]">{form.getValues("fullName")?.substring(0, 2) || "U"}</AvatarFallback>
+                  <AvatarFallback className="text-2xl text-gold-foreground">{form.getValues("fullName")?.substring(0, 2) || "U"}</AvatarFallback>
                 </Avatar>
                 {profilePhotoPreview && (
                   <Button
@@ -656,13 +656,13 @@ export default function EditProfilePage() {
                 render={({ field }) => (
                   <FormItem className="mb-0">
                     <FormControl>
-                      <Input {...field} className="h-auto border-none bg-transparent p-0 text-xl font-semibold text-[#351532] focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-2xl" disabled={isSaving || anyEnhancementLoading} />
+                      <Input {...field} className="h-auto border-none bg-transparent p-0 text-xl font-semibold text-foreground focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-2xl" disabled={isSaving || anyEnhancementLoading} />
                     </FormControl>
                     <FormMessage className="text-xs text-red-500" />
                   </FormItem>
                 )}
               />
-              <div className="flex flex-col gap-1 text-sm text-[#745d70] sm:text-base">
+              <div className="flex flex-col gap-1 text-sm text-muted-foreground sm:text-base">
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 shrink-0" />
                   <FormField
@@ -671,7 +671,7 @@ export default function EditProfilePage() {
                     render={({ field }) => (
                       <FormItem className="mb-0 flex items-center">
                         <FormControl>
-                          <Input {...field} className="h-auto w-auto border-none bg-transparent p-0 text-[#745d70] focus-visible:ring-0 focus-visible:ring-offset-0" placeholder="Add location" disabled={isSaving || anyEnhancementLoading} />
+                          <Input {...field} className="h-auto w-auto border-none bg-transparent p-0 text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0" placeholder="Add location" disabled={isSaving || anyEnhancementLoading} />
                         </FormControl>
                         <FormMessage className="text-xs text-red-500" />
                       </FormItem>
@@ -686,7 +686,7 @@ export default function EditProfilePage() {
                     render={({ field }) => (
                       <FormItem className="mb-0 flex items-center">
                         <FormControl>
-                          <Input {...field} className="h-auto w-auto border-none bg-transparent p-0 text-[#745d70] focus-visible:ring-0 focus-visible:ring-offset-0" placeholder="Add profession" disabled={isSaving || anyEnhancementLoading} />
+                          <Input {...field} className="h-auto w-auto border-none bg-transparent p-0 text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0" placeholder="Add profession" disabled={isSaving || anyEnhancementLoading} />
                         </FormControl>
                         <FormMessage className="text-xs text-red-500" />
                       </FormItem>
@@ -694,14 +694,14 @@ export default function EditProfilePage() {
                   />
                 </div>
               </div>
-              <div className="mt-2 flex flex-wrap items-center gap-3 rounded-xl border border-[#eadce5] bg-white/70 px-3 py-2.5">
+              <div className="mt-2 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-white/70 px-3 py-2.5">
                 <Checkbox
                   id="profile-visible"
                   checked={isProfileVisible}
                   disabled={isSaving || visibilitySaving || anyEnhancementLoading}
                   onCheckedChange={(value) => void handleVisibilityChange(value === true)}
                 />
-                <Label htmlFor="profile-visible" className="flex cursor-pointer items-center gap-2 text-sm font-medium text-[#351532]">
+                <Label htmlFor="profile-visible" className="flex cursor-pointer items-center gap-2 text-sm font-medium text-foreground">
                   {isProfileVisible ? (
                     <Eye className="h-4 w-4 text-primary" aria-hidden />
                   ) : (
@@ -710,7 +710,7 @@ export default function EditProfilePage() {
                   {isProfileVisible ? "Visible in Discover" : "Invisible — hidden from Discover"}
                 </Label>
                 {visibilitySaving ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
-                <Button asChild variant="outline" size="sm" className="ml-auto rounded-xl border-[#dcc9d8]">
+                <Button asChild variant="outline" size="sm" className="ml-auto rounded-xl border-input">
                   <Link href="/biodata">Biodata Studio</Link>
                 </Button>
               </div>
@@ -1161,7 +1161,7 @@ export default function EditProfilePage() {
             </TabsContent>
 
             <TabsContent value="horoscope" className="space-y-6">
-              <Card><CardHeader><CardTitle>Private Horoscope Studio</CardTitle><CardDescription>Manage birth details, field visibility, source documents and comparison consent in one private workspace.</CardDescription></CardHeader><CardContent><a href="/dashboard/horoscope" className="inline-flex rounded-xl bg-purple-800 px-5 py-3 font-semibold text-white">Open My Horoscope</a><p className="mt-3 text-sm text-muted-foreground">Legacy public horoscope uploads are no longer accepted here. Existing profile details have not been imported or published into the new studio.</p></CardContent></Card>
+              <Card><CardHeader><CardTitle>Private Horoscope Studio</CardTitle><CardDescription>Manage birth details, field visibility, source documents and comparison consent in one private workspace.</CardDescription></CardHeader><CardContent><a href="/dashboard/horoscope" className="inline-flex rounded-xl bg-primary-dark px-5 py-3 font-semibold text-white">Open My Horoscope</a><p className="mt-3 text-sm text-muted-foreground">Legacy public horoscope uploads are no longer accepted here. Existing profile details have not been imported or published into the new studio.</p></CardContent></Card>
             </TabsContent>
           </Tabs>
 

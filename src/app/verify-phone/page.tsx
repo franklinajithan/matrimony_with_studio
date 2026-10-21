@@ -58,7 +58,7 @@ export default function VerifyPhonePage() {
   }catch(e){setError(e instanceof Error?e.message:"Verification failed.");}
   finally{setBusy(false);}
  }
- return <Card className="mx-auto mt-12 w-full max-w-md rounded-3xl shadow-xl"><CardHeader><CardTitle className="text-2xl">Verify your mobile number</CardTitle><p className="text-sm text-muted-foreground">Keep your number private. We use an SMS code to confirm it belongs to you.</p></CardHeader><CardContent className="space-y-4">
+ return <Card className="mx-auto mt-12 w-full max-w-md rounded-3xl shadow-elevated"><CardHeader><CardTitle className="text-2xl">Verify your mobile number</CardTitle><p className="text-sm text-muted-foreground">Keep your number private. We use an SMS code to confirm it belongs to you.</p></CardHeader><CardContent className="space-y-4">
  {verified?<><p className="text-emerald-700">Your mobile number is verified.</p><Button disabled={busy||trialReady} onClick={()=>void activate()}>{busy?"Activating…":"Activate offer and continue"}</Button>{offerCode&&<Button variant="outline" disabled={busy} onClick={()=>void activate(true)}>Continue with standard 3-month offer</Button>}{error&&<p role="alert" className="text-sm text-red-600">{error}</p>}</>:<>
  <label className="block text-sm font-medium" htmlFor="mobile">Mobile number with country code</label>
  <Input id="mobile" type="tel" autoComplete="tel" value={phone} onChange={e=>{setPhone(e.target.value.trim());setSent(false);setOtp("");}} placeholder="+447700900123" disabled={busy}/>

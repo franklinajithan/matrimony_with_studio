@@ -72,7 +72,7 @@ export default function AdminMemberDetailsPage() {
           !user ? <p>Member not found.</p> :
           <div className="space-y-4"><div className="flex flex-wrap gap-2"><Button type="button" variant="outline" onClick={() => { setEditing(value => !value); setEditError(""); }}> {editing ? "Cancel editing" : "Edit profile"}</Button></div>
           {editSuccess && <p role="status" className="text-sm text-emerald-700">{editSuccess}</p>}
-          {editing && <form onSubmit={saveProfile} className="space-y-3 rounded-xl border bg-white p-4">
+          {editing && <form onSubmit={saveProfile} className="space-y-3 rounded-xl border bg-card p-4">
             {(["displayName","location","profession"] as const).map(field => <label key={field} className="block text-sm font-medium"><span className="mb-1 block capitalize">{field === "displayName" ? "Display name" : field}</span><Input value={form[field]} onChange={event => setForm(previous => ({ ...previous, [field]: event.target.value }))} maxLength={field === "displayName" ? 100 : 150} required={field === "displayName"} /></label>)}
             <label className="block text-sm font-medium"><span className="mb-1 block">Bio</span><Textarea value={form.bio} onChange={event => setForm(previous => ({ ...previous, bio: event.target.value }))} maxLength={3000} rows={5} /></label>
             {editError && <p role="alert" className="text-sm text-red-700">{editError}</p>}
@@ -98,7 +98,7 @@ export default function AdminMemberDetailsPage() {
     </Card>
     <ExtendedMemberProfile memberId={userId} profile={user} />
     <MemberSuspension memberId={userId} />
-    {!user?.isAdmin && <Card className="border-violet-200 bg-violet-50/40"><CardHeader><CardTitle>Membership & introductory offer</CardTitle><CardDescription>Manage this member's launch trial through the protected, audited subscription controls. Paid subscription records are managed separately.</CardDescription></CardHeader><CardContent><Button asChild><Link href={`/admin/subscriptions?memberId=${userId}`}>Manage membership</Link></Button></CardContent></Card>}
+    {!user?.isAdmin && <Card className="border-border bg-accent/40"><CardHeader><CardTitle>Membership & introductory offer</CardTitle><CardDescription>Manage this member&apos;s launch trial through the protected, audited subscription controls. Paid subscription records are managed separately.</CardDescription></CardHeader><CardContent><Button asChild><Link href={`/admin/subscriptions?memberId=${userId}`}>Manage membership</Link></Button></CardContent></Card>}
     <MemberOperations memberId={userId} />
     <MemberAdminNotes memberId={userId} />
     <Card><CardHeader><CardTitle>Verification request history</CardTitle><CardDescription>Member-submitted profile review requests and recorded decisions. Identity-document verification is a separate process.</CardDescription></CardHeader><CardContent>

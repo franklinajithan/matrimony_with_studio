@@ -15,6 +15,7 @@ jobs:
       # Regenerate the stale lockfile in CI until the refreshed lockfile is committed.
       - run: npm install --package-lock-only --ignore-scripts
       - run: npm ci
+      - run: npm run test:theme
       - run: npm run test:admin
       - run: npm run test:horoscope
       - run: npx tsc --noEmit
