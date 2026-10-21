@@ -50,7 +50,7 @@ export function Navbar() {
     { href: "/dashboard/preferences", label: "Settings", icon: <Settings className="h-5 w-5" /> },
   ];
   const landingPageNavLinks = [
-    { href: "/", label: t.home }, { href: "/about", label: t.about }, { href: "/success-stories", label: t.stories },
+    { href: "/", label: t.home }, { href: "/#features", label: "Features" }, { href: "/about", label: t.about }, { href: "/success-stories", label: t.stories },
     { href: "/pricing", label: t.pricing }, { href: "/safety", label: t.safety }, { href: "/contact", label: t.help },
   ];
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
@@ -107,7 +107,7 @@ export function Navbar() {
   const marketingLinkClass = (href: string) =>
     cn(
       "relative h-11 rounded-none bg-transparent px-3.5 text-[15px] font-medium text-[#5C4A66] shadow-none hover:bg-transparent hover:text-[#2A1845]",
-      pathname === href && "text-[#2A1845] after:absolute after:inset-x-1 after:-bottom-0.5 after:h-[3px] after:rounded-full after:bg-gradient-to-r after:from-[#7C3AED] after:to-[#C99532]"
+      (pathname === href || (href === "/#features" && pathname === "/")) && "text-[#2A1845] after:absolute after:inset-x-1 after:-bottom-0.5 after:h-[3px] after:rounded-full after:bg-gradient-to-r after:from-[#7C3AED] after:to-[#C99532]"
     );
 
   const signUpButtonClass =
