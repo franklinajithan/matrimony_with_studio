@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Heart, Shield, Users } from "lucide-react";
+import { ArrowRight, Check, Heart, MessageCircle, Shield, Sparkles, Users } from "lucide-react";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { getMessages } from "@/components/i18n/messages";
 
@@ -57,9 +57,25 @@ export function PremiumOpeningStory(){
    <div className="mx-auto grid w-full max-w-[430px] grid-cols-2 gap-3 sm:gap-4 lg:max-w-[980px] lg:grid-cols-4 lg:gap-5">{profiles.map((x,i)=>{return <div key={x.name} className="story-profile story-item flex h-[300px] min-w-0 flex-col overflow-hidden rounded-[1.75rem] border-4 border-white bg-card shadow-[0_18px_45px_hsl(var(--primary)/.14)] sm:h-[330px] lg:h-[390px] lg:rounded-[2rem]" style={{animationDelay:`${80+i*100}ms`}}><div className="relative min-h-0 flex-1"><Image src={x.src} alt={x.name} fill sizes="(min-width:1024px) 220px, 45vw" quality={90} className="object-cover object-[center_15%]"/></div><div className="h-[76px] shrink-0 p-3 lg:h-[84px] lg:p-4"><p className="truncate font-serif text-base font-semibold text-primary-dark lg:text-xl">{x.name}</p><p className="mt-1 truncate text-xs text-muted-foreground">{x.place}</p></div></div>})}</div>
   </article>
 
-  <article className="homepage-story-card grid items-center gap-8 overflow-hidden px-5 py-8 lg:grid-cols-[.82fr_1.18fr] lg:gap-16 lg:px-[max(6vw,72px)] xl:mx-auto xl:max-w-[1500px]">
-   <div className="story-copy text-center lg:text-left"><p className="mb-4 text-[10px] font-bold uppercase tracking-[.28em] text-gold-foreground lg:text-xs">{oc[12]}</p><h2 className="font-serif text-[2.25rem] font-semibold leading-[1.06] text-primary-dark lg:text-[4.65rem]">{oc[13]}<br/><span className="text-primary">{oc[14]}</span></h2><p className="mt-4 text-sm leading-6 text-muted-foreground lg:max-w-lg lg:text-lg lg:leading-8">{oc[15]}</p><div className="mt-7 grid max-w-[430px] grid-cols-2 gap-3 text-sm font-medium text-muted-foreground">{[oc[8],oc[16],oc[17],oc[18]].map((x,i)=><div key={x} className="story-item flex items-center gap-2 rounded-2xl border border-border bg-card px-3 py-3 shadow-sm" style={{animationDelay:`${i*70}ms`}}><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-primary">✓</span>{x}</div>)}</div></div>
-   <div className="story-media relative mx-auto h-[430px] w-full max-w-[430px] lg:h-[620px] lg:max-w-[680px]"><div className="absolute inset-[8%] rounded-full bg-[radial-gradient(circle,hsl(var(--gold)/.12),transparent_65%)]"/><svg className="story-line absolute inset-0 h-full w-full" viewBox="0 0 600 600" fill="none"><path d="M160 145 C360 40 445 190 305 285 C175 375 270 505 455 445" stroke="hsl(var(--gold))" strokeWidth="4" strokeLinecap="round"/></svg><div className="story-portrait absolute left-[8%] top-[6%] h-44 w-44 overflow-hidden rounded-[2.5rem] border-[6px] border-white shadow-elevated lg:h-56 lg:w-56"><Image src="/images/values/goals.jpg?v=3" alt="" fill sizes="224px" className="object-cover"/></div><div className="story-portrait story-portrait-delay absolute bottom-[5%] right-[7%] h-44 w-44 overflow-hidden rounded-[2.5rem] border-[6px] border-white shadow-elevated lg:h-56 lg:w-56"><Image src="/images/values/culture.jpg?v=3" alt="" fill sizes="224px" className="object-cover"/></div><div className="story-heart absolute left-1/2 top-[46%] flex h-20 w-20 -translate-x-1/2 items-center justify-center rounded-full bg-gradient-to-br from-primary to-gold text-white shadow-[0_16px_45px_hsl(var(--primary)/.30)]"><Heart className="h-9 w-9" fill="currentColor"/></div></div>
+  <article aria-labelledby="connection-story-heading" className="homepage-story-card connection-story grid min-w-0 items-center gap-10 px-5 py-12 sm:px-8 lg:grid-cols-[.9fr_1.1fr] lg:gap-14 lg:px-[max(5vw,48px)] lg:py-16 xl:mx-auto xl:max-w-[1500px]">
+   <div className="story-copy min-w-0">
+    <p className="flex items-center gap-3 text-[10px] font-bold uppercase leading-5 tracking-[.2em] text-gold-foreground sm:text-xs"><span aria-hidden="true" className="h-px w-8 shrink-0 bg-gold"/>{oc[12]}</p>
+    <h2 id="connection-story-heading" className="mt-5 font-serif text-[clamp(2.25rem,4.2vw,4.25rem)] font-medium leading-[1.08] tracking-tight text-primary-dark [overflow-wrap:anywhere]">{oc[13]}<br/><span className="text-primary">{oc[14]}</span></h2>
+    <p className="mt-5 max-w-lg text-sm leading-7 text-muted-foreground sm:text-base sm:leading-8">{oc[15]}</p>
+    <ul className="mt-8 grid grid-cols-1 gap-3 min-[360px]:grid-cols-2">
+     {[{label:oc[8],Icon:Heart},{label:oc[16],Icon:Sparkles},{label:oc[17],Icon:Users},{label:oc[18],Icon:MessageCircle}].map(({label,Icon})=><li key={label} className="flex min-w-0 items-center gap-3 rounded-2xl border border-primary/10 bg-card px-3 py-4 shadow-sm sm:px-4"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-primary"><Icon aria-hidden="true" className="h-5 w-5 stroke-[1.5]"/></span><span className="text-xs font-medium leading-5 text-foreground sm:text-sm">{label}</span></li>)}
+    </ul>
+   </div>
+   <div className="story-media relative mx-auto w-full min-w-0 max-w-[670px] pb-16 pr-9 sm:pb-20 sm:pr-14">
+    <div aria-hidden="true" className="pointer-events-none absolute inset-x-6 inset-y-5 rounded-[3rem] border border-gold/35 bg-accent/40"/>
+    <div className="relative aspect-[4/3] overflow-hidden rounded-[2rem] border border-gold/20 bg-card shadow-[0_18px_50px_hsl(var(--primary)/.10)] sm:rounded-[2.5rem]">
+     <Image src="/images/couple-meaningful-conversation.webp" alt="Couple in a purple suit and ivory sari sharing a relaxed conversation in a cream lounge" fill sizes="(min-width:1536px) 610px, (min-width:1024px) 48vw, 92vw" quality={90} className="object-cover object-center"/>
+    </div>
+    <div className="absolute bottom-0 right-0 w-[43%] overflow-hidden rounded-[1.5rem] border-[5px] border-background bg-card shadow-[0_14px_35px_hsl(var(--primary)/.14)] sm:rounded-[2rem] sm:border-[7px]">
+     <div className="relative aspect-[6/5]"><Image src="/images/couple-studio-connection.webp" alt="The couple smiling warmly at each other" fill sizes="(min-width:1024px) 270px, 40vw" quality={90} className="object-cover"/></div>
+    </div>
+    <div aria-hidden="true" className="absolute bottom-4 left-2 flex h-16 w-16 items-center justify-center rounded-2xl border border-gold/30 bg-primary text-white shadow-lg sm:bottom-7 sm:left-5 sm:h-20 sm:w-20 sm:rounded-3xl"><Heart className="h-7 w-7 fill-gold stroke-gold"/><Check className="absolute -right-2 -top-2 h-6 w-6 rounded-full border-2 border-background bg-gold p-1 text-primary-dark"/></div>
+   </div>
   </article>
  </section>
 }
