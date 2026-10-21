@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { PremiumOpeningStory } from "@/components/landing/PremiumOpeningStory";
 import { CompatibilityStory, StickyHowItWorks } from "@/components/landing/PremiumScrollSections";
 import { GlobalCommunityStory, PremiumStories, PremiumFinalCta } from "@/components/landing/PremiumClosingSections";
+import { LandingFaq } from "@/components/landing/LandingFaq";
 import { ModernMatchFeatures } from "@/components/landing/ModernMatchFeatures";
 import { Navbar } from "@/components/navigation/Navbar";
 import { Footer } from "@/components/navigation/Footer";
@@ -21,6 +22,7 @@ export default async function HomePage() {
         <StickyHowItWorks />
         <GlobalCommunityStory />
         <PremiumStories />
+        <LandingFaq />
         <PremiumFinalCta />
       </main>
       <Footer />
