@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/dashboard", "/admin", "/messages", "/api/", "/settings", "/onboarding", "/checkout", "/account", "/auth/"],
+      disallow: ["/dashboard", "/admin", "/messages", "/api/", "/settings", "/onboarding", "/checkout", "/account", "/auth/", "/profile/", "/members/", "/matches/", "/notifications/", "/billing/", "/payment/", "/verify/", "/reset-password"],
     },
     sitemap: "https://cupidmatch.co.uk/sitemap.xml",
   };
