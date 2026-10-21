@@ -32,7 +32,7 @@ export function ModernMatchFeatures() {
         <div className="mx-auto max-w-3xl text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/40 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[.15em] text-[#51217B]"><Sparkles className="h-4 w-4" /> {copy.eyebrow}</span>
           <h2 id="features-heading" className="mt-6 font-serif text-4xl font-semibold leading-tight text-[#29133F] sm:text-5xl lg:text-6xl">{copy.title} <span className="text-[#7542A1]">{copy.accent}</span></h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[#665872] sm:text-lg">From your personal story to the qualities you value in a partner, CupidMatch brings the important details together in one thoughtful experience.</p>
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[#665872] sm:text-lg">{copy.description}</p>
         </div>
         <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {features.map(({ title, description, Icon, label, href }) => (
