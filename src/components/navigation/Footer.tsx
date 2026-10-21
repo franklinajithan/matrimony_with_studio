@@ -33,7 +33,7 @@ export function Footer() {
           <div className="lg:col-span-2">
             <Logo textSize="text-xl" />
             <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">
-              Meet someone who understands where you come from — and where you're going.
+              {copy.tag}
             </p>
             <p className="mt-3 text-sm font-medium text-foreground">
               Modern relationship intelligence, shaped for Sri Lankan lives around the world.
@@ -54,22 +54,22 @@ export function Footer() {
             <ul className="mt-4 space-y-3">
               <li>
                 <Link href="/about" className={linkClass}>
-                  About
+                  {copy.about}
                 </Link>
               </li>
               <li>
                 <Link href="/discover" className={linkClass}>
-                  Discover
+                  {copy.discover}
                 </Link>
               </li>
               <li>
                 <Link href="/success-stories" className={linkClass}>
-                  Success Stories
+                  {copy.stories}
                 </Link>
               </li>
               <li>
                 <Link href="/pricing" className={linkClass}>
-                  Pricing
+                  {copy.pricing}
                 </Link>
               </li>
             </ul>
@@ -81,12 +81,12 @@ export function Footer() {
             <ul className="mt-4 space-y-3">
               <li>
                 <Link href="/contact" className={linkClass}>
-                  Contact
+                  {copy.contact}
                 </Link>
               </li>
               <li>
                 <Link href="/safety" className={linkClass}>
-                  Safety
+                  {copy.safety}
                 </Link>
               </li>
               <li>
@@ -96,7 +96,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/accessibility" className={linkClass}>
-                  Accessibility
+                  {copy.access}
                 </Link>
               </li>
             </ul>
@@ -108,17 +108,17 @@ export function Footer() {
             <ul className="mt-4 space-y-3">
               <li>
                 <Link href="/privacy" className={linkClass}>
-                  Privacy
+                  {copy.privacy}
                 </Link>
               </li>
               <li>
                 <Link href="/terms" className={linkClass}>
-                  Terms
+                  {copy.terms}
                 </Link>
               </li>
               <li>
                 <Link href="/community-guidelines" className={linkClass}>
-                  Community Guidelines
+                  {copy.guidelines}
                 </Link>
               </li>
             </ul>
