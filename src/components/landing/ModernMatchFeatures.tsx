@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { useI18n } from "@/components/i18n/I18nProvider";
-import { ArrowRight, BrainCircuit, HeartHandshake, LockKeyhole, SlidersHorizontal, Sparkles, UserRound, Stars, MessageCircle } from "lucide-react";
+import { ArrowRight, BrainCircuit, HeartHandshake, LockKeyhole, SlidersHorizontal, Sparkles, UserRound, Star, MessageCircle } from "lucide-react";
 
 const features = [
   { title: "Thoughtful partner discovery", description: "Explore introductions guided by the details and preferences that matter to you.", Icon: BrainCircuit, label: "DISCOVER", href: "/discover" },
   { title: "Your story, beautifully told", description: "Build a detailed biodata profile to share your personality, background and intentions.", Icon: UserRound, label: "PROFILE", href: "/signup" },
   { title: "Preferences that feel personal", description: "Focus on the age, location and qualities important in a future partner.", Icon: SlidersHorizontal, label: "PREFERENCES", href: "/signup" },
   { title: "Compatibility with context", description: "Look beyond photographs to explore shared values, life goals and compatibility.", Icon: HeartHandshake, label: "COMPATIBILITY", href: "/signup" },
-  { title: "Horoscope profiles", description: "Add your horoscope details as part of a richer personal profile. Availability of comparisons may vary.", Icon: Stars, label: "HOROSCOPE", href: "/signup" },
+  { title: "Horoscope profiles", description: "Add your horoscope details as part of a richer personal profile. Availability of comparisons may vary.", Icon: Star, label: "HOROSCOPE", href: "/signup" },
   { title: "Connect with intention", description: "Express interest and take the next step at a pace that feels comfortable.", Icon: MessageCircle, label: "CONNECTION", href: "/signup" },
 ] as const;
 
