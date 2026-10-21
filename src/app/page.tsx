@@ -10,14 +10,14 @@ import { Footer } from "@/components/navigation/Footer";
 import { getServerAuthUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "CupidMatch | Meaningful Matrimony & Partner Discovery",
-  description: "Discover meaningful introductions on CupidMatch. Create a detailed biodata profile, set partner preferences and explore compatibility and horoscope profile features.",
+  title: "Sri Lankan & Indian Matrimony UK | CupidMatch",
+  description: "Explore Sri Lankan, Tamil, Sinhala and Indian matrimony in the UK. Create your biodata, set partner preferences and discover meaningful introductions.",
   alternates: { canonical: "https://cupidmatch.co.uk/" },
   openGraph: {
     type: "website",
     url: "https://cupidmatch.co.uk/",
-    title: "CupidMatch | Meaningful Connections Begin Here",
-    description: "Explore thoughtful partner discovery, biodata, preferences and compatibility on CupidMatch.",
+    title: "Sri Lankan & Indian Matrimony UK | CupidMatch",
+    description: "Explore Sri Lankan, Tamil, Sinhala and Indian matrimony in the UK with biodata, partner preferences and thoughtful introductions.",
   },
 };
 
