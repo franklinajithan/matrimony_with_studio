@@ -36,7 +36,7 @@ export function Footer() {
               {copy.tag}
             </p>
             <p className="mt-3 text-sm font-medium text-foreground">
-              Modern relationship intelligence, shaped for Sri Lankan lives around the world.
+              {copy.sub}
             </p>
             
             {/* Language Selector in Footer */}
