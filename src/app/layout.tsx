@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { CUPIDMATCH_LOGO } from '@/lib/brand';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
@@ -15,11 +14,9 @@ export const metadata: Metadata = {
   applicationName: 'CupidMatch',
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large' } },
   icons: {
-    icon: [
-      { url: CUPIDMATCH_LOGO, type: 'image/png' },
-    ],
-    shortcut: CUPIDMATCH_LOGO,
-    apple: CUPIDMATCH_LOGO,
+    icon: [{ url: '/icon.svg', type: 'image/svg+xml', sizes: 'any' }],
+    shortcut: '/icon.svg',
+    apple: '/images/cupidmatch-royal-logo-transparent.png',
   },
   alternates: { canonical: '/' },
   openGraph: {
