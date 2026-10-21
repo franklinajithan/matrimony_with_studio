@@ -80,9 +80,9 @@ export function PremiumStories(){
  const onTouchEnd=(e:React.TouchEvent)=>{if(touchStart.current===null)return;const end=e.changedTouches[0]?.clientX??touchStart.current;const dx=end-touchStart.current;touchStart.current=null;if(Math.abs(dx)>45)move(dx<0?1:-1)};
  return <section className="relative bg-[#FBF8F4] px-5 py-10 [scroll-snap-align:start] [scroll-snap-stop:always] lg:py-16">
   <div className="mx-auto w-full max-w-5xl text-center">
-   <p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#A078B0]">Stories shared with care</p>
-   <h2 className="mt-2 font-serif text-[2.3rem] font-semibold leading-tight text-[#2A1845] lg:text-[4rem]">Real People<br/><span className="text-[#C026D3]">Real Stories</span></h2>
-   <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[#6B5A78] lg:max-w-xl lg:text-base">Meaningful introductions. Genuine conversations. Journeys shared with care.</p>
+   <p className="text-[10px] font-bold uppercase tracking-[.28em] text-[#A078B0]">Illustrative relationship journeys</p>
+   <h2 className="mt-2 font-serif text-[2.3rem] font-semibold leading-tight text-[#2A1845] lg:text-[4rem]">Shared Values<br/><span className="text-[#C026D3]">Meaningful Conversations</span></h2>
+   <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[#6B5A78] lg:max-w-xl lg:text-base">Illustrative examples of how shared values, culture and goals can shape a meaningful connection.</p>
    <div className="mx-auto mt-6 max-w-[430px] lg:max-w-[760px]" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
     <article className="overflow-hidden rounded-[2rem] border border-[#EEE4F5] bg-white text-left shadow-[0_20px_55px_rgba(76,29,149,.10)] lg:grid lg:grid-cols-[1.08fr_.92fr]">
      <div className="relative h-[300px] sm:h-[340px] lg:h-[500px]"><Image key={current.image} src={current.image} alt="" fill sizes="(min-width:1024px) 410px,430px" className="object-cover"/></div>
