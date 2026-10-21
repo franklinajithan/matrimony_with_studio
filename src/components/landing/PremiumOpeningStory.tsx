@@ -42,7 +42,7 @@ export function PremiumOpeningStory(){
     </div>
    </div>
    <div className="studio-hero-portrait">
-    <Image src="/images/hero-studio-elegance.webp" alt="Studio portrait of a couple, with the man in a purple suit and the woman in an ivory sari" fill priority quality={90} sizes="(min-width: 1536px) 850px, (min-width: 1024px) 60vw, (min-width: 640px) 90vw, 100vw" className="studio-hero-image"/>
+    <Image src="/images/hero-studio-elegance-refreshed.webp" alt="Studio portrait of a couple, with the man in a purple suit and the woman in an ivory sari" fill priority quality={90} sizes="(min-width: 1536px) 850px, (min-width: 1024px) 60vw, (min-width: 640px) 90vw, 100vw" className="studio-hero-image"/>
     <div aria-hidden="true" className="studio-hero-blend"/>
    </div>
   </article>
