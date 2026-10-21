@@ -14,9 +14,12 @@ export const metadata: Metadata = {
   applicationName: 'CupidMatch',
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large' } },
   icons: {
-    icon: [{ url: '/icon.svg', type: 'image/svg+xml', sizes: 'any' }],
-    shortcut: '/icon.svg',
-    apple: '/images/cupidmatch-royal-logo-transparent.png',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
   },
   alternates: { canonical: '/' },
   openGraph: {
