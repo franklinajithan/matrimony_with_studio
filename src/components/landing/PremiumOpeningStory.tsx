@@ -42,14 +42,14 @@ export function PremiumOpeningStory(){
     </div>
    </div>
    <div className="studio-hero-portrait">
-    <Image src="/images/hero-studio-elegance-refreshed.webp" alt="Studio portrait of a couple, with the man in a purple suit and the woman in an ivory sari" fill priority quality={90} sizes="(min-width: 1536px) 850px, (min-width: 1024px) 60vw, (min-width: 640px) 90vw, 100vw" className="studio-hero-image"/>
+    <Image src="/images/hero-studio-elegance-refined.webp" alt="Studio portrait of a couple, with the man in a purple suit and the woman in an ivory sari" fill priority quality={90} sizes="(min-width: 1536px) 850px, (min-width: 1024px) 60vw, (min-width: 640px) 90vw, 100vw" className="studio-hero-image"/>
     <div aria-hidden="true" className="studio-hero-blend"/>
    </div>
   </article>
 
   <article className="homepage-story-card relative grid items-center gap-8 overflow-hidden px-5 py-8 lg:grid-cols-[.82fr_1.18fr] lg:gap-16 lg:px-[max(6vw,72px)]">
    <div className="story-copy relative z-10 text-center lg:text-left"><p className="font-script text-[3.25rem] leading-[.98] text-primary lg:text-[5.5rem] xl:text-[6.25rem]">{oc[0]}<span className="block lg:ml-14">{oc[1]}</span></p><p className="mx-auto mt-6 max-w-md text-sm leading-6 text-muted-foreground lg:mx-0 lg:text-lg lg:leading-8">{oc[2]}</p><div className="mt-7 hidden items-center gap-3 text-sm font-semibold text-primary lg:flex"><span className="h-px w-12 bg-gold"/><Heart className="h-5 w-5"/>{oc[3]}</div></div>
-   <div className="story-media relative mx-auto h-[58svh] min-h-[420px] w-full max-w-[650px] overflow-hidden rounded-[3rem] shadow-[0_28px_70px_hsl(var(--primary)/.18)] lg:h-[70vh] lg:max-h-[690px]"><Image src="/images/hero-slide-2.png?v=3" alt="Engaged couple celebrating their connection" fill quality={100} sizes="(min-width:1024px) 50vw,100vw" className="object-cover object-center"/><div className="absolute inset-0 bg-gradient-to-t from-primary-dark/10 via-transparent to-accent/5"/><svg className="story-line pointer-events-none absolute inset-x-8 top-10 h-28" viewBox="0 0 500 100" fill="none"><path d="M8 60 C110 5 175 95 270 45 C355 0 410 75 492 35" stroke="hsl(var(--gold))" strokeWidth="3" strokeLinecap="round"/><path d="M458 30c-10-14-27 2 0 23 27-21 10-37 0-23Z" fill="hsl(var(--gold))"/></svg></div>
+   <div className="story-media relative mx-auto aspect-[6/5] w-full max-w-[813px] overflow-hidden rounded-[3rem] shadow-[0_28px_70px_hsl(var(--primary)/.18)]"><Image src="/images/couple-studio-connection.webp" alt="Couple smiling at each other, wearing a royal purple suit and an ivory sari with gold embroidery" fill quality={90} sizes="(min-width:1536px) 813px, (min-width:1024px) 50vw,100vw" className="object-cover object-center"/><div className="absolute inset-0 bg-gradient-to-t from-primary-dark/10 via-transparent to-accent/5"/><svg className="story-line pointer-events-none absolute inset-x-8 top-10 h-28" viewBox="0 0 500 100" fill="none"><path d="M8 60 C110 5 175 95 270 45 C355 0 410 75 492 35" stroke="hsl(var(--gold))" strokeWidth="3" strokeLinecap="round"/><path d="M458 30c-10-14-27 2 0 23 27-21 10-37 0-23Z" fill="hsl(var(--gold))"/></svg></div>
   </article>
 
   <article className="homepage-story-card grid items-center gap-8 overflow-hidden px-5 py-8 lg:grid-cols-[.72fr_1.28fr] lg:gap-14 lg:px-[max(6vw,72px)]">
