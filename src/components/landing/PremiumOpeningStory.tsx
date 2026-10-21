@@ -3,114 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Heart, Shield, Users } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { HERO_SLIDES } from "@/components/landing/brand";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { getMessages } from "@/components/i18n/messages";
-
-const clamp=(n:number)=>Math.max(0,Math.min(1,n));
-const ease=(n:number)=>{const x=clamp(n);return x*x*(3-2*x)};
-
-function useProgress(){
-  const ref=useRef<HTMLElement>(null);
-  const raf=useRef<number|null>(null);
-  const [p,setP]=useState(0);
-  useEffect(()=>{
-    const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const update=()=>{
-      raf.current=null; const el=ref.current;if(!el)return;
-      const r=el.getBoundingClientRect(), travel=Math.max(1,r.height-innerHeight);
-      setP(reduce?.82:clamp(-r.top/travel));
-    };
-    const scroll=()=>{if(raf.current===null)raf.current=requestAnimationFrame(update)};
-    update();addEventListener("scroll",scroll,{passive:true});addEventListener("resize",scroll,{passive:true});
-    return()=>{removeEventListener("scroll",scroll);removeEventListener("resize",scroll);if(raf.current!==null)cancelAnimationFrame(raf.current)};
-  },[]);
-  return {ref,p};
-}
-const phase=(p:number,a:number,b:number)=>ease((p-a)/(b-a));
-
-function HeroCarousel({
-  className,
-  priority,
-  sizes,
-}: {
-  className?: string;
-  priority?: boolean;
-  sizes: string;
-}) {
-  const [slide, setSlide] = useState(0);
-  const [ready, setReady] = useState(false);
-  const paused = useRef(false);
-
-  useEffect(() => {
-    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) return;
-    const id = window.setInterval(() => {
-      if (paused.current) return;
-      setSlide((s) => (s + 1) % HERO_SLIDES.length);
-    }, 5200);
-    return () => window.clearInterval(id);
-  }, []);
-
-  return (
-    <div
-      className={`relative overflow-hidden ${className ?? ""}`}
-      onMouseEnter={() => { paused.current = true; }}
-      onMouseLeave={() => { paused.current = false; }}
-      onFocus={() => { paused.current = true; }}
-      onBlur={() => { paused.current = false; }}
-    >
-      {HERO_SLIDES.map((src, i) => (
-        <div
-          key={src}
-          className="absolute inset-0 transition-opacity duration-700 ease-out"
-          style={{ opacity: i === slide ? 1 : 0 }}
-          aria-hidden={i !== slide}
-        >
-          <Image
-            src={src}
-            alt={i === 0 ? "Happy couple sharing a warm moment" : "Engaged couple celebrating their connection"}
-            fill
-            priority={priority && i === 0}
-            quality={100}
-            sizes={sizes}
-            className="hero-photo object-cover object-[58%_center] lg:object-[60%_center]"
-          />
-        </div>
-      ))}
-      <div className="absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 gap-2" role="tablist" aria-label="Hero photos">
-        {HERO_SLIDES.map((_, i) => (
-          <button
-            key={i}
-            type="button"
-            role="tab"
-            aria-selected={i === slide}
-            aria-label={`Show photo ${i + 1}`}
-            onClick={() => setSlide(i)}
-            className={`h-2 rounded-full transition-all ${i === slide ? "w-6 bg-white" : "w-2 bg-white/55 hover:bg-white/80"}`}
-          />
-        ))}
-      </div>
-      <style jsx>{`
-        @keyframes bowDraw { 0%,12% { stroke-dasharray:180; stroke-dashoffset:180; opacity:.35 } 32%,100% { stroke-dasharray:180; stroke-dashoffset:0; opacity:1 } }
-        @keyframes stringDraw { 0%,22% { stroke-dasharray:100; stroke-dashoffset:100 } 40%,100% { stroke-dasharray:100; stroke-dashoffset:0 } }
-        @keyframes arrowShoot { 0%,42% { transform:translateX(-30px); opacity:0 } 55% { transform:translateX(7px); opacity:1 } 62%,88% { transform:translateX(0); opacity:1 } 100% { transform:translateX(18px); opacity:0 } }
-        @keyframes heartPop { 0%,48% { transform:scale(0) rotate(-18deg); opacity:0 } 62% { transform:scale(1.25) rotate(5deg); opacity:1 } 72%,90% { transform:scale(1); opacity:1 } 100% { transform:scale(.85); opacity:0 } }
-        @keyframes signatureFloat { 0%,100% { transform:translateY(1px) rotate(-2deg) } 50% { transform:translateY(-3px) rotate(1deg) } }
-        @keyframes photoBreathe { 0%,100% { transform:scale(1.01) translate3d(0,0,0) } 50% { transform:scale(1.035) translate3d(-.35%, -.25%,0) } }
-        .cupid-signature{animation:signatureFloat 4.8s ease-in-out infinite}
-        .hero-photo{animation:photoBreathe 12s ease-in-out infinite}
-        .cupid-bow{animation:bowDraw 5.2s ease-in-out infinite}
-        .cupid-string{animation:stringDraw 5.2s ease-in-out infinite}
-        .cupid-arrow{transform-origin:center;animation:arrowShoot 5.2s cubic-bezier(.2,.8,.2,1) infinite}
-        .cupid-heart-pop{transform-origin:72px 27px;animation:heartPop 5.2s ease-out infinite}
-        @media(prefers-reduced-motion:reduce){.hero-photo{animation:none}}
-      `}</style>
-    </div>
-  );
-}
-
 
 // Landing copy is kept in a single locale-aware map instead of hardcoded JSX.
 const openingCopy = {
@@ -125,8 +19,6 @@ export function PremiumOpeningStory(){
  const oc=openingCopy[useI18n().language];
  const {language}=useI18n();
  const hero=getMessages(language).hero;
- const {ref:openingRef,p:openingP}=useProgress();
- const heroExit=phase(openingP,.03,.22);
  const profiles=[
   {name:"Nila, 27",place:"London, UK",src:"/images/profiles/nila.jpg?v=1"},
   {name:"Tharshini, 27",place:"London, UK",src:"/images/profiles/tharshini.jpg?v=1"},
@@ -134,20 +26,24 @@ export function PremiumOpeningStory(){
   {name:"Vishal, 29",place:"London, UK",src:"/images/profiles/vishal.jpg?v=1"},
  ];
  return <section className="overflow-x-clip bg-[#FFFCF7]">
-  <article ref={openingRef} className="homepage-story-card relative min-h-[calc(100svh-7rem)] min-w-0 overflow-hidden bg-[#FFFCF7] px-5 py-6 lg:flex lg:items-center lg:px-[max(4vw,56px)] lg:py-0">
-   <div className="absolute inset-0 z-0 hidden lg:block"><HeroCarousel className="h-full w-full" priority sizes="100vw"/><div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,#FFFCF7_0%,rgba(255,252,247,.99)_24%,rgba(255,252,247,.92)_35%,rgba(255,252,247,.54)_46%,rgba(255,252,247,.10)_58%,transparent_68%)]"/></div>
-   <div className="story-copy relative z-20 min-w-0 max-w-full overflow-hidden lg:max-w-[650px] lg:overflow-visible lg:pr-10" style={{transform:`translate3d(${-heroExit*72}px,${-heroExit*20}px,0)`,opacity:1-heroExit*.88}}>
-    <p className="max-w-full text-[9px] font-bold uppercase leading-5 tracking-[.18em] text-[#7C3AED] sm:text-[10px] sm:tracking-[.28em] lg:text-xs lg:tracking-[.32em]">{hero.eyebrow}<br/>{hero.eyebrow2}</p>
-    <div className="mt-3 lg:mt-4">
-      <h1 className="font-serif text-[2.35rem] font-semibold leading-[1.02] sm:text-[2.7rem] text-[#2A1845] lg:text-[5.25rem] xl:text-[5.9rem]">{hero.title}<br/><span className="bg-gradient-to-r from-[#7C3AED] via-[#9F67EA] to-[#C99532] bg-clip-text text-transparent">{hero.titleAccent}</span></h1>
-     </div>
-    <p className="mt-5 max-w-full text-[13px] leading-6 text-[#5F5270] lg:mt-6 lg:max-w-xl lg:text-[17px] lg:leading-8">{hero.description}</p>
-    <div className="mt-5 flex justify-between lg:mt-7 lg:max-w-lg lg:justify-start lg:gap-12">{[[Users,hero.verified],[Shield,hero.safe],[Heart,hero.compatibility]].map(([Icon,label]:any,i)=><div key={i} className="story-item w-24 text-center" style={{animationDelay:`${i*70}ms`}}><span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#F3E8FF] text-[#7C3AED]"><Icon className="h-5 w-5"/></span><span className="mt-2 block whitespace-pre-line text-[10px] font-semibold leading-3 text-[#4C3A5C]">{label}</span></div>)}</div>
-    <div className="mt-5 grid gap-2 lg:mt-7 lg:max-w-lg lg:grid-cols-2 lg:gap-3"><Link href="/signup" className="flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-sm font-semibold text-white shadow-[0_14px_34px_rgba(124,58,237,.28)] transition hover:-translate-y-0.5">{hero.create} <ArrowRight className="ml-1 h-4 w-4"/></Link><Link href="/discover" className="flex h-11 items-center justify-center rounded-full border border-[#C99532]/55 bg-white text-sm font-semibold text-[#5B21B6]">{hero.explore}</Link></div>
+  <article className="homepage-story-card relative isolate grid min-w-0 items-center overflow-hidden bg-[#FFFCF7] px-5 pt-10 lg:min-h-[calc(100svh-7rem)] lg:grid-cols-[1fr_1fr] lg:px-[max(4vw,56px)] lg:py-12">
+   <div aria-hidden="true" className="pointer-events-none absolute -bottom-48 -right-32 h-[650px] w-[650px] rounded-full border border-[#C99532]/25"/>
+   <div aria-hidden="true" className="pointer-events-none absolute -bottom-56 -right-20 h-[650px] w-[650px] rounded-full border border-[#C99532]/15"/>
+   <div className="relative z-10 min-w-0 pb-8 lg:py-6 lg:pr-8">
+    <p className="text-[10px] font-semibold uppercase leading-5 tracking-[.2em] text-[#745589] lg:text-xs">{hero.eyebrow}<br/>{hero.eyebrow2}</p>
+    <h1 className="mt-5 font-serif text-[clamp(2.5rem,6vw,5.75rem)] font-medium leading-[1.06] tracking-tight text-[#351944]">{hero.title}<br/><span className="text-[#936C2F]">{hero.titleAccent}</span></h1>
+    <p className="mt-5 max-w-xl text-sm leading-7 text-[#6B5A70] lg:mt-6 lg:text-base lg:leading-8">{hero.description}</p>
+    <ul className="mt-7 flex flex-wrap gap-x-6 gap-y-4 lg:gap-x-8">
+     {[{Icon:Users,label:hero.verified},{Icon:Shield,label:hero.safe},{Icon:Heart,label:hero.compatibility}].map(({Icon,label})=><li key={label} className="flex max-w-[145px] items-center gap-2 text-xs font-medium text-[#5F4B66]"><Icon className="h-6 w-6 shrink-0 stroke-[1.3] text-[#A27A3F]" aria-hidden="true"/>{label}</li>)}
+    </ul>
+    <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+     <Link href="/signup" className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#482153] px-7 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(72,33,83,.15)] transition hover:bg-[#61336C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#482153] focus-visible:ring-offset-4">{hero.create}<ArrowRight className="ml-2 h-4 w-4" aria-hidden="true"/></Link>
+     <Link href="/discover" className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#C99532]/45 bg-[#FFFCF7] px-7 text-sm font-semibold text-[#482153] transition hover:bg-[#F5EDE2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#482153] focus-visible:ring-offset-4">{hero.explore}</Link>
+    </div>
    </div>
-   <div className="story-media relative -mx-5 mt-6 overflow-hidden lg:hidden" style={{transform:`translate3d(${heroExit*-5}%,${heroExit*18}px,0) scale(${1+heroExit*.075})`,transformOrigin:"center center"}}>
-    <HeroCarousel className="h-[48svh] min-h-[340px] rounded-t-[2.25rem] shadow-[0_18px_45px_rgba(76,29,149,.16)]" priority sizes="(min-width:1024px) 55vw,100vw"/>
-<div className="pointer-events-none absolute -bottom-3 left-1/2 h-px w-[70%] -translate-x-1/2 bg-gradient-to-r from-transparent via-amber-300 to-transparent" style={{transform:`translateX(-50%) scaleX(${.35+heroExit*.65})`,opacity:.25+heroExit*.65}}/>
+   <div className="relative -mx-5 aspect-[3/2] sm:mx-0 lg:-mr-[max(4vw,56px)] lg:aspect-auto lg:h-[min(76vh,800px)] lg:min-h-[480px]">
+    <Image src="/images/hero-studio-elegance.webp" alt="A couple in purple and ivory formal attire sharing a relaxed studio portrait" fill priority quality={90} sizes="(min-width:1024px) 55vw,100vw" className="object-contain object-bottom"/>
+    <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-[#FFFCF7] to-transparent lg:inset-y-0 lg:left-0 lg:h-auto lg:w-16 lg:bg-gradient-to-r"/>
    </div>
   </article>
 
