@@ -144,7 +144,7 @@
     inset: 0;
     pointer-events: none;
     background:
-      linear-gradient(to bottom, hsl(var(--background)), transparent 10%, transparent 90%, hsl(var(--background))),
+      linear-gradient(to bottom, transparent 90%, hsl(var(--background))),
       linear-gradient(to right, hsl(var(--background)), transparent 8%, transparent 94%, hsl(var(--background)));
   }
   @media (min-width: 640px) and (max-width: 1023px) {
@@ -169,7 +169,7 @@
     .studio-hero-blend {
       background:
         linear-gradient(to right, hsl(var(--background)), transparent 15%, transparent 96%, hsl(var(--background))),
-        linear-gradient(to bottom, hsl(var(--background)), transparent 8%, transparent 91%, hsl(var(--background)));
+        linear-gradient(to bottom, transparent 91%, hsl(var(--background)));
     }
   }
 }
