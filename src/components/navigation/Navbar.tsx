@@ -107,7 +107,7 @@ export function Navbar() {
   const marketingLinkClass = (href: string) =>
     cn(
       "relative h-11 rounded-none bg-transparent px-3.5 text-[15px] font-medium text-[#5C4A66] shadow-none hover:bg-transparent hover:text-[#2A1845]",
-      (pathname === href || (href === "/#features" && pathname === "/")) && "text-[#2A1845] after:absolute after:inset-x-1 after:-bottom-0.5 after:h-[3px] after:rounded-full after:bg-gradient-to-r after:from-[#7C3AED] after:to-[#C99532]"
+      pathname === href && "text-[#2A1845] after:absolute after:inset-x-1 after:-bottom-0.5 after:h-[3px] after:rounded-full after:bg-gradient-to-r after:from-[#7C3AED] after:to-[#C99532]"
     );
 
   const signUpButtonClass =
