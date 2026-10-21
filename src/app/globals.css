@@ -95,6 +95,7 @@
   * {
     @apply border-border;
   }
+  :where(h1, h2, h3) { overflow-wrap: anywhere; }
   html {
     background: hsl(var(--background));
     overscroll-behavior-y: none;
@@ -123,6 +124,10 @@
     gap: 1.5rem;
   }
   .studio-hero-copy { @apply relative z-10 min-w-0; }
+  :is(html[lang="ta"], html[lang="si"]) .studio-hero-copy h1 {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    line-height: 1.25;
+  }
   .studio-hero-portrait {
     position: relative;
     width: calc(100% + 2.5rem);

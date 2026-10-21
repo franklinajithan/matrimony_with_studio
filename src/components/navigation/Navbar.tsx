@@ -107,7 +107,7 @@ export function Navbar() {
 
   const marketingLinkClass = (href: string) =>
     cn(
-      "relative h-11 rounded-none bg-transparent px-3.5 text-[15px] font-medium text-muted-foreground shadow-none hover:bg-transparent hover:text-primary-dark",
+      "relative h-11 rounded-none bg-transparent px-2 text-[13px] font-medium text-muted-foreground shadow-none hover:bg-transparent hover:text-primary-dark",
       pathname === href && "text-primary-dark after:absolute after:inset-x-1 after:-bottom-0.5 after:h-[3px] after:rounded-full after:bg-gradient-to-r after:from-primary after:to-gold"
     );
 
@@ -115,7 +115,7 @@ export function Navbar() {
     "rounded-full bg-primary px-6 font-semibold text-white hover:bg-primary-dark shadow-[0_8px_24px_hsl(var(--primary)/.22)] transition-all";
 
   const authActions = (
-    <div className="ml-auto hidden items-center gap-3 lg:flex">
+    <div className="ml-auto hidden items-center gap-3 xl:flex">
       {currentUser ? (
         <>
           <Button variant="ghost" asChild className="font-medium">
@@ -141,7 +141,7 @@ export function Navbar() {
   return (
     <TooltipProvider delayDuration={0}>
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90">
-        <div className="mx-auto flex h-[4.25rem] w-full max-w-[1500px] items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:h-24 lg:px-10 xl:px-14">
+        <div className="mx-auto flex h-[4.25rem] w-full max-w-[1500px] items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:h-24 lg:px-8 xl:px-6">
           <div className="flex shrink-0 items-center">
             {isMarketingPage ? (
               <Logo priority className="w-[120px] sm:w-32 lg:w-44" />
@@ -150,7 +150,7 @@ export function Navbar() {
 
           {isMarketingPage ? (
             <>
-              <nav className="hidden flex-1 items-center justify-center gap-2 lg:flex" aria-label="Primary">
+              <nav className="hidden flex-1 items-center justify-center gap-1 xl:flex" aria-label="Primary">
                 {landingPageNavLinks.map((link) => (
                   <Button 
                     key={link.label}
@@ -164,7 +164,7 @@ export function Navbar() {
               </nav>
 
               {/* Language Selector - Placeholder until i18n is implemented */}
-              <div className="hidden items-center gap-2 lg:flex">
+              <div className="hidden items-center gap-2 xl:flex">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button 
@@ -241,7 +241,7 @@ export function Navbar() {
           )}
 
           {isLoadingAuth ? (
-            <div className="ml-auto hidden items-center gap-3 lg:flex">
+            <div className="ml-auto hidden items-center gap-3 xl:flex">
               <Button variant="outline" asChild className="h-10 rounded-full border-border bg-card px-5 font-semibold text-primary hover:bg-card hover:text-primary">
                 <Link href="/login">Log In</Link>
               </Button>
@@ -311,13 +311,13 @@ export function Navbar() {
           )}
 
           {isMarketingPage ? (
-            <div className="ml-auto flex min-w-0 items-center gap-1 lg:hidden">
+            <div className="ml-auto flex min-w-0 items-center gap-1 xl:hidden">
               {!currentUser && !isLoadingAuth && (
                 <>
-                  <Button asChild size="sm" variant="ghost" className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm">
+                  <Button asChild size="sm" variant="ghost" className="h-11 px-2 text-xs sm:px-3 sm:text-sm">
                     <Link href="/login">Log in</Link>
                   </Button>
-                  <Button asChild size="sm" className={cn("h-8 px-3 text-xs sm:h-9 sm:px-4 sm:text-sm", signUpButtonClass)}>
+                  <Button asChild size="sm" className={cn(signUpButtonClass, "h-11 px-3 text-xs sm:px-4 sm:text-sm")}>
                     <Link href="/signup">Join</Link>
                   </Button>
                 </>
@@ -327,7 +327,7 @@ export function Navbar() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 shrink-0"
+                    className="h-11 w-11 shrink-0"
                     aria-label="Open menu"
                   >
                     <Menu className="h-6 w-6" />
