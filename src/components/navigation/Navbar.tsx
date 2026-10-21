@@ -49,8 +49,9 @@ export function Navbar() {
     { href: "/dashboard/edit-profile", label: "Profile", icon: <UserCircleIcon className="h-5 w-5" /> },
     { href: "/dashboard/preferences", label: "Settings", icon: <Settings className="h-5 w-5" /> },
   ];
+  const featuresLabel = { en: "Features", ta: "அம்சங்கள்", si: "විශේෂාංග", fr: "Fonctionnalités", nl: "Functies", de: "Funktionen" }[language];
   const landingPageNavLinks = [
-    { href: "/", label: t.home }, { href: "/about", label: t.about }, { href: "/success-stories", label: t.stories },
+    { href: "/", label: t.home }, { href: "/#features", label: featuresLabel }, { href: "/about", label: t.about }, { href: "/success-stories", label: t.stories },
     { href: "/pricing", label: t.pricing }, { href: "/safety", label: t.safety }, { href: "/contact", label: t.help },
   ];
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
