@@ -135,7 +135,7 @@ export function PremiumOpeningStory(){
  ];
  return <section className="overflow-x-clip bg-[#FFFCF7]">
   <article ref={openingRef} className="homepage-story-card relative min-h-[calc(100svh-7rem)] min-w-0 overflow-hidden bg-[#FFFCF7] px-5 py-6 lg:flex lg:items-center lg:px-[max(4vw,56px)] lg:py-0">
-   <div className="absolute inset-0 z-0 hidden lg:block"><HeroCarousel className="absolute inset-0" priority sizes="100vw"/><div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,#FFFCF7_0%,rgba(255,252,247,.99)_24%,rgba(255,252,247,.92)_35%,rgba(255,252,247,.54)_46%,rgba(255,252,247,.10)_58%,transparent_68%)]"/></div>
+   <div className="absolute inset-0 z-0 hidden lg:block"><HeroCarousel className="h-full w-full" priority sizes="100vw"/><div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,#FFFCF7_0%,rgba(255,252,247,.99)_24%,rgba(255,252,247,.92)_35%,rgba(255,252,247,.54)_46%,rgba(255,252,247,.10)_58%,transparent_68%)]"/></div>
    <div className="story-copy relative z-20 min-w-0 max-w-full overflow-hidden lg:max-w-[650px] lg:overflow-visible lg:pr-10" style={{transform:`translate3d(${-heroExit*72}px,${-heroExit*20}px,0)`,opacity:1-heroExit*.88}}>
     <p className="max-w-full text-[9px] font-bold uppercase leading-5 tracking-[.18em] text-[#7C3AED] sm:text-[10px] sm:tracking-[.28em] lg:text-xs lg:tracking-[.32em]">{hero.eyebrow}<br/>{hero.eyebrow2}</p>
     <div className="mt-3 lg:mt-4">
