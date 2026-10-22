@@ -12,7 +12,7 @@
     "seed": "tsx scripts/seed-test-profiles.ts",
     "seed:demo": "tsx scripts/seed-demo-profiles.ts",
     "seed:demo:cleanup": "tsx scripts/seed-demo-profiles.ts --cleanup",
-    "test:admin": "node --test scripts/admin-security.test.cjs",
+    "test:admin": "node --test scripts/admin-security.test.cjs scripts/member-deletion.test.cjs",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:horoscope": "node --test scripts/horoscope-security.test.mjs scripts/horoscope-api.test.cjs && node --import tsx --test src/lib/horoscope/*.test.ts scripts/profile-gender.test.ts",

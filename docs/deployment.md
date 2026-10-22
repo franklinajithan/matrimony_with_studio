@@ -12,7 +12,11 @@ This repository uses **Supabase Auth + Postgres + Storage**. Do not add Firebase
 | `NEXT_PUBLIC_SITE_URL` | Auth redirect origin on the server | Yes | Recommended in production |
 | `DATABASE_URL` | Local SQL scripts only (`scripts/apply-migration.mjs`) | **No** | Local schema work only |
 
-The app **does not** use a service-role/secret key. Do not add `SUPABASE_SERVICE_ROLE_KEY` to Vercel.
+`SUPABASE_SERVICE_ROLE_KEY` is a server-only secret required by permanent member deletion and the internal horoscope cleanup endpoint. Configure it through the hosting secret manager; never use a `NEXT_PUBLIC_` prefix or expose it in client code. Ordinary member/admin operations continue to use session authorization and RLS.
+
+Permanent deletion is available under Admin → Members → Manage member. The endpoint verifies the current administrator, rejects cross-origin requests, self-deletion and administrator targets, and checks the typed email against Auth. It blocks outstanding provider subscriptions, disables sign-in, recursively removes media and horoscope uploads, erases linked stories/billing events and personal profile audit payloads, then hard-deletes Auth. Database foreign-key cascades remove the linked application rows and release the email for registration. Administrative action/timestamp records remain without the target identifier/payload; provider-side payment records and backups are outside this operation.
+
+Cleanup spans Storage and Auth and is not atomic: failures leave the member disabled and may already have removed files. The UI reports failure and allows retry; it never reports success before Auth deletion succeeds. Existing access JWTs expire normally, while deleted profile/ownership rows prevent access to the removed data. Validate full deletion and re-registration using a disposable account on staging before production rollout; do not use a real member as a test.
 
 ## Local setup
 

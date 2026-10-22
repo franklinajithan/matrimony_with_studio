@@ -146,6 +146,7 @@ for (const file of files('src/app/api/admin', 'route.ts')) {
     const api = load(file, {
       '@/lib/auth/admin': { requireServerAdmin: async () => { checks++; return null; } },
       '@/lib/supabase/server': { createSupabaseServerClient: () => { throw new Error('Protected data accessed before authorization'); } },
+      '@/lib/supabase/admin': { createSupabaseAdminClient: () => { throw new Error('Privileged data accessed before authorization'); } },
       '@/lib/subscriptions': { ADMIN_BILLING_CAPABILITIES: {} },
       '@/lib/horoscope/server': { context: () => { throw new Error('Protected data accessed before authorization'); }, json: (body,status=200) => ({body,status}) },
       '@/lib/horoscope/provider': { providerConfigured: () => false },
