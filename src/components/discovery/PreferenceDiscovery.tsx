@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Bookmark, Briefcase, Heart, Loader2, MapPin, RotateCcw, Search, SlidersHorizontal, Sparkles, X } from "lucide-react";
+import { Bookmark, Briefcase, Heart, Loader2, MapPin, RotateCcw, Search, SlidersHorizontal, Sparkles, X, LayoutGrid, List, BadgeCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { getProfile, listProfiles } from "@/lib/supabase/profiles";
 import type { Profile } from "@/lib/supabase/types";
@@ -56,6 +56,7 @@ export function PreferenceDiscovery() {
   const [requiredGender, setRequiredGender] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [sheet, setSheet] = useState(false);
+  const [displayMode, setDisplayMode] = useState<"grid" | "list">("grid");
   const [sent, setSent] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<Record<string, boolean>>({});
 
@@ -160,16 +161,16 @@ export function PreferenceDiscovery() {
     <Card className="overflow-hidden border-border"><CardContent className="p-4 sm:p-5"><div className="flex flex-col gap-3 lg:flex-row lg:items-center"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/><Input className="pl-10" placeholder={t.search} value={filters.query} onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))}/></div><div className="flex gap-2"><Sheet open={sheet} onOpenChange={setSheet}><SheetTrigger asChild><Button data-testid="discover-filters-open" variant="outline" className="flex-1 lg:flex-none"><SlidersHorizontal className="mr-2 h-4 w-4"/>{t.filters} {activeCount ? `(${activeCount})` : ""}</Button></SheetTrigger><SheetContent className="w-[92vw] overflow-y-auto sm:max-w-md"><SheetHeader><SheetTitle>{t.matchFilters}</SheetTitle></SheetHeader><div className="mt-5"><FilterPanel/></div></SheetContent></Sheet>{hasSaved && <Button variant="ghost" onClick={reset}><RotateCcw className="mr-2 h-4 w-4"/>{t.showAll}</Button>}</div></div>
       <div className={`mt-4 flex items-center gap-2 rounded-xl px-3 py-2 text-sm ${hasSaved ? "bg-accent text-primary" : "bg-amber-50 text-amber-800"}`}><Sparkles className="h-4 w-4 shrink-0"/><span>{hasSaved ? <><strong>Preference match %</strong> compares each member with your saved Partner Preferences.</> : <><strong>Match % is waiting for your preferences.</strong> Set Partner Preferences to activate personalised scores.</>}</span>{!hasSaved && <Button size="sm" variant="outline" className="ml-auto" onClick={() => router.push(PREFERENCES_ROUTE)}>Set preferences</Button>}</div>
     </CardContent></Card>
-    <div className="flex items-center justify-between"><p className="text-sm text-muted-foreground"><strong className="text-foreground">{results.length}</strong> {t.potential}</p></div>
+    <div className="flex items-center justify-between gap-3"><p className="text-sm text-muted-foreground"><strong className="text-foreground">{results.length}</strong> {t.potential}</p><div className="flex gap-1 rounded-xl border border-border p-1" role="group" aria-label="Profile display"><Button size="sm" variant={displayMode === "grid" ? "secondary" : "ghost"} aria-pressed={displayMode === "grid"} onClick={() => setDisplayMode("grid")}><LayoutGrid className="mr-1 h-4 w-4" />Grid</Button><Button size="sm" variant={displayMode === "list" ? "secondary" : "ghost"} aria-pressed={displayMode === "list"} onClick={() => setDisplayMode("list")}><List className="mr-1 h-4 w-4" />List</Button></div></div>
     {!results.length ? <Card><CardContent className="py-14 text-center"><Heart className="mx-auto h-10 w-10 text-gold-foreground"/><h2 className="mt-3 text-lg font-semibold">{t.none}</h2><p className="mt-1 text-sm text-muted-foreground">{t.broaden}</p><Button className="mt-4" variant="outline" onClick={clear}>{t.showAll}</Button></CardContent></Card> :
-    <div className="grid grid-cols-2 items-stretch gap-3 md:grid-cols-3 lg:gap-5 xl:grid-cols-4">
+    <div className={displayMode === "list" ? "grid grid-cols-1 gap-3 lg:grid-cols-2" : "grid grid-cols-2 items-stretch gap-3 md:grid-cols-3 lg:gap-5 xl:grid-cols-4"}>
       {results.map((person) => {
       const score = preferences ? preferenceScore(person, preferences) : null;
       const showScore = Boolean(hasSaved && score && score.total > 0);
       return (
-        <Card key={person.id} data-testid={`discover-profile-${person.id}`} className="flex h-full flex-col overflow-hidden rounded-2xl border-border shadow-sm">
+        <Card key={person.id} data-testid={`discover-profile-${person.id}`} className={`flex h-full overflow-hidden rounded-2xl border-border shadow-sm ${displayMode === "list" ? "flex-col sm:flex-row" : "flex-col"}`}>
           {/* Fixed photo height so every card aligns */}
-          <div className="relative h-44 w-full shrink-0 overflow-hidden bg-accent sm:h-52 md:h-56">
+          <div className={displayMode === "list" ? "relative h-56 w-full shrink-0 overflow-hidden bg-accent sm:h-auto sm:w-44" : "relative h-44 w-full shrink-0 overflow-hidden bg-accent sm:h-52 md:h-56"}>
             {person.photoURL ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -212,7 +213,7 @@ export function PreferenceDiscovery() {
             </Button>
           </div>
 
-          <CardContent className="flex flex-1 flex-col gap-2 p-3 sm:p-4">
+          <div className="flex min-w-0 flex-1 flex-col"><CardContent className="flex flex-1 flex-col gap-2 p-3 sm:p-4">
             <div className="min-w-0">
               <h2 className="truncate text-sm font-semibold leading-tight text-foreground sm:text-base">
                 {person.displayName}
@@ -221,6 +222,9 @@ export function PreferenceDiscovery() {
                   <span className="font-normal text-muted-foreground">, {person.ageYears}</span>
                 ) : null}
               </h2>
+              <p className="mt-1 text-[10px] font-semibold tracking-wide text-gold-foreground sm:text-xs">CupidMatch member</p>
+              {person.isVerified && <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-primary"><BadgeCheck className="h-3.5 w-3.5" />Verified profile</p>}
+              {person.height && <p className="mt-1 text-xs text-muted-foreground">{person.height} tall</p>}
               <p className="mt-1 flex min-w-0 items-center gap-1 text-xs text-muted-foreground sm:text-sm">
                 <Briefcase className="h-3.5 w-3.5 shrink-0" aria-hidden />
                 <span className="truncate">{person.profession || "—"}</span>
@@ -295,7 +299,7 @@ export function PreferenceDiscovery() {
                 t.interest
               )}
             </Button>
-          </CardFooter>
+          </CardFooter></div>
         </Card>
       );
     })}
