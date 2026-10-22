@@ -58,6 +58,7 @@ export function PreferenceDiscovery() {
   const [sheet, setSheet] = useState(false);
   const [displayMode, setDisplayMode] = useState<"grid" | "list">("grid");
   const [sortMode, setSortMode] = useState<"compatible" | "youngest" | "oldest" | "name">("compatible");
+  const [visibleCount, setVisibleCount] = useState(20);
   const [savedSearchUrl, setSavedSearchUrl] = useState<string | null>(null);
   const [searchOwnerId, setSearchOwnerId] = useState<string | null>(null);
   const [sent, setSent] = useState<Set<string>>(new Set());
@@ -111,6 +112,7 @@ export function PreferenceDiscovery() {
     if (sortMode === "oldest") return (b.ageYears ?? -1) - (a.ageYears ?? -1);
     return preferences ? preferenceScore(b, preferences).percentage - preferenceScore(a, preferences).percentage : 0;
   }), [people, filters, preferences, requiredGender, sortMode]);
+  useEffect(() => { setVisibleCount(20); }, [filters, requiredGender, sortMode]);
   const reset = () => setFilters({ ...empty, gender: requiredGender });
   const clear = () => setFilters({ ...empty, gender: requiredGender });
   const activeCount = [
@@ -183,7 +185,7 @@ export function PreferenceDiscovery() {
     </div>
     {!results.length ? <Card><CardContent className="py-14 text-center"><Heart className="mx-auto h-10 w-10 text-gold-foreground"/><h2 className="mt-3 text-lg font-semibold">{t.none}</h2><p className="mt-1 text-sm text-muted-foreground">{t.broaden}</p><Button className="mt-4" variant="outline" onClick={clear}>{t.showAll}</Button></CardContent></Card> :
     <div className={displayMode === "list" ? "grid grid-cols-1 gap-3 lg:grid-cols-2" : "grid grid-cols-2 items-stretch gap-3 md:grid-cols-3 lg:gap-5 xl:grid-cols-4"}>
-      {results.map((person) => {
+      {results.slice(0, visibleCount).map((person) => {
       const score = preferences ? preferenceScore(person, preferences) : null;
       const showScore = Boolean(hasSaved && score && score.total > 0);
       return (
@@ -324,6 +326,7 @@ export function PreferenceDiscovery() {
       );
     })}
     </div>}
+    {results.length > visibleCount && <div className="flex justify-center py-5"><Button variant="outline" onClick={() => setVisibleCount((count) => count + 20)}>Show more matches ({Math.min(20, results.length - visibleCount)} more)</Button></div>}
   </PageFrame>;
 }
 
