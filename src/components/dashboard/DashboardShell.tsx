@@ -27,6 +27,7 @@ import { SearchAutocomplete } from "@/components/search/SearchAutocomplete";
 import { cn } from "@/lib/utils";
 import { auth, onAuthStateChanged, signOut, type AuthUser } from "@/lib/supabase/auth";
 import { getProfile } from "@/lib/supabase/profiles";
+import { supabase } from "@/lib/supabase/client";
 import {
   countPendingRequests,
   countRecentAcceptedConnections,
@@ -181,6 +182,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [displayName, setDisplayName] = useState<string>("");
   const [photoURL, setPhotoURL] = useState<string>("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [badges, setBadges] = useState<NavBadges>({ interests: 0, connections: 0, messages: 0 });
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -253,6 +255,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
+      setIsAdmin(false);
       if (!user) {
         router.replace("/login?next=/dashboard");
       }
@@ -263,6 +266,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!currentUser) return;
     let active = true;
+    // Ask the database for the current caller\'s admin status; never trust profile metadata.
+    supabase.rpc("is_admin")
+      .then(({ data, error }) => { if (active) setIsAdmin(!error && data === true); })
+      .catch(() => { if (active) setIsAdmin(false); });
     getProfile(currentUser.uid)
       .then((profile) => {
         if (!active) return;
@@ -476,6 +483,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     <DropdownMenuItem asChild>
                       <Link href="/pricing">{dt.subscription}</Link>
                     </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin">Admin Dashboard</Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
