@@ -37,8 +37,14 @@ export async function POST(request: Request) {
   const { memberId, email } = body || {};
   if (typeof memberId !== "string" || !uuid.test(memberId) || typeof email !== "string" || !email.trim()) return json({ error: "Member and confirmation email required" }, 400);
   if (memberId === admin.id) return json({ error: "You cannot delete your own administrator account" }, 403);
+  let db: SupabaseClient;
   try {
-    const db = createSupabaseAdminClient();
+    db = createSupabaseAdminClient();
+  } catch {
+    return json({ error: "Permanent deletion is not configured. Add SUPABASE_SERVICE_ROLE_KEY to the server's Production environment and redeploy. No account data was changed." }, 503);
+  }
+  let cleanupStarted = false;
+  try {
     const { data: profile, error: profileError } = await db.from("profiles").select("id,is_admin").eq("id", memberId).single();
     if (profileError || !profile) return json({ error: "Member not found" }, 404);
     if (profile.is_admin) return json({ error: "Administrator accounts cannot be deleted here" }, 403);
@@ -59,6 +65,7 @@ export async function POST(request: Request) {
     // Ban first to prevent fresh sign-ins during cleanup. A failed cleanup can be retried.
     const { error: banError } = await db.auth.admin.updateUserById(memberId, { ban_duration: "876000h" });
     if (banError) throw new Error("Unable to disable login");
+    cleanupStarted = true;
     const { data: buckets, error: bucketsError } = await db.storage.listBuckets();
     if (bucketsError) throw new Error("Unable to check uploaded files");
     for (const [bucket, prefix] of [["media", `users/${memberId}`], ["horoscope-private", memberId]]) {
@@ -78,6 +85,8 @@ export async function POST(request: Request) {
     if (deleteError) throw new Error("Account deletion failed");
     return json({ message: "Member permanently deleted. The same email can now register a new account." });
   } catch {
-    return json({ error: "Permanent deletion could not complete. The account may be disabled and some files removed. Retry deletion; contact support if it continues." }, 503);
+    return json({ error: cleanupStarted
+      ? "Permanent deletion could not complete. The account may be disabled and some files removed. Retry deletion; contact support if it continues."
+      : "Permanent deletion could not start. No files or profile data were removed. Check the server configuration and billing connection, then retry." }, 503);
   }
 }

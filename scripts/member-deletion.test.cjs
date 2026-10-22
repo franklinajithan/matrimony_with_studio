@@ -43,7 +43,7 @@ function setup(options = {}) {
   vm.runInThisContext(`(function(require,module,exports){${source}\n})`)(name => {
     if (name === 'next/server') return { NextResponse: { json: (body, init) => ({ body, status: init.status }) } };
     if (name === '@/lib/auth/admin') return { requireServerAdmin: async () => options.denied ? null : { id: adminId } };
-    if (name === '@/lib/supabase/admin') return { createSupabaseAdminClient: () => db };
+    if (name === '@/lib/supabase/admin') return { createSupabaseAdminClient: () => { if (options.configMissing) throw new Error('Permanent deletion is not configured'); return db; } };
     throw new Error(name);
   }, mod, mod.exports);
   const request = new Request('https://cupidmatch.co.uk/api/admin/delete-member', { method: 'POST', headers: { origin: options.origin || 'https://cupidmatch.co.uk', 'content-type': 'application/json' }, body: JSON.stringify(options.body || { memberId, email: 'member@example.com' }) });
@@ -73,4 +73,11 @@ test('storage failure prevents Auth deletion and reports failure', async () => {
 });
 test('Auth failure never returns success', async () => {
   const s = setup({ authFail: true }); assert.equal((await s.run()).status, 503);
+});
+test('missing configuration gives an actionable error without claiming partial deletion', async () => {
+  const s = setup({ configMissing: true }); const response = await s.run();
+  assert.equal(response.status, 503);
+  assert.match(response.body.error, /SUPABASE_SERVICE_ROLE_KEY/);
+  assert.match(response.body.error, /No account data was changed/);
+  assert.equal(s.calls.length, 0);
 });
