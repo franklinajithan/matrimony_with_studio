@@ -1,6 +1,8 @@
 # Account deletion release gate
 
-Status on 22 October 2026: implemented and locally tested; NOT released to production.
+Status on 22 October 2026: implemented and locally tested; website NOT released to production.
+
+Configuration follow-up: Supabase Edge Function `account-lifecycle` version 1 is ACTIVE. Vercel Production `CRON_SECRET` is configured. The database migration still fails with `Invalid or expired requestState`; Supabase Edge recovery secret and Auth email template remain pending. The Supabase CLI has no authenticated access token. No secret value is stored in tracked files. The prepared OTP template is `supabase/templates/magic-link.html`; applying it must preserve email sign-in and the confirmation-link fallback.
 
 Two Supabase `apply_migration` attempts failed with `McpServerError: Invalid or expired requestState`. A subsequent read confirmed `to_regclass('public.account_deletions')` is NULL. No real member was deleted. Do not merge/release before the database, function and acceptance checks below are complete.
 
