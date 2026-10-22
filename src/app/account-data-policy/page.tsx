@@ -1,0 +1,15 @@
+import type { Metadata } from 'next';
+export const metadata: Metadata = { title: 'Account deletion and retention | CupidMatch', description: 'How CupidMatch handles deactivation, permanent deletion, shared content and recovery.' };
+export default function AccountDataPolicy() {
+  return <main className="mx-auto max-w-3xl space-y-6 px-5 py-12"><h1 className="font-headline text-3xl">Account deletion and retention</h1><p>Effective 22 October 2026.</p>
+    <p>Deactivate your account in Account Settings to hide your profile from discovery and stop new interactions. Your data remains saved. Sign in to reactivate; reactivation leaves your profile unpublished until you choose to publish it.</p>
+    <p>Permanent deletion requires identity verification and a final confirmation. We immediately hide and lock the account, revoke its sessions, remove uploaded files, erase personal records and remove the login account and linked sign-in identities. The same email can then register a new account.</p>
+    <p>We delete your profile and preferences, biodata and share links, horoscope records and documents, photos, interests, connections, posts, comments and messages you authored. Other members retain their own posts and messages; shared conversations no longer display your identity. Their messages may contain information they wrote themselves.</p>
+    <p>If deletion fails, the account remains locked and hidden. A recovery process retries incomplete requests daily. Contact support through the website if the request remains incomplete. Deletion cannot be reversed once it starts.</p>
+    <p>A restricted operational record contains only account and requesting actor identifiers, timestamps, status and a technical failure stage. Completed records are removed after 90 days. Incomplete requests remain until resolved. This is an operational retention period, not a claim that the law requires retention.</p>
+    <p>Cancel any paid subscription before deleting. This flow removes local membership records and does not cancel charges or erase payment-provider invoices. Accounting records held by the payment provider follow its applicable retention policy. No additional local accounting or fraud archive is created by this flow.</p>
+    <p>Existing administrative audit entries relating to the account are stripped of personal payloads and account identifiers. Third-party OAuth providers keep their own accounts; deleting CupidMatch removes their link to CupidMatch.</p>
+    <p>Files already downloaded by other people and copies held by external services cannot be recalled by this operation. Public-image caches and infrastructure backups follow the hosting providers’ expiry and backup policies; live database and storage deletion does not certify immediate erasure of provider backups. Any restoration must reapply pending and completed deletion requests before serving restored data.</p>
+    <a href="/settings#account-management" className="inline-block font-semibold text-primary underline">Open Account Settings</a>
+  </main>;
+}

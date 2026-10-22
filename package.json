@@ -16,7 +16,8 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:horoscope": "node --test scripts/horoscope-security.test.mjs scripts/horoscope-api.test.cjs && node --import tsx --test src/lib/horoscope/*.test.ts scripts/profile-gender.test.ts",
-    "test:theme": "node --test scripts/theme-contrast.test.mjs"
+    "test:theme": "node --test scripts/theme-contrast.test.mjs",
+    "test:account": "node --test scripts/member-deletion.test.cjs scripts/account-lifecycle-sql.test.mjs"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.28.0",

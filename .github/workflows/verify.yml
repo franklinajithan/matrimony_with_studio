@@ -16,6 +16,8 @@ jobs:
       - run: npm install --package-lock-only --ignore-scripts
       - run: npm ci
       - run: npm run test:theme
+      - run: npm run lint
+      - run: npm run test:account
       - run: npm run test:admin
       - run: npm run test:horoscope
       - run: npx tsc --noEmit
