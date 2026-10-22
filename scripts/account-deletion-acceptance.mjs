@@ -32,10 +32,13 @@ try {
  await must(member.db.storage.from('media').upload(photo,png,{contentType:'image/png'}));
  await must(admin.from('profiles').update({photo_url:photo}).eq('id',member.id));
  await must(admin.from('biodata_documents').insert({owner_id:member.id,title:'Disposable QA',template_id:'classic',content:{name:'Disposable deletion QA'}}));
- await must(member.db.rpc('horoscope_save',{p_payload:{revision:0,tradition:'tamil',visibility:'private',fields:{dateOfBirth:'1990-01-01',timeQuality:'unknown',birthCity:'London',birthCountry:'UK',timezone:'Europe/London',language:'English',rasi:'Mesha'},shared_fields:[],comparison_consent:false,ai_consent:false,planets:[]}}));
+ // Seed through the trusted fixture client: horoscope editing may intentionally be disabled.
+ await must(admin.from('horoscope_profiles').insert({user_id:member.id,tradition:'tamil',visibility:'private',fields:{dateOfBirth:'1990-01-01',timeQuality:'unknown',birthCity:'London',birthCountry:'UK',timezone:'Europe/London',language:'English',rasi:'Mesha'}}));
  await must(admin.from('likes').insert({liker_id:member.id,liked_id:peer.id}));
- const chatId=[member.id,peer.id].sort().join('_');
- await must(admin.from('chats').insert({id:chatId,participant_1:member.id,participant_2:peer.id,participant_details:{[member.id]:{displayName:'Erase me'},[peer.id]:{displayName:'Keep peer'}}}));
+ const pair=[member.id,peer.id].sort();
+ await must(admin.from('connections').insert({member_a_id:pair[0],member_b_id:pair[1]}));
+ const chatId=pair.join('_');
+ await must(admin.from('chats').insert({id:chatId,participant_1:pair[0],participant_2:pair[1],participant_details:{[member.id]:{displayName:'Erase me'},[peer.id]:{displayName:'Keep peer'}}}));
  await must(admin.from('messages').insert([{chat_id:chatId,sender_id:member.id,text:'Erase my message'},{chat_id:chatId,sender_id:peer.id,text:'Keep peer message'}]));
  await invoke(member,{action:'deactivate',confirmation:'CONFIRM'});
  const hidden=await must(peer.db.from('discovery_profiles').select('id').eq('id',member.id));assert.equal(hidden.length,0);report.deactivation=true;
@@ -48,7 +51,19 @@ try {
  const messages=await must(peer.db.from('messages').select('text').eq('chat_id',chatId));assert.deepEqual(messages.map(m=>m.text),['Keep peer message']);report.peerContentPreserved=true;
  assert.equal((await must(peer.db.from('discovery_profiles').select('id').eq('id',member.id))).length,0);report.discoveryRemoved=true;
  const repeated=await member.db.functions.invoke('account-lifecycle',{body:{action:'delete',confirmation:'DELETE'}});assert.ok(repeated.error);report.staleSessionRejected=true;
- const fresh=await must(client().auth.signUp({email:member.email,password:member.password}));assert.ok(fresh.user?.id&&fresh.user.id!==member.id&&fresh.user.identities?.length);created.push(fresh.user.id);report.sameEmailRegistration=true;
+ const signup=await client().auth.signUp({email:member.email,password:member.password});
+ if(signup.error){
+  // The synthetic example.com mailbox cannot receive provider confirmation email.
+  // Keep this limitation explicit; administrative recreation proves only identity reuse.
+  assert.match(signup.error.message,/sending confirmation email/i);
+  report.sameEmailRegistration=false;report.signupDeliveryError=signup.error.message;
+  const fresh=await must(admin.auth.admin.createUser({email:member.email,password:member.password,email_confirm:true}));
+  assert.ok(fresh.user?.id&&fresh.user.id!==member.id);created.push(fresh.user.id);report.sameEmailIdentityRecreation=true;
+  const relogin=await must(client().auth.signInWithPassword({email:member.email,password:member.password}));
+  assert.equal(relogin.user.id,fresh.user.id);report.recreatedIdentityCanSignIn=true;
+ }else{
+  const fresh=signup.data;assert.ok(fresh.user?.id&&fresh.user.id!==member.id&&fresh.user.identities?.length);created.push(fresh.user.id);report.sameEmailRegistration=true;
+ }
  console.log(JSON.stringify(report,null,2));
 } finally {
  // IDs can only originate from createUser/signUp above, never environment/input.
