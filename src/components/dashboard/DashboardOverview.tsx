@@ -207,7 +207,7 @@ export function DashboardOverview() {
       });
       toast({ title: "Interest sent", description: "They will see this in their interests." });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Please try again.";
+      const message = err instanceof Error ? err.message : (err && typeof err === "object" && "message" in err && typeof err.message === "string" ? err.message : "Please try again.");
       const already = message.toLowerCase().includes("already");
       if (already) {
         setInterestedIds((prev) => new Set(prev).add(profileId));
