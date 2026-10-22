@@ -51,7 +51,10 @@ export async function readBody(request: Request) {
   const text = await request.text();
   if (text.length > 100000) throw new Error("Invalid request size");
   try {
-    return JSON.parse(text);
+    const body = JSON.parse(text);
+    if (!body || typeof body !== "object" || Array.isArray(body))
+      throw new Error("Invalid JSON request");
+    return body;
   } catch {
     throw new Error("Invalid JSON request");
   }

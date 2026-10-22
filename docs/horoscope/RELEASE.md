@@ -41,6 +41,10 @@ Pause all horoscope flags in admin (or authorised settings RPC), then revert the
 
 ## Explicit unfinished acceptance items
 
+The reusable HTTP/JWT acceptance runner is `scripts/horoscope-acceptance.mjs`. Run in a trusted environment with `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY`. It only creates random disposable accounts and removes its own IDs in `finally`; it never accepts existing member IDs or changes feature settings. It requires manual horoscope editing and registration to be enabled in an explicitly authorized QA window. It checks save/edit revision conflicts, raw/private peer denial, ordinary-member admin denial, approved-connection sharing, selected-field redaction, reciprocal comparison, cached-report revocation on block, consent withdrawal, member restrictions and owner deletion while restricted. It does not invoke AI, upload member documents or generate astrology scores.
+
+On 22 October a production attempt required a broader feature-setting change than the user's general horoscope instruction clearly authorized. Automatic review blocked continuation. Registration and all horoscope flags were restored to false, the temporary runner replaced with a JWT-protected HTTP 410 handler, and read-back confirmed zero disposable horoscope users. No completed live test result is claimed. A separately authorized test window or staging environment is required.
+
 - Migration installation and read-only privilege verification completed. Real authenticated create/edit/view/share checks remain pending; the rollback-only live fixture write request expired.
 - Provider credentials/model/privacy review and live extraction/AI outage/cancellation benchmarks.
 - A durable queued OCR worker with realtime/polling/cancellation; current implementation is a bounded authenticated synchronous request with explicit UI progress and retry. It does not pretend to keep processing after a failed request.

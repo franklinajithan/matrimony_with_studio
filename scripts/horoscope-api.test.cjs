@@ -170,3 +170,19 @@ test("rate limit stops provider generation and report writes", async () => {
   assert.equal(t.input(), undefined);
   assert.ok(!t.calls.includes("horoscope_store_report"));
 });
+test("JSON request bodies must be objects before route handlers inspect them", async () => {
+  const { readBody } = load("src/lib/horoscope/server.ts", {
+    "server-only": {},
+    "next/server": { NextResponse: {} },
+    "@/lib/supabase/server": {},
+  });
+  for (const value of [null, [], true, 42, "text"]) {
+    await assert.rejects(
+      readBody(new Request("https://example.com", { method: "POST", body: JSON.stringify(value) })),
+      /Invalid JSON request/,
+    );
+  }
+  assert.deepEqual(await readBody(new Request("https://example.com", {
+    method: "POST", body: '{"revision":0}',
+  })), { revision: 0 });
+});

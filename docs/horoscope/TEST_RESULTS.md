@@ -1,5 +1,13 @@
 # Horoscope verification evidence
 
+## Follow-up — 22 October 2026
+
+- Fixed JSON body validation: `null`, arrays and scalar JSON now return the existing invalid-request error before route code accesses object properties, rather than producing a misleading service-unavailable error.
+- `npm run test:horoscope`: 46 test nodes passed (28 database/API nodes and 18 schema/file/gender nodes), including the new object-body regression.
+- TypeScript check and targeted ESLint on changed code passed.
+- Added `scripts/horoscope-acceptance.mjs` for disposable Supabase Auth/JWT acceptance; no existing member IDs are accepted and cleanup is limited to identities created by that process.
+- Live horoscope QA continuation was blocked by automatic safety review because temporary global editing/registration changes were not clearly authorized by the general request. No successful live result is claimed. All flags and registration were restored to false; zero disposable horoscope users remain and the temporary runner is disabled.
+
 ## Executed locally
 
 - `npm run test:admin`: 96/96 passed (includes new page/API unauthorized access checks).
