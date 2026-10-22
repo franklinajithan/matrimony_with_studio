@@ -51,6 +51,7 @@ export function PreferenceDiscovery() {
   const { language } = useI18n();
   const t = getMessages(language).discover;
   const [people, setPeople] = useState<Person[]>([]);
+  const [memberReferences, setMemberReferences] = useState<Record<string,string>>({});
   const [preferences, setPreferences] = useState<PartnerPreferences | null>(null);
   const [filters, setFilters] = useState<DiscoveryFilters>(empty);
   const [requiredGender, setRequiredGender] = useState<string | undefined>();
@@ -99,6 +100,8 @@ export function PreferenceDiscovery() {
       const profiles = profilePages.flat();
       const shortlisted = await getShortlistedIds(user.id, profiles.map((p) => p.id));
       setPeople(profiles.map((p) => ({ ...p, isShortlisted: shortlisted.has(p.id) })));
+      const { data: references, error: referencesError } = await supabase.rpc("discovery_member_references");
+      if (!referencesError && references) setMemberReferences(Object.fromEntries(references.map((row: { member_id: string; reference: string }) => [row.member_id, row.reference])));
       setSent(new Set(sentIds));
     } catch (e) {
       toast({ title: "Matches unavailable", description: e instanceof Error ? e.message : "Please try again.", variant: "destructive" });
@@ -244,7 +247,7 @@ export function PreferenceDiscovery() {
                   <span className="font-normal text-muted-foreground">, {person.ageYears}</span>
                 ) : null}
               </h2>
-              <p className="mt-1 text-[10px] font-semibold tracking-wide text-gold-foreground sm:text-xs">CupidMatch member</p>
+              <p className="mt-1 text-[10px] font-semibold tracking-wide text-gold-foreground sm:text-xs">{memberReferences[person.id] || "CupidMatch member"}</p>
               {person.isVerified && <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-primary"><BadgeCheck className="h-3.5 w-3.5" />Verified profile</p>}
               {person.height && <p className="mt-1 text-xs text-muted-foreground">{person.height} tall</p>}
               {displayMode === "list" && person.bio && <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-muted-foreground">{person.bio}</p>}
