@@ -2,9 +2,9 @@
 
 Status on 22 October 2026: implemented and locally tested; website NOT released to production.
 
-Configuration follow-up: Supabase Edge Function `account-lifecycle` version 1 is ACTIVE. Vercel Production `CRON_SECRET` is configured. The database migration still fails with `Invalid or expired requestState`; Supabase Edge recovery secret and Auth email template remain pending. The Supabase CLI has no authenticated access token. No secret value is stored in tracked files. The prepared OTP template is `supabase/templates/magic-link.html`; applying it must preserve email sign-in and the confirmation-link fallback.
+Configuration follow-up: Supabase Edge Function `account-lifecycle` version 1 is ACTIVE. Vercel Production `CRON_SECRET` is configured. The production migration `20261022154857` was applied through the authenticated SQL Editor as one transaction, including migration history, after the connector repeatedly failed with `Invalid or expired requestState`. Read-back confirmed the ledger and migration history entry. Supabase Auth's Magic Link/OTP template was saved with both `{{ .Token }}` and `{{ .ConfirmationURL }}`; Email and Google providers remain enabled. The matching Supabase Edge recovery secret remains pending user entry because browser credential creation requires handoff. No secret value is stored in tracked files.
 
-Two Supabase `apply_migration` attempts failed with `McpServerError: Invalid or expired requestState`. A subsequent read confirmed `to_regclass('public.account_deletions')` is NULL. No real member was deleted. Do not merge/release before the database, function and acceptance checks below are complete.
+Post-migration advisors retain the existing security-definer discovery-view warning and other existing extension/function/password-protection advisories. The service-only deletion ledger intentionally has RLS enabled without client policies. No real member was deleted. Do not merge/release before recovery configuration and the acceptance checks below are complete.
 
 ## Architecture
 
