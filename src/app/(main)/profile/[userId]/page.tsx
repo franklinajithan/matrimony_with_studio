@@ -37,6 +37,7 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { auth, onAuthStateChanged, type AuthUser as FirebaseUser } from "@/lib/supabase/auth";
 import { getProfile } from "@/lib/supabase/profiles";
+import { supabase } from "@/lib/supabase/client";
 import { likeProfile, unlikeProfile, subscribeToLike } from "@/lib/supabase/likes";
 import {
   createMatchRequest,
@@ -114,6 +115,7 @@ export default function ProfilePage() {
   const viewedUserId = params.userId as string;
 
   const [viewedUserProfile, setViewedUserProfile] = useState<ViewedUserProfileData | null>(null);
+  const [publicMemberReference, setPublicMemberReference] = useState<string | null>(null);
   const [loggedInUserProfile, setLoggedInUserProfile] = useState<AIUserProfileSchema | null>(null);
   const [aiMatchResult, setAiMatchResult] = useState<{ score: number; reasoning: string } | null>(null);
 
@@ -209,6 +211,9 @@ export default function ProfilePage() {
       try {
         const data = await getProfile(viewedUserId);
         if (data) {
+          const { data: references } = await supabase.rpc("discovery_member_references");
+          const memberReference = Array.isArray(references) ? references.find((row: { member_id: string; reference: string }) => row.member_id === viewedUserId)?.reference : null;
+          setPublicMemberReference(memberReference || null);
           const profileData: ViewedUserProfileData = {
             userId: data.id,
             name: data.displayName || "N/A",
@@ -672,7 +677,7 @@ export default function ProfilePage() {
                 <AvatarFallback>{viewedUserProfile?.name?.substring(0, 2)}</AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1 overflow-hidden">
-                <h1 className="font-headline text-base leading-tight sm:text-xl sm:leading-normal text-primary truncate">{viewedUserProfile?.name}</h1>
+                <div><h1 className="font-headline text-base leading-tight sm:text-xl sm:leading-normal text-primary truncate">{viewedUserProfile?.name}</h1>{publicMemberReference && <p className="text-xs font-semibold tracking-wide text-muted-foreground">{publicMemberReference}</p>}</div>
                 <p className="text-xs sm:text-sm text-muted-foreground truncate">
                   {viewedUserProfile?.age} years • {viewedUserProfile?.location}
                 </p>
