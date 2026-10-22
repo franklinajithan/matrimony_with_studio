@@ -84,7 +84,8 @@ export async function POST(request: Request) {
     const { error: deleteError } = await db.auth.admin.deleteUser(memberId, false);
     if (deleteError) throw new Error("Account deletion failed");
     return json({ message: "Member permanently deleted. The same email can now register a new account." });
-  } catch {
+  } catch (error) {
+    console.error("[admin/delete-member] Permanent deletion failed", error instanceof Error ? error.message : "Unknown error");
     return json({ error: cleanupStarted
       ? "Permanent deletion could not complete. The account may be disabled and some files removed. Retry deletion; contact support if it continues."
       : "Permanent deletion could not start. No files or profile data were removed. Check the server configuration and billing connection, then retry." }, 503);
