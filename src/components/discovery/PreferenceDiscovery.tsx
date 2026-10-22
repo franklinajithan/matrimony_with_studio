@@ -58,6 +58,8 @@ export function PreferenceDiscovery() {
   const [sheet, setSheet] = useState(false);
   const [displayMode, setDisplayMode] = useState<"grid" | "list">("grid");
   const [sortMode, setSortMode] = useState<"compatible" | "youngest" | "oldest" | "name">("compatible");
+  const [savedSearchUrl, setSavedSearchUrl] = useState<string | null>(null);
+  const [searchOwnerId, setSearchOwnerId] = useState<string | null>(null);
   const [sent, setSent] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<Record<string, boolean>>({});
 
@@ -70,6 +72,8 @@ export function PreferenceDiscovery() {
       return;
     }
     try {
+      setSearchOwnerId(user.id);
+      try { setSavedSearchUrl(window.localStorage.getItem(`cupidmatch:discovery-search:${user.id}`)); } catch { setSavedSearchUrl(null); }
       const self = await getProfile(user.id);
       if (!self) throw new Error("Complete your profile before finding matches.");
       const saved = partnerPreferencesFromProfile(self);
@@ -174,6 +178,8 @@ export function PreferenceDiscovery() {
       <label className="flex items-center gap-1 text-xs text-muted-foreground">To <Input aria-label="Maximum age" type="number" min={18} max={100} inputMode="numeric" className="h-9 w-16 px-2" placeholder="60" value={filters.ageMax ?? ""} onChange={(e) => setFilters((f) => ({ ...f, ageMax: e.target.value ? Number(e.target.value) : undefined }))}/></label>
       {requiredGender && <span className="rounded-full bg-accent px-3 py-2 text-xs font-medium text-primary">Looking for {requiredGender.toLowerCase()} profiles</span>}
       <Button size="sm" variant="outline" onClick={() => { navigator.clipboard?.writeText(window.location.href).then(() => toast({ title: "Search link copied" })).catch(() => toast({ title: "Unable to copy link", variant: "destructive" })); }}>Copy search link</Button>
+      <Button size="sm" variant="outline" disabled={!searchOwnerId} onClick={() => { if (!searchOwnerId) return; try { const url = window.location.pathname + window.location.search; window.localStorage.setItem(`cupidmatch:discovery-search:${searchOwnerId}`, url); setSavedSearchUrl(url); toast({ title: "Search saved on this device" }); } catch { toast({ title: "Could not save search", variant: "destructive" }); } }}>Save search</Button>
+      {savedSearchUrl && <Button size="sm" variant="ghost" onClick={() => { window.location.assign(savedSearchUrl); }}>Open saved search</Button>}
     </div>
     {!results.length ? <Card><CardContent className="py-14 text-center"><Heart className="mx-auto h-10 w-10 text-gold-foreground"/><h2 className="mt-3 text-lg font-semibold">{t.none}</h2><p className="mt-1 text-sm text-muted-foreground">{t.broaden}</p><Button className="mt-4" variant="outline" onClick={clear}>{t.showAll}</Button></CardContent></Card> :
     <div className={displayMode === "list" ? "grid grid-cols-1 gap-3 lg:grid-cols-2" : "grid grid-cols-2 items-stretch gap-3 md:grid-cols-3 lg:gap-5 xl:grid-cols-4"}>
