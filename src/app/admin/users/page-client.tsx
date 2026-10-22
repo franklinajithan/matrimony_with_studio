@@ -42,6 +42,10 @@ export default function UserManagementPage() {
   const { toast } = useToast();
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("deleted") === "1") {
+      toast({ title: "Member permanently deleted", description: "The same email can now register a new account." });
+      window.history.replaceState(null, "", window.location.pathname);
+    }
     const unsubscribe = subscribeToProfiles(
       profiles => {
         setMembers(profiles.map(p => ({

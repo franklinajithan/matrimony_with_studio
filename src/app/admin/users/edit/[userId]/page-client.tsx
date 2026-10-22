@@ -9,6 +9,7 @@ import { MemberOperations } from "./member-operations";
 import { MemberAdminNotes } from "./member-admin-notes";
 import { ExtendedMemberProfile } from "./extended-member-profile";
 import { MemberSuspension } from "./member-suspension";
+import { MemberDeletion } from "./member-deletion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -110,5 +111,6 @@ export default function AdminMemberDetailsPage() {
           {review.reviewer_note && <p className="text-sm">Reviewer note: {review.reviewer_note}</p>}
         </li>)}</ul>}
     </CardContent></Card>
+    {user && !user.isAdmin && user.email && <MemberDeletion memberId={userId} email={user.email} />}
   </div>;
 }
