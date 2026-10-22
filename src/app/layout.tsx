@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import PwaRegistration from '@/components/PwaRegistration';
 import { Toaster } from "@/components/ui/toaster";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 
@@ -12,6 +13,8 @@ export const metadata: Metadata = {
   title: { default: 'CupidMatch | Sri Lankan & Indian Matrimony UK', template: '%s | CupidMatch' },
   description: 'Discover meaningful matrimonial connections for Sri Lankan and Indian communities in the UK. Explore compatible partners, biodata and cultural preferences.',
   applicationName: 'CupidMatch',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: { capable: true, title: 'CupidMatch', statusBarStyle: 'default' },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large' } },
   icons: {
     icon: [
@@ -57,6 +60,7 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <I18nProvider>{children}</I18nProvider>
         <Toaster />
+        <PwaRegistration />
       </body>
     </html>
   );
