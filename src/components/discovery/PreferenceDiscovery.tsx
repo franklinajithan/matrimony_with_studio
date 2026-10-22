@@ -57,6 +57,7 @@ export function PreferenceDiscovery() {
   const [loading, setLoading] = useState(true);
   const [sheet, setSheet] = useState(false);
   const [displayMode, setDisplayMode] = useState<"grid" | "list">("grid");
+  const [sortMode, setSortMode] = useState<"compatible" | "youngest" | "oldest" | "name">("compatible");
   const [sent, setSent] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<Record<string, boolean>>({});
 
@@ -100,7 +101,12 @@ export function PreferenceDiscovery() {
 
   useEffect(() => { void load(); }, [load]);
   const hasSaved = Boolean(preferences && hasPreferences(preferences));
-  const results = useMemo(() => people.filter((p) => profileMatchesFilters(p, { ...filters, gender: requiredGender || filters.gender })).sort((a, b) => preferences ? preferenceScore(b, preferences).percentage - preferenceScore(a, preferences).percentage : 0), [people, filters, preferences, requiredGender]);
+  const results = useMemo(() => people.filter((p) => profileMatchesFilters(p, { ...filters, gender: requiredGender || filters.gender })).sort((a, b) => {
+    if (sortMode === "name") return (a.displayName || "").localeCompare(b.displayName || "");
+    if (sortMode === "youngest") return (a.ageYears ?? 999) - (b.ageYears ?? 999);
+    if (sortMode === "oldest") return (b.ageYears ?? -1) - (a.ageYears ?? -1);
+    return preferences ? preferenceScore(b, preferences).percentage - preferenceScore(a, preferences).percentage : 0;
+  }), [people, filters, preferences, requiredGender, sortMode]);
   const reset = () => setFilters({ ...empty, gender: requiredGender });
   const clear = () => setFilters({ ...empty, gender: requiredGender });
   const activeCount = [
@@ -161,7 +167,7 @@ export function PreferenceDiscovery() {
     <Card className="overflow-hidden border-border"><CardContent className="p-4 sm:p-5"><div className="flex flex-col gap-3 lg:flex-row lg:items-center"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/><Input className="pl-10" placeholder={t.search} value={filters.query} onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))}/></div><div className="flex gap-2"><Sheet open={sheet} onOpenChange={setSheet}><SheetTrigger asChild><Button data-testid="discover-filters-open" variant="outline" className="flex-1 lg:flex-none"><SlidersHorizontal className="mr-2 h-4 w-4"/>{t.filters} {activeCount ? `(${activeCount})` : ""}</Button></SheetTrigger><SheetContent className="w-[92vw] overflow-y-auto sm:max-w-md"><SheetHeader><SheetTitle>{t.matchFilters}</SheetTitle></SheetHeader><div className="mt-5"><FilterPanel/></div></SheetContent></Sheet>{hasSaved && <Button variant="ghost" onClick={reset}><RotateCcw className="mr-2 h-4 w-4"/>{t.showAll}</Button>}</div></div>
       <div className={`mt-4 flex items-center gap-2 rounded-xl px-3 py-2 text-sm ${hasSaved ? "bg-accent text-primary" : "bg-amber-50 text-amber-800"}`}><Sparkles className="h-4 w-4 shrink-0"/><span>{hasSaved ? <><strong>Preference match %</strong> compares each member with your saved Partner Preferences.</> : <><strong>Match % is waiting for your preferences.</strong> Set Partner Preferences to activate personalised scores.</>}</span>{!hasSaved && <Button size="sm" variant="outline" className="ml-auto" onClick={() => router.push(PREFERENCES_ROUTE)}>Set preferences</Button>}</div>
     </CardContent></Card>
-    <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground"><strong className="text-foreground">{results.length}</strong> {t.potential}</p><div className="flex gap-1 rounded-xl border border-border p-1" role="group" aria-label="Profile display"><Button size="sm" variant={displayMode === "grid" ? "secondary" : "ghost"} aria-pressed={displayMode === "grid"} onClick={() => setDisplayMode("grid")}><LayoutGrid className="mr-1 h-4 w-4" />Grid</Button><Button size="sm" variant={displayMode === "list" ? "secondary" : "ghost"} aria-pressed={displayMode === "list"} onClick={() => setDisplayMode("list")}><List className="mr-1 h-4 w-4" />List</Button></div></div>
+    <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground"><strong className="text-foreground">{results.length}</strong> {t.potential}</p><label className="flex items-center gap-2 text-xs text-muted-foreground">Sort by <select aria-label="Sort matches" className="h-9 rounded-lg border border-input bg-background px-2 text-sm text-foreground" value={sortMode} onChange={(event) => setSortMode(event.target.value as typeof sortMode)}><option value="compatible">Best preference match</option><option value="youngest">Age: youngest</option><option value="oldest">Age: oldest</option><option value="name">Name A–Z</option></select></label><div className="flex gap-1 rounded-xl border border-border p-1" role="group" aria-label="Profile display"><Button size="sm" variant={displayMode === "grid" ? "secondary" : "ghost"} aria-pressed={displayMode === "grid"} onClick={() => setDisplayMode("grid")}><LayoutGrid className="mr-1 h-4 w-4" />Grid</Button><Button size="sm" variant={displayMode === "list" ? "secondary" : "ghost"} aria-pressed={displayMode === "list"} onClick={() => setDisplayMode("list")}><List className="mr-1 h-4 w-4" />List</Button></div></div>
     <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card px-3 py-3">
       <span className="text-xs font-semibold text-muted-foreground">Quick filters</span>
       <label className="flex items-center gap-1 text-xs text-muted-foreground">From <Input aria-label="Minimum age" type="number" min={18} max={100} inputMode="numeric" className="h-9 w-16 px-2" placeholder="18" value={filters.ageMin ?? ""} onChange={(e) => setFilters((f) => ({ ...f, ageMin: e.target.value ? Number(e.target.value) : undefined }))}/></label>
