@@ -15,7 +15,7 @@ function mapChat(row: Row | null): ChatRow | null {
   if (!row) return null;
   return {
     id: row.id,
-    participants: [row.participant_1, row.participant_2],
+    participants: [row.participant_1 || "deleted-member", row.participant_2 || "deleted-member"],
     participantDetails: row.participant_details || {},
     lastMessageText: row.last_message_text || "",
     lastMessageSenderId: row.last_message_sender_id || null,
