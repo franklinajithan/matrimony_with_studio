@@ -44,7 +44,6 @@ export function PremiumOpeningStory(){
    </div>
    <div className="studio-hero-portrait">
     <Image src={heroPortrait} alt="Studio portrait of a couple, with the man in a purple suit and the woman in an ivory sari" fill priority unoptimized className="studio-hero-image"/>
-    <div aria-hidden="true" className="studio-hero-blend"/>
    </div>
   </article>
 
