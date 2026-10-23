@@ -10,8 +10,8 @@ const shareCardImage = `/opengraph-image?v=${SHARE_CARD_VERSION}`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: 'CupidMatch | Global Sri Lankan & Indian Matrimony', template: '%s | CupidMatch' },
-  description: 'Explore meaningful matrimonial introductions for Sri Lankan and Indian communities across the UK, Sri Lanka, Australia, Canada, France, Germany and Switzerland.',
+  title: { default: 'Sri Lankan Matrimony Worldwide | CupidMatch', template: '%s | CupidMatch' },
+  description: 'CupidMatch is a matrimony platform for the Sri Lankan community worldwide. Discover meaningful introductions with Sri Lankan singles wherever you live.',
   applicationName: 'CupidMatch',
   manifest: '/manifest.webmanifest',
   appleWebApp: { capable: true, title: 'CupidMatch', statusBarStyle: 'default' },
@@ -29,14 +29,14 @@ export const metadata: Metadata = {
     url: siteUrl,
     locale: 'en_GB',
     siteName: 'CupidMatch',
-    title: 'CupidMatch - Find Your Perfect Match',
-    description: 'Meaningful matrimony connections for Indian and Sri Lankan communities.',
-    images: [{ url: shareCardImage, width: 1200, height: 630, alt: 'CupidMatch - Find Your Perfect Match' }],
+    title: 'CupidMatch | Sri Lankan Matrimony Worldwide',
+    description: 'Meaningful marriage-focused introductions for the Sri Lankan community worldwide.',
+    images: [{ url: shareCardImage, width: 1200, height: 630, alt: 'CupidMatch | Sri Lankan Matrimony Worldwide' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'CupidMatch - Find Your Perfect Match',
-    description: 'Meaningful matrimony connections for Indian and Sri Lankan communities.',
+    title: 'CupidMatch | Sri Lankan Matrimony Worldwide',
+    description: 'Meaningful marriage-focused introductions for the Sri Lankan community worldwide.',
     images: [shareCardImage],
   },
 };
