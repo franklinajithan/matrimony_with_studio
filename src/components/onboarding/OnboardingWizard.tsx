@@ -28,6 +28,7 @@ import { auth, onAuthStateChanged } from "@/lib/supabase/auth";
 import { mediaPathForUser, resolveMediaUrl, uploadMediaFile } from "@/lib/supabase/storage";
 import { ProfilePhotoEditor } from "@/components/profile/ProfilePhotoEditor";
 import { useI18n } from "@/components/i18n/I18nProvider";
+import { GlobalCityInput } from "@/components/onboarding/GlobalCityInput";
 import { getMessages } from "@/components/i18n/messages";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
@@ -490,14 +491,17 @@ export function OnboardingWizard() {
                   value={draft.country || ""}
                   onChange={(e) => updateDraft({ country: e.target.value, currentCountry: e.target.value || draft.currentCountry })}
                 >
-                  <option value="">{t.selectCountry}</option>
+                  <option value="">Choose your country or territory</option>
+                  {draft.country && !COUNTRY_OPTIONS.includes(draft.country) && (
+                    <option value={draft.country}>{draft.country} (saved selection)</option>
+                  )}
                   {COUNTRY_OPTIONS.map((country) => (
                     <option key={country} value={country}>{country}</option>
                   ))}
                 </select>
               </Field>
-              <Field label={t.region} htmlFor="region">
-                <Input id="region" value={draft.region || ""} onChange={(e) => updateDraft({ region: e.target.value })} className="min-h-11" placeholder="e.g. Colombo, Toronto, Chennai" />
+              <Field label="City, town, village or region" htmlFor="region">
+                <GlobalCityInput country={draft.country || ""} value={draft.region || ""} onChange={(region) => updateDraft({ region })} />
               </Field>
               <fieldset>
                 <legend className="mb-3 text-sm font-medium">{t.languages}</legend>
@@ -594,8 +598,9 @@ export function OnboardingWizard() {
               <Field label={t.religion} htmlFor="religion">
                 <Input id="religion" value={draft.religion || ""} onChange={(e) => updateDraft({ religion: e.target.value, skippedCultural: false })} className="min-h-11" />
               </Field>
-              <Field label={t.culture} htmlFor="culturalBackground">
-                <Input id="culturalBackground" value={draft.culturalBackground || ""} onChange={(e) => updateDraft({ culturalBackground: e.target.value })} className="min-h-11" />
+              <Field label="Sri Lankan community / cultural background (optional)" htmlFor="culturalBackground">
+                <Input id="culturalBackground" value={draft.culturalBackground || ""} onChange={(e) => updateDraft({ culturalBackground: e.target.value })} className="min-h-11" placeholder="Describe your heritage or cultural connections in your own words" />
+                <p className="mt-2 text-xs text-muted-foreground">CupidMatch is designed for the Sri Lankan community worldwide. This is voluntary and separate from your country of residence; no religion, ethnicity or language is assumed.</p>
               </Field>
               <Field label={t.familyInvolvement} htmlFor="familyInvolvement">
                 <Input id="familyInvolvement" value={draft.familyInvolvement || ""} onChange={(e) => updateDraft({ familyInvolvement: e.target.value })} className="min-h-11" />
@@ -623,8 +628,10 @@ export function OnboardingWizard() {
                   className="min-h-11"
                   value={(draft.preferredSettlement || []).join(", ")}
                   onChange={(e) => updateDraft({ preferredSettlement: e.target.value.split(",").map((item) => item.trim()).filter(Boolean) })}
-                  placeholder="Sri Lanka, Canada, UK"
+                  placeholder="Worldwide, or enter countries separated by commas"
                 />
+                <p className="mt-2 text-xs text-muted-foreground">Enter any countries or choose Worldwide. You can also include towns or regions. This is for future settlement preferences, not a restriction on who can find you.</p>
+                <Button type="button" variant="outline" className="mt-2 min-h-11" onClick={() => updateDraft({ preferredSettlement: ["Worldwide"] })}>Open to anywhere in the world</Button>
               </Field>
               <Field label={t.longDistance} htmlFor="longDistanceOk">
                 <Input id="longDistanceOk" className="min-h-11" value={draft.longDistanceOk || ""} onChange={(e) => updateDraft({ longDistanceOk: e.target.value })} />
