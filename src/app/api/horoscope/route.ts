@@ -45,12 +45,10 @@ export async function GET(request: Request) {
 }
 export async function PUT(request: Request) {
   try {
-    const { db, settings } = await context(request, true);
+    const { db } = await context(request, true);
     const { data: qaAllowed, error: qaError } = await db.rpc("horoscope_qa_member_allowed");
     if (qaError || qaAllowed !== true) return json({ error: "Horoscope editing is available only to approved QA members." }, 403);
     // QA approval activates manual editing only; uploads and AI remain gated.
-    if (qaAllowed !== true)
-      return json({ error: "Horoscope editing is paused." }, 403);
     const parsed = saveSchema.safeParse(await readBody(request));
     if (!parsed.success)
       return json(
