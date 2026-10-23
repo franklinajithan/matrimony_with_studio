@@ -10,14 +10,14 @@ import { Footer } from "@/components/navigation/Footer";
 import { getServerAuthUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Sri Lankan & Indian Matrimony Worldwide | CupidMatch",
-  description: "Explore Sri Lankan, Tamil, Sinhala and Indian matrimony across the UK, Sri Lanka, Australia, Canada, France, Germany and Switzerland.",
+  title: "Sri Lankan Matrimony Worldwide | CupidMatch",
+  description: "CupidMatch connects the Sri Lankan community worldwide for meaningful, marriage-focused introductions. Meet compatible Sri Lankan singles across countries and cities.",
   alternates: { canonical: "https://cupidmatch.co.uk/" },
   openGraph: {
     type: "website",
     url: "https://cupidmatch.co.uk/",
-    title: "Sri Lankan & Indian Matrimony Worldwide | CupidMatch",
-    description: "Marriage-focused introductions across the UK, Sri Lanka, Australia, Canada, France, Germany and Switzerland.",
+    title: "Sri Lankan Matrimony Worldwide | CupidMatch",
+    description: "Marriage-focused introductions for Sri Lankan communities around the world, wherever you live.",
   },
 };
 
