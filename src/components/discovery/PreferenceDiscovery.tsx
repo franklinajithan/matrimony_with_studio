@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Bookmark, Briefcase, Heart, Loader2, MapPin, RotateCcw, Search, SlidersHorizontal, Sparkles, X } from "lucide-react";
+import { Bookmark, Briefcase, Heart, Loader2, MapPin, RotateCcw, Search, SlidersHorizontal, Sparkles, X, LayoutGrid, List, BadgeCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { getProfile, listProfiles } from "@/lib/supabase/profiles";
 import type { Profile } from "@/lib/supabase/types";
@@ -51,11 +51,17 @@ export function PreferenceDiscovery() {
   const { language } = useI18n();
   const t = getMessages(language).discover;
   const [people, setPeople] = useState<Person[]>([]);
+  const [memberReferences, setMemberReferences] = useState<Record<string,string>>({});
   const [preferences, setPreferences] = useState<PartnerPreferences | null>(null);
   const [filters, setFilters] = useState<DiscoveryFilters>(empty);
   const [requiredGender, setRequiredGender] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [sheet, setSheet] = useState(false);
+  const [displayMode, setDisplayMode] = useState<"grid" | "list">("grid");
+  const [sortMode, setSortMode] = useState<"compatible" | "youngest" | "oldest" | "name">("compatible");
+  const [visibleCount, setVisibleCount] = useState(20);
+  const [savedSearchUrl, setSavedSearchUrl] = useState<string | null>(null);
+  const [searchOwnerId, setSearchOwnerId] = useState<string | null>(null);
   const [sent, setSent] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<Record<string, boolean>>({});
 
@@ -68,6 +74,9 @@ export function PreferenceDiscovery() {
       return;
     }
     try {
+      setSearchOwnerId(user.id);
+      const { data: savedSearch, error: savedError } = await supabase.from("member_saved_searches").select("path_and_query").eq("user_id", user.id).maybeSingle();
+      if (!savedError) setSavedSearchUrl(savedSearch?.path_and_query || null);
       const self = await getProfile(user.id);
       if (!self) throw new Error("Complete your profile before finding matches.");
       const saved = partnerPreferencesFromProfile(self);
@@ -91,6 +100,8 @@ export function PreferenceDiscovery() {
       const profiles = profilePages.flat();
       const shortlisted = await getShortlistedIds(user.id, profiles.map((p) => p.id));
       setPeople(profiles.map((p) => ({ ...p, isShortlisted: shortlisted.has(p.id) })));
+      const { data: references, error: referencesError } = await supabase.rpc("discovery_member_references");
+      if (!referencesError && references) setMemberReferences(Object.fromEntries(references.map((row: { member_id: string; reference: string }) => [row.member_id, row.reference])));
       setSent(new Set(sentIds));
     } catch (e) {
       toast({ title: "Matches unavailable", description: e instanceof Error ? e.message : "Please try again.", variant: "destructive" });
@@ -99,7 +110,13 @@ export function PreferenceDiscovery() {
 
   useEffect(() => { void load(); }, [load]);
   const hasSaved = Boolean(preferences && hasPreferences(preferences));
-  const results = useMemo(() => people.filter((p) => profileMatchesFilters(p, { ...filters, gender: requiredGender || filters.gender })).sort((a, b) => preferences ? preferenceScore(b, preferences).percentage - preferenceScore(a, preferences).percentage : 0), [people, filters, preferences, requiredGender]);
+  const results = useMemo(() => people.filter((p) => profileMatchesFilters(p, { ...filters, gender: requiredGender || filters.gender })).sort((a, b) => {
+    if (sortMode === "name") return (a.displayName || "").localeCompare(b.displayName || "");
+    if (sortMode === "youngest") return (a.ageYears ?? 999) - (b.ageYears ?? 999);
+    if (sortMode === "oldest") return (b.ageYears ?? -1) - (a.ageYears ?? -1);
+    return preferences ? preferenceScore(b, preferences).percentage - preferenceScore(a, preferences).percentage : 0;
+  }), [people, filters, preferences, requiredGender, sortMode]);
+  useEffect(() => { setVisibleCount(20); }, [filters, requiredGender, sortMode]);
   const reset = () => setFilters({ ...empty, gender: requiredGender });
   const clear = () => setFilters({ ...empty, gender: requiredGender });
   const activeCount = [
@@ -160,16 +177,25 @@ export function PreferenceDiscovery() {
     <Card className="overflow-hidden border-border"><CardContent className="p-4 sm:p-5"><div className="flex flex-col gap-3 lg:flex-row lg:items-center"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/><Input className="pl-10" placeholder={t.search} value={filters.query} onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))}/></div><div className="flex gap-2"><Sheet open={sheet} onOpenChange={setSheet}><SheetTrigger asChild><Button data-testid="discover-filters-open" variant="outline" className="flex-1 lg:flex-none"><SlidersHorizontal className="mr-2 h-4 w-4"/>{t.filters} {activeCount ? `(${activeCount})` : ""}</Button></SheetTrigger><SheetContent className="w-[92vw] overflow-y-auto sm:max-w-md"><SheetHeader><SheetTitle>{t.matchFilters}</SheetTitle></SheetHeader><div className="mt-5"><FilterPanel/></div></SheetContent></Sheet>{hasSaved && <Button variant="ghost" onClick={reset}><RotateCcw className="mr-2 h-4 w-4"/>{t.showAll}</Button>}</div></div>
       <div className={`mt-4 flex items-center gap-2 rounded-xl px-3 py-2 text-sm ${hasSaved ? "bg-accent text-primary" : "bg-amber-50 text-amber-800"}`}><Sparkles className="h-4 w-4 shrink-0"/><span>{hasSaved ? <><strong>Preference match %</strong> compares each member with your saved Partner Preferences.</> : <><strong>Match % is waiting for your preferences.</strong> Set Partner Preferences to activate personalised scores.</>}</span>{!hasSaved && <Button size="sm" variant="outline" className="ml-auto" onClick={() => router.push(PREFERENCES_ROUTE)}>Set preferences</Button>}</div>
     </CardContent></Card>
-    <div className="flex items-center justify-between"><p className="text-sm text-muted-foreground"><strong className="text-foreground">{results.length}</strong> {t.potential}</p></div>
+    <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground"><strong className="text-foreground">{results.length}</strong> {t.potential}</p><label className="flex items-center gap-2 text-xs text-muted-foreground">Sort by <select aria-label="Sort matches" className="h-9 rounded-lg border border-input bg-background px-2 text-sm text-foreground" value={sortMode} onChange={(event) => setSortMode(event.target.value as typeof sortMode)}><option value="compatible">Best preference match</option><option value="youngest">Age: youngest</option><option value="oldest">Age: oldest</option><option value="name">Name A–Z</option></select></label><div className="flex gap-1 rounded-xl border border-border p-1" role="group" aria-label="Profile display"><Button size="sm" variant={displayMode === "grid" ? "secondary" : "ghost"} aria-pressed={displayMode === "grid"} onClick={() => setDisplayMode("grid")}><LayoutGrid className="mr-1 h-4 w-4" />Grid</Button><Button size="sm" variant={displayMode === "list" ? "secondary" : "ghost"} aria-pressed={displayMode === "list"} onClick={() => setDisplayMode("list")}><List className="mr-1 h-4 w-4" />List</Button></div></div>
+    <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card px-3 py-3">
+      <span className="text-xs font-semibold text-muted-foreground">Quick filters</span>
+      <label className="flex items-center gap-1 text-xs text-muted-foreground">From <Input aria-label="Minimum age" type="number" min={18} max={100} inputMode="numeric" className="h-9 w-16 px-2" placeholder="18" value={filters.ageMin ?? ""} onChange={(e) => setFilters((f) => ({ ...f, ageMin: e.target.value ? Number(e.target.value) : undefined }))}/></label>
+      <label className="flex items-center gap-1 text-xs text-muted-foreground">To <Input aria-label="Maximum age" type="number" min={18} max={100} inputMode="numeric" className="h-9 w-16 px-2" placeholder="60" value={filters.ageMax ?? ""} onChange={(e) => setFilters((f) => ({ ...f, ageMax: e.target.value ? Number(e.target.value) : undefined }))}/></label>
+      {requiredGender && <span className="rounded-full bg-accent px-3 py-2 text-xs font-medium text-primary">Looking for {requiredGender.toLowerCase()} profiles</span>}
+      <Button size="sm" variant="outline" onClick={() => { navigator.clipboard?.writeText(window.location.href).then(() => toast({ title: "Search link copied" })).catch(() => toast({ title: "Unable to copy link", variant: "destructive" })); }}>Copy search link</Button>
+      <Button size="sm" variant="outline" disabled={!searchOwnerId} onClick={() => { if (!searchOwnerId) return; void (async () => { const url = window.location.pathname + window.location.search; const { error } = await supabase.from("member_saved_searches").upsert({ user_id: searchOwnerId, path_and_query: url, updated_at: new Date().toISOString() }, { onConflict: "user_id" }); if (error) { toast({ title: "Could not save search", description: error.message, variant: "destructive" }); return; } setSavedSearchUrl(url); toast({ title: "Search saved to your account" }); })(); }}>Save search</Button>
+      {savedSearchUrl && <Button size="sm" variant="ghost" onClick={() => { window.location.assign(savedSearchUrl); }}>Open saved search</Button>}
+    </div>
     {!results.length ? <Card><CardContent className="py-14 text-center"><Heart className="mx-auto h-10 w-10 text-gold-foreground"/><h2 className="mt-3 text-lg font-semibold">{t.none}</h2><p className="mt-1 text-sm text-muted-foreground">{t.broaden}</p><Button className="mt-4" variant="outline" onClick={clear}>{t.showAll}</Button></CardContent></Card> :
-    <div className="grid grid-cols-2 items-stretch gap-3 md:grid-cols-3 lg:gap-5 xl:grid-cols-4">
-      {results.map((person) => {
+    <div className={displayMode === "list" ? "grid grid-cols-1 gap-3 lg:grid-cols-2" : "grid grid-cols-2 items-stretch gap-3 md:grid-cols-3 lg:gap-5 xl:grid-cols-4"}>
+      {results.slice(0, visibleCount).map((person) => {
       const score = preferences ? preferenceScore(person, preferences) : null;
       const showScore = Boolean(hasSaved && score && score.total > 0);
       return (
-        <Card key={person.id} data-testid={`discover-profile-${person.id}`} className="flex h-full flex-col overflow-hidden rounded-2xl border-border shadow-sm">
+        <Card key={person.id} data-testid={`discover-profile-${person.id}`} className={`flex h-full overflow-hidden rounded-2xl border-border shadow-sm ${displayMode === "list" ? "flex-col sm:flex-row" : "flex-col"}`}>
           {/* Fixed photo height so every card aligns */}
-          <div className="relative h-44 w-full shrink-0 overflow-hidden bg-accent sm:h-52 md:h-56">
+          <div className={displayMode === "list" ? "relative h-56 w-full shrink-0 overflow-hidden bg-accent sm:h-auto sm:w-44" : "relative h-44 w-full shrink-0 overflow-hidden bg-accent sm:h-52 md:h-56"}>
             {person.photoURL ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -212,7 +238,7 @@ export function PreferenceDiscovery() {
             </Button>
           </div>
 
-          <CardContent className="flex flex-1 flex-col gap-2 p-3 sm:p-4">
+          <div className="flex min-w-0 flex-1 flex-col"><CardContent className="flex flex-1 flex-col gap-2 p-3 sm:p-4">
             <div className="min-w-0">
               <h2 className="truncate text-sm font-semibold leading-tight text-foreground sm:text-base">
                 {person.displayName}
@@ -221,6 +247,10 @@ export function PreferenceDiscovery() {
                   <span className="font-normal text-muted-foreground">, {person.ageYears}</span>
                 ) : null}
               </h2>
+              <p className="mt-1 text-[10px] font-semibold tracking-wide text-gold-foreground sm:text-xs">{memberReferences[person.id] || "CupidMatch member"}</p>
+              {person.isVerified && <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-primary"><BadgeCheck className="h-3.5 w-3.5" />Verified profile</p>}
+              {person.height && <p className="mt-1 text-xs text-muted-foreground">{person.height} tall</p>}
+              {displayMode === "list" && person.bio && <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-muted-foreground">{person.bio}</p>}
               <p className="mt-1 flex min-w-0 items-center gap-1 text-xs text-muted-foreground sm:text-sm">
                 <Briefcase className="h-3.5 w-3.5 shrink-0" aria-hidden />
                 <span className="truncate">{person.profession || "—"}</span>
@@ -295,11 +325,12 @@ export function PreferenceDiscovery() {
                 t.interest
               )}
             </Button>
-          </CardFooter>
+          </CardFooter></div>
         </Card>
       );
     })}
     </div>}
+    {results.length > visibleCount && <div className="flex justify-center py-5"><Button variant="outline" onClick={() => setVisibleCount((count) => count + 20)}>Show more matches ({Math.min(20, results.length - visibleCount)} more)</Button></div>}
   </PageFrame>;
 }
 

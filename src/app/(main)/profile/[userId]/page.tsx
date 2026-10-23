@@ -37,6 +37,7 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { auth, onAuthStateChanged, type AuthUser as FirebaseUser } from "@/lib/supabase/auth";
 import { getProfile } from "@/lib/supabase/profiles";
+import { supabase } from "@/lib/supabase/client";
 import { likeProfile, unlikeProfile, subscribeToLike } from "@/lib/supabase/likes";
 import {
   createMatchRequest,
@@ -114,6 +115,7 @@ export default function ProfilePage() {
   const viewedUserId = params.userId as string;
 
   const [viewedUserProfile, setViewedUserProfile] = useState<ViewedUserProfileData | null>(null);
+  const [publicMemberReference, setPublicMemberReference] = useState<string | null>(null);
   const [loggedInUserProfile, setLoggedInUserProfile] = useState<AIUserProfileSchema | null>(null);
   const [aiMatchResult, setAiMatchResult] = useState<{ score: number; reasoning: string } | null>(null);
 
@@ -209,6 +211,9 @@ export default function ProfilePage() {
       try {
         const data = await getProfile(viewedUserId);
         if (data) {
+          const { data: references } = await supabase.rpc("discovery_member_references");
+          const memberReference = Array.isArray(references) ? references.find((row: { member_id: string; reference: string }) => row.member_id === viewedUserId)?.reference : null;
+          setPublicMemberReference(memberReference || null);
           const profileData: ViewedUserProfileData = {
             userId: data.id,
             name: data.displayName || "N/A",
@@ -672,7 +677,7 @@ export default function ProfilePage() {
                 <AvatarFallback>{viewedUserProfile?.name?.substring(0, 2)}</AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1 overflow-hidden">
-                <h1 className="font-headline text-base leading-tight sm:text-xl sm:leading-normal text-primary truncate">{viewedUserProfile?.name}</h1>
+                <div><h1 className="font-headline text-base leading-tight sm:text-xl sm:leading-normal text-primary truncate">{viewedUserProfile?.name}</h1>{publicMemberReference && <p className="text-xs font-semibold tracking-wide text-muted-foreground">{publicMemberReference}</p>}</div>
                 <p className="text-xs sm:text-sm text-muted-foreground truncate">
                   {viewedUserProfile?.age} years • {viewedUserProfile?.location}
                 </p>
@@ -690,12 +695,45 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-4xl px-4 pt-5"><a className="inline-flex rounded-xl border border-border bg-accent px-4 py-3 text-sm font-semibold text-primary-dark" href={`/profile/${viewedUserId}/horoscope`}>View Horoscope</a></div>
+      {/* Portrait-led matrimonial profile overview */}
+      <section className="mx-auto max-w-6xl px-3 pt-5 sm:px-6" aria-label="Member overview">
+        <div className="grid overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_16px_48px_hsl(var(--primary)/0.08)] md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+          <div className="relative min-h-[360px] overflow-hidden bg-accent sm:min-h-[480px]">
+            {mainPageImage?.url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={mainPageImage.url} alt={viewedUserProfile.name} className="absolute inset-0 h-full w-full object-cover" />
+            ) : <div className="flex h-full min-h-[360px] items-center justify-center text-7xl font-semibold text-primary">{viewedUserProfile.name.slice(0,1)}</div>}
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent px-5 pb-6 pt-20 text-white">
+              <p className="text-2xl font-semibold tracking-tight sm:text-3xl">{viewedUserProfile.name}{viewedUserProfile.age ? `, ${viewedUserProfile.age}` : ""}</p>
+              <p className="mt-1 text-sm text-white/90">{viewedUserProfile.location}</p>
+              {publicMemberReference && <span className="mt-2 inline-block rounded-full border border-white/40 bg-black/25 px-3 py-1 text-xs font-semibold">{publicMemberReference}</span>}
+            </div>
+          </div>
+          <div className="flex flex-col justify-center gap-5 p-5 sm:p-8 lg:p-10">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-foreground">CupidMatch · Member profile</p>
+              <h2 className="mt-2 font-headline text-2xl font-semibold text-primary sm:text-3xl">Get to know {viewedUserProfile.name}</h2>
+              <p className="mt-3 line-clamp-5 text-sm leading-7 text-muted-foreground">{viewedUserProfile.bio || "Explore this member's profile and interests."}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-5 border-y border-border py-5">
+              <div><p className="text-xs text-muted-foreground">Age</p><p className="mt-1 font-semibold">{viewedUserProfile.age || "Not specified"}</p></div>
+              <div><p className="text-xs text-muted-foreground">Height</p><p className="mt-1 font-semibold">{viewedUserProfile.height ? `${viewedUserProfile.height} cm` : "Not specified"}</p></div>
+              <div><p className="text-xs text-muted-foreground">Profession</p><p className="mt-1 text-sm font-medium">{viewedUserProfile.profession || "Not specified"}</p></div>
+              <div><p className="text-xs text-muted-foreground">Religion</p><p className="mt-1 text-sm font-medium">{viewedUserProfile.religion || "Not specified"}</p></div>
+            </div>
+            {viewedUserProfile.isVerified && <span className="inline-flex w-fit items-center gap-2 rounded-full bg-accent px-3 py-2 text-xs font-medium text-primary"><CheckCircle className="h-4 w-4" />Verified profile</span>}
+            <div className="flex flex-wrap items-center gap-3">
+              <Button variant="outline" asChild className="rounded-xl"><a href="#profile-details">Explore full profile</a></Button>
+              <Button variant="outline" asChild className="rounded-xl"><a href={`/profile/${viewedUserId}/horoscope`}>View Horoscope</a></Button>
+            </div>
+          </div>
+        </div>
+      </section>
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div id="profile-details" className="max-w-6xl mx-auto px-4 py-8 scroll-mt-24">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Left Column - About & Basic Info */}
-          <div className="md:col-span-1 space-y-6">
+          <div className="space-y-6 lg:col-span-1">
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg">About</CardTitle>
@@ -770,7 +808,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Right Column - Photos & Interests */}
-          <div className="md:col-span-2">
+          <div className="lg:col-span-2">
             <Tabs defaultValue="photos" className="space-y-4">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="photos">Photos</TabsTrigger>

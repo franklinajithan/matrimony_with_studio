@@ -33,7 +33,8 @@ try{
   const requests=[];
   try{
    browser=await engine.launch();
-   const context=await browser.newContext(options);page=await context.newPage();
+   // Keep every API call inside Playwright routing; a registered PWA worker bypasses page routes.
+   const context=await browser.newContext({...options,serviceWorkers:"block"});page=await context.newPage();
    let record=null,paused=false,conflict=true;
    await page.route('**/api/horoscope**',async request=>{
     const parsed=new URL(request.request().url()),method=request.request().method();

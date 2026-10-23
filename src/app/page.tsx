@@ -10,14 +10,14 @@ import { Footer } from "@/components/navigation/Footer";
 import { getServerAuthUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Sri Lankan & Indian Matrimony UK | CupidMatch",
-  description: "Explore Sri Lankan, Tamil, Sinhala and Indian matrimony in the UK. Create your biodata, set partner preferences and discover meaningful introductions.",
+  title: "Sri Lankan & Indian Matrimony Worldwide | CupidMatch",
+  description: "Explore Sri Lankan, Tamil, Sinhala and Indian matrimony across the UK, Sri Lanka, Australia, Canada, France, Germany and Switzerland.",
   alternates: { canonical: "https://cupidmatch.co.uk/" },
   openGraph: {
     type: "website",
     url: "https://cupidmatch.co.uk/",
-    title: "Sri Lankan & Indian Matrimony UK | CupidMatch",
-    description: "Explore Sri Lankan, Tamil, Sinhala and Indian matrimony in the UK with biodata, partner preferences and thoughtful introductions.",
+    title: "Sri Lankan & Indian Matrimony Worldwide | CupidMatch",
+    description: "Marriage-focused introductions across the UK, Sri Lanka, Australia, Canada, France, Germany and Switzerland.",
   },
 };
 
@@ -26,7 +26,7 @@ export default async function HomePage() {
   if (user) redirect("/dashboard");
 
   const organisationSchema = { "@context": "https://schema.org", "@type": "Organization", name: "CupidMatch", url: "https://cupidmatch.co.uk", logo: "https://cupidmatch.co.uk/images/cupidmatch-royal-logo-transparent.png" };
-  const websiteSchema = { "@context": "https://schema.org", "@type": "WebSite", name: "CupidMatch", url: "https://cupidmatch.co.uk", inLanguage: "en-GB" };
+  const websiteSchema = { "@context": "https://schema.org", "@type": "WebSite", name: "CupidMatch", url: "https://cupidmatch.co.uk", inLanguage: "en" };
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([organisationSchema, websiteSchema]).replace(/</g, "\\u003c") }} />

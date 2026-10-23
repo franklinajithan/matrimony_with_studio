@@ -16,6 +16,9 @@ export default function Controls() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [member, setMember] = useState("");
+  const [qaMember, setQaMember] = useState("");
+  const [qaApproved, setQaApproved] = useState(true);
+  const [qaMembers, setQaMembers] = useState<Array<{ user_id: string; added_at: string }>>([]);
   const [restricted, setRestricted] = useState(true);
   async function load() {
     try {
@@ -27,6 +30,7 @@ export default function Controls() {
       setSettings(s);
       setMetrics(d.metrics);
       setProvider(d.providerConfigured);
+      setQaMembers(d.qaMembers || []);
     } catch (e) {
       setMessage((e as Error).message);
     }
@@ -131,6 +135,17 @@ export default function Controls() {
           <Button disabled={busy}>Save controls</Button>
         </form>
       )}
+      <form className="space-y-3 rounded-2xl border bg-card p-5" onSubmit={(e) => { e.preventDefault(); void save({ qaMember, approved: qaApproved }); }}>
+        <h2 className="font-semibold">Restricted Horoscope QA group</h2>
+        <p className="text-sm text-muted-foreground">Approve a test member by UUID. This does not activate the public Horoscope feature. Keep upload and AI flags off until verified.</p>
+        <label className="block text-sm">Member UUID
+          <input className="mt-2 w-full rounded border p-3" value={qaMember} onChange={(e) => setQaMember(e.target.value)} required placeholder="Member UUID" />
+        </label>
+        <label className="flex items-center gap-2"><input type="checkbox" checked={qaApproved} onChange={(e) => setQaApproved(e.target.checked)} />Approve member for QA editing</label>
+        <Button disabled={busy}>Update QA approval</Button>
+        <p className="text-xs text-muted-foreground">Approved members: {qaMembers.length}</p>
+        {qaMembers.length > 0 && <ul className="max-h-48 space-y-1 overflow-auto text-xs">{qaMembers.map((row) => <li key={row.user_id} className="break-all rounded-lg bg-accent p-2">{row.user_id} <button type="button" className="ml-2 underline" disabled={busy} onClick={() => void save({ qaMember: row.user_id, approved: false })}>Revoke</button></li>)}</ul>}
+      </form>
       <form
         className="space-y-3 rounded-2xl border bg-card p-5"
         onSubmit={(e) => {

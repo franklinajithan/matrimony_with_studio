@@ -157,8 +157,24 @@ export async function loadDashboardOverview(userId: string): Promise<DashboardOv
           : "Discovery is unavailable right now.",
     };
   } else {
+    // Keep dashboard suggestions consistent with the eligibility rules used by Discover.
+    // If the member's gender or the candidate's gender is unknown, do not guess.
+    const ownExtra = (profile.extra || {}) as Record<string, unknown>;
+    const ownDetails = (ownExtra.matchDetails || {}) as Record<string, unknown>;
+    const ownDraft = (profile.onboardingDraft || {}) as Record<string, unknown>;
+    const ownGender = String(ownDetails.gender || profile.gender || ownExtra.gender || ownDraft.gender || "").trim().toLowerCase();
+    const desiredGender = ownGender === "male" || ownGender === "man" ? "female"
+      : ownGender === "female" || ownGender === "woman" ? "male" : null;
     const candidates = (discoveryResult.value || [])
-      .filter((person) => !alreadySent.has(person.id))
+      .filter((person) => {
+        if (person.id === userId || alreadySent.has(person.id)) return false;
+        if (!desiredGender) return true;
+        const otherExtra = (person.extra || {}) as Record<string, unknown>;
+        const otherDetails = (otherExtra.matchDetails || {}) as Record<string, unknown>;
+        const otherDraft = (person.onboardingDraft || {}) as Record<string, unknown>;
+        const otherGender = String(otherDetails.gender || person.gender || otherExtra.gender || otherDraft.gender || "").trim().toLowerCase();
+        return desiredGender === "female" ? ["female", "woman"].includes(otherGender) : ["male", "man"].includes(otherGender);
+      })
       .slice(0, 6)
       .map((person) => mapDiscoveryPerson(person, profile));
     discovery =

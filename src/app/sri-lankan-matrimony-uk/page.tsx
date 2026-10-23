@@ -45,6 +45,7 @@ export default function Page() {
         <div className="mt-5 flex flex-wrap gap-5 text-sm font-semibold text-primary">
           <Link href="/sri-lankan-matrimony-uk">Sri Lankan matrimony</Link>
           <Link href="/tamil-matrimony-uk">Tamil matrimony</Link>
+          <Link href="/indian-matrimony-uk">Indian matrimony UK</Link>
           <Link href="/sinhala-matrimony">Sinhala matrimony</Link>
           <Link href="/horoscope-matching">Horoscope information</Link>
           <Link href="/safety">Safety tips</Link>

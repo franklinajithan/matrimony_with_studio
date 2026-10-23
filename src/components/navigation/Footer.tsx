@@ -28,7 +28,7 @@ export function Footer() {
     <footer className="border-t border-gold/30 bg-background">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         {/* Main Footer Content */}
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-6">
           {/* Brand Column */}
           <div className="lg:col-span-2">
             <Logo textSize="text-xl" />
@@ -72,6 +72,19 @@ export function Footer() {
                   {copy.pricing}
                 </Link>
               </li>
+            </ul>
+          </div>
+
+          {/* Public matrimony landing pages: discoverable, with no member data exposed */}
+          <div>
+            <h2 className={headingClass}>Matrimony &amp; Matchmaking</h2>
+            <ul className="mt-4 space-y-3">
+              <li><Link href="/international-matrimony" className={linkClass}>International Matrimony</Link></li>
+              <li><Link href="/sri-lankan-matrimony-uk" className={linkClass}>Sri Lankan Matrimony UK</Link></li>
+              <li><Link href="/tamil-matrimony-uk" className={linkClass}>Tamil Matrimony UK</Link></li>
+              <li><Link href="/indian-matrimony-uk" className={linkClass}>Indian Matrimony UK</Link></li>
+              <li><Link href="/sinhala-matrimony" className={linkClass}>Sinhala Matrimony</Link></li>
+              <li><Link href="/horoscope-matching" className={linkClass}>Horoscope Matching</Link></li>
             </ul>
           </div>
 

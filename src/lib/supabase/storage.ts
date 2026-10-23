@@ -55,6 +55,10 @@ export function resolveMediaUrl(urlOrPath: string | null | undefined): string {
   if (value.startsWith("blob:") || value.startsWith("data:")) return value;
   if (value.startsWith("/")) return value;
 
+  // Keep signed URLs intact: converting them to public URLs would bypass
+  // their expiry and break access when media storage becomes private.
+  if (value.includes(`/object/sign/${MEDIA_BUCKET}/`) || value.includes(`/storage/v1/object/sign/${MEDIA_BUCKET}/`)) return value;
+
   const storagePath = extractStoragePath(value);
   if (storagePath) return getPublicMediaUrl(storagePath);
 

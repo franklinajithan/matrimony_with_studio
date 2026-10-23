@@ -10,8 +10,8 @@ const shareCardImage = `/opengraph-image?v=${SHARE_CARD_VERSION}`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: 'CupidMatch | Sri Lankan & Indian Matrimony UK', template: '%s | CupidMatch' },
-  description: 'Discover meaningful matrimonial connections for Sri Lankan and Indian communities in the UK. Explore compatible partners, biodata and cultural preferences.',
+  title: { default: 'CupidMatch | Global Sri Lankan & Indian Matrimony', template: '%s | CupidMatch' },
+  description: 'Explore meaningful matrimonial introductions for Sri Lankan and Indian communities across the UK, Sri Lanka, Australia, Canada, France, Germany and Switzerland.',
   applicationName: 'CupidMatch',
   manifest: '/manifest.webmanifest',
   appleWebApp: { capable: true, title: 'CupidMatch', statusBarStyle: 'default' },
@@ -24,7 +24,6 @@ export const metadata: Metadata = {
     shortcut: '/favicon.ico',
     apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
   },
-  alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
     url: siteUrl,
