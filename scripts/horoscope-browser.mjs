@@ -29,13 +29,15 @@ try{
  }
  assert.ok(ready,'Temporary UI server did not start');
  for(const [device,engine,options] of profiles){
-  let browser;
+  let browser,page;
+  const requests=[];
   try{
    browser=await engine.launch();
-   const context=await browser.newContext(options),page=await context.newPage();
+   const context=await browser.newContext(options);page=await context.newPage();
    let record=null,paused=false,conflict=true;
    await page.route('**/api/horoscope**',async request=>{
     const parsed=new URL(request.request().url()),method=request.request().method();
+    requests.push({method,path:parsed.pathname});
     const settings={horoscope_enabled:!paused,horoscope_upload_enabled:false,ai_horoscope_matching_enabled:false};
     if(parsed.pathname.endsWith('/documents'))return request.fulfill({json:{documents:[],providerConfigured:false}});
     if(method==='GET')return request.fulfill({json:{profile:record,settings}});
@@ -78,7 +80,19 @@ try{
    await page.getByRole('status').filter({hasText:'Horoscope and source documents deleted.'}).waitFor();
    assert.equal(record,null);await noOverflow(page);
    results.push({device,status:'passed',scope:'mocked component UI; not physical Safari/PWA acceptance'});
-  }catch(error){results.push({device,status:'failed',error:error.message});}
+  }catch(error){
+   let diagnostics;
+   if(page){
+    await page.screenshot({path:new URL(`artifacts/horoscope-ui/${device}-failure.png`,root).pathname,fullPage:true}).catch(()=>{});
+    diagnostics=await page.evaluate(()=>({
+     alerts:Array.from(document.querySelectorAll('[role="alert"]')).map(el=>el.textContent),
+     invalidFields:Array.from(document.querySelectorAll('input,select,textarea')).filter(el=>!el.validity.valid).map(el=>({type:el.type,value:el.value,message:el.validationMessage})),
+     date:document.querySelector('input[type="date"]')?.value,
+     fields:Array.from(document.querySelectorAll('input[type="text"]')).map(el=>({label:el.closest('label')?.textContent.trim(),value:el.value})),
+    })).catch(()=>null);
+   }
+   results.push({device,status:'failed',error:error.message,requests,diagnostics});
+  }
   finally{await browser?.close();}
  }
 }finally{
