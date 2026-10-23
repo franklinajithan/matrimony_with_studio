@@ -5,10 +5,10 @@ import { Footer } from "@/components/navigation/Footer";
 
 const url = "https://cupidmatch.co.uk/international-matrimony";
 export const metadata: Metadata = {
-  title: "International Sri Lankan & Indian Matrimony",
-  description: "Explore cross-border Sri Lankan, Tamil, Sinhala and Indian matrimonial introductions in the UK, Sri Lanka, Australia, Canada, France, Germany and Switzerland.",
+  title: "Sri Lankan Matrimony Worldwide",
+  description: "Discover marriage-focused introductions for the Sri Lankan community worldwide, across countries, cities and diaspora communities.",
   alternates: { canonical: url },
-  openGraph: { type: "website", url, title: "International Matrimony | CupidMatch", description: "Meaningful marriage-focused introductions across seven countries." },
+  openGraph: { type: "website", url, title: "International Matrimony | CupidMatch", description: "Meaningful Sri Lankan community matrimonial introductions worldwide." },
 };
 const regions = [
   { name: "United Kingdom", context: "Build meaningful introductions across British cities while staying connected with family, language and cultural traditions." },
@@ -30,15 +30,15 @@ export default function InternationalMatrimonyPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, "\\u003c") }} />
       <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground"><Link href="/" className="underline">Home</Link> / International matrimony</nav>
       <p className="mt-10 text-xs font-bold uppercase tracking-[.2em] text-gold-foreground">CupidMatch · Across borders, connected by values</p>
-      <h1 className="mt-4 max-w-4xl font-serif text-4xl font-semibold leading-tight text-primary-dark sm:text-6xl">International Sri Lankan &amp; Indian Matrimony</h1>
-      <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">A meaningful connection does not have to stop at a border. CupidMatch is designed for marriage-focused introductions among Sri Lankan, Tamil, Sinhala and Indian communities, including people exploring relationships across different countries.</p>
+      <h1 className="mt-4 max-w-4xl font-serif text-4xl font-semibold leading-tight text-primary-dark sm:text-6xl">Sri Lankan Matrimony Worldwide</h1>
+      <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">A meaningful connection does not have to stop at a border. CupidMatch helps Sri Lankan communities around the world explore marriage-focused introductions across different countries, languages and backgrounds.</p>
       <div className="mt-9 flex flex-wrap gap-3">
         <Link href="/signup" className="rounded-full bg-primary px-6 py-3 font-semibold text-white">Create your biodata</Link>
         <Link href="/how-it-works" className="rounded-full border border-gold/40 px-6 py-3 font-semibold text-primary">How CupidMatch works</Link>
       </div>
       <section className="mt-16" aria-labelledby="regions">
-        <h2 id="regions" className="font-serif text-3xl font-semibold text-primary-dark">Countries we are focusing on</h2>
-        <p className="mt-3 max-w-3xl leading-7 text-muted-foreground">Our international focus includes the following countries. The number of available members and matching results in each location will depend on current registrations and account features.</p>
+        <h2 id="regions" className="font-serif text-3xl font-semibold text-primary-dark">Sri Lankan communities around the world</h2>
+        <p className="mt-3 max-w-3xl leading-7 text-muted-foreground">These countries are examples, not restrictions. CupidMatch supports worldwide country selection and city search. Available members and matches depend on registrations and individual preferences.</p>
         <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">{regions.map(({name,context})=><article key={name} className="rounded-2xl border border-gold/25 bg-card p-6"><h3 className="font-serif text-2xl font-semibold text-primary">{name}</h3><p className="mt-3 leading-7 text-muted-foreground">{context}</p></article>)}</div>
       </section>
       <section className="mt-16 max-w-4xl space-y-5">
