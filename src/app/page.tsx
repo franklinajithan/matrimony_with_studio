@@ -25,8 +25,8 @@ export default async function HomePage() {
   const user = await getServerAuthUser();
   if (user) redirect("/dashboard");
 
-  const organisationSchema = { "@context": "https://schema.org", "@type": "Organization", name: "CupidMatch", url: "https://cupidmatch.co.uk", logo: "https://cupidmatch.co.uk/images/cupidmatch-royal-logo-transparent.png" };
-  const websiteSchema = { "@context": "https://schema.org", "@type": "WebSite", name: "CupidMatch", url: "https://cupidmatch.co.uk", inLanguage: "en" };
+  const organisationSchema = { "@context": "https://schema.org", "@type": "Organization", name: "CupidMatch", url: "https://cupidmatch.co.uk", description: "Sri Lankan community matrimony platform connecting people worldwide.", logo: "https://cupidmatch.co.uk/images/cupidmatch-royal-logo-transparent.png" };
+  const websiteSchema = { "@context": "https://schema.org", "@type": "WebSite", name: "CupidMatch", alternateName: "CupidMatch Sri Lankan Matrimony", description: "Sri Lankan matrimony worldwide for meaningful marriage-focused introductions.", url: "https://cupidmatch.co.uk", inLanguage: "en" };
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([organisationSchema, websiteSchema]).replace(/</g, "\\u003c") }} />
