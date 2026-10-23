@@ -21,6 +21,15 @@ export const COUNTRY_OPTIONS: string[] = ISO_COUNTRY_CODES
   .filter((name): name is string => Boolean(name))
   .sort((a, b) => a.localeCompare(b, "en"));
 
+/** Country-code lookup for the global settlement search API. */
+export function countryCodeForName(name: string): string | undefined {
+  const normalized = name.trim().toLowerCase();
+  const legacy: Record<string, string> = { "uk": "GB", "usa": "US", "uae": "AE", "sri lanka": "LK" };
+  if (legacy[normalized]) return legacy[normalized];
+  return ISO_COUNTRY_CODES.find((code) => englishCountryNames.of(code)?.toLowerCase() === normalized);
+}
+
+
 const optionalText = z.string().max(500).optional().or(z.literal(""));
 const optionalLongText = z.string().max(2000).optional().or(z.literal(""));
 const optionalUrl = z.string().max(4000).optional().or(z.literal(""));
