@@ -10,6 +10,12 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  async headers() {
+    return [{
+      source: '/images/cupidmatch-og.jpg',
+      headers: [{ key: 'Cache-Control', value: 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800' }],
+    }];
+  },
   async redirects() {
     return [
       { source: "/dashboard/matches", destination: "/suggestions", permanent: false },

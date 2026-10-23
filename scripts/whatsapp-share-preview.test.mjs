@@ -29,3 +29,9 @@ test('site default points to same image without legacy dynamic card', () => {
   assert.match(layout, /shareCardImage = '\/images\/cupidmatch-og\.jpg'/);
   assert.doesNotMatch(layout, /opengraph-image\?v=/);
 });
+
+
+test('legacy file metadata cannot override the approved banner', () => {
+  assert.equal(existsSync(new URL('src/app/opengraph-image.tsx', root)), false);
+  assert.equal(existsSync(new URL('src/app/opengraph-image.png', root)), false);
+});

@@ -14,6 +14,8 @@ const shareDescription = 'Find your perfect match with CupidMatch. Meaningful ma
 const shareImage = 'https://cupidmatch.co.uk/images/cupidmatch-og.jpg';
 
 export const metadata: Metadata = {
+  // All homepage URLs are absolute; preserve the canonical root trailing slash.
+  metadataBase: null,
   title: { absolute: shareTitle },
   description: shareDescription,
   alternates: { canonical: 'https://cupidmatch.co.uk/' },

@@ -34,7 +34,7 @@ export default function FamilyAssistedMatrimonyPage() {
       <p className="mt-6 text-lg leading-8 text-muted-foreground">In many Sri Lankan families, parents, siblings and trusted relatives help introduce prospective partners. Their support can be valuable when the person seeking marriage stays in control of their own choices.</p>
       <section className="mt-12 space-y-5">
         <h2 className="font-serif text-3xl text-primary">Start with consent</h2>
-        <p className="leading-8 text-muted-foreground">Before sharing someone's name, photographs, background or contact details, ask for their informed permission. Discuss what may be visible to others and respect their decision if they change their mind.</p>
+        <p className="leading-8 text-muted-foreground">Before sharing someone&apos;s name, photographs, background or contact details, ask for their informed permission. Discuss what may be visible to others and respect their decision if they change their mind.</p>
         <h2 className="font-serif text-3xl text-primary">Discuss what matters</h2>
         <p className="leading-8 text-muted-foreground">Talk openly about location, language, career, family expectations and future plans. Avoid assuming that everyone in a Tamil, Sinhala or other Sri Lankan community wants the same things.</p>
         <h2 className="font-serif text-3xl text-primary">Keep introductions safe</h2>
