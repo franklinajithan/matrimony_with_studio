@@ -1,5 +1,11 @@
 # Horoscope verification evidence
 
+## UI automation continuation — 23 October 2026
+
+Added a temporary local component harness (`scripts/horoscope-browser.mjs`) and `.github/workflows/horoscope-ui.yml`. It mocks every horoscope API request, creates no Auth users and changes no production settings. Planned browser coverage: desktop Chromium, Pixel 7 emulation, iPhone WebKit emulation and a 320px viewport. Assertions cover horizontal overflow, required review confirmation, unknown birth time, conflict message/draft preservation, private save, preview, paused editing, continued export/delete, and screenshots. The harness removes its generated route and build directory and restores TypeScript configuration after running.
+
+Local run: blocked before UI interaction in all four configurations. Chromium downloads were truncated; WebKit downloaded from Microsoft's fallback CDN but could not launch due missing host libraries. Official dependency installation failed due host setgroups/cache permissions. No browser/device pass or visual screenshot is claimed. Script syntax and targeted lint passed. The dedicated CI workflow installs Chromium/WebKit plus dependencies on Ubuntu and uploads the JSON report and any screenshots. A passing mocked harness is still not physical iPhone Safari/installed PWA acceptance.
+
 ## Live continuation — 23 October 2026
 
 Final validation: 48 local test nodes passed (30 API/database and 18 schema/file/gender). TypeScript, targeted lint and production build passed. Existing unrelated Genkit/OpenTelemetry build warning remains.
