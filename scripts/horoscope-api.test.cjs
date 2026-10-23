@@ -193,7 +193,9 @@ for (const code of ["40001", "PT409"]) {
       "@/lib/horoscope/server": {
         context: async () => ({
           settings: { horoscope_enabled: true },
-          db: { rpc: async () => ({ error: { code }, data: null }) },
+          db: { rpc: async (name) => name === "horoscope_qa_member_allowed"
+            ? { data: true, error: null }
+            : { error: { code }, data: null } },
         }),
         readBody: async () => ({
           revision: 0, tradition: "tamil", visibility: "private",

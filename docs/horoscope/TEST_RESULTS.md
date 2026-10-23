@@ -44,7 +44,7 @@ This proves the committed SQL executes and exercises PostgreSQL RLS. It does **n
 ## Not executed / not claimed
 
 - Historical migration failures were resolved on 19 October; see the installed-schema verification below.
-- Real authenticated member create/save/share/view comparison: not completed; feature flags remain off and the live fixture test write request expired.
+- Earlier expired authenticated fixture attempts were superseded by the twelve successful disposable Auth/JWT/RPC checks on 23 October (above). Feature flags were restored to OFF.
 - Live Gemini extraction/AI narrative: dedicated credentials/model and vendor privacy approval not configured/verified. No member file was sent to an AI vendor.
 - OCR benchmark: no human-labelled Tamil/English chart corpus supplied; field accuracy is unmeasured.
 - Traditional matching reference cases: no deterministic scoring engine enabled or validated.
