@@ -267,7 +267,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     if (!currentUser) return;
     let active = true;
     // Ask the database for the current caller\'s admin status; never trust profile metadata.
-    supabase.rpc("is_admin")
+    Promise.resolve(supabase.rpc("is_admin"))
       .then(({ data, error }) => { if (active) setIsAdmin(!error && data === true); })
       .catch(() => { if (active) setIsAdmin(false); });
     getProfile(currentUser.uid)

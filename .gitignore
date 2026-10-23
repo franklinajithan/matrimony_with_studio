@@ -16,6 +16,8 @@
 # next.js
 /.next/
 /.next-prod/
+/.next-horoscope-qa/
+/artifacts/horoscope-ui/
 /out/
 
 # production

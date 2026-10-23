@@ -1,0 +1,29 @@
+name: Horoscope UI
+on:
+  pull_request:
+    paths:
+      - 'src/components/horoscope/**'
+      - 'scripts/horoscope-browser.mjs'
+      - '.github/workflows/horoscope-ui.yml'
+  workflow_dispatch:
+jobs:
+  mocked-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium webkit
+      - run: node scripts/horoscope-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: horoscope-ui
+          path: artifacts/horoscope-ui/
+          retention-days: 7

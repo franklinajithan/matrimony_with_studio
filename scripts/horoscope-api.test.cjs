@@ -170,3 +170,44 @@ test("rate limit stops provider generation and report writes", async () => {
   assert.equal(t.input(), undefined);
   assert.ok(!t.calls.includes("horoscope_store_report"));
 });
+test("JSON request bodies must be objects before route handlers inspect them", async () => {
+  const { readBody } = load("src/lib/horoscope/server.ts", {
+    "server-only": {},
+    "next/server": { NextResponse: {} },
+    "@/lib/supabase/server": {},
+  });
+  for (const value of [null, [], true, 42, "text"]) {
+    await assert.rejects(
+      readBody(new Request("https://example.com", { method: "POST", body: JSON.stringify(value) })),
+      /Invalid JSON request/,
+    );
+  }
+  assert.deepEqual(await readBody(new Request("https://example.com", {
+    method: "POST", body: '{"revision":0}',
+  })), { revision: 0 });
+});
+for (const code of ["40001", "PT409"]) {
+  test(`stale horoscope saves return an actionable HTTP 409 for ${code}`, async () => {
+    const api = load("src/app/api/horoscope/route.ts", {
+      "@/lib/horoscope/schema": schema,
+      "@/lib/horoscope/server": {
+        context: async () => ({
+          settings: { horoscope_enabled: true },
+          db: { rpc: async (name) => name === "horoscope_qa_member_allowed"
+            ? { data: true, error: null }
+            : { error: { code }, data: null } },
+        }),
+        readBody: async () => ({
+          revision: 0, tradition: "tamil", visibility: "private",
+          fields: { dateOfBirth: "1990-01-01", timeQuality: "unknown", birthCity: "London", birthCountry: "UK", timezone: "Europe/London", language: "Tamil" },
+          shared_fields: [], comparison_consent: false, ai_consent: false, planets: [],
+        }),
+        json: (body, status = 200) => ({ body, status }),
+        failure: () => { throw new Error("Unexpected route failure"); },
+      },
+    });
+    const result = await api.PUT({});
+    assert.equal(result.status, 409);
+    assert.match(result.body.error, /Reload before saving/);
+  });
+}
