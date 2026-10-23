@@ -490,14 +490,17 @@ export function OnboardingWizard() {
                   value={draft.country || ""}
                   onChange={(e) => updateDraft({ country: e.target.value, currentCountry: e.target.value || draft.currentCountry })}
                 >
-                  <option value="">{t.selectCountry}</option>
+                  <option value="">Choose your country or territory</option>
+                  {draft.country && !COUNTRY_OPTIONS.includes(draft.country) && (
+                    <option value={draft.country}>{draft.country} (saved selection)</option>
+                  )}
                   {COUNTRY_OPTIONS.map((country) => (
                     <option key={country} value={country}>{country}</option>
                   ))}
                 </select>
               </Field>
-              <Field label={t.region} htmlFor="region">
-                <Input id="region" value={draft.region || ""} onChange={(e) => updateDraft({ region: e.target.value })} className="min-h-11" placeholder="e.g. Colombo, Toronto, Chennai" />
+              <Field label="City, town, village or region" htmlFor="region">
+                <Input id="region" value={draft.region || ""} onChange={(e) => updateDraft({ region: e.target.value })} className="min-h-11" placeholder="Enter any city, town or village worldwide" />
               </Field>
               <fieldset>
                 <legend className="mb-3 text-sm font-medium">{t.languages}</legend>
