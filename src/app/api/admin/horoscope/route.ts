@@ -63,6 +63,7 @@ export async function PATCH(request: Request) {
     }
     const parsed = schema.safeParse(body);
     if (!parsed.success) return json({ error: "Invalid settings" }, 400);
+    if (parsed.data.horoscope_enabled || parsed.data.horoscope_upload_enabled || parsed.data.ai_horoscope_matching_enabled) return json({ error: "Horoscope activation requires completed QA and a separate release approval. Test member enrolment alone does not enable the feature." }, 409);
     if (
       (parsed.data.horoscope_upload_enabled ||
         parsed.data.ai_horoscope_matching_enabled) &&
