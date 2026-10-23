@@ -5,8 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 
 const siteUrl = 'https://cupidmatch.co.uk';
-const SHARE_CARD_VERSION = 'royal-cupid-20261018';
-const shareCardImage = `/opengraph-image?v=${SHARE_CARD_VERSION}`;
+const shareCardImage = '/images/cupidmatch-og.jpg';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -29,9 +28,9 @@ export const metadata: Metadata = {
     url: siteUrl,
     locale: 'en_GB',
     siteName: 'CupidMatch',
-    title: 'CupidMatch - Find Your Perfect Match',
-    description: 'Meaningful matrimony connections for Indian and Sri Lankan communities.',
-    images: [{ url: shareCardImage, width: 1200, height: 630, alt: 'CupidMatch - Find Your Perfect Match' }],
+    title: 'CupidMatch | Sri Lankan Matrimony Worldwide',
+    description: 'Find your perfect match with CupidMatch. Meaningful matrimonial connections for the Sri Lankan community worldwide.',
+    images: [{ url: shareCardImage, width: 1200, height: 630, type: 'image/jpeg', alt: 'CupidMatch — Find Your Perfect Match' }],
   },
   twitter: {
     card: 'summary_large_image',

@@ -23,7 +23,7 @@ export default function Page() {
       <section className="mt-12 space-y-5">
         <h2 className="font-serif text-3xl text-primary">Planning a meaningful introduction</h2>
         <p className="leading-8 text-muted-foreground">For introductions involving France, consider language, travel and family connections. Discuss these subjects early and respectfully, alongside compatibility and communication.</p>
-        <p className="leading-8 text-muted-foreground">Tamil, Sinhala and other Sri Lankan communities are diverse. Individual preferences matter more than assumptions about someone's background. The availability of members in any location depends on registrations.</p>
+        <p className="leading-8 text-muted-foreground">Tamil, Sinhala and other Sri Lankan communities are diverse. Individual preferences matter more than assumptions about someone&apos;s background. The availability of members in any location depends on registrations.</p>
       </section>
       <section className="mt-12 space-y-5">
         <h2 className="font-serif text-3xl text-primary">Safety and privacy</h2>
