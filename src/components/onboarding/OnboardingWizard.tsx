@@ -626,8 +626,10 @@ export function OnboardingWizard() {
                   className="min-h-11"
                   value={(draft.preferredSettlement || []).join(", ")}
                   onChange={(e) => updateDraft({ preferredSettlement: e.target.value.split(",").map((item) => item.trim()).filter(Boolean) })}
-                  placeholder="Sri Lanka, Canada, UK"
+                  placeholder="Worldwide, or enter countries separated by commas"
                 />
+                <p className="mt-2 text-xs text-muted-foreground">Enter any countries or choose Worldwide. You can also include towns or regions. This is for future settlement preferences, not a restriction on who can find you.</p>
+                <Button type="button" variant="outline" className="mt-2 min-h-11" onClick={() => updateDraft({ preferredSettlement: ["Worldwide"] })}>Open to anywhere in the world</Button>
               </Field>
               <Field label={t.longDistance} htmlFor="longDistanceOk">
                 <Input id="longDistanceOk" className="min-h-11" value={draft.longDistanceOk || ""} onChange={(e) => updateDraft({ longDistanceOk: e.target.value })} />
