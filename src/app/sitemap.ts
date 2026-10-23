@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 const baseUrl = "https://cupidmatch.co.uk";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const pages = ["", "/about", "/discover", "/pricing", "/safety", "/contact", "/privacy", "/terms", "/accessibility", "/community-guidelines", "/how-it-works", "/international-matrimony", "/sri-lankan-matrimony-uk", "/indian-matrimony-uk", "/tamil-matrimony-uk", "/sinhala-matrimony", "/horoscope-matching", "/sri-lankan-matrimony-sri-lanka", "/sri-lankan-matrimony-canada", "/sri-lankan-matrimony-australia", "/sri-lankan-matrimony-france", "/sri-lankan-matrimony-germany", "/sri-lankan-matrimony-switzerland"];
+  const pages = ["", "/about", "/discover", "/pricing", "/safety", "/contact", "/privacy", "/terms", "/accessibility", "/community-guidelines", "/how-it-works", "/international-matrimony", "/sri-lankan-matrimony-uk", "/indian-matrimony-uk", "/tamil-matrimony-uk", "/sinhala-matrimony", "/horoscope-matching", "/family-assisted-matrimony", "/sri-lankan-matrimony-sri-lanka", "/sri-lankan-matrimony-canada", "/sri-lankan-matrimony-australia", "/sri-lankan-matrimony-france", "/sri-lankan-matrimony-germany", "/sri-lankan-matrimony-switzerland"];
   return pages.map((path) => ({
     url: `${baseUrl}${path}`,
     changeFrequency: path === "" ? "weekly" : "monthly",
