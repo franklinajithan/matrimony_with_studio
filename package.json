@@ -12,6 +12,7 @@
     "seed": "tsx scripts/seed-test-profiles.ts",
     "seed:demo": "tsx scripts/seed-demo-profiles.ts",
     "seed:demo:cleanup": "tsx scripts/seed-demo-profiles.ts --cleanup",
+    "test:signup": "node --test scripts/family-signup-regression.test.mjs",
     "test:admin": "node --test scripts/admin-security.test.cjs scripts/member-deletion.test.cjs",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
