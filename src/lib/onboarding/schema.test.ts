@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   isAdult,
+  COUNTRY_OPTIONS,
+  countryCodeForName,
   parseOnboardingDraft,
   validateForPublish,
   validateOnboardingStep,
@@ -74,5 +76,36 @@ describe("onboarding validation", () => {
     const edited = parseOnboardingDraft({ ...adultDraft, displayName: "Amina Silva" });
     const merged = mergeOnboardingDrafts(saved, edited);
     expect(merged.displayName).toBe("Amina Silva");
+  });
+});
+
+describe("worldwide Sri Lankan community onboarding", () => {
+  it("includes worldwide countries and territories rather than a fixed launch-market list", () => {
+    expect(COUNTRY_OPTIONS.length).toBe(249);
+    for (const country of ["Sri Lanka", "United Kingdom", "Australia", "Canada", "Germany", "Japan", "Brazil", "South Africa"]) {
+      expect(COUNTRY_OPTIONS).toContain(country);
+    }
+  });
+
+  it("resolves the location lookup country without confusing residence and heritage", () => {
+    expect(countryCodeForName("Sri Lanka")).toBe("LK");
+    expect(countryCodeForName("United Kingdom")).toBe("GB");
+    expect(countryCodeForName("Canada")).toBe("CA");
+    expect(countryCodeForName("UK")).toBe("GB");
+    expect(countryCodeForName("Atlantis")).toBeUndefined();
+  });
+
+  it("accepts worldwide residences and voluntary Sri Lankan cultural background", () => {
+    const draft = parseOnboardingDraft({
+      ...adultDraft,
+      country: "Japan",
+      region: "Osaka",
+      culturalBackground: "Sri Lankan Tamil diaspora",
+      preferredSettlement: ["Worldwide"],
+    });
+    expect(validateForPublish(draft)).toEqual([]);
+    expect(draft.country).toBe("Japan");
+    expect(draft.culturalBackground).toBe("Sri Lankan Tamil diaspora");
+    expect(draft.preferredSettlement).toEqual(["Worldwide"]);
   });
 });
