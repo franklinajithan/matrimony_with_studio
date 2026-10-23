@@ -52,3 +52,9 @@ On 22 October a production attempt required a broader feature-setting change tha
 - Malware scanning integration, HEIC conversion, calendar/local-numeral normalisation benchmark.
 - Field-level extraction accuracy/correction metrics, vendor cost integration, cohort allow-list, full Tamil UI translation, actual device and assistive-technology testing.
 - Legacy public horoscope file remediation requires a separate owner-reviewed migration. Existing public media has not been made private by this work.
+
+## Manual backend verification — 23 October 2026
+
+The owner-authorized live disposable run passed all twelve manual-entry/privacy checks in TEST_RESULTS.md. Set `HOROSCOPE_QA_COHORT=allowlist` when testing the installed restricted cohort deployment. The runner only enrolls IDs it creates. Migration `20261023073857_horoscope_revision_conflict.sql` is already applied: stale revision conflicts now return `PT409` without PostgREST serialization retries. The API recognizes old/new error codes for rolling deployment. Keep the SQL patch on restored environments as well.
+
+Registration and editing were restored to paused after QA. Upload/AI flags stayed off throughout. Actual browser/device checks and provider/scoring gates remain outstanding; backend success does not authorize a general launch.

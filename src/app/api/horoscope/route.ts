@@ -59,11 +59,11 @@ export async function PUT(request: Request) {
       return json(
         {
           error:
-            error.code === "40001"
+            ["40001", "PT409"].includes(error.code)
               ? "Your horoscope changed. Reload before saving."
               : "Could not save. Check your details and retry.",
         },
-        error.code === "40001" ? 409 : 400,
+        ["40001", "PT409"].includes(error.code) ? 409 : 400,
       );
     return json({ profile: data });
   } catch (e) {

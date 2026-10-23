@@ -186,3 +186,26 @@ test("JSON request bodies must be objects before route handlers inspect them", a
     method: "POST", body: '{"revision":0}',
   })), { revision: 0 });
 });
+for (const code of ["40001", "PT409"]) {
+  test(`stale horoscope saves return an actionable HTTP 409 for ${code}`, async () => {
+    const api = load("src/app/api/horoscope/route.ts", {
+      "@/lib/horoscope/schema": schema,
+      "@/lib/horoscope/server": {
+        context: async () => ({
+          settings: { horoscope_enabled: true },
+          db: { rpc: async () => ({ error: { code }, data: null }) },
+        }),
+        readBody: async () => ({
+          revision: 0, tradition: "tamil", visibility: "private",
+          fields: { dateOfBirth: "1990-01-01", timeQuality: "unknown", birthCity: "London", birthCountry: "UK", timezone: "Europe/London", language: "Tamil" },
+          shared_fields: [], comparison_consent: false, ai_consent: false, planets: [],
+        }),
+        json: (body, status = 200) => ({ body, status }),
+        failure: () => { throw new Error("Unexpected route failure"); },
+      },
+    });
+    const result = await api.PUT({});
+    assert.equal(result.status, 409);
+    assert.match(result.body.error, /Reload before saving/);
+  });
+}

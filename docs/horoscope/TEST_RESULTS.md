@@ -1,5 +1,18 @@
 # Horoscope verification evidence
 
+## Live continuation — 23 October 2026
+
+Final validation: 48 local test nodes passed (30 API/database and 18 schema/file/gender). TypeScript, targeted lint and production build passed. Existing unrelated Genkit/OpenTelemetry build warning remains.
+
+Owner authorized a temporary manual-editing/registration test window. The installed database includes a cohort allow-list, so only newly created disposable IDs were enrolled. Twelve real Supabase Auth/JWT/RPC checks passed: manual save, raw peer isolation, private-view denial, non-admin settings denial, stale-edit rejection, unconnected-view denial, selected-field redaction, mutual comparison, report revocation after blocking, consent withdrawal, member restriction, and owner deletion while restricted. All disposable identities were removed; registration and all horoscope flags are false again, and the temporary runner is disabled (JWT-protected HTTP 410 handler). No real member data was edited or removed.
+
+The stale-edit test exposed a real production defect: custom SQLSTATE `40001` caused PostgREST's documented infinite transaction-retry bug. Migration `20261023073857_horoscope_revision_conflict.sql` was applied successfully and changes only that business-conflict SQLSTATE to `PT409`, preserving the installed function and cohort checks. The Next.js save route recognizes both codes during rollout. PGlite regression checks assert `PT409`; the live test asserts it returns within ten seconds. The initial timed-out attempts are not claimed as passes. Inspected corresponding backend PIDs after the fix; no active horoscope-save loop remained.
+
+Reference: https://supabase.com/docs/guides/troubleshooting/high-cpu-and-infinite-transaction-retries-when-using-custom-error-codes-in-rpc-functions-77326b
+
+The runner accepts `HOROSCOPE_QA_COHORT=allowlist` to enroll only its own disposable IDs. This is backend verification, not desktop/mobile UI, OCR, traditional-scoring or provider-delivery acceptance.
+
+
 ## Follow-up — 22 October 2026
 
 - Fixed JSON body validation: `null`, arrays and scalar JSON now return the existing invalid-request error before route code accesses object properties, rather than producing a misleading service-unavailable error.

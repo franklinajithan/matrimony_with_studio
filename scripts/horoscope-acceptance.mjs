@@ -4,12 +4,15 @@ import { randomUUID, randomBytes } from 'node:crypto';
 import assert from 'node:assert/strict';
 const url=process.env.NEXT_PUBLIC_SUPABASE_URL, key=process.env.SUPABASE_SERVICE_ROLE_KEY, anon=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 if(!url||!key||!anon)throw new Error('Trusted Supabase server environment required');
-const options={auth:{persistSession:false,autoRefreshToken:false}};
+const options={db:{retry:false},auth:{persistSession:false,autoRefreshToken:false}};
 const admin=createClient(url,key,options),created=[],report={};
 const must=async p=>{const r=await p;if(r.error)throw r.error;return r.data};
 async function fixture(){
  const email=`cupidmatch-horoscope-qa-${randomUUID()}@example.com`,password=randomBytes(32).toString('base64url');
  const {user}=await must(admin.auth.admin.createUser({email,password,email_confirm:true}));created.push(user.id);
+ // A restricted rollout may require explicit enrollment of these disposable IDs.
+ if(process.env.HOROSCOPE_QA_COHORT==='allowlist')
+  await must(admin.from('horoscope_qa_allowlist').insert({user_id:user.id}));
  const db=createClient(url,anon,options);await must(db.auth.signInWithPassword({email,password}));
  await must(admin.from('profiles').update({is_published:true}).eq('id',user.id));
  return {id:user.id,db};
@@ -23,7 +26,9 @@ try{
  assert.equal((await must(b.db.from('horoscope_profiles').select('*').eq('user_id',a.id))).length,0);report.rawPeerIsolation=true;
  assert.ok((await b.db.rpc('horoscope_view',{p_owner:a.id})).error);report.privateViewDenied=true;
  assert.ok((await b.db.rpc('horoscope_admin_settings',{p_settings:{}})).error);report.memberAdminDenied=true;
- assert.ok((await a.db.rpc('horoscope_save',{p_payload:payload()})).error);report.staleEditRejected=true;
+ const staleStarted=Date.now();
+ const stale=await a.db.rpc('horoscope_save',{p_payload:payload()}).abortSignal(AbortSignal.timeout(10000));
+ assert.equal(stale.error?.code,'PT409');assert.ok(Date.now()-staleStarted<10000);report.staleEditRejected=true;
  await must(a.db.rpc('horoscope_save',{p_payload:payload(1,'connections')}));
  assert.ok((await b.db.rpc('horoscope_view',{p_owner:a.id})).error);report.unconnectedViewDenied=true;
  const pair=[a.id,b.id].sort();await must(admin.from('connections').insert({member_a_id:pair[0],member_b_id:pair[1]}));

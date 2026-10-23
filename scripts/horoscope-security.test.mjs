@@ -62,6 +62,9 @@ const migration = await readFile(
   "utf8",
 );
 await db.exec(migration);
+await db.exec(await readFile(new URL(
+  "../supabase/migrations/20261023073857_horoscope_revision_conflict.sql", import.meta.url,
+), "utf8"));
 await db.exec(
   "begin; update public.horoscope_settings set horoscope_enabled=true,horoscope_upload_enabled=true;",
 );
@@ -296,7 +299,11 @@ try {
       "stale saves reject and consent withdrawal invalidates report access",
       async () => {
         await actor(a);
-        await assert.rejects(save(payload(1, "members")), /Record changed/);
+        await assert.rejects(save(payload(1, "members")), (error) => {
+          assert.equal(error.code, "PT409");
+          assert.match(error.message, /Record changed/);
+          return true;
+        });
         const p = payload(3, "connections");
         p.comparison_consent = false;
         await save(p);

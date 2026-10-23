@@ -62,7 +62,7 @@ do $$ declare h jsonb; begin
  h:=h - 'user_id' - 'provenance' - 'verified_at' - 'updated_at' - 'created_at';
  h:=h || '{"comparison_consent":false,"planets":[]}';
  perform public.horoscope_save(h);
- begin perform public.horoscope_save(h);raise exception 'Stale revision allowed';exception when serialization_failure then null;end;
+ begin perform public.horoscope_save(h);raise exception 'Stale revision allowed';exception when sqlstate 'PT409' then null;end;
 end $$;
 select set_config('request.jwt.claim.sub',current_setting('horoscope.qa.b'),true);
 do $$ begin
