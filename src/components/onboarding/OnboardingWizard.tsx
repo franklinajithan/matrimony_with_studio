@@ -598,8 +598,9 @@ export function OnboardingWizard() {
               <Field label={t.religion} htmlFor="religion">
                 <Input id="religion" value={draft.religion || ""} onChange={(e) => updateDraft({ religion: e.target.value, skippedCultural: false })} className="min-h-11" />
               </Field>
-              <Field label={t.culture} htmlFor="culturalBackground">
-                <Input id="culturalBackground" value={draft.culturalBackground || ""} onChange={(e) => updateDraft({ culturalBackground: e.target.value })} className="min-h-11" />
+              <Field label="Sri Lankan community / cultural background (optional)" htmlFor="culturalBackground">
+                <Input id="culturalBackground" value={draft.culturalBackground || ""} onChange={(e) => updateDraft({ culturalBackground: e.target.value })} className="min-h-11" placeholder="Describe your heritage or cultural connections in your own words" />
+                <p className="mt-2 text-xs text-muted-foreground">CupidMatch is designed for the Sri Lankan community worldwide. This is voluntary and separate from your country of residence; no religion, ethnicity or language is assumed.</p>
               </Field>
               <Field label={t.familyInvolvement} htmlFor="familyInvolvement">
                 <Input id="familyInvolvement" value={draft.familyInvolvement || ""} onChange={(e) => updateDraft({ familyInvolvement: e.target.value })} className="min-h-11" />
