@@ -9,16 +9,23 @@ import { Navbar } from "@/components/navigation/Navbar";
 import { Footer } from "@/components/navigation/Footer";
 import { getServerAuthUser } from "@/lib/supabase/server";
 
+const shareTitle = 'CupidMatch | Sri Lankan Matrimony Worldwide';
+const shareDescription = 'Find your perfect match with CupidMatch. Meaningful matrimonial connections for the Sri Lankan community worldwide.';
+const shareImage = 'https://cupidmatch.co.uk/images/cupidmatch-og.jpg';
+
 export const metadata: Metadata = {
-  title: "Sri Lankan & Indian Matrimony Worldwide | CupidMatch",
-  description: "Explore Sri Lankan, Tamil, Sinhala and Indian matrimony across the UK, Sri Lanka, Australia, Canada, France, Germany and Switzerland.",
-  alternates: { canonical: "https://cupidmatch.co.uk/" },
+  title: { absolute: shareTitle },
+  description: shareDescription,
+  alternates: { canonical: 'https://cupidmatch.co.uk/' },
   openGraph: {
-    type: "website",
-    url: "https://cupidmatch.co.uk/",
-    title: "Sri Lankan & Indian Matrimony Worldwide | CupidMatch",
-    description: "Marriage-focused introductions across the UK, Sri Lanka, Australia, Canada, France, Germany and Switzerland.",
+    type: 'website',
+    siteName: 'CupidMatch',
+    url: 'https://cupidmatch.co.uk/',
+    title: shareTitle,
+    description: shareDescription,
+    images: [{ url: shareImage, secureUrl: shareImage, width: 1200, height: 630, type: 'image/jpeg', alt: 'CupidMatch — Find Your Perfect Match' }],
   },
+  twitter: { card: 'summary_large_image', title: shareTitle, description: shareDescription, images: [shareImage] },
 };
 
 export default async function HomePage() {
