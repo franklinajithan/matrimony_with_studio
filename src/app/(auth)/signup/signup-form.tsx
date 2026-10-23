@@ -27,6 +27,7 @@ const signupSchema = z
     email: z.string().email({ message: "Enter a valid email address." }),
     password: z.string().min(8, { message: "Password must be at least 8 characters." }),
     confirmPassword: z.string().min(8, { message: "Confirm your password." }),
+    adultConsent: z.boolean().refine((val) => val === true, { message: "You must be an adult registering for yourself." }),
     terms: z.boolean().refine((val) => val === true, { message: "You must accept the terms to continue." }),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -53,6 +54,7 @@ export default function SignupPage() {
       promoCode: "",
       password: "",
       confirmPassword: "",
+      adultConsent: false,
       terms: false,
     },
   });
@@ -232,6 +234,19 @@ export default function SignupPage() {
                     </div>
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="adultConsent"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border border-gold/30 p-4">
+                  <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={isLoading} /></FormControl>
+                  <div className="space-y-2"><FormLabel>I am 18 or older and I am creating this account for myself.</FormLabel>
+                    <p className="text-xs leading-5 text-muted-foreground">Helping a relative? The adult member should register and control their own account. <Link href="/family-assisted-matrimony" className="font-medium text-primary underline">Read family guidance</Link>.</p>
+                    <FormMessage />
+                  </div>
                 </FormItem>
               )}
             />
