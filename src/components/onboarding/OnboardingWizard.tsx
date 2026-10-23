@@ -28,6 +28,7 @@ import { auth, onAuthStateChanged } from "@/lib/supabase/auth";
 import { mediaPathForUser, resolveMediaUrl, uploadMediaFile } from "@/lib/supabase/storage";
 import { ProfilePhotoEditor } from "@/components/profile/ProfilePhotoEditor";
 import { useI18n } from "@/components/i18n/I18nProvider";
+import { GlobalCityInput } from "@/components/onboarding/GlobalCityInput";
 import { getMessages } from "@/components/i18n/messages";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
@@ -500,7 +501,7 @@ export function OnboardingWizard() {
                 </select>
               </Field>
               <Field label="City, town, village or region" htmlFor="region">
-                <Input id="region" value={draft.region || ""} onChange={(e) => updateDraft({ region: e.target.value })} className="min-h-11" placeholder="Enter any city, town or village worldwide" />
+                <GlobalCityInput country={draft.country || ""} value={draft.region || ""} onChange={(region) => updateDraft({ region })} />
               </Field>
               <fieldset>
                 <legend className="mb-3 text-sm font-medium">{t.languages}</legend>
