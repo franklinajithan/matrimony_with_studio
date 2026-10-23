@@ -1,0 +1,13 @@
+-- During restricted QA, both the viewer and the target must be approved.
+-- horoscope_can_view independently enforces the owner's consent and visibility.
+create or replace function public.horoscope_member_allowed(p_id uuid)
+returns boolean language sql stable security definer set search_path = ''
+as $$
+ select auth.uid() is not null
+ and public.horoscope_qa_member_allowed()
+ and exists (select 1 from public.horoscope_qa_allowlist q where q.user_id=p_id)
+ and exists (select 1 from public.profiles p where p.id=p_id and p.suspended_at is null and p.deletion_requested_at is null)
+ and not exists (select 1 from public.horoscope_restrictions r where r.user_id=p_id and r.restricted)
+$$;
+revoke all on function public.horoscope_member_allowed(uuid) from public, anon;
+grant execute on function public.horoscope_member_allowed(uuid) to authenticated;
