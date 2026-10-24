@@ -140,8 +140,20 @@ export function PreferenceDiscovery() {
   const toggleShortlist = async (person: Person) => {
     const { data: { user } } = await supabase.auth.getUser(); if (!user) return;
     setBusy((v) => ({ ...v, [`s-${person.id}`]: true }));
-    try { if (person.isShortlisted) await removeFromShortlist(user.id, person.id); else await addToShortlist(user.id, person.id); setPeople((all) => all.map((p) => p.id === person.id ? { ...p, isShortlisted: !p.isShortlisted } : p)); }
-    finally { setBusy((v) => ({ ...v, [`s-${person.id}`]: false })); }
+    try {
+      if (person.isShortlisted) await removeFromShortlist(user.id, person.id);
+      else await addToShortlist(user.id, person.id);
+      setPeople((all) => all.map((p) => p.id === person.id ? { ...p, isShortlisted: !person.isShortlisted } : p));
+      toast({ title: person.isShortlisted ? "Removed from shortlist" : "Added to shortlist" });
+    } catch (error) {
+      toast({
+        title: "Could not update shortlist",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setBusy((v) => ({ ...v, [`s-${person.id}`]: false }));
+    }
   };
   const interest = async (id: string) => {
     const { data: { user } } = await supabase.auth.getUser(); if (!user || sent.has(id)) return;
@@ -228,6 +240,7 @@ export function PreferenceDiscovery() {
               variant="secondary"
               className="absolute right-2 top-2 h-8 w-8 rounded-full bg-white/90 sm:h-9 sm:w-9"
               onClick={() => void toggleShortlist(person)}
+              disabled={Boolean(busy[`s-${person.id}`])}
               aria-label={person.isShortlisted ? "Remove from shortlist" : "Shortlist"}
             >
               {busy[`s-${person.id}`] ? (
