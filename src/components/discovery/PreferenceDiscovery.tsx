@@ -19,14 +19,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { DIASPORA_COUNTRY_NAMES } from "@/data/diaspora-countries";
+import { WORLD_COUNTRY_NAMES } from "@/data/world-countries";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { getMessages } from "@/components/i18n/messages";
 
 type Person = Profile & { isShortlisted?: boolean };
 const empty: DiscoveryFilters = { query: "", countries: [], languages: [], religions: [], professions: [], smoking: [], drinking: [] };
 const options = {
-  countries: DIASPORA_COUNTRY_NAMES,
+  countries: WORLD_COUNTRY_NAMES,
   languages: ["Tamil", "English", "Sinhala"],
   religions: ["Hinduism", "Christianity", "Islam", "Buddhism", "Sikhism", "Jainism", "Other"],
   genders: ["Woman", "Man", "Non-binary", "No preference"],
