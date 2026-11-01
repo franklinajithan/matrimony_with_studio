@@ -8,10 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { auth } from "@/lib/supabase/auth";
+import { auth, onAuthStateChanged, type AuthUser } from "@/lib/supabase/auth";
 import { getProfile, updateUserProfile } from "@/lib/supabase/profiles";
 import { readProfileGender, profileGenderPatch } from "@/lib/profile-gender";
-import { COUNTRY_OPTIONS, LANGUAGE_OPTIONS } from "@/lib/onboarding/schema";
+import { LANGUAGE_OPTIONS } from "@/lib/onboarding/schema";
+
+import { countryOptionsWithLegacy } from "@/data/world-countries";
 
 const ANY = "__empty__";
 const GENDERS = ["Woman", "Man", "Non-binary"];
@@ -32,24 +34,31 @@ export function MatchDetailsEditor() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const user = auth.currentUser; if (!user) return;
-    void getProfile(user.uid).then((profile) => {
-      if (!profile) return;
-      const saved = record(record(profile.extra).matchDetails);
-      const relationship = record(profile.relationshipIntentions); const settlement = record(profile.settlement); const family = record(profile.culturalFamily); const draft = record(profile.onboardingDraft);
-      setExtra(profile.extra || {});
-      setDetails({
-        gender: ({ male: "Man", female: "Woman", "non-binary": "Non-binary", "": "" })[readProfileGender(profile)],
-        maritalStatus: String(saved.maritalStatus || relationship.maritalStatus || draft.maritalStatus || ""),
-        country: String(saved.country || profile.country || ""),
-        languages: Array.isArray(saved.languages) ? saved.languages : (profile.languages || (profile.language ? [profile.language] : [])),
-        wantsChildren: String(saved.wantsChildren || relationship.wantsChildren || relationship.children || ""),
-        relocation: String(saved.relocation || settlement.relocation || settlement.relocationOpenness || ""),
-        familyInvolvement: String(saved.familyInvolvement || family.familyInvolvement || ""),
-        marriageTimeline: String(saved.marriageTimeline || relationship.marriageTimeline || relationship.timeline || ""),
+    let generation = 0;
+    const unsubscribe = onAuthStateChanged((user: AuthUser | null) => {
+      const current = ++generation;
+      if (!user) { setDetails(EMPTY); setExtra({}); return; }
+      void getProfile(user.uid).then((profile) => {
+        if (current !== generation || !profile) return;
+        const saved = record(record(profile.extra).matchDetails);
+        const relationship = record(profile.relationshipIntentions); const settlement = record(profile.settlement); const family = record(profile.culturalFamily); const draft = record(profile.onboardingDraft);
+        setExtra(profile.extra || {});
+        setDetails({
+          gender: ({ male: "Man", female: "Woman", "non-binary": "Non-binary", "": "" })[readProfileGender(profile)],
+          maritalStatus: String(saved.maritalStatus || relationship.maritalStatus || draft.maritalStatus || ""),
+          country: String(saved.country || profile.country || ""),
+          languages: Array.isArray(saved.languages) ? saved.languages : (profile.languages || (profile.language ? [profile.language] : [])),
+          wantsChildren: String(saved.wantsChildren || relationship.wantsChildren || relationship.children || ""),
+          relocation: String(saved.relocation || settlement.relocation || settlement.relocationOpenness || ""),
+          familyInvolvement: String(saved.familyInvolvement || family.familyInvolvement || ""),
+          marriageTimeline: String(saved.marriageTimeline || relationship.marriageTimeline || relationship.timeline || ""),
+        });
+      }).catch(() => {
+        if (current === generation) toast({ title: "Could not load match details", description: "Please refresh and try again.", variant: "destructive" });
       });
     });
-  }, []);
+    return () => { generation++; unsubscribe(); };
+  }, [toast]);
 
   const patch = (next: Partial<Details>) => setDetails((v) => ({ ...v, ...next }));
   async function save() {
@@ -70,7 +79,7 @@ export function MatchDetailsEditor() {
   return <Card className="border-border">
     <CardHeader><div className="flex gap-3"><div className="rounded-full bg-accent p-2"><HeartHandshake className="h-5 w-5 text-primary" /></div><div><CardTitle className="text-lg">Match details</CardTitle><CardDescription>Complete the same relationship details used in Partner Preferences. More complete information makes preference matching more useful and transparent.</CardDescription></div></div></CardHeader>
     <CardContent className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2"><Choice label="Gender" value={details.gender} values={GENDERS} onChange={(v) => patch({ gender: v })}/><Choice label="Marital status" value={details.maritalStatus} values={MARITAL} onChange={(v) => patch({ maritalStatus: v })}/><Choice label="Country" value={details.country} values={[...COUNTRY_OPTIONS]} onChange={(v) => patch({ country: v })}/><div><Label>Languages</Label><Input className="mt-2" value={details.languages.join(", ")} onChange={(e) => patch({ languages: e.target.value.split(",").map(v => v.trim()).filter(Boolean) })} placeholder={`e.g. ${LANGUAGE_OPTIONS.slice(0,3).map(v => v.label).join(", ")}`} /></div><Choice label="Children plans" value={details.wantsChildren} values={CHILDREN} onChange={(v) => patch({ wantsChildren: v })}/><Choice label="Relocation" value={details.relocation} values={RELOCATION} onChange={(v) => patch({ relocation: v })}/><Choice label="Family involvement" value={details.familyInvolvement} values={FAMILY} onChange={(v) => patch({ familyInvolvement: v })}/><Choice label="Marriage timeline" value={details.marriageTimeline} values={TIMELINE} onChange={(v) => patch({ marriageTimeline: v })}/></div>
+      <div className="grid gap-4 sm:grid-cols-2"><Choice label="Gender" value={details.gender} values={GENDERS} onChange={(v) => patch({ gender: v })}/><Choice label="Marital status" value={details.maritalStatus} values={MARITAL} onChange={(v) => patch({ maritalStatus: v })}/><Choice label="Country" value={details.country} values={countryOptionsWithLegacy([details.country])} onChange={(v) => patch({ country: v })}/><div><Label>Languages</Label><Input className="mt-2" value={details.languages.join(", ")} onChange={(e) => patch({ languages: e.target.value.split(",").map(v => v.trim()).filter(Boolean) })} placeholder={`e.g. ${LANGUAGE_OPTIONS.slice(0,3).map(v => v.label).join(", ")}`} /></div><Choice label="Children plans" value={details.wantsChildren} values={CHILDREN} onChange={(v) => patch({ wantsChildren: v })}/><Choice label="Relocation" value={details.relocation} values={RELOCATION} onChange={(v) => patch({ relocation: v })}/><Choice label="Family involvement" value={details.familyInvolvement} values={FAMILY} onChange={(v) => patch({ familyInvolvement: v })}/><Choice label="Marriage timeline" value={details.marriageTimeline} values={TIMELINE} onChange={(v) => patch({ marriageTimeline: v })}/></div>
       <div className="rounded-xl bg-accent p-3 text-sm text-primary-dark">Religion, profession, education, height, smoking and drinking are already taken from your <strong>About</strong> details. Complete both sections for the best preference-match calculation.</div>
       <div className="flex justify-end"><Button type="button" onClick={() => void save()} disabled={saving}>{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}Save match details</Button></div>
     </CardContent>

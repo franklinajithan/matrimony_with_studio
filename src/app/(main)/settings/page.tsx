@@ -11,11 +11,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { User, Image as ImageIcon, Info, Loader2, MapPin, Briefcase, Cake } from 'lucide-react';
 import { useState, useEffect } from "react";
-import { auth, updateProfile } from "@/lib/supabase/auth";
+import { auth, onAuthStateChanged, updateProfile, type AuthUser } from "@/lib/supabase/auth";
 import { extractStoragePath, mediaPathForUser, resolveMediaUrl, uploadFile } from "@/lib/supabase/storage";
 import { getProfile, updateUserProfile } from "@/lib/supabase/profiles";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import { AccountLifecycle } from "@/components/account/AccountLifecycle";
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters."),
@@ -52,13 +53,18 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
-    const loadUserProfile = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
+    let active = true;
+    let generation = 0;
+    const unsubscribe = onAuthStateChanged(async (user: AuthUser | null) => {
+      const current = ++generation;
+      if (!user) {
+        if (active) { form.reset({ displayName: "", bio: "", location: "", profession: "", dob: "" }); setCurrentPhotoURL(""); setIsLoading(false); }
+        return;
+      }
 
       try {
         const data = await getProfile(user.uid);
-        if (data) {
+        if (active && current === generation && data) {
           form.reset({
             displayName: data.displayName || "",
             bio: data.bio || "",
@@ -76,11 +82,10 @@ export default function SettingsPage() {
           variant: "destructive",
         });
       } finally {
-        setIsLoading(false);
+        if (active && current === generation) setIsLoading(false);
       }
-    };
-
-    loadUserProfile();
+    });
+    return () => { active = false; generation++; unsubscribe(); };
   }, [form, toast]);
 
   async function onSubmit(values: z.infer<typeof profileSchema>) {
@@ -153,6 +158,7 @@ export default function SettingsPage() {
 
   return (
     <div className="container max-w-2xl py-8 space-y-4">
+      <AccountLifecycle />
       <Card><CardHeader><CardTitle>Profile verification</CardTitle><CardDescription>Request review and track your verification status.</CardDescription></CardHeader><CardContent><Button asChild variant="outline"><Link href="/verification">Manage verification request</Link></Button></CardContent></Card>
       <Card>
         <CardHeader>

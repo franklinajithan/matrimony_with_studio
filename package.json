@@ -12,12 +12,16 @@
     "seed": "tsx scripts/seed-test-profiles.ts",
     "seed:demo": "tsx scripts/seed-demo-profiles.ts",
     "seed:demo:cleanup": "tsx scripts/seed-demo-profiles.ts --cleanup",
-    "test:signup": "node --test scripts/family-signup-regression.test.mjs",
+    "test:signup": "node --test scripts/family-signup-regression.test.mjs scripts/auth-session.test.cjs scripts/match-details-session.test.cjs",
     "test:admin": "node --test scripts/admin-security.test.cjs scripts/member-deletion.test.cjs",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:horoscope": "node --test scripts/horoscope-security.test.mjs scripts/horoscope-api.test.cjs scripts/horoscope-qa-access.test.cjs && node --import tsx --test src/lib/horoscope/*.test.ts scripts/profile-gender.test.ts",
-    "test:theme": "node --test scripts/theme-contrast.test.mjs"
+    "test:theme": "node --test scripts/theme-contrast.test.mjs",
+    "test:core": "node --test scripts/core-member-regression.test.cjs",
+    "test:account": "node --test scripts/member-deletion.test.cjs scripts/account-lifecycle-sql.test.mjs",
+    "test:interests": "node --test scripts/interest-persistence.test.cjs",
+    "test:interest-security": "node --test scripts/interest-authorization.test.mjs"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.28.0",

@@ -1,5 +1,7 @@
 "use client";
 
+import { countryOptionsWithLegacy } from "@/data/world-countries";
+
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -17,7 +19,6 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
 import {
-  COUNTRY_OPTIONS,
   EMPTY_ONBOARDING_DRAFT,
   LANGUAGE_OPTIONS,
   ONBOARDING_STEPS,
@@ -491,7 +492,7 @@ export function OnboardingWizard() {
                   onChange={(e) => updateDraft({ country: e.target.value, currentCountry: e.target.value || draft.currentCountry })}
                 >
                   <option value="">{t.selectCountry}</option>
-                  {COUNTRY_OPTIONS.map((country) => (
+                  {countryOptionsWithLegacy([draft.country]).map((country) => (
                     <option key={country} value={country}>{country}</option>
                   ))}
                 </select>

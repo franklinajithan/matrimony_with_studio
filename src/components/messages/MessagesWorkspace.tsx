@@ -174,11 +174,11 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
               if (!otherUserId) return null;
 
               const cached = chat.participantDetails?.[otherUserId];
-              let otherUserName = cached?.displayName || "Member";
+              let otherUserName = cached?.displayName || (otherUserId === "deleted-member" ? "Deleted member" : "Member");
               let otherUserAvatar =
                 resolveMediaUrl(cached?.photoURL) || "https://placehold.co/100x100.png";
 
-              if (!cached?.displayName) {
+              if (!cached?.displayName && otherUserId !== "deleted-member") {
                 try {
                   const profile = await getProfile(otherUserId);
                   if (profile) {
@@ -307,10 +307,10 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
         const otherUserId = chat.participants.find((id) => id !== userId);
         if (!otherUserId) return;
         const cached = chat.participantDetails?.[otherUserId];
-        let otherUserName = cached?.displayName || "Member";
+        let otherUserName = cached?.displayName || (otherUserId === "deleted-member" ? "Deleted member" : "Member");
         let otherUserAvatar =
           resolveMediaUrl(cached?.photoURL) || "https://placehold.co/100x100.png";
-        if (!cached?.displayName) {
+        if (!cached?.displayName && otherUserId !== "deleted-member") {
           try {
             const profile = await getProfile(otherUserId);
             if (profile) {
@@ -357,7 +357,8 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
       return () => { cancelled = true; };
     }
 
-    void areConnected(userId, candidateOtherUserId)
+    void getChat(selectedChatId)
+      .then(async chat => chat?.participants.includes("deleted-member") || await areConnected(userId, candidateOtherUserId))
       .then((connected) => {
         if (!cancelled && connected) setAuthorizedChatId(selectedChatId);
       })
@@ -408,6 +409,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
 
   const handleSend = async () => {
     const text = draft.trim();
+    if (selectedConversation?.otherUserId === "deleted-member") return;
     if (!text || !currentUser || !selectedChatId || !selectedConversation || isSending) return;
 
     const optimisticId = `local-${Date.now()}`;
@@ -643,7 +645,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <Link
-                  href={`/profile/${selectedConversation.otherUserId}`}
+                  href={selectedConversation.otherUserId === "deleted-member" ? "/messages" : `/profile/${selectedConversation.otherUserId}`}
                   className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-1 py-1 hover:bg-black/5"
                 >
                   <Avatar className="h-10 w-10">
@@ -654,7 +656,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                     <p className="truncate font-semibold text-foreground">
                       {selectedConversation.otherUserName}
                     </p>
-                    <p className="truncate text-xs text-muted-foreground">CupidMatch connection · View profile</p>
+                    <p className="truncate text-xs text-muted-foreground">{selectedConversation.otherUserId === "deleted-member" ? "This conversation is read-only" : "CupidMatch connection · View profile"}</p>
                   </div>
                 </Link>
                 <div className="flex items-center gap-0.5">
@@ -672,7 +674,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
-                        <Link href={`/profile/${selectedConversation.otherUserId}`}>View profile</Link>
+                        <Link href={selectedConversation.otherUserId === "deleted-member" ? "/messages" : `/profile/${selectedConversation.otherUserId}`}>View profile</Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link href="/connections">All connections</Link>
@@ -821,6 +823,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                     <Textarea
                       ref={textareaRef}
                       data-testid="message-composer"
+                      disabled={selectedConversation.otherUserId === "deleted-member"}
                       value={draft}
                       onChange={(e) => setDraft(e.target.value)}
                       onKeyDown={onComposerKeyDown}
@@ -839,7 +842,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
                       draft.trim() && "bg-primary hover:bg-primary/90"
                     )}
                     onClick={() => void handleSend()}
-                    disabled={!draft.trim() || isSending}
+                    disabled={selectedConversation.otherUserId === "deleted-member" || !draft.trim() || isSending}
                     data-testid="message-send"
                     aria-label="Send message"
                   >
