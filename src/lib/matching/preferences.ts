@@ -1,3 +1,4 @@
+import { readProfileGender } from "../profile-gender";
 import type { Profile } from "@/lib/supabase/types";
 
 export type PartnerPreferences = {
@@ -38,7 +39,7 @@ export function filtersFromPreferences(prefs: PartnerPreferences): DiscoveryFilt
 function candidateDetails(profile: Profile) {
   const extra = record(profile.extra); const match = record(extra.matchDetails); const relationship = record(profile.relationshipIntentions); const lifestyle = record(profile.valuesLifestyle); const family = record(profile.culturalFamily); const settlement = record(profile.settlement); const draft = record(profile.onboardingDraft);
   return {
-    gender: String(match.gender || extra.gender || draft.gender || ""), maritalStatus: String(match.maritalStatus || extra.maritalStatus || relationship.maritalStatus || draft.maritalStatus || ""),
+    gender: readProfileGender(profile), maritalStatus: String(match.maritalStatus || extra.maritalStatus || relationship.maritalStatus || draft.maritalStatus || ""),
     country: String(match.country || profile.country || ""), languages: strings(match.languages).length ? strings(match.languages) : (profile.languages?.length ? profile.languages : strings(profile.language)),
     education: profile.educationLevel || String(match.education || extra.education || ""), height: number(profile.height || match.height),
     wantsChildren: String(match.wantsChildren || relationship.wantsChildren || relationship.children || extra.wantsChildren || ""), relocation: String(match.relocation || settlement.relocation || settlement.relocationOpenness || extra.relocation || ""),
