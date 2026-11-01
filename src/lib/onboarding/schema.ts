@@ -10,9 +10,7 @@ export const LANGUAGE_OPTIONS = [
   { id: "other", label: "Other" },
 ] as const;
 
-export const COUNTRY_OPTIONS = [
-  "Sri Lanka", "India", "United Kingdom", "United States", "Canada", "Australia", "United Arab Emirates", "Other",
-] as const;
+export { WORLD_COUNTRY_NAMES as COUNTRY_OPTIONS } from "@/data/world-countries";
 
 const optionalText = z.string().max(500).optional().or(z.literal(""));
 const optionalLongText = z.string().max(2000).optional().or(z.literal(""));

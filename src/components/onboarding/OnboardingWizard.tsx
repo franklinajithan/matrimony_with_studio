@@ -491,6 +491,7 @@ export function OnboardingWizard() {
                   onChange={(e) => updateDraft({ country: e.target.value, currentCountry: e.target.value || draft.currentCountry })}
                 >
                   <option value="">{t.selectCountry}</option>
+                  {draft.country && !COUNTRY_OPTIONS.includes(draft.country) && <option value={draft.country}>{draft.country} (saved selection)</option>}
                   {COUNTRY_OPTIONS.map((country) => (
                     <option key={country} value={country}>{country}</option>
                   ))}
