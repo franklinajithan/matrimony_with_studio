@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Bookmark, Briefcase, Heart, Loader2, MapPin, RotateCcw, Search, SlidersHorizontal, Sparkles, X, LayoutGrid, List, BadgeCheck } from "lucide-react";
+import { defaultDiscoveryGender } from "@/lib/profile-gender";
+import { createMemberActionRunner } from "@/lib/matching/member-actions";
 import { supabase } from "@/lib/supabase/client";
 import { getProfile, listProfiles } from "@/lib/supabase/profiles";
 import type { Profile } from "@/lib/supabase/types";
@@ -65,6 +67,8 @@ export function PreferenceDiscovery() {
   const [sent, setSent] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<Record<string, boolean>>({});
 
+  const actionRunner = useRef(createMemberActionRunner());
+
   const load = useCallback(async () => {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
@@ -81,16 +85,7 @@ export function PreferenceDiscovery() {
       if (!self) throw new Error("Complete your profile before finding matches.");
       const saved = partnerPreferencesFromProfile(self);
       // Gender is a matching eligibility filter rather than just a score.
-      const extra = (self.extra || {}) as Record<string, any>;
-      const details = (extra.matchDetails || {}) as Record<string, any>;
-      const draft = (self.onboardingDraft || {}) as Record<string, any>;
-      const ownGender = String(details.gender || extra.gender || draft.gender || "").toLowerCase();
-      const chosen = String(saved.gender || "").trim();
-      const mandatoryGender = chosen && !["no preference", "any", "all"].includes(chosen.toLowerCase())
-        ? chosen
-        : ["man", "male"].includes(ownGender) ? "Woman"
-        : ["woman", "female"].includes(ownGender) ? "Man"
-        : undefined;
+      const mandatoryGender = defaultDiscoveryGender(self, saved.gender);
       setRequiredGender(mandatoryGender);
       // Saved preferences rank candidates; they must not silently exclude every profile.
       const defaults = empty;
@@ -137,18 +132,31 @@ export function PreferenceDiscovery() {
     window.history.replaceState({}, "", next.size ? `/discover?${next}` : "/discover");
   }, [filters, loading]);
 
-  const toggleShortlist = async (person: Person) => {
-    const { data: { user } } = await supabase.auth.getUser(); if (!user) return;
-    setBusy((v) => ({ ...v, [`s-${person.id}`]: true }));
-    try { if (person.isShortlisted) await removeFromShortlist(user.id, person.id); else await addToShortlist(user.id, person.id); setPeople((all) => all.map((p) => p.id === person.id ? { ...p, isShortlisted: !p.isShortlisted } : p)); }
-    finally { setBusy((v) => ({ ...v, [`s-${person.id}`]: false })); }
-  };
+  const runMemberAction = (key: string, title: string, action: (userId: string) => Promise<void>) =>
+    actionRunner.current(key, {
+      setBusy: (pending) => setBusy((v) => ({ ...v, [key]: pending })),
+      getUserId: async () => {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error || !user) throw new Error("Your session has expired. Please sign in again.");
+        return user.id;
+      },
+      action,
+      onError: () => toast({ title, description: "Please try again. If the problem continues, sign out and sign in again.", variant: "destructive" }),
+    });
+
+  const toggleShortlist = (person: Person) => runMemberAction(`s-${person.id}`, "Could not update shortlist", async (userId) => {
+    if (person.isShortlisted) await removeFromShortlist(userId, person.id);
+    else await addToShortlist(userId, person.id);
+    setPeople((all) => all.map((p) => p.id === person.id ? { ...p, isShortlisted: !person.isShortlisted } : p));
+    toast({ title: person.isShortlisted ? "Removed from shortlist" : "Added to shortlist" });
+  });
   const interest = async (id: string) => {
-    const { data: { user } } = await supabase.auth.getUser(); if (!user || sent.has(id)) return;
-    setBusy((v) => ({ ...v, [`i-${id}`]: true }));
-    try { await sendInterest({ senderUid: user.id, receiverUid: id }); setSent((v) => new Set(v).add(id)); toast({ title: "Interest sent" }); }
-    catch (e) { toast({ title: "Could not send interest", description: e instanceof Error ? e.message : "Try again.", variant: "destructive" }); }
-    finally { setBusy((v) => ({ ...v, [`i-${id}`]: false })); }
+    if (sent.has(id)) return;
+    await runMemberAction(`i-${id}`, "Could not send interest", async (userId) => {
+      await sendInterest({ senderUid: userId, receiverUid: id });
+      setSent((v) => new Set(v).add(id));
+      toast({ title: "Interest sent" });
+    });
   };
 
   const FilterPanel = () => <div className="space-y-5 pb-8">
@@ -228,6 +236,7 @@ export function PreferenceDiscovery() {
               variant="secondary"
               className="absolute right-2 top-2 h-8 w-8 rounded-full bg-white/90 sm:h-9 sm:w-9"
               onClick={() => void toggleShortlist(person)}
+              disabled={busy[`s-${person.id}`]}
               aria-label={person.isShortlisted ? "Remove from shortlist" : "Shortlist"}
             >
               {busy[`s-${person.id}`] ? (

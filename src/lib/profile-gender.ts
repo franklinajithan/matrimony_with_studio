@@ -27,3 +27,11 @@ export function profileGenderPatch(profile: { extra?: unknown; onboardingDraft?:
     onboardingDraft,
   };
 }
+
+/** Saved partner preference wins; otherwise retain the existing binary default. */
+export function defaultDiscoveryGender(profile: { extra?: unknown; onboardingDraft?: unknown }, preference?: string): string | undefined {
+  const chosen = String(preference ?? "").trim();
+  if (chosen && !["no preference", "any", "all"].includes(chosen.toLowerCase())) return chosen;
+  const own = readProfileGender(profile);
+  return own === "male" ? "Woman" : own === "female" ? "Man" : undefined;
+}
