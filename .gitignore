@@ -54,3 +54,5 @@ firestore-debug.log
 /.next-account-qa/
 /artifacts/account-deletion/
 /.next-consolidated-verify/
+
+/.next-safety-verify/

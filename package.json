@@ -21,7 +21,8 @@
     "test:core": "node --test scripts/core-member-regression.test.cjs",
     "test:account": "node --test scripts/member-deletion.test.cjs scripts/account-lifecycle-sql.test.mjs",
     "test:interests": "node --test scripts/interest-persistence.test.cjs",
-    "test:interest-security": "node --test scripts/interest-authorization.test.mjs"
+    "test:interest-security": "node --test scripts/interest-authorization.test.mjs",
+    "test:safety": "node --test scripts/member-safety-sql.test.mjs scripts/member-safety-api.test.cjs scripts/member-safety-client.test.cjs scripts/member-safety-ui.test.cjs"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.28.0",
