@@ -44,7 +44,7 @@ Eight HTTP-boundary regressions execute the actual service and installed Supabas
 - Existing signup, admin/deletion, horoscope/gender, theme and WhatsApp suites: passed.
 - TypeScript: passed.
 - Lint: passed, 13 existing warnings.
-- Production build: passed (107 static pages). Existing Genkit/OpenTelemetry and webpack cache warnings remain. Build skips type/lint checks, so both were run separately.
+- Production build: passed (107 static pages). Existing Genkit/OpenTelemetry and webpack cache warnings remain. TypeScript and lint were run separately.
 
 ## Next priorities and blockers
 1. Combine the complementary #62/#64/#65 fixes without duplicating handlers; signed-in browser, real Google OAuth and email-confirmation delivery are still unverified.
@@ -57,3 +57,19 @@ Eight HTTP-boundary regressions execute the actual service and installed Supabas
 
 ## Change boundaries
 No merges, production deployments, schema migrations, live billing activation, production auth-setting changes or production user mutations were performed. Existing PR branches were left intact.
+
+## Follow-up snapshot after new work appeared
+The final inventory is **19 open PRs**, with main unchanged. The original 15 plus these additions were inspected:
+- [#68](https://github.com/franklinajithan/matrimony_with_studio/pull/68): current-main lifecycle integration of #51. Actions Verify and admin security checks pass. Still overlaps #40; real OAuth/mail/device acceptance remains pending.
+- [#69](https://github.com/franklinajithan/matrimony_with_studio/pull/69): shared country options/aliases from #61 across onboarding/preferences/discovery, preserving manual labels. Verify passes.
+- [#70](https://github.com/franklinajithan/matrimony_with_studio/pull/70): this focused resend-persistence fix. Local checks pass; remote Verify/Vercel were still running at the follow-up snapshot.
+- [#71](https://github.com/franklinajithan/matrimony_with_studio/pull/71): complementary shared-country work including match-detail editor and bounded/searchable preference selection, stacked on #64. Verify was running. Overlaps #69/#54/#61; reconcile rather than merging duplicates.
+
+No additional competing country implementation was created after #69/#71 appeared. Both remain partial progress toward #53: indexed worldwide city/region identifiers, additive backfill and full location/device acceptance are outstanding.
+
+## Read-only live security follow-up
+The matrimony Supabase project is ACTIVE_HEALTHY. Only schema/policy/trigger metadata and security advisors were queried; no member data was queried or mutated.
+
+**High-priority authorization finding:** broad legacy participant UPDATE/INSERT policies coexist with narrower interest policies. The policies are permissive and therefore combine by OR; the restrictive account-live-session policy is present and remains restrictive. The broad policies mean the narrower state-transition rules cannot be treated as the effective security boundary. The inspected match-request triggers check activity and update timestamps, but do not independently establish participant immutability and a complete role-based transition model. This is a schema-review finding, not a claim that an unauthorized production write was attempted. Prepare an isolated SQL acceptance suite for sender/receiver/admin transitions, immutability, self-targeting, session revocation, concurrency and removed-connection resends before proposing a coordinated policy/trigger migration. This PR does not fix that authorization concern.
+
+Advisors still flag the discovery SECURITY DEFINER view, public execution of privileged functions, pg_trgm in public and service-only tables without client policies. Assess each function and view intentionally; do not grant client access to service-only tables or blindly change discovery visibility. References: [view security](https://supabase.com/docs/guides/database/database-linter?lint=0010_security_definer_view), [public function execution](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable), [RLS without policies](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy). The privacy proposal in #67 and authorization review remain release gates.
