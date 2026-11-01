@@ -87,7 +87,7 @@ export async function sendInterest(params: {
       // members to start a fresh mutual-consent cycle instead of getting stuck.
     }
     // Allow re-send after decline/withdraw or a removed accepted connection by resetting to pending.
-    const { error: updateError } = await supabase
+    const { data: updated, error: updateError } = await supabase
       .from("match_requests")
       .update({
         status: "pending",
@@ -95,8 +95,16 @@ export async function sendInterest(params: {
         withdrawn_at: null,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", id);
+      .eq("id", id)
+      // Do not reset a request changed in another tab/session after our read.
+      .eq("status", existing.status)
+      .select("id")
+      .maybeSingle();
     if (updateError) throw updateError;
+    // RLS or a concurrent change can affect zero rows without a database error.
+    if (!updated) {
+      throw new Error("This interest could not be resent. Refresh the page and try again.");
+    }
     return { id };
   }
 
