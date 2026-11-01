@@ -1,2 +1,3 @@
-// Make Next.js static image types available before the first build.
-import "next/image-types/global";
+// Keep static image imports typed on clean CI checkouts before next build
+// generates the ignored next-env.d.ts file.
+/// <reference types="next/image-types/global" />
