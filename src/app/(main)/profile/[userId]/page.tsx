@@ -40,13 +40,12 @@ import { getProfile } from "@/lib/supabase/profiles";
 import { supabase } from "@/lib/supabase/client";
 import { likeProfile, unlikeProfile, subscribeToLike } from "@/lib/supabase/likes";
 import {
-  createMatchRequest,
-  deleteMatchRequest,
-  getMatchRequest,
-  subscribeToMatchRequest,
-  updateMatchRequestStatus,
+  sendInterest,
+  withdrawInterest,
+  declineInterest,
+  acceptInterest,
+  subscribeToPairMatchRequest,
 } from "@/lib/supabase/matches";
-import { createChatDocument } from "@/lib/supabase/chats";
 import { intelligentMatchSuggestions, type IntelligentMatchSuggestionsInput, type IntelligentMatchSuggestionsOutput } from "@/ai/flows/intelligent-match-suggestions";
 import type { UserProfileSchema as AIUserProfileSchema, PotentialMatchProfileSchema as AIPotentialMatchProfileSchema } from "@/ai/flows/intelligent-match-suggestions";
 import { Progress } from "@/components/ui/progress";
@@ -301,9 +300,8 @@ export default function ProfilePage() {
       return;
     }
 
-    const reqId = getCompositeId(currentFirebaseUser.uid, viewedUserId);
-    setMatchRequestId(reqId);
-    const unsubscribe = subscribeToMatchRequest(reqId, (data) => {
+    const unsubscribe = subscribeToPairMatchRequest(currentFirebaseUser.uid, viewedUserId, (data) => {
+      setMatchRequestId(data?.id || null);
       if (data) {
         if (data.status === "accepted") {
           setRequestStatus("accepted");
@@ -436,14 +434,14 @@ export default function ProfilePage() {
   };
 
   const handleSendRequest = async () => {
-    if (!currentFirebaseUser || !viewedUserProfile || isProcessingRequest || !matchRequestId) return;
+    if (!currentFirebaseUser || !viewedUserProfile || isProcessingRequest) return;
     setIsProcessingRequest(true);
     try {
-      await createMatchRequest({
-        id: matchRequestId,
+      const request = await sendInterest({
         senderUid: currentFirebaseUser.uid,
         receiverUid: viewedUserProfile.userId,
       });
+      setMatchRequestId(request.id);
       setRequestStatus("pending_sent");
       toast({ title: "Request Sent", description: `Match request sent to ${viewedUserProfile.name}.` });
     } catch (e: any) {
@@ -457,7 +455,7 @@ export default function ProfilePage() {
     if (!matchRequestId || isProcessingRequest) return;
     setIsProcessingRequest(true);
     try {
-      await deleteMatchRequest(matchRequestId);
+      await withdrawInterest(matchRequestId);
       setRequestStatus("none");
       toast({ title: "Request Cancelled", description: "Your match request has been cancelled." });
     } catch (e: any) {
@@ -471,8 +469,7 @@ export default function ProfilePage() {
     if (!currentFirebaseUser || !viewedUserProfile || !matchRequestId || isProcessingRequest) return;
     setIsProcessingRequest(true);
     try {
-      await updateMatchRequestStatus(matchRequestId, "accepted");
-      await createChatDocument(currentFirebaseUser.uid, viewedUserProfile.userId);
+      await acceptInterest(matchRequestId);
       setRequestStatus("accepted");
       refreshBadges();
       toast({ title: "Request Accepted!", description: `You are now matched with ${viewedUserProfile.name}.` });
@@ -487,13 +484,8 @@ export default function ProfilePage() {
     if (!currentFirebaseUser || !matchRequestId || isProcessingRequest) return;
     setIsProcessingRequest(true);
     try {
-      const requestData = await getMatchRequest(matchRequestId);
-      if (!requestData) {
-        throw new Error("Request document not found.");
-      }
-      const declineStatus = currentFirebaseUser.uid === requestData.senderUid ? "declined_by_sender" : "declined_by_receiver";
-
-      await updateMatchRequestStatus(matchRequestId, declineStatus);
+      if (requestStatus === "pending_sent") await withdrawInterest(matchRequestId);
+      else await declineInterest(matchRequestId);
       setRequestStatus("none");
       refreshBadges();
       toast({ title: "Request Declined" });

@@ -1,0 +1,94 @@
+import { PGlite } from '@electric-sql/pglite';
+import { readFile } from 'node:fs/promises';
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+const db = new PGlite();
+const a='10000000-0000-4000-8000-000000000001',b='10000000-0000-4000-8000-000000000002',session='20000000-0000-4000-8000-000000000001';
+await db.exec(`
+create role anon;create role authenticated;create role service_role bypassrls;
+create schema auth;create schema storage;
+create table auth.users(id uuid primary key,email text unique);
+create table auth.identities(id uuid primary key default gen_random_uuid(),user_id uuid references auth.users on delete cascade,provider text);
+
+create table auth.sessions(id uuid primary key,user_id uuid references auth.users on delete cascade);
+create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+create function auth.jwt() returns jsonb language sql stable as $$select jsonb_build_object('session_id',nullif(current_setting('request.session',true),''))$$;
+create table public.profiles(id uuid primary key references auth.users on delete cascade,is_admin boolean default false,suspended_at timestamptz,is_published boolean default true,comment_notifications jsonb default '{}');
+alter table profiles enable row level security;
+create policy owner on profiles for all to authenticated using(id=auth.uid()) with check(id=auth.uid());
+create view public.discovery_profiles as select id from profiles where is_published;
+create function public.member_is_active(uuid) returns boolean language sql as $$select true$$;
+create function public.reject_suspended_social_writes() returns trigger language plpgsql as $$begin return new;end$$;
+create table chats(id text primary key,participant_1 uuid not null references profiles on delete cascade,participant_2 uuid not null references profiles on delete cascade,participant_details jsonb,unread_by jsonb,last_message_text text,last_message_sender_id uuid);
+create table messages(id uuid primary key default gen_random_uuid(),chat_id text references chats on delete cascade,sender_id uuid references profiles on delete cascade,text text);
+create table posts(id uuid primary key default gen_random_uuid(),user_id uuid references profiles on delete cascade,liked_by uuid[] default '{}',likes_count integer,comment_list jsonb,comments_count integer,comment_notifications jsonb);
+create table profile_share_links(owner_id uuid,profile_id uuid);
+create table biodata_share_links(owner_id uuid);
+create table success_stories(submitted_by_uid uuid,photo_storage_path text);
+create table member_admin_notes(member_id uuid,author_id uuid);
+create table promo_redemptions(user_id uuid references auth.users);
+create table promo_codes(created_by uuid not null references auth.users);
+create table verification_requests(reviewer_id uuid,reviewer_note text);
+create table admin_audit_log(actor_id uuid,metadata jsonb,target_id text);
+create table user_subscriptions(user_id uuid,provider_subscription_id text,status text);
+create table storage.objects(bucket_id text,name text,owner_id text);
+alter table storage.objects enable row level security;
+grant usage on schema public,auth,storage to authenticated,service_role;
+grant select,insert,update on public.profiles to authenticated;
+grant select on public.discovery_profiles to authenticated;
+grant all on all tables in schema public,storage to service_role;
+grant select,delete on auth.users to service_role;
+grant select on auth.sessions to service_role;
+insert into auth.users(id,email) values('${a}','disposable@example.com'),('${b}','peer@example.com');
+insert into auth.identities(user_id,provider) values('${a}','email'),('${a}','google');insert into profiles(id) values('${a}'),('${b}');
+insert into auth.sessions values('${session}','${a}');
+`);
+await db.exec(await readFile('supabase/migrations/20261022154857_account_lifecycle.sql','utf8'));
+await db.exec(`grant all on all tables in schema public to service_role;`);
+const actor = async (id=a) => db.exec(`reset role;select set_config('request.jwt.claim.sub','${id}',false);select set_config('request.session','${session}',false);set role authenticated;`);
+const service = async () => db.exec('reset role;set role service_role;');
+test('live session required; refresh or missing session does not bypass RLS',async()=>{
+ await actor();assert.equal((await db.query('select * from profiles')).rows.length,1);
+ await db.exec(`select set_config('request.session','',false)`);assert.equal((await db.query('select * from profiles')).rows.length,0);
+ await actor();await assert.rejects(db.exec(`update profiles set deletion_requested_at=now()`),/Server-managed/);
+ await assert.rejects(db.exec(`select account_begin_deletion('${a}','${a}')`),/permission denied/);
+ await service();
+});
+test('deactivation retains data, prevents discovery, reactivation stays unpublished',async()=>{
+ await service();await db.exec(`select account_set_deactivated('${a}',true)`);
+ assert.equal((await db.query(`select member_is_active('${a}') as active`)).rows[0].active,false);
+ assert.equal((await db.query(`select count(*)::int as n from profiles`)).rows[0].n,2);
+ await db.exec(`select account_set_deactivated('${a}',false)`);
+ assert.equal((await db.query(`select is_published from profiles where id='${a}'`)).rows[0].is_published,false);
+});
+test('deletion revokes sessions, preserves peers, erases embedded personal data',async()=>{
+ await service();await db.exec(`
+ insert into chats values('chat','${a}','${b}','{"${a}":{"displayName":"Erased Name"},"${b}":{"displayName":"Keep"}}','{"${a}":1,"${b}":0}','private preview','${a}');
+ insert into messages(chat_id,sender_id,text) values('chat','${a}','remove'),('chat','${b}','keep');
+ insert into posts(user_id,liked_by,likes_count,comment_list,comments_count,comment_notifications) values('${b}',array['${a}'::uuid],1,'[{"userId":"${a}","content":"erase"},{"userId":"${b}","content":"keep"}]',2,'{}');
+ insert into promo_redemptions values('${a}');insert into promo_codes values('${a}');
+ insert into storage.objects values('media','users/${a}/photo.jpg',null),('media','legacy-name.jpg','${a}'),('media','users/${b}/keep.jpg','${b}');
+ select account_begin_deletion('${a}','${a}');
+ update account_deletions set state='processing' where user_id='${a}';
+ `);
+ assert.equal((await db.query(`select count(*)::int n from account_storage_objects('${a}')`)).rows[0].n,2);
+ assert.equal((await db.query(`select count(*)::int n from auth.sessions where user_id='${a}'`)).rows[0].n,0);
+ await db.exec(`select account_erase_residuals('${a}');delete from auth.users where id='${a}';`);
+ const chat=(await db.query('select * from chats')).rows[0];assert.equal(chat.participant_1,null);assert.equal(chat.participant_2,b);assert.equal(chat.participant_details[a],undefined);assert.equal(chat.last_message_text,'Member deleted');
+ assert.deepEqual((await db.query('select text from messages')).rows,[{text:'keep'}]);
+ const post=(await db.query('select * from posts')).rows[0];assert.deepEqual(post.liked_by,[]);assert.equal(post.comments_count,1);assert.equal(post.comment_list[0].content,'keep');
+ await actor();assert.equal((await db.query('select * from profiles')).rows.length,0);
+ await service();assert.equal((await db.query(`select count(*)::int n from profiles where id='${b}'`)).rows[0].n,1);
+});
+test('empty shared conversation is removed after both members are erased',async()=>{
+ await db.exec('reset role');
+ await db.exec(`delete from auth.users where id='${b}'`);
+ assert.equal((await db.query(`select count(*)::int n from chats`)).rows[0].n,0);
+});
+test('linked identities cascade and same email can register a new identity',async()=>{
+ await db.exec('reset role');
+ assert.equal((await db.query(`select count(*)::int n from auth.identities where user_id='${a}'`)).rows[0].n,0);
+ await db.exec(`insert into auth.users(id,email) values(gen_random_uuid(),'disposable@example.com')`);
+ assert.equal((await db.query(`select count(*)::int n from auth.users where email='disposable@example.com'`)).rows[0].n,1);
+});
+test.after(async()=>{await db.close()});

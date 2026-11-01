@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { WORLD_COUNTRY_NAMES } from "@/data/world-countries";
 
 export const ONBOARDING_STEP_COUNT = 8;
 
@@ -10,9 +11,7 @@ export const LANGUAGE_OPTIONS = [
   { id: "other", label: "Other" },
 ] as const;
 
-export const COUNTRY_OPTIONS = [
-  "Sri Lanka", "India", "United Kingdom", "United States", "Canada", "Australia", "United Arab Emirates", "Other",
-] as const;
+export const COUNTRY_OPTIONS = WORLD_COUNTRY_NAMES;
 
 const optionalText = z.string().max(500).optional().or(z.literal(""));
 const optionalLongText = z.string().max(2000).optional().or(z.literal(""));

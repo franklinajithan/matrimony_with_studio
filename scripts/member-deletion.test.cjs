@@ -3,81 +3,81 @@ const assert = require('node:assert/strict');
 const ts = require('typescript');
 const fs = require('node:fs');
 const vm = require('node:vm');
-const memberId = '10000000-0000-4000-8000-000000000001';
-const adminId = '20000000-0000-4000-8000-000000000002';
-function setup(options = {}) {
-  const calls = [];
-  const ok = { data: [], error: null };
-  const db = {
-    from(table) {
-      const q = {
-        select() { return q; },
-        delete() { calls.push(`erase:${table}`); return q; },
-        update() { calls.push(`anonymize:${table}`); return q; },
-        eq() { return q; },
-        single: async () => ({ data: { id: memberId, is_admin: !!options.targetAdmin }, error: null }),
-        then(resolve) { return Promise.resolve(table.includes('subscriptions') && options.paid ? { data: [{ stripe_subscription_id: 'sub_1', status: 'active' }], error: null } : ok).then(resolve); },
-      }; return q;
-    },
-    auth: { admin: {
-      getUserById: async () => ({ data: { user: { email: 'member@example.com' } }, error: null }),
-      updateUserById: async () => { calls.push('ban'); return ok; },
-      deleteUser: async (id, soft) => { calls.push(['deleteAuth', id, soft]); return { error: options.authFail ? new Error('fail') : null }; },
-    } },
-    storage: {
-      listBuckets: async () => ({ data: [{ id: 'media' }, { id: 'horoscope-private' }], error: null }),
-      from(bucket) { return {
-        list: async (folder, { offset }) => {
-          calls.push(['list', bucket, folder, offset]);
-          if (options.storageFail) return { error: new Error('fail') };
-          if (bucket !== 'media') return ok;
-          if (folder === `users/${memberId}`) return { data: [{ name: 'photos', id: null }], error: null };
-          return { data: Array.from({ length: offset ? 1 : 100 }, (_, i) => ({ id: String(offset + i), name: String(offset + i) })), error: null };
-        },
-        remove: async paths => { calls.push(['remove', bucket, paths]); return ok; },
-      }; },
-    },
-  };
-  const mod = { exports: {} };
-  const source = ts.transpileModule(fs.readFileSync('src/app/api/admin/delete-member/route.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
-  vm.runInThisContext(`(function(require,module,exports){${source}\n})`)(name => {
-    if (name === 'next/server') return { NextResponse: { json: (body, init) => ({ body, status: init.status }) } };
-    if (name === '@/lib/auth/admin') return { requireServerAdmin: async () => options.denied ? null : { id: adminId } };
-    if (name === '@/lib/supabase/admin') return { createSupabaseAdminClient: () => { if (options.configMissing) throw new Error('Permanent deletion is not configured'); return db; } };
-    throw new Error(name);
-  }, mod, mod.exports);
-  const request = new Request('https://cupidmatch.co.uk/api/admin/delete-member', { method: 'POST', headers: { origin: options.origin || 'https://cupidmatch.co.uk', 'content-type': 'application/json' }, body: JSON.stringify(options.body || { memberId, email: 'member@example.com' }) });
-  return { calls, run: () => mod.exports.POST(request) };
+function load(file, mocks={}) {
+ const mod={exports:{}};
+ const source=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+ vm.runInThisContext(`(function(require,module,exports){${source}\n})`)(n=>{if(n==='server-only')return {};if(n in mocks)return mocks[n];throw Error(n)},mod,mod.exports);
+ return mod.exports;
 }
-for (const [name, options, status] of [
-  ['denies non-admins', { denied: true }, 403],
-  ['denies cross-origin', { origin: 'https://evil.example' }, 403],
-  ['rejects malformed target', { body: { memberId: 'bad', email: 'x' } }, 400],
-  ['rejects self deletion', { body: { memberId: adminId, email: 'x' } }, 403],
-  ['protects administrator targets', { targetAdmin: true }, 403],
-  ['checks Auth email', { body: { memberId, email: 'wrong@example.com' } }, 400],
-  ['blocks ongoing paid billing', { paid: true }, 409],
-]) test(name, async () => { const s = setup(options); assert.equal((await s.run()).status, status); assert.equal(s.calls.length, 0); });
-test('hard deletes only after paginated nested storage and residual data cleanup', async () => {
-  const s = setup(); assert.equal((await s.run()).status, 200);
-  const removals = s.calls.filter(c => c[0] === 'remove');
-  assert.equal(removals.length, 2); assert.equal(removals.flatMap(c => c[2]).length, 101);
-  assert.ok(removals.every(c => c[2].every(p => p.startsWith(`users/${memberId}/photos/`))));
-  assert.deepEqual(s.calls.at(-1), ['deleteAuth', memberId, false]);
-  assert.ok(s.calls.includes('erase:subscription_events')); assert.ok(s.calls.includes('erase:success_stories'));
-  assert.ok(s.calls.includes('anonymize:admin_audit_log'));
+const {hasRecentAuthentication}=load('src/lib/account/recent-auth.ts');
+test('recent authentication uses AMR, rejects refresh iat, missing, future and stale proof',()=>{
+ const now=Date.now(),timestamp=Math.floor(now/1000);
+ for(const method of ['password','otp','oauth'])assert.equal(hasRecentAuthentication({amr:[{method,timestamp}]},now),true);
+ for(const claims of [{},{iat:timestamp},{amr:[{method:'password',timestamp:timestamp-301}]},{amr:[{method:'password',timestamp:timestamp+120}]},{amr:[{method:'anonymous',timestamp}]}])assert.equal(hasRecentAuthentication(claims,now),false);
 });
-test('storage failure prevents Auth deletion and reports failure', async () => {
-  const s = setup({ storageFail: true }); assert.equal((await s.run()).status, 503);
-  assert.ok(!s.calls.some(c => c[0] === 'deleteAuth'));
+const {deleteAccount}=load('src/lib/account/deletion.ts');
+function setup(options={}) {
+ const calls=[];let state=options.completed?'completed':options.prior?'failed':null,exists=!options.absent,objects=Array.from({length:205},(_,i)=>({bucket_id:i%2?'media':'horoscope-private',name:`owned/${i}`}));
+ const ok={error:null,data:null};
+ const db={
+  from(table){let operation='select',patch;const q={
+   select(){return q},eq(){return q},or(){return q},
+   update(p){operation='update';patch=p;return q},
+   async maybeSingle(){if(operation==='update'){calls.push('claim');if(options.claimed)return {data:null,error:null};state=patch.state;return {data:{user_id:'member',attempts:0},error:null}}return {data:state?{state}:null,error:null}},
+   async single(){return {data:{is_admin:!!options.admin},error:null}},
+   then(resolve){calls.push(`ledger:${patch.state}`);if(!options.ledgerFail)state=patch.state;return Promise.resolve({error:options.ledgerFail&&patch.state==='completed'?Error():null}).then(resolve)}
+  };return q},
+  async rpc(name){calls.push(name);if(name==='account_billing_active')return {data:!!options.paid,error:options.billingFail?Error():null};if(name==='account_begin_deletion'){state='pending';return ok}if(name==='account_storage_objects')return {data:objects.slice(0,100),error:options.storageFail?Error():null};if(name==='account_erase_residuals')return {error:options.residualFail?Error():null};throw Error(name)},
+  auth:{admin:{
+   async getUserById(){return {data:{user:exists?{id:'member',email:'test@example.com',identities:options.identities||[{provider:'email'}]}:null},error:exists?null:{status:404}}},
+   async updateUserById(){calls.push('ban');return {error:options.banFail?Error():null}},
+   async deleteUser(id,soft){calls.push(['deleteAuth',id,soft]);if(options.authFail)return {error:Error()};exists=false;return ok}
+  }},
+  storage:{from(bucket){return {async remove(paths){calls.push(['files',bucket,paths.length]);objects=objects.filter(o=>o.bucket_id!==bucket||!paths.includes(o.name));return ok}}}}
+ };
+ return {db,calls,run:()=>deleteAccount(db,'member','actor','test@example.com'),state:()=>state};
+}
+for(const [label,identities] of [['email',[{provider:'email'}]],['Google',[{provider:'google'}]],['linked',[{provider:'email'},{provider:'google'}]]])test(`${label}: batches files before hard Auth deletion, handles repeated request`,async()=>{
+ const s=setup({identities});await s.run();assert.equal(s.calls.filter(c=>c[0]==='files').reduce((sum,c)=>sum+c[2],0),205);assert.deepEqual(s.calls.find(c=>c[0]==='deleteAuth'),['deleteAuth','member',false]);assert.ok(s.calls.indexOf('account_erase_residuals')<s.calls.findIndex(c=>c[0]==='deleteAuth'));const count=s.calls.length;await s.run();assert.equal(s.calls.length,count);
 });
-test('Auth failure never returns success', async () => {
-  const s = setup({ authFail: true }); assert.equal((await s.run()).status, 503);
+for(const option of ['storageFail','authFail','residualFail','banFail'])test(`${option} records recoverable failure and never reports success`,async()=>{const s=setup({[option]:true});await assert.rejects(s.run(),/pending recovery/);assert.equal(s.state(),'failed');if(option!=='authFail')assert.ok(!s.calls.some(c=>c[0]==='deleteAuth'))});
+test('protect admin accounts and paid subscriptions before requesting deletion',async()=>{for(const o of [{admin:true},{paid:true},{billingFail:true}]){const s=setup(o);await assert.rejects(s.run());assert.ok(!s.calls.includes('account_begin_deletion'))}});
+test('concurrent processing does not run destructive steps twice',async()=>{const s=setup({claimed:true});await assert.rejects(s.run(),/already in progress/);assert.ok(!s.calls.includes('ban'))});
+test('lost completion after Auth deletion can recover without the Auth identity',async()=>{const s=setup({prior:true,absent:true});await s.run();assert.equal(s.state(),'completed');assert.ok(!s.calls.includes('ban'))});
+test('confirmation email cannot target a different member',async()=>{const s=setup();await assert.rejects(deleteAccount(s.db,'member','admin','wrong@example.com'),/does not match/);assert.ok(!s.calls.includes('account_begin_deletion'))});
+test('same-origin and strict admin checks precede service-role deletion',async()=>{
+ const deletion=load('src/lib/account/deletion.ts');let called=false;
+ const api=load('src/app/api/admin/delete-member/route.ts',{
+  'next/server':{NextResponse:{json:(body,init)=>({body,status:init.status})}},
+  '@/lib/auth/admin':{requireServerAdmin:async()=>({id:'admin'})},
+  '@/lib/account/server':{recentAccountUser:async()=>null},
+  '@/lib/account/deletion':deletion,
+  '@/lib/account/edge':{invokeAccountOperation:()=>{called=true}}
+ });
+ assert.equal((await api.POST(new Request('https://cupidmatch.co.uk/api/admin/delete-member',{method:'POST',headers:{origin:'https://evil.example'}}))).status,403);
+ assert.equal((await api.POST(new Request('https://cupidmatch.co.uk/api/admin/delete-member',{method:'POST',headers:{origin:'https://cupidmatch.co.uk'}}))).status,401);assert.equal(called,false);
 });
-test('missing configuration gives an actionable error without claiming partial deletion', async () => {
-  const s = setup({ configMissing: true }); const response = await s.run();
-  assert.equal(response.status, 503);
-  assert.match(response.body.error, /SUPABASE_SERVICE_ROLE_KEY/);
-  assert.match(response.body.error, /No account data was changed/);
-  assert.equal(s.calls.length, 0);
+test('Edge deployment copies match the tested server modules',()=>{
+ for(const file of ['deletion','recent-auth'])assert.equal(fs.readFileSync(`supabase/functions/account-lifecycle/${file}.ts`,'utf8'),fs.readFileSync(`src/lib/account/${file}.ts`,'utf8'));
+});
+function edge(options={}) {
+ let handler;const deleted=[];const now=Math.floor(Date.now()/1000),id='10000000-0000-4000-8000-000000000001';
+ const token='header.'+Buffer.from(JSON.stringify({amr:[{method:'password',timestamp:options.stale?now-600:now}]})).toString('base64url')+'.signature';
+ const admin={auth:{getUser:async()=>({data:{user:options.anonymous?null:{id}},error:null})}};
+ const member={rpc:async name=>({data:name==='is_admin'?!!options.admin:!options.revoked,error:null})};
+ const mocks={
+  '@supabase/supabase-js':{createClient:(_url,key)=>key==='service'?admin:member},
+  './deletion.ts':{deleteAccount:async(...args)=>deleted.push(args),DeletionError:load('src/lib/account/deletion.ts').DeletionError},
+  './recent-auth.ts':{hasRecentAuthentication},
+ };
+ const mod={exports:{}};const source=ts.transpileModule(fs.readFileSync('supabase/functions/account-lifecycle/index.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+ vm.runInNewContext(source,{require:n=>mocks[n],module:mod,exports:mod.exports,Deno:{env:{get:key=>key==='SUPABASE_SERVICE_ROLE_KEY'?'service':'anon'},serve:fn=>{handler=fn}},Request,Response,TextDecoder,TextEncoder,Uint8Array,atob,crypto:require('node:crypto').webcrypto,console});
+ return {id,deleted,run:body=>handler(new Request('https://project.supabase.co/functions/v1/account-lifecycle',{method:'POST',headers:{authorization:`Bearer ${token}`,'content-type':'application/json'},body:JSON.stringify(body)}))};
+}
+for(const options of [{anonymous:true},{stale:true},{revoked:true}])test(`Edge denies invalid caller ${JSON.stringify(options)}`,async()=>{const s=edge(options);assert.equal((await s.run({action:'delete',confirmation:'DELETE'})).status,401);assert.equal(s.deleted.length,0)});
+test('Edge refuses admin deletion by ordinary members and wrong confirmation',async()=>{
+ const s=edge();assert.equal((await s.run({action:'admin-delete',confirmation:'DELETE'})).status,403);assert.equal((await s.run({action:'delete',confirmation:'yes'})).status,400);assert.equal(s.deleted.length,0);
+});
+test('Edge self deletion derives target from verified identity, ignores supplied IDs',async()=>{
+ const s=edge();assert.equal((await s.run({action:'delete',confirmation:'DELETE',memberId:'victim'})).status,200);assert.equal(s.deleted[0][1],s.id);assert.equal(s.deleted[0][2],s.id);
 });

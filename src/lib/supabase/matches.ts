@@ -87,7 +87,7 @@ export async function sendInterest(params: {
       // members to start a fresh mutual-consent cycle instead of getting stuck.
     }
     // Allow re-send after decline/withdraw or a removed accepted connection by resetting to pending.
-    const { error: updateError } = await supabase
+    const { data: updated, error: updateError } = await supabase
       .from("match_requests")
       .update({
         status: "pending",
@@ -95,8 +95,16 @@ export async function sendInterest(params: {
         withdrawn_at: null,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", id);
+      .eq("id", id)
+      // Do not reset a request changed in another tab/session after our read.
+      .eq("status", existing.status)
+      .select("id")
+      .maybeSingle();
     if (updateError) throw updateError;
+    // RLS or a concurrent change can affect zero rows without a database error.
+    if (!updated) {
+      throw new Error("This interest could not be resent. Refresh the page and try again.");
+    }
     return { id };
   }
 
@@ -112,14 +120,18 @@ export async function sendInterest(params: {
 }
 
 export async function withdrawInterest(requestId: string): Promise<void> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("match_requests")
     .update({
       status: "withdrawn",
       withdrawn_at: new Date().toISOString(),
     })
-    .eq("id", requestId);
+    .eq("id", requestId)
+    .eq("status", "pending")
+    .select("id")
+    .maybeSingle();
   if (error) throw error;
+  if (!data) throw new Error("That pending interest is no longer available. Refresh and try again.");
 }
 
 export async function acceptInterest(requestId: string): Promise<void> {
@@ -134,11 +146,15 @@ export async function acceptInterest(requestId: string): Promise<void> {
 }
 
 export async function declineInterest(requestId: string): Promise<void> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("match_requests")
     .update({ status: "declined" })
-    .eq("id", requestId);
+    .eq("id", requestId)
+    .eq("status", "pending")
+    .select("id")
+    .maybeSingle();
   if (error) throw error;
+  if (!data) throw new Error("That pending interest is no longer available. Refresh and try again.");
 }
 
 export async function listSentRequests(senderId: string): Promise<MatchRequestRow[]> {
@@ -324,4 +340,50 @@ export function subscribeToPendingRequests(
   return () => {
     void supabase.removeChannel(channel);
   };
+}
+
+/** Read both directional and older sorted IDs without rewriting existing rows. */
+export async function getPairMatchRequest(viewerId: string, otherId: string): Promise<MatchRequestRow | null> {
+  const { data, error } = await supabase.from("match_requests").select("*")
+    .in("sender_id", [viewerId, otherId]).in("receiver_id", [viewerId, otherId])
+    .order("updated_at", { ascending: false });
+  if (error) throw error;
+  const rows = (data || []) as Row[];
+  const accepted = rows.filter((row) => row.status === "accepted");
+  if (accepted.length) {
+    const { data: connection, error: connectionError } = await supabase.from("connections")
+      .select("created_from_request_id").eq("member_a_id", viewerId < otherId ? viewerId : otherId)
+      .eq("member_b_id", viewerId < otherId ? otherId : viewerId).maybeSingle();
+    if (connectionError) throw connectionError;
+    if (connection) return mapRequest(accepted.find((row) => row.id === connection.created_from_request_id) || accepted[0]);
+  }
+  // Incoming consent takes precedence when both members sent an interest.
+  return mapRequest(rows.find((row) => row.status === "pending" && row.receiver_id === viewerId)
+    || rows.find((row) => row.status === "pending") || null);
+}
+
+export function subscribeToPairMatchRequest(
+  viewerId: string, otherId: string,
+  onChange: (request: MatchRequestRow | null) => void,
+  onError?: (error: Error) => void,
+): () => void {
+  let active = true;
+  let revision = 0;
+  const load = async () => {
+    const current = ++revision;
+    try {
+      const request = await getPairMatchRequest(viewerId, otherId);
+      if (active && current === revision) onChange(request);
+    } catch (error) { if (active && current === revision) onError?.(error as Error); }
+  };
+  void load();
+  const channel = supabase.channel(`pair-requests:${viewerId}:${otherId}`);
+  for (const sender of [viewerId, otherId]) {
+    channel.on("postgres_changes", { event: "*", schema: "public", table: "match_requests", filter: `sender_id=eq.${sender}` }, () => { void load(); });
+  }
+  for (const column of ["member_a_id", "member_b_id"]) {
+    channel.on("postgres_changes", { event: "*", schema: "public", table: "connections", filter: `${column}=eq.${viewerId}` }, () => { void load(); });
+  }
+  channel.subscribe();
+  return () => { active = false; revision++; void supabase.removeChannel(channel); };
 }

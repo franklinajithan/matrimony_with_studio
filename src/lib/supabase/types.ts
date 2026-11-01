@@ -67,7 +67,7 @@ export type MatchRequestRow = {
   id: string;
   senderUid: string;
   receiverUid: string;
-  status: "pending" | "accepted" | "declined_by_sender" | "declined_by_receiver";
+  status: "pending" | "accepted" | "declined" | "withdrawn" | "declined_by_sender" | "declined_by_receiver";
   createdAt: Timestamp | null;
   updatedAt: Timestamp | null;
 };

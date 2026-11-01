@@ -50,3 +50,7 @@ supabase/.temp/
 # firebase
 firebase-debug.log
 firestore-debug.log
+# Disposable account verification runtime
+/.next-account-qa/
+/artifacts/account-deletion/
+/.next-consolidated-verify/
