@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { User, Image as ImageIcon, Info, Loader2, MapPin, Briefcase, Cake } from 'lucide-react';
 import { useState, useEffect } from "react";
-import { auth, updateProfile } from "@/lib/supabase/auth";
+import { auth, onAuthStateChanged, updateProfile, type AuthUser } from "@/lib/supabase/auth";
 import { extractStoragePath, mediaPathForUser, resolveMediaUrl, uploadFile } from "@/lib/supabase/storage";
 import { getProfile, updateUserProfile } from "@/lib/supabase/profiles";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -52,13 +52,13 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
-    const loadUserProfile = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
+    let active = true;
+    const unsubscribe = onAuthStateChanged(async (user: AuthUser | null) => {
+      if (!user) { if (active) setIsLoading(false); return; }
 
       try {
         const data = await getProfile(user.uid);
-        if (data) {
+        if (active && data) {
           form.reset({
             displayName: data.displayName || "",
             bio: data.bio || "",
@@ -76,11 +76,10 @@ export default function SettingsPage() {
           variant: "destructive",
         });
       } finally {
-        setIsLoading(false);
+        if (active) setIsLoading(false);
       }
-    };
-
-    loadUserProfile();
+    });
+    return () => { active = false; unsubscribe(); };
   }, [form, toast]);
 
   async function onSubmit(values: z.infer<typeof profileSchema>) {
