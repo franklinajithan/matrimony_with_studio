@@ -48,6 +48,7 @@ import {
 } from "@/lib/supabase/matches";
 import { intelligentMatchSuggestions, type IntelligentMatchSuggestionsInput, type IntelligentMatchSuggestionsOutput } from "@/ai/flows/intelligent-match-suggestions";
 import type { UserProfileSchema as AIUserProfileSchema, PotentialMatchProfileSchema as AIPotentialMatchProfileSchema } from "@/ai/flows/intelligent-match-suggestions";
+import { MemberSafetyActions } from "@/components/safety/MemberSafetyActions";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -682,6 +683,7 @@ export default function ProfilePage() {
                 <ShareProfileButton compact />
               ) : null}
               {renderActionButtons()}
+              {currentFirebaseUser && viewedUserId && currentFirebaseUser.uid !== viewedUserId && <MemberSafetyActions memberId={viewedUserId} />}
             </div>
           </div>
         </div>

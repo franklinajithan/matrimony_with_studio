@@ -16,6 +16,7 @@ import { extractStoragePath, mediaPathForUser, resolveMediaUrl, uploadFile } fro
 import { getProfile, updateUserProfile } from "@/lib/supabase/profiles";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import { BlockedMembers } from "@/components/safety/BlockedMembers";
 import { AccountLifecycle } from "@/components/account/AccountLifecycle";
 
 const profileSchema = z.object({
@@ -159,6 +160,7 @@ export default function SettingsPage() {
   return (
     <div className="container max-w-2xl py-8 space-y-4">
       <AccountLifecycle />
+      <BlockedMembers />
       <Card><CardHeader><CardTitle>Profile verification</CardTitle><CardDescription>Request review and track your verification status.</CardDescription></CardHeader><CardContent><Button asChild variant="outline"><Link href="/verification">Manage verification request</Link></Button></CardContent></Card>
       <Card>
         <CardHeader>

@@ -14,6 +14,7 @@ const links = [
   { href: "/admin/success-stories", label: "Stories", icon: Heart },
   { href: "/admin/registration", label: "Registration", icon: Users },
   { href: "/admin/horoscope", label: "Horoscope", icon: Shield },
+  { href: "/admin/reports", label: "Reports", icon: Shield },
   { href: "/admin/security", label: "Security", icon: Shield },
 ];
 
