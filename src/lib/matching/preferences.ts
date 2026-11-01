@@ -1,3 +1,4 @@
+import { readProfileGender, normalizeProfileGender } from "@/lib/profile-gender";
 import type { Profile } from "@/lib/supabase/types";
 
 export type PartnerPreferences = {
@@ -33,12 +34,22 @@ export function partnerPreferencesFromProfile(profile: Profile): PartnerPreferen
     gender: source.gender, maritalStatuses: strings(source.maritalStatuses || source.maritalStatus), heightMin: source.heightMin, heightMax: source.heightMax, education: strings(source.education), relocation: source.relocation, wantsChildren: source.wantsChildren, familyInvolvement: source.familyInvolvement, marriageTimeline: source.marriageTimeline, mustHaves: strings(source.mustHaves),
   };
 }
+/** Explicit saved choices win; only an absent choice receives the legacy default. */
+export function defaultDiscoveryGender(profile: Profile, savedGender?: string): string | undefined {
+  if (savedGender?.trim()) {
+    const gender = normalizeProfileGender(savedGender);
+    return gender === "male" ? "Man" : gender === "female" ? "Woman" : gender === "non-binary" ? "Non-binary" : undefined;
+  }
+  const ownGender = readProfileGender(profile);
+  return ownGender === "male" ? "Woman" : ownGender === "female" ? "Man" : undefined;
+}
+
 export function filtersFromPreferences(prefs: PartnerPreferences): DiscoveryFilters { return { ...prefs, query: "" }; }
 
 function candidateDetails(profile: Profile) {
   const extra = record(profile.extra); const match = record(extra.matchDetails); const relationship = record(profile.relationshipIntentions); const lifestyle = record(profile.valuesLifestyle); const family = record(profile.culturalFamily); const settlement = record(profile.settlement); const draft = record(profile.onboardingDraft);
   return {
-    gender: String(match.gender || extra.gender || draft.gender || ""), maritalStatus: String(match.maritalStatus || extra.maritalStatus || relationship.maritalStatus || draft.maritalStatus || ""),
+    gender: readProfileGender(profile), maritalStatus: String(match.maritalStatus || extra.maritalStatus || relationship.maritalStatus || draft.maritalStatus || ""),
     country: String(match.country || profile.country || ""), languages: strings(match.languages).length ? strings(match.languages) : (profile.languages?.length ? profile.languages : strings(profile.language)),
     education: profile.educationLevel || String(match.education || extra.education || ""), height: number(profile.height || match.height),
     wantsChildren: String(match.wantsChildren || relationship.wantsChildren || relationship.children || extra.wantsChildren || ""), relocation: String(match.relocation || settlement.relocation || settlement.relocationOpenness || extra.relocation || ""),

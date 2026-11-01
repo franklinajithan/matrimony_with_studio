@@ -8,7 +8,7 @@ import { getProfile, listProfiles } from "@/lib/supabase/profiles";
 import type { Profile } from "@/lib/supabase/types";
 import { getShortlistedIds, addToShortlist, removeFromShortlist } from "@/lib/supabase/shortlist";
 import { sendInterest, listSentInterestReceiverIds } from "@/lib/supabase/matches";
-import { filtersFromPreferences, partnerPreferencesFromProfile, preferenceScore, profileMatchesFilters, type DiscoveryFilters, type PartnerPreferences } from "@/lib/matching/preferences";
+import { defaultDiscoveryGender, filtersFromPreferences, partnerPreferencesFromProfile, preferenceScore, profileMatchesFilters, type DiscoveryFilters, type PartnerPreferences } from "@/lib/matching/preferences";
 import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
 import { ShareProfileButton } from "@/components/discovery/ShareProfileButton";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -80,22 +80,12 @@ export function PreferenceDiscovery() {
       const self = await getProfile(user.id);
       if (!self) throw new Error("Complete your profile before finding matches.");
       const saved = partnerPreferencesFromProfile(self);
-      // Gender is a matching eligibility filter rather than just a score.
-      const extra = (self.extra || {}) as Record<string, any>;
-      const details = (extra.matchDetails || {}) as Record<string, any>;
-      const draft = (self.onboardingDraft || {}) as Record<string, any>;
-      const ownGender = String(details.gender || extra.gender || draft.gender || "").toLowerCase();
-      const chosen = String(saved.gender || "").trim();
-      const mandatoryGender = chosen && !["no preference", "any", "all"].includes(chosen.toLowerCase())
-        ? chosen
-        : ["man", "male"].includes(ownGender) ? "Woman"
-        : ["woman", "female"].includes(ownGender) ? "Man"
-        : undefined;
+      const mandatoryGender = defaultDiscoveryGender(self, saved.gender);
       setRequiredGender(mandatoryGender);
       // Saved preferences rank candidates; they must not silently exclude every profile.
       const defaults = empty;
       setPreferences(saved);
-      setFilters({ ...defaults, query: params.get("q") || "", ageMin: params.get("ageMin") ? Number(params.get("ageMin")) : defaults.ageMin, ageMax: params.get("ageMax") ? Number(params.get("ageMax")) : defaults.ageMax, countries: params.get("country") ? [params.get("country")!] : defaults.countries, languages: params.get("language") ? [params.get("language")!] : defaults.languages, religions: params.get("religion") ? [params.get("religion")!] : defaults.religions });
+      setFilters({ ...defaults, gender: params.get("gender") || undefined, query: params.get("q") || "", ageMin: params.get("ageMin") ? Number(params.get("ageMin")) : defaults.ageMin, ageMax: params.get("ageMax") ? Number(params.get("ageMax")) : defaults.ageMax, countries: params.get("country") ? [params.get("country")!] : defaults.countries, languages: params.get("language") ? [params.get("language")!] : defaults.languages, religions: params.get("religion") ? [params.get("religion")!] : defaults.religions });
       const [profilePages, sentIds] = await Promise.all([Promise.all(Array.from({ length: 5 }, (_, i) => listProfiles({ limit: 100, offset: i * 100, excludeId: user.id }))), listSentInterestReceiverIds(user.id)]);
       const profiles = profilePages.flat();
       const shortlisted = await getShortlistedIds(user.id, profiles.map((p) => p.id));
@@ -110,15 +100,15 @@ export function PreferenceDiscovery() {
 
   useEffect(() => { void load(); }, [load]);
   const hasSaved = Boolean(preferences && hasPreferences(preferences));
-  const results = useMemo(() => people.filter((p) => profileMatchesFilters(p, { ...filters, gender: requiredGender || filters.gender })).sort((a, b) => {
+  const results = useMemo(() => people.filter((p) => profileMatchesFilters(p, { ...filters, gender: filters.gender ?? requiredGender })).sort((a, b) => {
     if (sortMode === "name") return (a.displayName || "").localeCompare(b.displayName || "");
     if (sortMode === "youngest") return (a.ageYears ?? 999) - (b.ageYears ?? 999);
     if (sortMode === "oldest") return (b.ageYears ?? -1) - (a.ageYears ?? -1);
     return preferences ? preferenceScore(b, preferences).percentage - preferenceScore(a, preferences).percentage : 0;
   }), [people, filters, preferences, requiredGender, sortMode]);
   useEffect(() => { setVisibleCount(20); }, [filters, requiredGender, sortMode]);
-  const reset = () => setFilters({ ...empty, gender: requiredGender });
-  const clear = () => setFilters({ ...empty, gender: requiredGender });
+  const reset = () => setFilters({ ...empty });
+  const clear = () => setFilters({ ...empty });
   const activeCount = [
     filters.ageMin, filters.ageMax, filters.countries.length, filters.languages.length,
     filters.religions.length, filters.professions.length, filters.smoking.length, filters.drinking.length,
@@ -133,6 +123,7 @@ export function PreferenceDiscovery() {
   useEffect(() => {
     if (loading) return;
     const next = new URLSearchParams();
+    if (filters.gender) next.set("gender", filters.gender);
     if (filters.query) next.set("q", filters.query); if (filters.ageMin) next.set("ageMin", String(filters.ageMin)); if (filters.ageMax) next.set("ageMax", String(filters.ageMax)); if (filters.countries[0]) next.set("country", filters.countries[0]); if (filters.languages[0]) next.set("language", filters.languages[0]); if (filters.religions[0]) next.set("religion", filters.religions[0]);
     window.history.replaceState({}, "", next.size ? `/discover?${next}` : "/discover");
   }, [filters, loading]);
@@ -158,7 +149,7 @@ export function PreferenceDiscovery() {
     <div><Label>{t.profession}</Label><Input className="mt-2" placeholder="e.g. Engineer" value={filters.professions[0] || ""} onChange={(e) => setFilters((f) => ({ ...f, professions: e.target.value ? [e.target.value] : [] }))}/></div>
     <Choice label={t.smoking} value={first(filters.smoking)} values={["Never", "Occasionally", "Socially"]} onChange={(v) => setFilters((f) => ({ ...f, smoking: list(v) }))}/><Choice label={t.drinking} value={first(filters.drinking)} values={["Never", "Occasionally", "Socially"]} onChange={(v) => setFilters((f) => ({ ...f, drinking: list(v) }))}/>
     <div className="border-t border-border pt-4"><p className="mb-3 text-sm font-semibold text-primary-dark">More partner preferences</p><div className="space-y-4">
-      <Choice testId="discover-filter-gender" label="Gender" value={requiredGender || filters.gender || "all"} values={options.genders} onChange={(v) => setFilters((f) => ({ ...f, gender: v === "all" ? undefined : v }))}/>
+      <Choice testId="discover-filter-gender" label="Gender" value={filters.gender ?? requiredGender ?? "all"} values={options.genders} onChange={(v) => setFilters((f) => ({ ...f, gender: v === "all" ? "No preference" : v }))}/>
       <Choice testId="discover-filter-marital-status" label="Marital status" value={first(filters.maritalStatuses || [])} values={options.maritalStatuses} onChange={(v) => setFilters((f) => ({ ...f, maritalStatuses: list(v) }))}/>
       <div><Label>Height (cm)</Label><div className="mt-2 grid grid-cols-2 gap-2"><Input data-testid="discover-filter-height-min" inputMode="numeric" placeholder="Min" value={filters.heightMin || ""} onChange={(e) => setFilters((f) => ({ ...f, heightMin: e.target.value }))}/><Input data-testid="discover-filter-height-max" inputMode="numeric" placeholder="Max" value={filters.heightMax || ""} onChange={(e) => setFilters((f) => ({ ...f, heightMax: e.target.value }))}/></div></div>
       <Choice testId="discover-filter-education" label="Education" value={first(filters.education || [])} values={options.education} onChange={(v) => setFilters((f) => ({ ...f, education: list(v) }))}/>
@@ -182,7 +173,7 @@ export function PreferenceDiscovery() {
       <span className="text-xs font-semibold text-muted-foreground">Quick filters</span>
       <label className="flex items-center gap-1 text-xs text-muted-foreground">From <Input aria-label="Minimum age" type="number" min={18} max={100} inputMode="numeric" className="h-9 w-16 px-2" placeholder="18" value={filters.ageMin ?? ""} onChange={(e) => setFilters((f) => ({ ...f, ageMin: e.target.value ? Number(e.target.value) : undefined }))}/></label>
       <label className="flex items-center gap-1 text-xs text-muted-foreground">To <Input aria-label="Maximum age" type="number" min={18} max={100} inputMode="numeric" className="h-9 w-16 px-2" placeholder="60" value={filters.ageMax ?? ""} onChange={(e) => setFilters((f) => ({ ...f, ageMax: e.target.value ? Number(e.target.value) : undefined }))}/></label>
-      {requiredGender && <span className="rounded-full bg-accent px-3 py-2 text-xs font-medium text-primary">Looking for {requiredGender.toLowerCase()} profiles</span>}
+      {(filters.gender ?? requiredGender) && <span className="rounded-full bg-accent px-3 py-2 text-xs font-medium text-primary">Looking for {(filters.gender ?? requiredGender)?.toLowerCase()} profiles</span>}
       <Button size="sm" variant="outline" onClick={() => { navigator.clipboard?.writeText(window.location.href).then(() => toast({ title: "Search link copied" })).catch(() => toast({ title: "Unable to copy link", variant: "destructive" })); }}>Copy search link</Button>
       <Button size="sm" variant="outline" disabled={!searchOwnerId} onClick={() => { if (!searchOwnerId) return; void (async () => { const url = window.location.pathname + window.location.search; const { error } = await supabase.from("member_saved_searches").upsert({ user_id: searchOwnerId, path_and_query: url, updated_at: new Date().toISOString() }, { onConflict: "user_id" }); if (error) { toast({ title: "Could not save search", description: error.message, variant: "destructive" }); return; } setSavedSearchUrl(url); toast({ title: "Search saved to your account" }); })(); }}>Save search</Button>
       {savedSearchUrl && <Button size="sm" variant="ghost" onClick={() => { window.location.assign(savedSearchUrl); }}>Open saved search</Button>}
