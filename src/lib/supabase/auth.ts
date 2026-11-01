@@ -173,8 +173,10 @@ export async function createUserWithEmailAndPassword(_auth: unknown, email: stri
     );
   }
 
-  cachedUser = mapUser(data.session?.user ?? data.user);
-  return { user: cachedUser, session: data.session as Session | null, needsEmailConfirmation: !data.session };
+  // A signup response may contain an unconfirmed user without a session.
+  // Only an authenticated session may populate the current-user cache.
+  cachedUser = mapUser(data.session?.user ?? null);
+  return { user: mapUser(data.user), session: data.session as Session | null, needsEmailConfirmation: !data.session };
 }
 
 export async function signOut(_auth?: unknown) {
