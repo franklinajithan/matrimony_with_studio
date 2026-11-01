@@ -550,14 +550,6 @@ export default function EditProfilePage() {
     setProfilePhotoPreview(previewUrl);
   };
 
-  const handleDeactivateAccount = () => {
-    toast({
-      title: "Account Deactivated (Mock)",
-      description: "Your account has been scheduled for deactivation.",
-      variant: "destructive",
-    });
-  };
-
   const handleHoroscopeFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -1170,37 +1162,7 @@ export default function EditProfilePage() {
             Save Changes
           </Button>
 
-          <Card className="rounded-2xl border-destructive/50 shadow-sm">
-            <CardHeader>
-              <CardTitle className="font-headline flex items-center text-2xl text-destructive">
-                <AlertTriangle className="mr-2 h-6 w-6" />
-                Danger Zone
-              </CardTitle>
-              <CardDescription>Actions in this zone are critical and may have irreversible consequences.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" className="w-full rounded-xl" disabled={isSaving || anyEnhancementLoading}>
-                    Deactivate Account
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>Deactivating your account will hide your profile from CupidMatch. You will not be able to log in or be discovered by others. You can usually reactivate your account by contacting support. This action is not immediate deletion.</AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeactivateAccount} className="bg-destructive hover:bg-destructive/90">
-                      Yes, Deactivate My Account
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-              <p className="mt-2 text-center text-xs text-muted-foreground">Please be certain before deactivating your account.</p>
-            </CardContent>
-          </Card>
+          <div className="rounded-xl border p-4"><a className="font-semibold text-primary underline" href="/settings#account-management">Account Settings — deactivate or permanently delete your account</a></div>
         </PageFrame>
       </form>
     </Form>
