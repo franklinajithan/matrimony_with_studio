@@ -16,6 +16,7 @@ jobs:
       - run: npm install --package-lock-only --ignore-scripts
       - run: npm ci
       - run: node --test scripts/whatsapp-share-preview.test.mjs
+      - run: node --test scripts/public-share-privacy.test.mjs
       - run: npm run test:core
       - run: npm run test:signup
       - run: npm run lint
