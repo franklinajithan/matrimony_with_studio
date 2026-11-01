@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Bookmark, Briefcase, Heart, Loader2, MapPin, RotateCcw, Search, SlidersHorizontal, Sparkles, X, LayoutGrid, List, BadgeCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
@@ -22,6 +22,8 @@ import { useToast } from "@/hooks/use-toast";
 import { DIASPORA_COUNTRY_NAMES } from "@/data/diaspora-countries";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { getMessages } from "@/components/i18n/messages";
+
+import { runMemberAction } from "@/lib/discovery/member-action";
 
 type Person = Profile & { isShortlisted?: boolean };
 const empty: DiscoveryFilters = { query: "", countries: [], languages: [], religions: [], professions: [], smoking: [], drinking: [] };
@@ -63,6 +65,7 @@ export function PreferenceDiscovery() {
   const [savedSearchUrl, setSavedSearchUrl] = useState<string | null>(null);
   const [searchOwnerId, setSearchOwnerId] = useState<string | null>(null);
   const [sent, setSent] = useState<Set<string>>(new Set());
+  const pendingActions = useRef(new Set<string>());
   const [busy, setBusy] = useState<Record<string, boolean>>({});
 
   const load = useCallback(async () => {
@@ -137,30 +140,33 @@ export function PreferenceDiscovery() {
     window.history.replaceState({}, "", next.size ? `/discover?${next}` : "/discover");
   }, [filters, loading]);
 
-  const toggleShortlist = async (person: Person) => {
-    const { data: { user } } = await supabase.auth.getUser(); if (!user) return;
-    setBusy((v) => ({ ...v, [`s-${person.id}`]: true }));
-    try {
-      if (person.isShortlisted) await removeFromShortlist(user.id, person.id);
-      else await addToShortlist(user.id, person.id);
+  const authenticateAction = async () => {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    return user?.id;
+  };
+  const toggleShortlist = (person: Person) => runMemberAction({
+    key: `s-${person.id}`, pending: pendingActions.current, authenticate: authenticateAction,
+    perform: async (userId) => {
+      if (person.isShortlisted) await removeFromShortlist(userId, person.id);
+      else await addToShortlist(userId, person.id);
+    },
+    onSuccess: () => {
       setPeople((all) => all.map((p) => p.id === person.id ? { ...p, isShortlisted: !person.isShortlisted } : p));
       toast({ title: person.isShortlisted ? "Removed from shortlist" : "Added to shortlist" });
-    } catch (error) {
-      toast({
-        title: "Could not update shortlist",
-        description: error instanceof Error ? error.message : "Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setBusy((v) => ({ ...v, [`s-${person.id}`]: false }));
-    }
-  };
+    },
+    onError: (description) => toast({ title: "Could not update shortlist", description, variant: "destructive" }),
+    onBusy: (value) => setBusy((v) => ({ ...v, [`s-${person.id}`]: value })),
+  });
   const interest = async (id: string) => {
-    const { data: { user } } = await supabase.auth.getUser(); if (!user || sent.has(id)) return;
-    setBusy((v) => ({ ...v, [`i-${id}`]: true }));
-    try { await sendInterest({ senderUid: user.id, receiverUid: id }); setSent((v) => new Set(v).add(id)); toast({ title: "Interest sent" }); }
-    catch (e) { toast({ title: "Could not send interest", description: e instanceof Error ? e.message : "Try again.", variant: "destructive" }); }
-    finally { setBusy((v) => ({ ...v, [`i-${id}`]: false })); }
+    if (sent.has(id)) return;
+    await runMemberAction({
+      key: `i-${id}`, pending: pendingActions.current, authenticate: authenticateAction,
+      perform: async (userId) => { await sendInterest({ senderUid: userId, receiverUid: id }); },
+      onSuccess: () => { setSent((v) => new Set(v).add(id)); toast({ title: "Interest sent" }); },
+      onError: (description) => toast({ title: "Could not send interest", description, variant: "destructive" }),
+      onBusy: (value) => setBusy((v) => ({ ...v, [`i-${id}`]: value })),
+    });
   };
 
   const FilterPanel = () => <div className="space-y-5 pb-8">
