@@ -19,14 +19,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { DIASPORA_COUNTRY_NAMES } from "@/data/diaspora-countries";
+import { WORLD_COUNTRY_NAMES, countryOptionsWithLegacy } from "@/data/world-countries";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { getMessages } from "@/components/i18n/messages";
 
 type Person = Profile & { isShortlisted?: boolean };
 const empty: DiscoveryFilters = { query: "", countries: [], languages: [], religions: [], professions: [], smoking: [], drinking: [] };
 const options = {
-  countries: DIASPORA_COUNTRY_NAMES,
+  countries: WORLD_COUNTRY_NAMES,
   languages: ["Tamil", "English", "Sinhala"],
   religions: ["Hinduism", "Christianity", "Islam", "Buddhism", "Sikhism", "Jainism", "Other"],
   genders: ["Woman", "Man", "Non-binary", "No preference"],
@@ -177,7 +177,7 @@ export function PreferenceDiscovery() {
   const FilterPanel = () => <div className="space-y-5 pb-8">
     <div className="rounded-2xl bg-accent p-4 text-sm text-primary-dark"><p className="font-semibold">Filter profiles independently of your saved preferences</p><p className="mt-1 text-primary">Changes here filter the results. Your saved preferences are used to rank matches; Reset shows all available profiles.</p></div>
     <div><Label>{t.age}</Label><div className="mt-2 grid grid-cols-2 gap-2"><Input type="number" min={18} placeholder={t.min} value={filters.ageMin || ""} onChange={(e) => setFilters((f) => ({ ...f, ageMin: e.target.value ? Number(e.target.value) : undefined }))}/><Input type="number" min={18} placeholder={t.max} value={filters.ageMax || ""} onChange={(e) => setFilters((f) => ({ ...f, ageMax: e.target.value ? Number(e.target.value) : undefined }))}/></div></div>
-    <Choice label={t.country} value={first(filters.countries)} values={options.countries} onChange={(v) => setFilters((f) => ({ ...f, countries: list(v) }))}/><Choice label={t.language} value={first(filters.languages)} values={options.languages} onChange={(v) => setFilters((f) => ({ ...f, languages: list(v) }))}/><Choice label={t.religion} value={first(filters.religions)} values={options.religions} onChange={(v) => setFilters((f) => ({ ...f, religions: list(v) }))}/>
+    <Choice label={t.country} value={first(filters.countries)} values={countryOptionsWithLegacy(filters.countries)} onChange={(v) => setFilters((f) => ({ ...f, countries: list(v) }))}/><Choice label={t.language} value={first(filters.languages)} values={options.languages} onChange={(v) => setFilters((f) => ({ ...f, languages: list(v) }))}/><Choice label={t.religion} value={first(filters.religions)} values={options.religions} onChange={(v) => setFilters((f) => ({ ...f, religions: list(v) }))}/>
     <div><Label>{t.profession}</Label><Input className="mt-2" placeholder="e.g. Engineer" value={filters.professions[0] || ""} onChange={(e) => setFilters((f) => ({ ...f, professions: e.target.value ? [e.target.value] : [] }))}/></div>
     <Choice label={t.smoking} value={first(filters.smoking)} values={["Never", "Occasionally", "Socially"]} onChange={(v) => setFilters((f) => ({ ...f, smoking: list(v) }))}/><Choice label={t.drinking} value={first(filters.drinking)} values={["Never", "Occasionally", "Socially"]} onChange={(v) => setFilters((f) => ({ ...f, drinking: list(v) }))}/>
     <div className="border-t border-border pt-4"><p className="mb-3 text-sm font-semibold text-primary-dark">More partner preferences</p><div className="space-y-4">

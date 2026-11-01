@@ -2,7 +2,8 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { load } = require('./helpers/load-ts.cjs');
 const genders = load('src/lib/profile-gender.ts');
-const matching = load('src/lib/matching/preferences.ts', { '@/lib/profile-gender': genders });
+const countries = load('src/data/world-countries.ts', { './diaspora-countries': load('src/data/diaspora-countries.ts') });
+const matching = load('src/lib/matching/preferences.ts', { '@/lib/profile-gender': genders, '@/data/world-countries': countries });
 const empty = { query: '', countries: [], languages: [], religions: [], professions: [], smoking: [], drinking: [] };
 
 test('discovery and scoring use canonical gender before stale legacy fields', () => {
@@ -97,7 +98,7 @@ function discoveryHarness({ shortlist = async () => {}, send = async () => {}, a
   mocks['@/hooks/use-toast'] = { useToast: () => ({ toast: value => toasts.push(value) }) };
   mocks['@/components/i18n/I18nProvider'] = { useI18n: () => ({ language: 'en' }) };
   mocks['@/components/i18n/messages'] = { getMessages: () => ({ discover: {} }) };
-  mocks['@/data/diaspora-countries'] = { DIASPORA_COUNTRY_NAMES: [] };
+  mocks['@/data/world-countries'] = countries;
   const { PreferenceDiscovery } = load(file, mocks);
   function render() { cursor = 0; return PreferenceDiscovery(); }
   function find(node, predicate) {
@@ -150,3 +151,30 @@ for (const action of ['shortlist', 'interest']) {
     assert.equal(ui.pending.current.size, 0);
   });
 }
+
+test('shared worldwide country source covers 249 distinct ISO countries and legacy drafts', () => {
+  assert.equal(countries.ISO_COUNTRY_CODES.length, 249);
+  assert.equal(new Set(countries.ISO_COUNTRY_CODES).size, 249);
+  for (const code of ['LK','GB','AU','CA','FR','DE','CH','IN','AE','US','AX','RE','ZW']) {
+    assert.ok(countries.WORLD_COUNTRIES.some(country => country.code === code));
+  }
+  const schema = load('src/lib/onboarding/schema.ts', { '@/data/world-countries': countries });
+  assert.equal(schema.COUNTRY_OPTIONS, countries.WORLD_COUNTRY_NAMES);
+  const draft = { country: 'Historical country label', region: 'Évry-Courcouronnes' };
+  assert.equal(schema.parseOnboardingDraft(draft).country, draft.country);
+  assert.equal(schema.parseOnboardingDraft(draft).region, draft.region);
+  assert.ok(countries.countryOptionsWithLegacy([draft.country]).includes(draft.country));
+});
+
+test('country filtering and scoring compare ISO codes and legacy names compatibly', () => {
+  for (const [saved, selected] of [['UK','United Kingdom'],['United States of America','US'],['UAE','United Arab Emirates'],['Côte d’ivoire','CI'],['Turkey','Türkiye']]) {
+    const profile = { country: saved };
+    assert.equal(matching.profileMatchesFilters(profile, { ...empty, countries: [selected] }), true);
+    assert.equal(matching.preferenceScore(profile, { ...empty, countries: [selected] }).percentage, 100);
+  }
+  assert.equal(countries.countriesMatch('Congo - Kinshasa','Congo - Brazzaville'), false);
+  assert.equal(countries.countriesMatch('Historical label', ' historical label '), true);
+  assert.equal(countries.countriesMatch('', ''), false);
+  assert.equal(matching.profileMatchesFilters({ country: 'Sri Lanka' }, { ...empty, countries: ['Worldwide'] }), true);
+  assert.equal(matching.profileMatchesFilters({ country: 'Sri Lanka' }, { ...empty, countries: ['GB'] }), false);
+});
