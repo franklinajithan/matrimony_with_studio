@@ -1,3 +1,4 @@
+import { countriesMatch } from "@/data/world-countries";
 import { readProfileGender } from "@/lib/profile-gender";
 import type { Profile } from "@/lib/supabase/types";
 
@@ -22,6 +23,7 @@ const canonical = (value?: string) => {
 };
 const same = (a?: string, b?: string) => Boolean(a && b && canonical(a) === canonical(b));
 const neutral = (value?: string) => !value || ["no preference", "doesn't matter", "does not matter", "any", "prefer not to say"].some((v) => same(value, v));
+const includesCountry = (values: string[], value: string) => !values.length || values.some((wanted) => ["worldwide", "any", "all", "no preference"].includes(wanted.trim().toLowerCase()) || countriesMatch(wanted, value));
 const includes = (values: string[], value?: string) => !values.length || Boolean(value && values.some((v) => same(v, value)));
 const record = (value: unknown): Record<string, any> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, any> : {};
 
@@ -59,7 +61,7 @@ function candidateDetails(profile: Profile) {
 export function profileMatchesFilters(profile: Profile, filters: DiscoveryFilters): boolean {
   const c = candidateDetails(profile); const q = filters.query.trim().toLowerCase(); if (q && ![profile.displayName, profile.profession, profile.location, c.country].some((v) => v?.toLowerCase().includes(q))) return false;
   if (filters.ageMin && profile.ageYears && profile.ageYears < filters.ageMin) return false; if (filters.ageMax && profile.ageYears && profile.ageYears > filters.ageMax) return false;
-  if (!includes(filters.countries, c.country)) return false; if (filters.languages.length && !filters.languages.some((language) => c.languages.some((v) => same(v, language)))) return false;
+  if (!includesCountry(filters.countries, c.country)) return false; if (filters.languages.length && !filters.languages.some((language) => c.languages.some((v) => same(v, language)))) return false;
   if (!includes(filters.religions, profile.religion)) return false;
   if (filters.professions.length && !filters.professions.some((wanted) => profile.profession?.toLowerCase().includes(wanted.toLowerCase()))) return false;
   if (!includes(filters.smoking, c.smoking)) return false; if (!includes(filters.drinking, c.drinking)) return false;
@@ -80,7 +82,7 @@ export function preferenceScore(profile: Profile, prefs: PartnerPreferences): Pr
   const c = candidateDetails(profile); const checks: { key: string; label: string; applies: boolean; known: boolean; matched: boolean }[] = [];
   const add = (key: string, label: string, applies: boolean, known: boolean, matched: boolean) => checks.push({ key, label, applies, known, matched });
   add("Age", "Age", Boolean(prefs.ageMin || prefs.ageMax), Boolean(profile.ageYears), Boolean(profile.ageYears && (!prefs.ageMin || profile.ageYears >= prefs.ageMin) && (!prefs.ageMax || profile.ageYears <= prefs.ageMax)));
-  add("Country", c.country || "Country", prefs.countries.length > 0, Boolean(c.country), includes(prefs.countries, c.country));
+  add("Country", c.country || "Country", prefs.countries.length > 0, Boolean(c.country), includesCountry(prefs.countries, c.country));
   const language = prefs.languages.find((wanted) => c.languages.some((v) => same(v, wanted))); add("Language", language || "Language", prefs.languages.length > 0, c.languages.length > 0, Boolean(language));
   add("Religion", profile.religion || "Religion", prefs.religions.length > 0, Boolean(profile.religion), includes(prefs.religions, profile.religion));
   add("Profession", "Profession", prefs.professions.length > 0, Boolean(profile.profession), prefs.professions.some((wanted) => profile.profession?.toLowerCase().includes(wanted.toLowerCase())));
