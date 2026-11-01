@@ -28,10 +28,13 @@ export function profileGenderPatch(profile: { extra?: unknown; onboardingDraft?:
   };
 }
 
-/** Saved partner preference wins; otherwise retain the existing binary default. */
+/** Explicit neutral preferences stay neutral; only absent choices get a default. */
 export function defaultDiscoveryGender(profile: { extra?: unknown; onboardingDraft?: unknown }, preference?: string): string | undefined {
   const chosen = String(preference ?? "").trim();
-  if (chosen && !["no preference", "any", "all"].includes(chosen.toLowerCase())) return chosen;
+  if (chosen) {
+    const normalized = normalizeProfileGender(chosen);
+    return normalized === "male" ? "Man" : normalized === "female" ? "Woman" : normalized === "non-binary" ? "Non-binary" : undefined;
+  }
   const own = readProfileGender(profile);
   return own === "male" ? "Woman" : own === "female" ? "Man" : undefined;
 }

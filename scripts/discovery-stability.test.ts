@@ -26,7 +26,7 @@ test("legacy, draft, invalid and non-binary gender values remain compatible", ()
 });
 test("saved partner gender keeps precedence over default", () => {
   assert.equal(defaultDiscoveryGender(member({gender:"male"}), " Man "), "Man");
-  assert.equal(defaultDiscoveryGender(member({gender:"male"}), "No preference"), "Woman");
+  assert.equal(defaultDiscoveryGender(member({gender:"male"}), "No preference"), undefined);
 });
 test("repeat click while auth is pending performs only one mutation", async () => {
   const run = createMemberActionRunner();
