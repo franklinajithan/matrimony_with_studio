@@ -31,7 +31,9 @@
     "test:premium-launch": "node --test scripts/premium-launch-api.test.cjs scripts/premium-launch-sql.test.mjs",
     "test:browser-registration": "node scripts/browser-registration-acceptance.mjs",
     "test:registration-publication": "node --import tsx --test scripts/registration-publication.test.cjs",
-    "test:marriage-onboarding": "node --import tsx --test scripts/marriage-onboarding.test.cjs"
+    "test:marriage-onboarding": "node --import tsx --test scripts/marriage-onboarding.test.cjs",
+    "test:feature-privacy": "node --test scripts/search-url.test.cjs scripts/member-photo-authorization.test.cjs scripts/story-publication-sql.test.mjs scripts/story-publication-client.test.cjs",
+    "test:browser-discovery": "node scripts/browser-discovery-acceptance.mjs"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.28.0",
@@ -88,7 +90,6 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.19.2",
-    "typescript": "^5",
-    "esbuild": "0.25.3"
+    "typescript": "^5"
   }
 }

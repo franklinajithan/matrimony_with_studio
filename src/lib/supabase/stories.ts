@@ -47,7 +47,7 @@ export async function createSuccessStory(params: {
     consent_version: "2026-11-02",
     status: "pending",
   });
-  if (error) throw error;
+  if (error) throw new Error("Your story could not be submitted. Please try again later.");
 }
 
 export function subscribeToSuccessStories(
