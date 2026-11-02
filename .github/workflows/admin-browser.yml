@@ -3,9 +3,12 @@ on:
   pull_request:
     paths:
       - 'src/app/admin/**'
+      - 'src/app/(auth)/**'
+      - 'src/components/onboarding/**'
       - 'src/components/ui/**'
       - 'src/components/subscriptions/PremiumLaunchOffer.tsx'
       - 'scripts/browser-admin-acceptance.mjs'
+      - 'scripts/browser-registration-acceptance.mjs'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/admin-browser.yml'
@@ -25,3 +28,4 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser-admin
+      - run: npm run test:browser-registration

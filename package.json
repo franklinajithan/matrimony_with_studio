@@ -28,7 +28,9 @@
     "test:admin-verification": "node --test scripts/admin-verification-api.test.cjs scripts/admin-verification-ui.test.cjs scripts/admin-verification-sql.test.mjs",
     "test:admin-audit": "node --test scripts/admin-audit-pagination.test.cjs scripts/admin-audit-ui.test.cjs",
     "test:browser-admin": "node scripts/browser-admin-acceptance.mjs",
-    "test:premium-launch": "node --test scripts/premium-launch-api.test.cjs scripts/premium-launch-sql.test.mjs"
+    "test:premium-launch": "node --test scripts/premium-launch-api.test.cjs scripts/premium-launch-sql.test.mjs",
+    "test:browser-registration": "node scripts/browser-registration-acceptance.mjs",
+    "test:registration-publication": "node --import tsx --test scripts/registration-publication.test.cjs"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.28.0",
