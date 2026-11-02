@@ -12,8 +12,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      # Regenerate the stale lockfile in CI until the refreshed lockfile is committed.
-      - run: npm install --package-lock-only --ignore-scripts
+      # Test the committed dependency graph that passed clean local installation.
       - run: npm ci
       - run: node --test scripts/whatsapp-share-preview.test.mjs
       - run: node --test scripts/public-share-privacy.test.mjs
