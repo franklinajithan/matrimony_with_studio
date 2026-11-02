@@ -86,6 +86,9 @@ export function OnboardingWizard() {
   const [draftReady, setDraftReady] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [navigating, setNavigating] = useState(false);
+  const navigationLock = useRef(false);
+  const saveTail = useRef<Promise<unknown>>(Promise.resolve());
   const [isPublished, setIsPublished] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const draftRef = useRef(draft);
@@ -104,40 +107,35 @@ export function OnboardingWizard() {
     draftReadyRef.current = draftReady;
   }, [draftReady]);
 
-  const persist = useCallback(async (nextDraft: OnboardingDraft, nextStep: number, options?: { silent?: boolean }) => {
-    if (!draftReadyRef.current) {
-      return { ok: false as const, error: "Still loading your saved profile." };
-    }
-    if (!options?.silent) {
-      setSaveState("saving");
-      setSaveError(null);
-    }
-    try {
-      const response = await fetch("/api/onboarding/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ draft: nextDraft, step: nextStep }),
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(payload.error || "Could not save.");
+  const persist = useCallback((nextDraft: OnboardingDraft, nextStep: number, options?: { silent?: boolean }) => {
+    if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
+    const save = async () => {
+      if (!draftReadyRef.current) return { ok: false as const, error: "Still loading your saved profile." };
+      if (!options?.silent) { setSaveState("saving"); setSaveError(null); }
+      try {
+        const response = await fetch("/api/onboarding/save", {
+          method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin",
+          body: JSON.stringify({ draft: nextDraft, step: nextStep }),
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok !== true) throw new Error(payload.error || "Could not confirm your saved profile.");
+        const isCurrent = draftRef.current === nextDraft;
+        if (!options?.silent && isCurrent && payload.draft && typeof payload.draft === "object") {
+          const synced = { ...EMPTY_ONBOARDING_DRAFT, ...payload.draft };
+          draftRef.current = synced; setDraft(synced);
+        }
+        if (!options?.silent) setSaveState(isCurrent ? "saved" : "idle");
+        return { ok: true as const };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Could not save.";
+        if (!options?.silent) { setSaveState("error"); setSaveError(message); }
+        return { ok: false as const, error: message };
       }
-      if (!options?.silent && payload.draft && typeof payload.draft === "object") {
-        const synced = { ...EMPTY_ONBOARDING_DRAFT, ...payload.draft };
-        setDraft(synced);
-        draftRef.current = synced;
-      }
-      if (!options?.silent) setSaveState("saved");
-      return { ok: true as const };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Could not save.";
-      if (!options?.silent) {
-        setSaveState("error");
-        setSaveError(message);
-      }
-      return { ok: false as const, error: message };
-    }
+    };
+    // Older autosaves must finish before a newer snapshot reaches the server.
+    const result = saveTail.current.then(save, save);
+    saveTail.current = result;
+    return result;
   }, []);
 
   const scheduleSave = useCallback(
@@ -153,11 +151,10 @@ export function OnboardingWizard() {
 
   const updateDraft = useCallback(
     (patch: Partial<OnboardingDraft>) => {
-      setDraft((current) => {
-        const next = { ...current, ...patch };
-        scheduleSave(next, stepRef.current);
-        return next;
-      });
+      const next = { ...draftRef.current, ...patch };
+      draftRef.current = next;
+      setDraft(next);
+      scheduleSave(next, stepRef.current);
     },
     [scheduleSave]
   );
@@ -191,7 +188,8 @@ export function OnboardingWizard() {
           setDraft(loaded);
           draftRef.current = loaded;
         }
-        const requested = Number(initialStepParam.current);
+        const rawStep = initialStepParam.current;
+        const requested = rawStep !== null && /^\d+$/.test(rawStep) ? Number(rawStep) : NaN;
         if (Number.isInteger(requested) && requested >= 0 && requested <= 7) {
           setStep(requested);
           stepRef.current = requested;
@@ -230,21 +228,22 @@ export function OnboardingWizard() {
   const progressValue = ((step + 1) / ONBOARDING_STEPS.length) * 100;
   const current = ONBOARDING_STEPS[step];
 
-  async function goNext() {
-    const errors = validateOnboardingStep(step, draft);
+  async function moveStep(direction: 1 | -1) {
+    if (navigationLock.current || uploading) return;
+    const snapshot = draftRef.current;
+    const errors = direction === 1 ? validateOnboardingStep(stepRef.current, snapshot) : [];
     setStepErrors(errors);
-    if (errors.length > 0) return;
-    const nextStep = Math.min(7, step + 1);
-    setStep(nextStep);
-    await persist(draft, nextStep);
+    if (errors.length) return;
+    navigationLock.current = true; setNavigating(true);
+    const nextStep = Math.max(0, Math.min(7, stepRef.current + direction));
+    try {
+      const saved = await persist(snapshot, nextStep);
+      if (!saved.ok) { setStepErrors([saved.error]); return; }
+      stepRef.current = nextStep; setStep(nextStep);
+    } finally { navigationLock.current = false; setNavigating(false); }
   }
-
-  async function goBack() {
-    const nextStep = Math.max(0, step - 1);
-    setStepErrors([]);
-    setStep(nextStep);
-    await persist(draft, nextStep);
-  }
+  async function goNext() { await moveStep(1); }
+  async function goBack() { await moveStep(-1); }
 
   async function handlePhoto(file: File | undefined, kind: "primary" | "additional") {
     if (!file) return;
@@ -295,46 +294,37 @@ export function OnboardingWizard() {
   }
 
   async function handlePublish() {
-    const errors = validateOnboardingStep(7, draft);
+    if (navigationLock.current || uploading) return;
+    const snapshot = draftRef.current;
+    const errors = validateOnboardingStep(7, snapshot);
     setStepErrors(errors);
-    if (errors.length > 0) return;
-    setPublishing(true);
-    const saved = await persist(draft, 7);
-    if (!saved.ok) {
-      setPublishing(false);
-      toast({
-        title: "Publish failed",
-        description: saved.error,
-        variant: "destructive",
-      });
-      return;
-    }
+    if (errors.length) return;
+    navigationLock.current = true; setPublishing(true);
     try {
+      const saved = await persist(snapshot, 7);
+      if (!saved.ok) throw new Error(saved.error);
       const response = await fetch("/api/onboarding/publish", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ draft }),
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ draft: snapshot }),
       });
       const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(payload.error || "Could not publish.");
-      }
+      if (!response.ok || payload.ok !== true || payload.isPublished !== true) throw new Error(payload.error || "Could not confirm publication.");
       setIsPublished(true);
       toast({ title: "Profile published", description: "Members can now find you in discovery." });
-      router.push("/dashboard");
-      router.refresh();
+      router.push("/dashboard"); router.refresh();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not publish.";
-      setStepErrors([message]);
-      toast({ title: "Publish failed", description: message, variant: "destructive" });
-    } finally {
-      setPublishing(false);
-    }
+      setStepErrors([message]); toast({ title: "Publish failed", description: message, variant: "destructive" });
+    } finally { navigationLock.current = false; setPublishing(false); }
   }
 
   async function handleExit() {
-    await persist(draft, step);
-    router.push("/dashboard");
+    if (navigationLock.current || uploading) return;
+    navigationLock.current = true; setNavigating(true);
+    try {
+      const saved = await persist(draftRef.current, stepRef.current);
+      if (!saved.ok) { setStepErrors([saved.error]); return; }
+      router.push("/dashboard");
+    } finally { navigationLock.current = false; setNavigating(false); }
   }
 
   const saveLabel = useMemo(() => {
@@ -429,7 +419,7 @@ export function OnboardingWizard() {
         </Alert>
       )}
 
-      <section className="space-y-6 rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-8">
+      <fieldset disabled={navigating || publishing} className="min-w-0 space-y-6 rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-8">
           {step === 0 && (
             <div className="space-y-5">
               <ChoiceGroup
@@ -690,22 +680,22 @@ export function OnboardingWizard() {
               </label>
             </div>
           )}
-      </section>
+      </fieldset>
 
       <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Button variant="ghost" className="min-h-11" onClick={() => void handleExit()}>
+        <Button variant="ghost" className="min-h-11" onClick={() => void handleExit()} disabled={navigating || publishing || uploading}>
           {t.saveExit}
         </Button>
         <div className="flex gap-3">
-          <Button variant="outline" className="min-h-11 flex-1 sm:flex-none" onClick={() => void goBack()} disabled={step === 0 || publishing}>
+          <Button variant="outline" className="min-h-11 flex-1 sm:flex-none" onClick={() => void goBack()} disabled={step === 0 || publishing || navigating || uploading}>
             <ChevronLeft className="mr-1 h-4 w-4" /> {t.back}
           </Button>
           {step < 7 ? (
-            <Button className="min-h-11 flex-1 sm:flex-none" onClick={() => void goNext()}>
+            <Button className="min-h-11 flex-1 sm:flex-none" onClick={() => void goNext()} disabled={navigating || publishing || uploading}>
               {t.continue} <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           ) : (
-            <Button className="min-h-11 flex-1 sm:flex-none" onClick={() => void handlePublish()} disabled={publishing}>
+            <Button className="min-h-11 flex-1 sm:flex-none" onClick={() => void handlePublish()} disabled={publishing || navigating || uploading}>
               {publishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {t.publish}
             </Button>
