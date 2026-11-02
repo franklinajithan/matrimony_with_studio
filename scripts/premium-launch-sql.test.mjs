@@ -1,0 +1,21 @@
+import {PGlite} from '@electric-sql/pglite';import{readFile}from'node:fs/promises';import{test,after,beforeEach}from'node:test';import assert from'node:assert/strict';
+const db=new PGlite();after(()=>db.close());
+const a='10000000-0000-4000-8000-000000000001',b='10000000-0000-4000-8000-000000000002';
+await db.exec(`create role anon;create role authenticated;create schema auth;create schema private;
+create table auth.users(id uuid primary key,email_confirmed_at timestamptz,phone_confirmed_at timestamptz);
+insert into auth.users values('${a}',now(),null),('${b}',null,null);
+create function auth.uid()returns uuid language sql stable as $$select nullif(current_setting('test.uid',true),'')::uuid$$;
+create function private.account_session_active()returns boolean language sql stable as $$select coalesce(nullif(current_setting('test.active',true),''),'true')::boolean$$;
+create function public.member_is_active(uuid)returns boolean language sql stable as $$select coalesce(nullif(current_setting('test.member',true),''),'true')::boolean$$;
+create table public.admin_audit_log(actor_id uuid,action text,target_type text,target_id text,metadata jsonb);
+grant usage on schema public,auth,private to authenticated,anon;`);
+await db.exec(await readFile('supabase/migrations/20261102124728_six_month_premium_launch_offer.sql','utf8'));
+async function actor(uid=a,active=true,member=true){await db.exec(`reset role;select set_config('test.uid','${uid}',false),set_config('test.active','${active}',false),set_config('test.member','${member}',false);set role authenticated;`);}
+const claim=()=>db.query('select public.claim_premium_launch_offer() result');
+beforeEach(async()=>{await db.exec('reset role;delete from premium_launch_offers;delete from admin_audit_log;');await actor();});
+test('email-confirmed member receives exactly six calendar months without a phone',async()=>{const r=(await claim()).rows[0].result;assert.equal(r.plan,'premium');assert.equal(r.durationMonths,6);assert.equal((await db.query("select ends_at=starts_at+interval '6 months' valid from premium_launch_offers")).rows[0].valid,true);await db.exec('reset role');assert.equal((await db.query('select actor_id from admin_audit_log')).rows[0].actor_id,a);});
+test('repeat selection returns the same dates and only one audit record',async()=>{const first=(await claim()).rows[0].result;assert.deepEqual((await claim()).rows[0].result,first);await db.exec('reset role');assert.equal((await db.query('select count(*)::int n from admin_audit_log')).rows[0].n,1);});
+test('expired offer cannot be restarted by selecting Premium again',async()=>{await claim();await db.exec("reset role;update premium_launch_offers set starts_at='2020-01-01',ends_at='2020-07-01'");await actor();const r=(await claim()).rows[0].result;assert.ok(Date.parse(r.endsAt)<Date.now());});
+test('unconfirmed email, revoked session and inactive account cannot claim',async()=>{await actor(b);await assert.rejects(claim(),/Confirm your email/);await actor(a,false);await assert.rejects(claim(),/active account/);await actor(a,true,false);await assert.rejects(claim(),/active account/);});
+test('anonymous callers and members cannot grant, extend or inspect someone else’s offer',async()=>{await claim();await actor(b);assert.equal((await db.query('select * from premium_launch_offers')).rows.length,0);await assert.rejects(db.exec("insert into premium_launch_offers(user_id,ends_at)values('"+b+"',now()+interval '6 months')"),/permission denied/);await assert.rejects(db.exec("update premium_launch_offers set ends_at=ends_at+interval '6 months'"),/permission denied/);await db.exec('reset role;set role anon');await assert.rejects(claim(),/permission denied/);});
+test('audit failure rolls back the grant',async()=>{await db.exec("reset role;create function fail_launch_audit()returns trigger language plpgsql as $$begin raise exception 'Audit unavailable';end$$;create trigger fail_launch_audit before insert on admin_audit_log for each row execute function fail_launch_audit()");try{await actor();await assert.rejects(claim(),/Audit unavailable/);assert.equal((await db.query('select * from premium_launch_offers')).rows.length,0);}finally{await db.exec('reset role;drop trigger fail_launch_audit on admin_audit_log');}});

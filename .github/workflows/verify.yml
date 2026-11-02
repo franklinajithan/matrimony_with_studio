@@ -26,6 +26,7 @@ jobs:
       - run: npm run test:theme
       - run: npm run test:account
       - run: npm run test:admin
+      - run: npm run test:premium-launch
       - run: npm run test:admin-audit
       - run: npm run test:admin-verification
       - run: npm run test:admin-completion
