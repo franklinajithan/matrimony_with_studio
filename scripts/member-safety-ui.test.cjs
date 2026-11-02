@@ -27,3 +27,44 @@ test('failed reporting stays open, preserves feedback and permits retry',async()
 test('expired sessions never submit a report or block',async()=>{
  const f=fixture({authenticate:async()=>({data:{user:null},error:null})});f.click('Block member');f.click('Confirm block');await flush();assert.equal(f.events.length,0);assert.match(f.toasts[0].description,/session has expired/);assert.equal(f.lock.current,false);
 });
+
+function blockedFixture(list) {
+ const state = []; let cursor = 0, effectDeps, cleanup, subscriber;
+ let subscriptions = 0, unsubscriptions = 0;
+ const mocks = {
+  react: {
+   useState: initial => { const i = cursor++; if (!(i in state)) state[i] = initial; return [state[i], next => { state[i] = typeof next === 'function' ? next(state[i]) : next; }]; },
+   useRef: () => ({current: false}),
+   useEffect: (effect, deps) => { if (!effectDeps || deps.some((value, i) => value !== effectDeps[i])) { cleanup?.(); effectDeps = deps; cleanup = effect(); } },
+  },
+  '@/lib/supabase/auth': {onAuthStateChanged: callback => { subscriptions++; subscriber = callback; callback({uid: 'viewer'}); return () => { unsubscriptions++; }; }},
+  '@/lib/supabase/client': {supabase: {}},
+  '@/lib/supabase/blocks': {listBlocks: list},
+  '@/components/ui/button': {Button: 'Button'},
+  '@/components/ui/card': Object.fromEntries(['Card','CardContent','CardHeader','CardTitle'].map(name => [name,name])),
+  '@/hooks/use-toast': {useToast: () => ({toast() {}})},
+ };
+ const {BlockedMembers} = load('src/components/safety/BlockedMembers.tsx', mocks);
+ function render() { cursor = 0; return BlockedMembers(); }
+ function find(node, predicate) { if (!node || typeof node !== 'object') return; if (predicate(node)) return node; for (const child of [node.props?.children].flat(Infinity)) { const result = find(child, predicate); if (result) return result; } }
+ return {render, state, find, auth: user => subscriber(user), unmount: () => cleanup(), counts: () => ({subscriptions, unsubscriptions})};
+}
+test('blocked list retries a failed load in place and clears the error after success', async () => {
+ let attempts = 0;
+ const f = blockedFixture(async () => { if (++attempts === 1) throw Error('offline'); return [{id:'block', reference:'CM-000002'}]; });
+ f.render(); await flush();
+ const failed = f.render(); assert.ok(f.find(failed, node => node.props?.role === 'alert'));
+ f.find(failed, node => node.type === 'Button' && node.props.children === 'Try again').props.onClick();
+ f.render(); await flush(); const recovered = f.render();
+ assert.equal(attempts, 2); assert.equal(f.find(recovered, node => node.props?.role === 'alert'), undefined);
+ assert.equal(f.state[0][0].reference, 'CM-000002');
+ assert.deepEqual(f.counts(), {subscriptions: 2, unsubscriptions: 1}); f.unmount();
+});
+test('retried blocked list ignores stale requests and signed-out results', async () => {
+ const pending = []; const f = blockedFixture(() => new Promise((resolve, reject) => pending.push({resolve, reject})));
+ f.render(); pending[0].reject(Error('offline')); await flush();
+ const failed = f.render(); f.find(failed, node => node.type === 'Button' && node.props.children === 'Try again').props.onClick(); f.render();
+ f.auth({uid:'other'}); pending[1].resolve([{id:'stale'}]); await flush(); assert.equal(f.state[0].length, 0);
+ f.auth(null); pending[2].resolve([{id:'private'}]); await flush(); assert.equal(f.state[0].length, 0); assert.equal(f.state[1], false);
+ f.unmount();
+});
