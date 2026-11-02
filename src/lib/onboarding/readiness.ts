@@ -1,4 +1,4 @@
-import { LANGUAGE_OPTIONS, validateOnboardingStep, type OnboardingDraft } from "@/lib/onboarding/schema";
+import { LANGUAGE_OPTIONS, isAdult, validateOnboardingStep, type OnboardingDraft } from "@/lib/onboarding/schema";
 
 export type ProfilePublicationState = "draft" | "published";
 
@@ -20,25 +20,17 @@ export type ProfileReadiness = {
   firstIncompleteStep: number;
 };
 
-const REQUIRED_CHECKS: Array<{
-  filled: (draft: OnboardingDraft) => boolean;
-}> = [
-  { filled: (draft) => Boolean(draft.displayName?.trim() && draft.displayName.trim().length >= 2) },
-  { filled: (draft) => Boolean(draft.dob?.trim()) },
-  { filled: (draft) => Boolean(draft.country?.trim()) },
-  { filled: (draft) => Boolean(draft.region?.trim()) },
-  { filled: (draft) => Boolean(draft.languages && draft.languages.length > 0) },
-  { filled: (draft) => Boolean(draft.lookingFor?.trim()) },
-  { filled: (draft) => Boolean(draft.relationshipTimeline?.trim()) },
-  { filled: (draft) => Boolean(draft.bio?.trim() && draft.bio.trim().length >= 20) },
-  { filled: (draft) => Boolean(draft.educationLevel?.trim()) },
-  { filled: (draft) => Boolean(draft.relocationOpenness?.trim()) },
+// Only basic identity controls readiness; optional answers improve the profile later.
+const REQUIRED_CHECKS = [
+  { filled: (draft: OnboardingDraft) => Boolean(draft.displayName?.trim() && draft.displayName.trim().length >= 2) },
+  { filled: (draft: OnboardingDraft) => draft.gender === "male" || draft.gender === "female" },
+  { filled: (draft: OnboardingDraft) => Boolean(draft.dob && isAdult(draft.dob)) },
 ];
 
 const LOOKING_FOR_LABELS: Record<string, string> = {
   marriage: "Marriage",
-  "long-term": "Long-term partnership",
-  either: "Open to either",
+  "long-term": "Previously saved preference",
+  either: "Previously saved preference",
 };
 
 const RELOCATION_LABELS: Record<string, string> = {
@@ -101,26 +93,26 @@ export function computeProfileReadiness(
 
   const nextActions: ReadinessAction[] = [];
   if (!hasRealPhoto(draft.photoURL)) {
-    nextActions.push({ id: "photo", label: "Add a profile photo", href: "/onboarding?step=6" });
+    nextActions.push({ id: "photo", label: "Add a profile photo (optional)", href: "/onboarding?step=6" });
   }
   if (!draft.bio?.trim() || draft.bio.trim().length < 20) {
     nextActions.push({
       id: "introduction",
-      label: "Complete your introduction",
+      label: "Add an introduction (optional)",
       href: "/onboarding?step=3",
     });
   }
   if (!draft.lookingFor?.trim() || !draft.relationshipTimeline?.trim()) {
     nextActions.push({
       id: "preferences",
-      label: "Set partner preferences",
+      label: "Add marriage preferences (optional)",
       href: "/onboarding?step=2",
     });
   }
   if (!draft.relocationOpenness?.trim() && !(draft.preferredSettlement && draft.preferredSettlement.length > 0)) {
     nextActions.push({
       id: "settlement",
-      label: "Add future settlement plans",
+      label: "Add settlement plans (optional)",
       href: "/onboarding?step=5",
     });
   }

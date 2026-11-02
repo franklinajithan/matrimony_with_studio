@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, Loader2 } from "lucide-react";
+import { Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { auth, signInWithEmailAndPassword } from "@/lib/supabase/auth";
 import { getProfile } from "@/lib/supabase/profiles";
@@ -42,6 +42,7 @@ function LoginForm() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const nextPath = useMemo(
@@ -156,9 +157,23 @@ function LoginForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center"><Lock className="mr-2 h-4 w-4 text-muted-foreground" />{t.password}</FormLabel>
-                  <FormControl>
-                    <Input data-testid="login-password" type="password" autoComplete="current-password" placeholder="••••••••" {...field} disabled={isLoading} />
-                  </FormControl>
+                  <div className="relative">
+                    <FormControl>
+                      <Input data-testid="login-password" type={showPassword ? "text" : "password"} autoComplete="current-password" placeholder="••••••••" {...field} className="pr-12" disabled={isLoading} />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute inset-y-0 right-0 h-full min-w-11 text-muted-foreground hover:text-primary"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-pressed={showPassword}
+                      disabled={isLoading}
+                      onClick={() => setShowPassword(value => !value)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+                    </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

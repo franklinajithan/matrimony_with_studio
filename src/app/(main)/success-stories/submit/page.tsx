@@ -17,6 +17,7 @@ import React, { useState } from "react";
 import { auth } from '@/lib/supabase/auth';
 import { mediaPathForUser, resolveMediaUrl, uploadFile } from '@/lib/supabase/storage';
 import { createSuccessStory } from '@/lib/supabase/stories';
+import { StoryConsentControls } from '@/components/stories/StoryConsentControls';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -39,6 +40,7 @@ const successStorySchema = z.object({
 export default function SubmitSuccessStoryPage() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionVersion, setSubmissionVersion] = useState(0);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof successStorySchema>>({
@@ -77,7 +79,7 @@ export default function SubmitSuccessStoryPage() {
         photoUrl,
         photoStoragePath,
         contactEmail: values.email || null,
-        submittedByUid: currentUser ? currentUser.uid : null,
+        publicationConsent: values.consent,
       });
 
       toast({
@@ -86,9 +88,9 @@ export default function SubmitSuccessStoryPage() {
         variant: "default",
       });
       form.reset();
+      setSubmissionVersion(n => n + 1);
       setSelectedFileName(null);
     } catch (error: any) {
-      console.error("Error submitting success story:", error);
       toast({
         title: "Submission Failed",
         description: error.message || "Could not submit your story. Please try again.",
@@ -207,7 +209,7 @@ export default function SubmitSuccessStoryPage() {
                     </FormControl>
                     <div className="min-w-0 space-y-2 leading-6">
                       <FormLabel className="cursor-pointer text-sm leading-6 text-muted-foreground">
-                        I consent to CupidMatch sharing my story and photo (if provided) on their website and promotional materials.
+                        My partner and I agree to publish these names, this marriage story and any photo on the CupidMatch website. I can withdraw this consent here. My contact email stays private.
                       </FormLabel>
                       <FormMessage />
                     </div>
@@ -228,6 +230,7 @@ export default function SubmitSuccessStoryPage() {
           <p className="text-sm leading-6 text-muted-foreground">You don’t need the perfect words. Here are a few places to start:</p>
           <ul className="list-disc space-y-3 pl-4 text-sm leading-6 text-muted-foreground"><li>What made you send that first hello?</li><li>Which values brought you closer?</li><li>What would you tell someone just starting out?</li></ul>
           <div className="border-t border-border pt-5"><ShieldCheck aria-hidden className="mb-3 h-5 w-5 text-primary" /><h3 className="text-sm font-semibold">Shared with care</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">Our team reviews submissions before they’re featured. Your email is only for verification and won’t be published.</p></div>
+          <StoryConsentControls key={submissionVersion} />
         </aside>
         </div>
       </div>

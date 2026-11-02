@@ -4,6 +4,7 @@ import { computeProfileReadiness, isProfileComplete } from "@/lib/onboarding/rea
 
 const completeDraft = {
   displayName: "Amina Perera",
+  gender: "female",
   dob: "1995-03-12",
   confirmedAdult: true,
   country: "Sri Lanka",
@@ -28,7 +29,7 @@ describe("profile readiness", () => {
     });
     const readiness = computeProfileReadiness(draft, false);
     expect(readiness.percent).toBe(Math.round((readiness.filled / readiness.total) * 100));
-    expect(readiness.percent).toBe(40);
+    expect(readiness.percent).toBe(67);
     expect(readiness.state).toBe("draft");
     expect(readiness.primaryAction.label).toBe("Continue my profile");
   });

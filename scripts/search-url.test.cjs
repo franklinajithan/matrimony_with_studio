@@ -1,0 +1,10 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const {load}=require('./helpers/load-ts.cjs');
+const {filtersFromSearch,searchFromFilters,safeSavedSearch}=load('src/lib/matching/search-url.ts');
+const empty={query:'',countries:[],languages:[],religions:[],professions:[],smoking:[],drinking:[]};
+test('all advanced fields, repeated countries and Unicode roundtrip in saved links',()=>{
+ const f={...empty,query:'தமிழ் & family',countries:['United Kingdom','Sri Lanka'],languages:['Tamil','Sinhala'],religions:['Hinduism'],professions:['Engineer'],smoking:['Never'],drinking:['Never'],gender:'Woman',ageMin:25,ageMax:38,heightMin:'160',heightMax:'180',education:["Master's"],maritalStatuses:['Never married'],relocation:'Open to relocating',wantsChildren:'Wants children',familyInvolvement:'Some family involvement',marriageTimeline:'Within 1–2 years'};
+ assert.deepEqual(filtersFromSearch(new URL(searchFromFilters(f),'https://example.com').searchParams),f);
+});
+test('neutral gender survives reload; legacy links retain the profile default',()=>{assert.equal(filtersFromSearch(new URLSearchParams(),'Woman').gender,'Woman');assert.equal(filtersFromSearch(new URL(searchFromFilters(empty),'https://example.com').searchParams,'Woman').gender,'No preference');});
+test('malformed ages and excessive query values are bounded',()=>{const p=new URLSearchParams('ageMin=NaN&ageMax=300&q='+'a'.repeat(300));for(let i=0;i<30;i++)p.append('country','b'.repeat(110));const f=filtersFromSearch(p);assert.equal(f.ageMin,undefined);assert.equal(f.ageMax,undefined);assert.equal(f.query.length,200);assert.equal(f.countries.length,20);assert.equal(f.countries[0].length,100);});
+test('saved searches reject scripts, external origins and unrelated routes',()=>{for(const url of ['https://evil.example/discover','//evil.example/discover','/dashboard','javascript:alert(1)','/discover/../login','/discover\\evil'])assert.equal(safeSavedSearch(url),null,url);assert.ok(safeSavedSearch('/discover?education=Doctorate').includes('education=Doctorate'));});

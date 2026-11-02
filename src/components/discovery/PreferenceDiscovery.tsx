@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { WORLD_COUNTRY_NAMES, countryOptionsWithLegacy } from "@/data/world-countries";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { getMessages } from "@/components/i18n/messages";
+import { filtersFromSearch, searchFromFilters, safeSavedSearch } from "@/lib/matching/search-url";
 
 type Person = Profile & { isShortlisted?: boolean };
 const empty: DiscoveryFilters = { query: "", countries: [], languages: [], religions: [], professions: [], smoking: [], drinking: [] };
@@ -53,6 +54,7 @@ function memberActionError(error: unknown): string {
 export function PreferenceDiscovery() {
   const router = useRouter();
   const params = useSearchParams();
+  const initialSearch = useRef(params.toString());
   const { toast } = useToast();
   const { language } = useI18n();
   const t = getMessages(language).discover;
@@ -76,23 +78,22 @@ export function PreferenceDiscovery() {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      const next = params.toString() ? `/discover?${params.toString()}` : "/discover";
+      const next = initialSearch.current ? `/discover?${initialSearch.current}` : "/discover";
       router.replace(`/login?next=${encodeURIComponent(next)}`);
       return;
     }
     try {
       setSearchOwnerId(user.id);
       const { data: savedSearch, error: savedError } = await supabase.from("member_saved_searches").select("path_and_query").eq("user_id", user.id).maybeSingle();
-      if (!savedError) setSavedSearchUrl(savedSearch?.path_and_query || null);
+      if (!savedError) setSavedSearchUrl(safeSavedSearch(savedSearch?.path_and_query));
       const self = await getProfile(user.id);
       if (!self) throw new Error("Complete your profile before finding matches.");
       const saved = partnerPreferencesFromProfile(self);
       const initialGender = defaultDiscoveryGender(self, saved);
       setDefaultGender(initialGender);
       // Saved preferences rank candidates; they must not silently exclude every profile.
-      const defaults = { ...empty, gender: initialGender };
       setPreferences(saved);
-      setFilters({ ...defaults, gender: params.get("gender") || initialGender, query: params.get("q") || "", ageMin: params.get("ageMin") ? Number(params.get("ageMin")) : defaults.ageMin, ageMax: params.get("ageMax") ? Number(params.get("ageMax")) : defaults.ageMax, countries: params.get("country") ? [params.get("country")!] : defaults.countries, languages: params.get("language") ? [params.get("language")!] : defaults.languages, religions: params.get("religion") ? [params.get("religion")!] : defaults.religions });
+      setFilters(filtersFromSearch(new URLSearchParams(initialSearch.current), initialGender));
       const [profilePages, sentIds] = await Promise.all([Promise.all(Array.from({ length: 5 }, (_, i) => listProfiles({ limit: 100, offset: i * 100, excludeId: user.id }))), listSentInterestReceiverIds(user.id)]);
       const profiles = profilePages.flat();
       const shortlisted = await getShortlistedIds(user.id, profiles.map((p) => p.id));
@@ -103,7 +104,7 @@ export function PreferenceDiscovery() {
     } catch (e) {
       toast({ title: "Matches unavailable", description: e instanceof Error ? e.message : "Please try again.", variant: "destructive" });
     } finally { setLoading(false); }
-  }, [params, router, toast]);
+  }, [router, toast]);
 
   useEffect(() => { void load(); }, [load]);
   const hasSaved = Boolean(preferences && hasPreferences(preferences));
@@ -129,11 +130,15 @@ export function PreferenceDiscovery() {
 
   useEffect(() => {
     if (loading) return;
-    const next = new URLSearchParams();
-    if (filters.gender) next.set("gender", filters.gender);
-    if (filters.query) next.set("q", filters.query); if (filters.ageMin) next.set("ageMin", String(filters.ageMin)); if (filters.ageMax) next.set("ageMax", String(filters.ageMax)); if (filters.countries[0]) next.set("country", filters.countries[0]); if (filters.languages[0]) next.set("language", filters.languages[0]); if (filters.religions[0]) next.set("religion", filters.religions[0]);
-    window.history.replaceState({}, "", next.size ? `/discover?${next}` : "/discover");
+    const next = searchFromFilters(filters);
+    if (window.location.pathname + window.location.search !== next) window.history.replaceState(window.history.state, "", next);
   }, [filters, loading]);
+
+  useEffect(() => {
+    const restore = () => setFilters(filtersFromSearch(new URLSearchParams(window.location.search), defaultGender));
+    window.addEventListener('popstate', restore);
+    return () => window.removeEventListener('popstate', restore);
+  }, [defaultGender]);
 
   const toggleShortlist = async (person: Person) => {
     const key = `s-${person.id}`;
@@ -175,7 +180,7 @@ export function PreferenceDiscovery() {
     }
   };
 
-  const FilterPanel = () => <div className="space-y-5 pb-8">
+  const filterPanel = <div className="space-y-5 pb-8">
     <div className="rounded-2xl bg-accent p-4 text-sm text-primary-dark"><p className="font-semibold">Filter profiles independently of your saved preferences</p><p className="mt-1 text-primary">Changes here filter the results. Your saved preferences are used to rank matches; Reset shows all available profiles.</p></div>
     <div><Label>{t.age}</Label><div className="mt-2 grid grid-cols-2 gap-2"><Input type="number" min={18} placeholder={t.min} value={filters.ageMin || ""} onChange={(e) => setFilters((f) => ({ ...f, ageMin: e.target.value ? Number(e.target.value) : undefined }))}/><Input type="number" min={18} placeholder={t.max} value={filters.ageMax || ""} onChange={(e) => setFilters((f) => ({ ...f, ageMax: e.target.value ? Number(e.target.value) : undefined }))}/></div></div>
     <Choice label={t.country} value={first(filters.countries)} values={countryOptionsWithLegacy(filters.countries)} onChange={(v) => setFilters((f) => ({ ...f, countries: list(v) }))}/><Choice label={t.language} value={first(filters.languages)} values={options.languages} onChange={(v) => setFilters((f) => ({ ...f, languages: list(v) }))}/><Choice label={t.religion} value={first(filters.religions)} values={options.religions} onChange={(v) => setFilters((f) => ({ ...f, religions: list(v) }))}/>
@@ -198,7 +203,7 @@ export function PreferenceDiscovery() {
 
   return <PageFrame>
     <PageHero eyebrow={t.eyebrow} title={t.title} description={t.description}/>
-    <Card className="overflow-hidden border-border"><CardContent className="p-4 sm:p-5"><div className="flex flex-col gap-3 lg:flex-row lg:items-center"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/><Input className="pl-10" placeholder={t.search} value={filters.query} onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))}/></div><div className="flex gap-2"><Sheet open={sheet} onOpenChange={setSheet}><SheetTrigger asChild><Button data-testid="discover-filters-open" variant="outline" className="flex-1 lg:flex-none"><SlidersHorizontal className="mr-2 h-4 w-4"/>{t.filters} {activeCount ? `(${activeCount})` : ""}</Button></SheetTrigger><SheetContent className="w-[92vw] overflow-y-auto sm:max-w-md"><SheetHeader><SheetTitle>{t.matchFilters}</SheetTitle></SheetHeader><div className="mt-5"><FilterPanel/></div></SheetContent></Sheet>{hasSaved && <Button variant="ghost" onClick={reset}><RotateCcw className="mr-2 h-4 w-4"/>{t.showAll}</Button>}</div></div>
+    <Card className="overflow-hidden border-border"><CardContent className="p-4 sm:p-5"><div className="flex flex-col gap-3 lg:flex-row lg:items-center"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/><Input className="pl-10" placeholder={t.search} value={filters.query} onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))}/></div><div className="flex gap-2"><Sheet open={sheet} onOpenChange={setSheet}><SheetTrigger asChild><Button data-testid="discover-filters-open" variant="outline" className="flex-1 lg:flex-none"><SlidersHorizontal className="mr-2 h-4 w-4"/>{t.filters} {activeCount ? `(${activeCount})` : ""}</Button></SheetTrigger><SheetContent className="w-[92vw] overflow-y-auto sm:max-w-md"><SheetHeader><SheetTitle>{t.matchFilters}</SheetTitle></SheetHeader><div className="mt-5">{filterPanel}</div></SheetContent></Sheet>{hasSaved && <Button variant="ghost" onClick={reset}><RotateCcw className="mr-2 h-4 w-4"/>{t.showAll}</Button>}</div></div>
       <div className={`mt-4 flex items-center gap-2 rounded-xl px-3 py-2 text-sm ${hasSaved ? "bg-accent text-primary" : "bg-amber-50 text-amber-800"}`}><Sparkles className="h-4 w-4 shrink-0"/><span>{hasSaved ? <><strong>Preference match %</strong> compares each member with your saved Partner Preferences.</> : <><strong>Match % is waiting for your preferences.</strong> Set Partner Preferences to activate personalised scores.</>}</span>{!hasSaved && <Button size="sm" variant="outline" className="ml-auto" onClick={() => router.push(PREFERENCES_ROUTE)}>Set preferences</Button>}</div>
     </CardContent></Card>
     <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground"><strong className="text-foreground">{results.length}</strong> {t.potential}</p><label className="flex items-center gap-2 text-xs text-muted-foreground">Sort by <select aria-label="Sort matches" className="h-9 rounded-lg border border-input bg-background px-2 text-sm text-foreground" value={sortMode} onChange={(event) => setSortMode(event.target.value as typeof sortMode)}><option value="compatible">Best preference match</option><option value="youngest">Age: youngest</option><option value="oldest">Age: oldest</option><option value="name">Name A–Z</option></select></label><div className="flex gap-1 rounded-xl border border-border p-1" role="group" aria-label="Profile display"><Button size="sm" variant={displayMode === "grid" ? "secondary" : "ghost"} aria-pressed={displayMode === "grid"} onClick={() => setDisplayMode("grid")}><LayoutGrid className="mr-1 h-4 w-4" />Grid</Button><Button size="sm" variant={displayMode === "list" ? "secondary" : "ghost"} aria-pressed={displayMode === "list"} onClick={() => setDisplayMode("list")}><List className="mr-1 h-4 w-4" />List</Button></div></div>
@@ -208,7 +213,7 @@ export function PreferenceDiscovery() {
       <label className="flex items-center gap-1 text-xs text-muted-foreground">To <Input aria-label="Maximum age" type="number" min={18} max={100} inputMode="numeric" className="h-9 w-16 px-2" placeholder="60" value={filters.ageMax ?? ""} onChange={(e) => setFilters((f) => ({ ...f, ageMax: e.target.value ? Number(e.target.value) : undefined }))}/></label>
       {defaultGender && <span className="rounded-full bg-accent px-3 py-2 text-xs font-medium text-primary">Looking for {defaultGender.toLowerCase()} profiles</span>}
       <Button size="sm" variant="outline" onClick={() => { navigator.clipboard?.writeText(window.location.href).then(() => toast({ title: "Search link copied" })).catch(() => toast({ title: "Unable to copy link", variant: "destructive" })); }}>Copy search link</Button>
-      <Button size="sm" variant="outline" disabled={!searchOwnerId} onClick={() => { if (!searchOwnerId) return; void (async () => { const url = window.location.pathname + window.location.search; const { error } = await supabase.from("member_saved_searches").upsert({ user_id: searchOwnerId, path_and_query: url, updated_at: new Date().toISOString() }, { onConflict: "user_id" }); if (error) { toast({ title: "Could not save search", description: error.message, variant: "destructive" }); return; } setSavedSearchUrl(url); toast({ title: "Search saved to your account" }); })(); }}>Save search</Button>
+      <Button size="sm" variant="outline" disabled={!searchOwnerId} onClick={() => { if (!searchOwnerId) return; void (async () => { const url = searchFromFilters(filters); const { error } = await supabase.from("member_saved_searches").upsert({ user_id: searchOwnerId, path_and_query: url, updated_at: new Date().toISOString() }, { onConflict: "user_id" }); if (error) { toast({ title: "Could not save search", description: error.message, variant: "destructive" }); return; } setSavedSearchUrl(url); toast({ title: "Search saved to your account" }); })(); }}>Save search</Button>
       {savedSearchUrl && <Button size="sm" variant="ghost" onClick={() => { window.location.assign(savedSearchUrl); }}>Open saved search</Button>}
     </div>
     {!results.length ? <Card><CardContent className="py-14 text-center"><Heart className="mx-auto h-10 w-10 text-gold-foreground"/><h2 className="mt-3 text-lg font-semibold">{t.none}</h2><p className="mt-1 text-sm text-muted-foreground">{t.broaden}</p><Button className="mt-4" variant="outline" onClick={clear}>{t.showAll}</Button></CardContent></Card> :

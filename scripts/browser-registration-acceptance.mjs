@@ -28,10 +28,10 @@ build.onResolve({filter:/^next\/link$/},()=>({path:'link',namespace:'test-link'}
    await page.clock.setFixedTime(new Date('2026-11-02T12:00:00Z'));
    const errors=[];page.on('pageerror',e=>errors.push(e.message));
    let draft={displayName:'Test Member',gender:'female',dob:'1995-05-12',country:'Sri Lanka',region:'Jaffna',languages:['Tamil'],lookingFor:'marriage',relationshipTimeline:'ready',bio:'I value kindness, honesty and a lasting partnership.',educationLevel:"Bachelor's",relocationOpenness:'open',photoPrivacy:'connections'};
-   let storedStep=3,failSave=false,saves=0,publishes=0,releaseSave=null;
+   let storedStep=3,failSave=false,saves=0,publishes=0,releaseSave=null,expectedPrivacy='connections',lastPublished=null;
    await page.route('**/api/onboarding/draft',route=>route.fulfill({json:{draft,step:storedStep,isPublished:false}}));
    await page.route('**/api/onboarding/save',async route=>{saves++;const body=route.request().postDataJSON();if(failSave)return route.fulfill({status:503,json:{error:'Temporary save failure'}});if(releaseSave){await releaseSave;}draft={...body.draft};storedStep=body.step;await route.fulfill({json:{ok:true,draft,step:storedStep}});});
-   await page.route('**/api/onboarding/publish',async route=>{publishes++;const body=route.request().postDataJSON();assert.equal(body.draft.reviewConfirmed,true);assert.equal(body.draft.photoPrivacy,'connections');await route.fulfill({json:{ok:true,isPublished:true,step:8}});});
+   await page.route('**/api/onboarding/publish',async route=>{publishes++;const body=route.request().postDataJSON();assert.equal(body.draft.reviewConfirmed,true);assert.equal(body.draft.photoPrivacy,expectedPrivacy);lastPublished=body.draft;await route.fulfill({json:{ok:true,isPublished:true,step:8}});});
    await page.goto(base);await page.locator('#bio').waitFor();checks++;
    // Explicit step link overrides the saved checkpoint.
    await page.goto(base+'/?step=0');await page.locator('#displayName').waitFor();checks++;
@@ -46,12 +46,18 @@ build.onResolve({filter:/^next\/link$/},()=>({path:'link',namespace:'test-link'}
    await page.locator('#displayName').fill('Latest edit');releaseSave=null;release();await new Promise(resolve=>setTimeout(resolve,1300));
    assert.equal(await page.locator('#displayName').inputValue(),'Latest edit','A stale save response must not replace newer typing');assert.equal(draft.displayName,'Latest edit');checks++;
    // Traverse all eight real screens; the fixture starts with complete editable fields.
-   for(const expected of['#country','#partnershipStyle','#bio','#religion','#open']){await page.getByRole('button',{name:'Continue',exact:true}).click();await page.locator(expected).waitFor();}
+   for(const expected of['#country','#partnershipStyle','#bio','#religion','#open']){await page.getByRole('button',{name:'Continue',exact:true}).click();await page.locator(expected).waitFor();if(expected==='#partnershipStyle'){assert.equal(await page.getByRole('radio',{name:/Long-term partnership|Open to either/}).count(),0);await page.locator('#maritalStatus').selectOption('Divorced');checks++;}}
    await page.getByRole('button',{name:'Continue',exact:true}).click();await page.getByRole('radio',{name:'Visible to accepted connections only',exact:true}).waitFor();
    await page.getByRole('button',{name:'Continue',exact:true}).click();await page.getByRole('button',{name:'Publish profile',exact:true}).waitFor();
    await page.getByRole('button',{name:'Publish profile',exact:true}).click();assert.equal(publishes,0);checks++;
    await page.getByRole('checkbox',{name:'I confirm these details are accurate and I want to publish my profile for other members to see.',exact:true}).check();await page.getByRole('button',{name:'Publish profile',exact:true}).click();await page.waitForFunction(()=>window.__navigation==='/dashboard');assert.equal(publishes,1);checks++;
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);assert.deepEqual(errors,[]);checks++;
+   draft={displayName:'Minimal Member',gender:'male',dob:'1990-06-10'};storedStep=0;expectedPrivacy='members';
+   await page.goto(base);await page.locator('#displayName').waitFor();assert.equal(await page.locator('#displayName').inputValue(),'Minimal Member');
+   await page.getByRole('button',{name:'Continue',exact:true}).click();await page.locator('#country').waitFor();
+   await page.getByRole('button',{name:'Skip optional details and review',exact:true}).click();await page.getByRole('button',{name:'Publish profile',exact:true}).waitFor();checks++;
+   await page.getByRole('checkbox',{name:'I confirm these details are accurate and I want to publish my profile for other members to see.',exact:true}).check();await page.getByRole('button',{name:'Publish profile',exact:true}).click();await page.waitForFunction(()=>window.__navigation==='/dashboard');assert.equal(publishes,2);checks++;
+   for(const key of['country','region','bio','educationLevel','relationshipTimeline','relocationOpenness','photoURL','maritalStatus'])assert.equal(lastPublished[key]||'','',key+' remains optional');assert.deepEqual(lastPublished.languages,[]);checks++;
    let signups=0,duplicate=false;
    await page.route('**/fixture/signup',async route=>{signups++;const body=route.request().postDataJSON();assert.equal(body.pendingPhone,'');assert.equal(body.email,'fixture-member@example.invalid');return route.fulfill(duplicate?{status:400,json:{error:'An account with this email already exists.'}}:{json:{needsEmailConfirmation:true,session:null,user:{uid:'fixture-member'}}});});
    await page.goto(base+'/#signup');await page.reload();
@@ -64,7 +70,7 @@ build.onResolve({filter:/^next\/link$/},()=>({path:'link',namespace:'test-link'}
    duplicate=true;await page.getByRole('button',{name:'Create account',exact:true}).click();await page.getByText('An account with this email already exists.',{exact:true}).first().waitFor();checks++;
    await page.getByRole('button',{name:'Google',exact:true}).click();await page.waitForFunction(()=>window.__oauth?.provider==='google');checks++;
    assert.deepEqual(errors,[]);
-   console.log(`PASS signup/onboarding ${viewport.width}px (14 checks)`);await context.close();await browser.close();browser=null;
+   console.log(`PASS signup/onboarding ${viewport.width}px (18 checks)`);await context.close();await browser.close();browser=null;
   }
   console.log(`${checks} registration/onboarding browser checks passed with fixture identity/HTTP boundaries.`);
 }finally{await browser?.close();if(server)await new Promise(resolve=>server.close(resolve));await rm(dir,{recursive:true,force:true});}

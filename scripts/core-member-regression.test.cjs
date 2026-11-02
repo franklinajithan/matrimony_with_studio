@@ -95,6 +95,7 @@ function discoveryHarness({ shortlist = async () => {}, send = async () => {}, a
   mocks['@/lib/supabase/shortlist'] = { addToShortlist: shortlist, removeFromShortlist: shortlist };
   mocks['@/lib/supabase/matches'] = { sendInterest: send };
   mocks['@/lib/matching/preferences'] = matching;
+  mocks['@/lib/matching/search-url'] = load('src/lib/matching/search-url.ts');
   mocks['@/hooks/use-toast'] = { useToast: () => ({ toast: value => toasts.push(value) }) };
   mocks['@/components/i18n/I18nProvider'] = { useI18n: () => ({ language: 'en' }) };
   mocks['@/components/i18n/messages'] = { getMessages: () => ({ discover: {} }) };
@@ -185,9 +186,9 @@ test('shared search URLs preserve explicit neutral and selected gender filters',
   try {
     for (const gender of ['Woman', 'Man', 'No preference']) {
       let saved;
-      global.window = { history: { replaceState: (_state, _title, value) => { saved = value; } } };
+      global.window = { location: { pathname: '/discover', search: '' }, history: { replaceState: (_state, _title, value) => { saved = value; } } };
       const ui = discoveryHarness(); ui.render(); ui.state[3] = { ...empty, gender }; ui.effects.length = 0; ui.render();
-      const persist = ui.effects.find(effect => effect.toString().includes('new URLSearchParams'));
+      const persist = ui.effects.find(effect => effect.toString().includes('searchFromFilters'));
       assert.ok(persist); persist();
       assert.equal(new URL(saved, 'https://example.com').searchParams.get('gender'), gender);
     }
