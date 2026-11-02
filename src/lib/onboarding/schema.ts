@@ -33,9 +33,10 @@ export const onboardingDraftSchema = z.object({
   country: optionalText,
   region: optionalText,
   languages: z.array(z.string().max(40)).max(12).optional(),
+  maritalStatus: optionalText,
   lookingFor: optionalText,
   relationshipTimeline: optionalText,
-  partnershipStyle: optionalText,
+  partnershipStyle: optionalLongText,
   bio: optionalLongText,
   educationLevel: optionalText,
   smokingHabits: optionalText,
@@ -69,7 +70,7 @@ export type OnboardingDraft = z.infer<typeof onboardingDraftSchema>;
 
 export const EMPTY_ONBOARDING_DRAFT: OnboardingDraft = {
   displayName: "", gender: undefined, hideName: false, aliasName: "", profilePhotoGrayscale: false, dob: "", confirmedAdult: false, height: "", profession: "", country: "", region: "", languages: [],
-  lookingFor: "", relationshipTimeline: "", partnershipStyle: "", bio: "", educationLevel: "", smokingHabits: "",
+  maritalStatus: "", lookingFor: "", relationshipTimeline: "", partnershipStyle: "", bio: "", educationLevel: "", smokingHabits: "",
   drinkingHabits: "", hobbies: "", faithImportance: "", familyImportance: "", religion: "", culturalBackground: "",
   familyInvolvement: "", festivalImportance: "", skippedCultural: false, currentCountry: "", preferredSettlement: [],
   relocationOpenness: "", longDistanceOk: "", familyResponsibilities: "", photoURL: "", photoStoragePath: "",
@@ -106,11 +107,12 @@ function sanitizeDraftInput(input: unknown): unknown {
   row.displayName = clamp(row.displayName, 80);
   row.dob = clamp(row.dob, 32);
   row.bio = clamp(row.bio, 2000);
+  row.partnershipStyle = clamp(row.partnershipStyle, 2000);
   row.familyResponsibilities = clamp(row.familyResponsibilities, 2000);
   row.photoURL = clamp(row.photoURL, 4000);
   row.photoStoragePath = clamp(row.photoStoragePath, 1000);
   for (const key of Object.keys(row)) {
-    if (["displayName", "gender", "hideName", "aliasName", "profilePhotoGrayscale", "dob", "bio", "familyResponsibilities", "photoURL", "photoStoragePath", "languages", "preferredSettlement", "additionalPhotoUrls", "confirmedAdult", "skippedCultural", "photoPrivacy", "reviewConfirmed"].includes(key)) continue;
+    if (["displayName", "gender", "hideName", "aliasName", "profilePhotoGrayscale", "dob", "bio", "partnershipStyle", "familyResponsibilities", "photoURL", "photoStoragePath", "languages", "preferredSettlement", "additionalPhotoUrls", "confirmedAdult", "skippedCultural", "photoPrivacy", "reviewConfirmed"].includes(key)) continue;
     if (typeof row[key] === "string") row[key] = clamp(row[key], 500);
   }
   if (Array.isArray(row.additionalPhotoUrls)) {
@@ -134,11 +136,11 @@ const stepSchemas: Record<number, z.ZodTypeAny> = {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "You must be 18 or older to create a profile.", path: ["dob"] });
     }
   }),
-  1: z.object({ country: z.string().trim().min(2, "Select your country."), region: z.string().trim().min(2, "Add a city or region, not a street address."), languages: z.array(z.string()).min(1, "Select at least one language.") }),
-  2: z.object({ lookingFor: z.string().trim().min(2, "Tell us what you are looking for."), relationshipTimeline: z.string().trim().min(2, "Choose a timeline.") }),
-  3: z.object({ bio: z.string().trim().min(20, "Write at least a short introduction (20 characters)."), educationLevel: z.string().trim().min(1, "Select your education level.") }),
+  1: z.object({ country: optionalText, region: optionalText, languages: z.array(z.string()).optional() }),
+  2: z.object({ maritalStatus: optionalText, lookingFor: optionalText, relationshipTimeline: optionalText, partnershipStyle: optionalLongText }),
+  3: z.object({ bio: optionalLongText, educationLevel: optionalText }),
   4: z.object({}).optional(),
-  5: z.object({ relocationOpenness: z.string().trim().min(2, "Tell us how open you are to relocating.") }),
+  5: z.object({ relocationOpenness: optionalText }),
   6: z.object({ photoPrivacy: z.enum(["members", "connections", "hidden"], { errorMap: () => ({ message: "Choose a photo privacy option." }) }) }),
   7: z.object({ reviewConfirmed: z.literal(true, { errorMap: () => ({ message: "Please confirm your details before publishing." }) }) }),
 };
@@ -160,10 +162,10 @@ export function validateForPublish(draft: OnboardingDraft): string[] {
 export const ONBOARDING_STEPS = [
   { id: 0, title: "About you", description: "Basic details and adult eligibility" },
   { id: 1, title: "Where you live", description: "Country, region and languages" },
-  { id: 2, title: "Intentions", description: "What you are looking for" },
-  { id: 3, title: "Values", description: "Lifestyle and what matters" },
+  { id: 2, title: "Marriage plans", description: "Optional marriage preferences" },
+  { id: 3, title: "About your life", description: "Optional details for a future spouse" },
   { id: 4, title: "Culture", description: "Optional family and cultural preferences" },
-  { id: 5, title: "Future", description: "Settlement and relocation" },
+  { id: 5, title: "Life after marriage", description: "Optional settlement and family plans" },
   { id: 6, title: "Photos", description: "Photos and privacy" },
   { id: 7, title: "Review", description: "Check and publish when you are ready" },
 ] as const;
