@@ -28,26 +28,27 @@ test('expired sessions never submit a report or block',async()=>{
  const f=fixture({authenticate:async()=>({data:{user:null},error:null})});f.click('Block member');f.click('Confirm block');await flush();assert.equal(f.events.length,0);assert.match(f.toasts[0].description,/session has expired/);assert.equal(f.lock.current,false);
 });
 
-function blockedFixture(list) {
+function blockedFixture(list, {authenticate = async () => ({data:{user:{id:"viewer"}},error:null}), unblock = async () => {}} = {}) {
  const state = []; let cursor = 0, effectDeps, cleanup, subscriber;
  let subscriptions = 0, unsubscriptions = 0;
+ const refs = [], toasts = []; let refCursor = 0;
  const mocks = {
   react: {
    useState: initial => { const i = cursor++; if (!(i in state)) state[i] = initial; return [state[i], next => { state[i] = typeof next === 'function' ? next(state[i]) : next; }]; },
-   useRef: () => ({current: false}),
+   useRef: initial => { const i = refCursor++; return refs[i] ||= {current:initial}; },
    useEffect: (effect, deps) => { if (!effectDeps || deps.some((value, i) => value !== effectDeps[i])) { cleanup?.(); effectDeps = deps; cleanup = effect(); } },
   },
   '@/lib/supabase/auth': {onAuthStateChanged: callback => { subscriptions++; subscriber = callback; callback({uid: 'viewer'}); return () => { unsubscriptions++; }; }},
-  '@/lib/supabase/client': {supabase: {}},
-  '@/lib/supabase/blocks': {listBlocks: list},
+  '@/lib/supabase/client': {supabase: {auth:{getUser:authenticate}}},
+  '@/lib/supabase/blocks': {listBlocks: list, unblockUser:unblock},
   '@/components/ui/button': {Button: 'Button'},
   '@/components/ui/card': Object.fromEntries(['Card','CardContent','CardHeader','CardTitle'].map(name => [name,name])),
-  '@/hooks/use-toast': {useToast: () => ({toast() {}})},
+  '@/hooks/use-toast': {useToast: () => ({toast(value) {toasts.push(value);}})},
  };
  const {BlockedMembers} = load('src/components/safety/BlockedMembers.tsx', mocks);
- function render() { cursor = 0; return BlockedMembers(); }
+ function render() { cursor = 0; refCursor = 0; return BlockedMembers(); }
  function find(node, predicate) { if (!node || typeof node !== 'object') return; if (predicate(node)) return node; for (const child of [node.props?.children].flat(Infinity)) { const result = find(child, predicate); if (result) return result; } }
- return {render, state, find, auth: user => subscriber(user), unmount: () => cleanup(), counts: () => ({subscriptions, unsubscriptions})};
+ return {render, state, find, toasts, auth: user => subscriber(user), unmount: () => cleanup(), counts: () => ({subscriptions, unsubscriptions})};
 }
 test('blocked list retries a failed load in place and clears the error after success', async () => {
  let attempts = 0;
@@ -67,4 +68,39 @@ test('retried blocked list ignores stale requests and signed-out results', async
  f.auth({uid:'other'}); pending[1].resolve([{id:'stale'}]); await flush(); assert.equal(f.state[0].length, 0);
  f.auth(null); pending[2].resolve([{id:'private'}]); await flush(); assert.equal(f.state[0].length, 0); assert.equal(f.state[1], false);
  f.unmount();
+});
+
+test('account change during unblock authentication prevents the write and feedback', async () => {
+ let release, writes = 0;
+ const f = blockedFixture(async () => [{id:'block',blockerId:'viewer',blockedId:'member',reference:'CM-000002'}], {
+  authenticate: () => new Promise(resolve => {release = resolve;}), unblock: async () => {writes++;},
+ });
+ f.render(); await flush();
+ f.find(f.render(), node => node.type === 'Button' && node.props.children === 'Unblock').props.onClick();
+ f.auth(null); release({data:{user:{id:'viewer'}},error:null}); await flush();
+ assert.equal(writes, 0); assert.equal(f.toasts.length, 0); assert.equal(f.state[0].length, 0); f.unmount();
+});
+test('unmounted unblock completion never shows stale success or failure feedback', async () => {
+ for (const fail of [false,true]) {
+  let resolveWrite, rejectWrite;
+  const f = blockedFixture(async () => [{id:'block',blockerId:'viewer',blockedId:'member',reference:'CM-000002'}], {
+   unblock: () => new Promise((resolve,reject) => {resolveWrite = resolve; rejectWrite = reject;}),
+  });
+  f.render(); await flush();
+  f.find(f.render(), node => node.type === 'Button' && node.props.children === 'Unblock').props.onClick(); await flush();
+  f.unmount(); if (fail) rejectWrite(Error('offline')); else resolveWrite(); await flush();
+  assert.equal(f.toasts.length, 0); assert.equal(f.state[0].length, 1);
+ }
+});
+test('active unblock confirms persistence, locks duplicates and permits retry after failure', async () => {
+ let release, reject, writes = 0;
+ const f = blockedFixture(async () => [{id:'block',blockerId:'viewer',blockedId:'member',reference:'CM-000002'}], {
+  unblock: () => {writes++; return new Promise((resolve,fail) => {release=resolve;reject=fail;});},
+ });
+ f.render(); await flush();
+ const click = () => f.find(f.render(), node => node.type === 'Button' && node.props.children === 'Unblock').props.onClick();
+ const firstClick = f.find(f.render(), node => node.type === 'Button' && node.props.children === 'Unblock').props.onClick;
+ firstClick(); firstClick(); await flush(); assert.equal(writes, 1); assert.equal(f.toasts.length, 0);
+ reject(Error('offline')); await flush(); assert.equal(f.state[0].length, 1); assert.equal(f.toasts[0].variant, 'destructive');
+ click(); await flush(); release(); await flush(); assert.equal(writes, 2); assert.equal(f.state[0].length, 0); assert.equal(f.toasts[1].title, 'Member unblocked'); f.unmount();
 });

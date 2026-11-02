@@ -10,27 +10,30 @@ export function BlockedMembers() {
   const [blocks, setBlocks] = useState<Block[]>([]); const [loading, setLoading] = useState(true);
   const [error, setError] = useState(""); const [busy, setBusy] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
-  const pending = useRef(false); const { toast } = useToast();
+  const pending = useRef(false);
+  const { current: generation } = useRef({ value: 0 }); const { toast } = useToast();
   useEffect(() => {
-    let generation = 0;
     const unsubscribe = onAuthStateChanged((user: AuthUser | null) => {
-      const current = ++generation; setBlocks([]); setError(""); setLoading(!!user);
-      if (user) void listBlocks(user.uid, 500).then((rows) => { if (current === generation) setBlocks(rows); })
-        .catch(() => { if (current === generation) setError("Could not load blocked members. Please try again."); })
-        .finally(() => { if (current === generation) setLoading(false); });
+      const current = ++generation.value; setBlocks([]); setError(""); setLoading(!!user);
+      if (user) void listBlocks(user.uid, 500).then((rows) => { if (current === generation.value) setBlocks(rows); })
+        .catch(() => { if (current === generation.value) setError("Could not load blocked members. Please try again."); })
+        .finally(() => { if (current === generation.value) setLoading(false); });
     });
-    return () => { generation++; unsubscribe(); };
-  }, [reload]);
+    return () => { generation.value++; unsubscribe(); };
+  }, [reload, generation]);
   async function unblock(block: Block) {
     if (pending.current) return; pending.current = true; setBusy(block.id);
+    const current = generation.value;
     try {
       const { data, error } = await supabase.auth.getUser();
+      if (current !== generation.value) return;
       if (error) throw error;
       if (!data.user || data.user.id !== block.blockerId) throw new Error("Sign in again to manage blocks.");
       await unblockUser(data.user.id, block.blockedId);
+      if (current !== generation.value) return;
       setBlocks((rows) => rows.filter((row) => row.id !== block.id));
       toast({ title: "Member unblocked", description: "Your previous connection has not been restored." });
-    } catch { toast({ title: "Could not unblock member", description: "Please refresh and try again.", variant: "destructive" }); }
+    } catch { if (current === generation.value) toast({ title: "Could not unblock member", description: "Please refresh and try again.", variant: "destructive" }); }
     finally { pending.current = false; setBusy(null); }
   }
   return <Card><CardHeader><CardTitle>Blocked members</CardTitle></CardHeader><CardContent className="space-y-3">
