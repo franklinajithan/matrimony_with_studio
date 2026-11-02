@@ -11,7 +11,7 @@ import { execFileSync } from 'node:child_process';
 const root=resolve('.'), dir=await mkdtemp(join(tmpdir(),'cupidmatch-browser-'));
 let browser,server;
 try {
-  const bundle=await build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import Verification from './src/app/admin/verifications/page-client';import Audit from './src/app/admin/security/audit-explorer';createRoot(document.getElementById('root')).render(location.hash==='#audit'?<Audit/>:<Verification/>);`,resolveDir:root,loader:'tsx'},bundle:true,write:false,jsx:'automatic',platform:'browser',tsconfig:join(root,'tsconfig.json'),define:{'process.env.NODE_ENV':'"production"'},plugins:[{name:'isolated-link',setup(build){build.onResolve({filter:/^next\/link$/},()=>({path:'link',namespace:'test-link'}));build.onLoad({filter:/.*/,namespace:'test-link'},()=>({contents:"import React from 'react';export default function Link({children,...props}){return React.createElement('a',props,children);}",resolveDir:root}));}}]});
+  const bundle=await build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import Verification from './src/app/admin/verifications/page-client';import Audit from './src/app/admin/security/audit-explorer';import{PremiumLaunchOffer}from'./src/components/subscriptions/PremiumLaunchOffer';createRoot(document.getElementById('root')).render(location.hash==='#premium'?<PremiumLaunchOffer/>:location.hash==='#audit'?<Audit/>:<Verification/>);`,resolveDir:root,loader:'tsx'},bundle:true,write:false,jsx:'automatic',platform:'browser',tsconfig:join(root,'tsconfig.json'),define:{'process.env.NODE_ENV':'"production"'},plugins:[{name:'isolated-link',setup(build){build.onResolve({filter:/^next\/link$/},()=>({path:'link',namespace:'test-link'}));build.onLoad({filter:/.*/,namespace:'test-link'},()=>({contents:"import React from 'react';export default function Link({children,...props}){return React.createElement('a',props,children);}",resolveDir:root}));}}]});
   execFileSync(join(root,'node_modules/.bin/tailwindcss'),['-i','src/app/globals.css','-o',join(dir,'style.css')],{stdio:'pipe'});
   const css=await readFile(join(dir,'style.css'));
   server=createServer((req,res)=>{if(req.url==='/bundle.js'){res.setHeader('Content-Type','text/javascript');res.end(bundle.outputFiles[0].contents);}else if(req.url==='/style.css'){res.setHeader('Content-Type','text/css');res.end(css);}else{res.setHeader('Content-Type','text/html');res.end('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/style.css"></head><body><main class="p-4"><div id="root"></div></main><script src="/bundle.js"></script></body></html>');}});
@@ -45,8 +45,16 @@ try {
     await page.goto(base+'/#audit');await page.reload();await page.getByRole('button',{name:'Older events',exact:true}).click();await page.getByText('Page 2 · Up to 50 events per page',{exact:true}).waitFor();checks++;
     await page.getByRole('button',{name:'Clear',exact:true}).click();await page.getByText('Page 1 · Up to 50 events per page',{exact:true}).waitFor();checks++;
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);assert.deepEqual(errors,[]);checks++;
+    let claims=0;
+    await page.route('**/api/membership/premium-launch',async route=>{claims++;assert.deepEqual(route.request().postDataJSON(),{});await new Promise(resolve=>setTimeout(resolve,150));await route.fulfill({json:{plan:'premium',durationMonths:6,startsAt:'2026-11-02T10:00:00Z',endsAt:'2027-05-02T10:00:00Z'}});});
+    await page.goto(base+'/#premium');await page.reload();
+    await page.getByRole('heading',{name:'Premium — free for 6 months',exact:true}).waitFor();checks++;
+    await page.getByRole('button',{name:'Start 6 months free',exact:true}).click();
+    await page.getByRole('status').filter({hasText:'Your Premium launch offer is active until'}).waitFor();assert.equal(claims,1);checks++;
+    assert.equal(await page.getByRole('button',{name:'Start 6 months free',exact:true}).count(),0);checks++;
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);checks++;
     await context.close();await browser.close();browser=null;
-    console.log(`PASS admin browser acceptance ${viewport.width}px (9 checks)`);
+    console.log(`PASS admin browser acceptance ${viewport.width}px (13 checks)`);
   }
   console.log(`${checks} desktop/mobile browser checks passed; API responses are fixtures.`);
 }finally{await browser?.close();if(server)await new Promise(resolve=>server.close(resolve));await rm(dir,{recursive:true,force:true});}

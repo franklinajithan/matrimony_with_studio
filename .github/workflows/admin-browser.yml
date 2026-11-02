@@ -4,6 +4,7 @@ on:
     paths:
       - 'src/app/admin/**'
       - 'src/components/ui/**'
+      - 'src/components/subscriptions/PremiumLaunchOffer.tsx'
       - 'scripts/browser-admin-acceptance.mjs'
       - 'package.json'
       - 'package-lock.json'

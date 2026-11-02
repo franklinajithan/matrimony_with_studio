@@ -27,7 +27,8 @@
     "test:admin-pricing": "node --test scripts/admin-pricing-sql.test.mjs scripts/admin-pricing-api.test.cjs scripts/public-catalogue.test.cjs scripts/admin-pricing-ui.test.cjs",
     "test:admin-verification": "node --test scripts/admin-verification-api.test.cjs scripts/admin-verification-ui.test.cjs scripts/admin-verification-sql.test.mjs",
     "test:admin-audit": "node --test scripts/admin-audit-pagination.test.cjs scripts/admin-audit-ui.test.cjs",
-    "test:browser-admin": "node scripts/browser-admin-acceptance.mjs"
+    "test:browser-admin": "node scripts/browser-admin-acceptance.mjs",
+    "test:premium-launch": "node --test scripts/premium-launch-api.test.cjs scripts/premium-launch-sql.test.mjs"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.28.0",
