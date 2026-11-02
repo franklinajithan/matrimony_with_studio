@@ -12,6 +12,8 @@ const primary = [
   { href: "/admin/subscriptions", label: "Billing", icon: CreditCard },
 ];
 const extra = [
+  { href: "/admin/promo-codes", label: "Invitation codes" },
+  { href: "/admin/horoscope", label: "Horoscope controls" },
   { href: "/admin/reports", label: "Member reports" },
   { href: "/admin/registration", label: "Registration controls" },
   { href: "/admin/plans", label: "Plans & pricing" },

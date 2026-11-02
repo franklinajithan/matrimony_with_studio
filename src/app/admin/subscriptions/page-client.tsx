@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { BillingRecords } from "./billing-records";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 type Trial={user_id:string;name:string;email:string|null;starts_at:string;ends_at:string;duration_months:number;promo_code_id:string|null};
@@ -7,7 +8,7 @@ const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]
 export default function AdminSubscriptionsClient(){
  const [trials,setTrials]=useState<Trial[]>([]),[memberId,setMemberId]=useState(""),[action,setAction]=useState<"grant"|"extend"|"end">("extend"),[months,setMonths]=useState(3),[reason,setReason]=useState(""),[search,setSearch]=useState(""),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[success,setSuccess]=useState("");
  async function load(){
-  setLoading(true);
+  setLoading(true);setError("");
   try{const r=await fetch("/api/admin/trials",{cache:"no-store"});const body=await r.json();if(!r.ok)throw Error(body.error||"Unable to load trials");setTrials(body.trials||[]);}
   catch(e){setError(e instanceof Error?e.message:"Unable to load trials");}
   finally{setLoading(false);}
@@ -25,7 +26,8 @@ export default function AdminSubscriptionsClient(){
   finally{setBusy(false);}
  }
  return <div className="space-y-7 pb-12" data-testid="admin-subscriptions">
- <div><p className="text-xs font-bold uppercase tracking-widest text-primary">MEMBERSHIP OPERATIONS</p><h1 className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">Trial control centre</h1><p className="mt-2 max-w-2xl text-sm text-muted-foreground">Grant, extend or end introductory memberships with a required reason and permanent audit entry. Payment-provider subscriptions remain separate.</p></div>
+ <div><p className="text-xs font-bold uppercase tracking-widest text-primary">MEMBERSHIP OPERATIONS</p><h1 className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">Membership control centre</h1><p className="mt-2 max-w-2xl text-sm text-muted-foreground">Grant, extend or end introductory memberships with a required reason and permanent audit entry. Payment-provider subscriptions remain separate.</p></div>
+ <BillingRecords />
  <div className="grid gap-3 sm:grid-cols-3"><div className="rounded-2xl border bg-card p-5"><p className="text-sm text-muted-foreground">Loaded trial records</p><p className="mt-2 text-3xl font-bold">{trials.length}</p></div><div className="rounded-2xl border bg-card p-5"><p className="text-sm text-muted-foreground">Active trials (loaded)</p><p className="mt-2 text-3xl font-bold text-emerald-700">{active}</p></div><div className="rounded-2xl border bg-card p-5"><p className="text-sm text-muted-foreground">Special-code trials (loaded)</p><p className="mt-2 text-3xl font-bold text-primary">{trials.filter(t=>!!t.promo_code_id).length}</p></div></div>
  <form onSubmit={submit} className="space-y-5 rounded-3xl border bg-card p-5 shadow-sm sm:p-7">
  <div><h2 className="text-xl font-bold">Adjust a member&apos;s trial</h2><p className="mt-1 text-sm text-muted-foreground">Choose an existing member below or paste a member ID from the Members directory.</p></div>
@@ -39,6 +41,6 @@ export default function AdminSubscriptionsClient(){
  </form>
  <section className="rounded-3xl border bg-card p-5 shadow-sm"><div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-xl font-bold">Member trials</h2><p className="text-xs text-muted-foreground">Latest 200 records by expiry. Counts are for loaded records only.</p></div><Button variant="outline" disabled={loading} onClick={()=>void load()}>Refresh</Button></div>
  <Input aria-label="Search trials" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, email or member ID" className="mb-4"/>
- {loading?<p className="p-5 text-muted-foreground">Loading trial records…</p>:filtered.length===0?<p className="p-5 text-muted-foreground">No matching trial records.</p>:<div className="grid gap-3 md:grid-cols-2">{filtered.map(t=>{const live=new Date(t.ends_at).getTime()>Date.now();return <div key={t.user_id} className="rounded-2xl border border-border p-4"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><h3 className="truncate font-semibold">{t.name}</h3><p className="truncate text-xs text-muted-foreground">{t.email||t.user_id}</p></div><span className={`rounded-full px-2 py-1 text-xs font-bold ${live?"bg-emerald-50 text-emerald-700":"bg-accent text-muted-foreground"}`}>{live?"Active":"Ended"}</span></div><p className="mt-3 text-sm text-muted-foreground">{t.duration_months} months · {t.promo_code_id?"Special code":"Standard / admin"}</p><p className="mt-1 text-sm text-muted-foreground">Ends {new Date(t.ends_at).toLocaleDateString("en-GB")}</p><Button className="mt-3" size="sm" variant="outline" onClick={()=>{setMemberId(t.user_id);setAction(live?"extend":"extend");window.scrollTo({top:0,behavior:"smooth"});}}>Manage membership</Button></div>})}</div>}
+ {loading?<p className="p-5 text-muted-foreground">Loading trial records…</p>:filtered.length===0?<p className="p-5 text-muted-foreground">No matching trial records.</p>:<div className="grid gap-3 md:grid-cols-2">{filtered.map(t=>{const live=new Date(t.ends_at).getTime()>Date.now();return <div key={t.user_id} className="rounded-2xl border border-border p-4"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><h3 className="truncate font-semibold">{t.name}</h3><p className="truncate text-xs text-muted-foreground">{t.email||t.user_id}</p></div><span className={`rounded-full px-2 py-1 text-xs font-bold ${live?"bg-emerald-50 text-emerald-700":"bg-accent text-muted-foreground"}`}>{live?"Active":"Ended"}</span></div><p className="mt-3 text-sm text-muted-foreground">{t.duration_months} months · {t.promo_code_id?"Special code":"Standard / admin"}</p><p className="mt-1 text-sm text-muted-foreground">Ends {new Date(t.ends_at).toLocaleDateString("en-GB")}</p><Button className="mt-3" size="sm" variant="outline" onClick={()=>{setMemberId(t.user_id);setAction("extend");window.scrollTo({top:0,behavior:"smooth"});}}>Manage membership</Button></div>})}</div>}
  </section></div>;
 }

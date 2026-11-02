@@ -2,8 +2,11 @@ import { getAdminDashboardMetrics, type AdminDashboardMetrics } from "@/lib/admi
 import { requireAdminPage } from "@/app/admin/guard";
 import { Users, Activity, RefreshCw, UserCheck, BookHeart, CreditCard, BadgePoundSterling, Shield, ArrowUpRight, ArrowRight, LayoutDashboard, Sparkles, ShieldAlert } from "lucide-react";
 import Link from "next/link";
+import { WorkloadOverview } from "./workload-overview";
 
 const modules = [
+  { title: "Member reports", detail: "Review reports and record moderation decisions", icon: ShieldAlert, href: "/admin/reports", tint: "bg-amber-50 text-amber-700", category: "TRUST & SAFETY" },
+  { title: "Horoscope controls", detail: "Manage feature access and QA approvals", icon: Sparkles, href: "/admin/horoscope", tint: "bg-accent text-primary", category: "SYSTEM" },
   { title: "Registration controls", detail: "Pause or reopen new member registrations", icon: Users, href: "/admin/registration", tint: "bg-accent text-primary", category: "SITE ACCESS" },
   { title: "Member management", detail: "Member directory, profiles and account review", icon: Users, href: "/admin/users", tint: "bg-accent text-primary", category: "COMMUNITY" },
   { title: "Verification centre", detail: "Review submitted requests and profile status", icon: UserCheck, href: "/admin/verifications", tint: "bg-blue-50 text-blue-700", category: "TRUST & SAFETY" },
@@ -60,6 +63,7 @@ export default async function AdminDashboardPage() {
       </div>
     </section>
 
+    <WorkloadOverview />
     <section className="space-y-4">
       <div><p className="mb-1 text-xs font-bold uppercase tracking-[0.14em] text-primary">WORKSPACE</p><h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Management tools</h2><p className="mt-1 text-sm text-muted-foreground">Choose an area to view and manage.</p></div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{modules.map(({ title, detail, icon: Icon, href, tint, category }) =>

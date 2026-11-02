@@ -1,156 +1,40 @@
-
 "use client";
-
-import React, { useEffect, useState, useMemo } from 'react';
-import { subscribeToSuccessStories } from '@/lib/supabase/stories';
-import type { Timestamp } from '@/lib/supabase/timestamp';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Search, BookHeart } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
-
-interface SuccessStoryData {
-  id: string;
-  coupleNames?: string;
-  status?: 'pending' | 'approved' | 'rejected';
-  submittedAt?: Timestamp;
-  storyText?: string; 
-}
-
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+type Status = "pending" | "approved" | "rejected";
+type Story = { id: string; couple_names: string; story_text: string; status: Status; submitted_at: string };
 export default function AdminSuccessStoriesPage() {
-  const [stories, setStories] = useState<SuccessStoryData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const { toast } = useToast();
-
+  const [stories, setStories] = useState<Story[]>([]);
+  const [filter, setFilter] = useState<Status | "">("pending"); const [offset, setOffset] = useState(0);
+  const [loading, setLoading] = useState(true); const [error, setError] = useState(""); const [success, setSuccess] = useState("");
+  const [reload, setReload] = useState(0); const [busy, setBusy] = useState(false); const lock = useRef(false);
+  const [review, setReview] = useState<{story: Story; status: Status} | null>(null); const [note, setNote] = useState("");
   useEffect(() => {
-    setIsLoading(true);
-    const unsubscribe = subscribeToSuccessStories((fetchedStories) => {
-      setStories(fetchedStories.map((story) => ({
-        id: story.id,
-        coupleNames: story.coupleNames,
-        status: story.status,
-        submittedAt: story.submittedAt || undefined,
-        storyText: story.storyText,
-      })));
-      setIsLoading(false);
-    }, (error) => {
-      console.error("Error fetching success stories:", error);
-      toast({
-        title: "Error Loading Stories",
-        description: "Could not fetch success stories. Please try again.",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [toast]);
-
-  const filteredStories = useMemo(() => {
-    if (!searchTerm) return stories;
-    return stories.filter(story =>
-      (story.coupleNames?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (story.id?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (story.status?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-    );
-  }, [stories, searchTerm]);
-
-  const getStatusBadgeVariant = (status?: string): "default" | "secondary" | "destructive" | "outline" => {
-    switch (status) {
-      case 'approved':
-        return 'default'; // Green (using primary for now)
-      case 'pending':
-        return 'secondary'; // Yellow/Amber (using secondary)
-      case 'rejected':
-        return 'destructive'; // Red
-      default:
-        return 'outline';
-    }
-  };
-   const getStatusBadgeClasses = (status?: string): string => {
-    switch (status) {
-      case 'approved':
-        return 'bg-green-500 hover:bg-green-600 text-white';
-      case 'pending':
-        return 'bg-amber-500 hover:bg-amber-600 text-white';
-      default:
-        return ''; // Uses default destructive or outline styles
-    }
-  };
-
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
+    const controller = new AbortController(); setLoading(true); setError(""); setStories([]);
+    void fetch(`/api/admin/success-stories?status=${filter}&offset=${offset}`, { cache: "no-store", signal: controller.signal })
+      .then(async response => { const body = await response.json(); if (!response.ok || !Array.isArray(body.stories)) throw Error(body.error || "Could not load stories"); if (!controller.signal.aborted) setStories(body.stories); })
+      .catch(() => { if (!controller.signal.aborted) setError("Stories unavailable. Try again."); })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [filter, offset, reload]);
+  async function save() {
+    if (!review || lock.current || note.trim().length < 10) return;
+    lock.current = true; setBusy(true); setError(""); setSuccess("");
+    try {
+      const response = await fetch("/api/admin/success-stories", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: review.story.id, expectedStatus: review.story.status, status: review.status, note: note.trim() }) });
+      const body = await response.json(); if (!response.ok) throw Error(body.error || "Could not save review");
+      setReview(null); setNote(""); setSuccess("Review saved and recorded in the audit log."); setReload(value => value + 1);
+    } catch (err) { setError(err instanceof Error ? err.message : "Could not save review"); }
+    finally { lock.current = false; setBusy(false); }
   }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-                <BookHeart className="h-8 w-8 text-primary"/>Manage Success Stories
-            </h1>
-            <p className="text-muted-foreground mt-1">View submitted love stories. Moderation actions will be enabled after secure, audited server operations are implemented.</p>
-        </div>
-      </div>
-      
-
-      <div className="flex items-center gap-2 p-1 rounded-md border border-input bg-card focus-within:ring-2 focus-within:ring-ring">
-        <Search className="h-5 w-5 ml-2 text-muted-foreground" />
-        <Input
-            type="text"
-            placeholder="Filter by names, ID, or status..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full border-none shadow-none focus-visible:ring-0 h-9"
-        />
-      </div>
-
-      <div className="overflow-x-auto bg-card p-4 rounded-lg shadow">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[200px]">Couple Names</TableHead>
-              <TableHead>Submitted At</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-              <TableHead>Story</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredStories.map((story) => (
-              <TableRow key={story.id}>
-                <TableCell className="font-medium">{story.coupleNames || 'N/A'}</TableCell>
-                <TableCell>
-                  {story.submittedAt ? format(story.submittedAt.toDate(), 'PPp') : 'N/A'}
-                </TableCell>
-                <TableCell className="text-center">
-                  <Badge 
-                    variant={getStatusBadgeVariant(story.status)} 
-                    className={getStatusBadgeClasses(story.status)}
-                  >
-                    {story.status || 'Unknown'}
-                  </Badge>
-                </TableCell>
-                <TableCell className="max-w-sm truncate" title={story.storyText || ""}>{story.storyText || "—"}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        {filteredStories.length === 0 && !isLoading && (
-          <p className="text-center text-muted-foreground py-8">
-            {stories.length > 0 && searchTerm ? `No stories found matching "${searchTerm}".` : "No success stories submitted yet."}
-          </p>
-        )}
-      </div>
-    </div>
-  );
+  return <div className="space-y-6 pb-12">
+    <div><h1 className="text-3xl font-bold">Success story moderation</h1><p className="mt-2 text-sm text-muted-foreground">Read the complete submission before approving publication. Rejection or return to pending removes public approval.</p></div>
+    <div className="flex flex-wrap items-center gap-3"><Label htmlFor="story-filter">Status</Label><select id="story-filter" className="min-h-11 rounded-md border bg-background px-3" value={filter} disabled={busy || !!review} onChange={event => { setOffset(0); setFilter(event.target.value as Status | ""); }}><option value="">All statuses</option>{(["pending", "approved", "rejected"] as const).map(value => <option key={value}>{value}</option>)}</select><Button variant="outline" disabled={loading || busy} onClick={() => {setReview(null); setReload(value => value + 1);}}>Refresh</Button></div>
+    {error && <p role="alert" className="text-destructive">{error}</p>}{success && <p role="status">{success}</p>}
+    {loading ? <p role="status">Loading stories…</p> : error && !stories.length ? <Button variant="outline" onClick={() => setReload(value => value + 1)}>Try again</Button> : !stories.length ? <p>No stories in this view.</p> : <div className="space-y-4">{stories.map(story => <article key={story.id} className="space-y-3 rounded-2xl border bg-card p-5"><div className="flex flex-wrap justify-between gap-2"><h2 className="text-lg font-semibold">{story.couple_names}</h2><span className="text-sm capitalize">{story.status}</span></div><p className="text-xs text-muted-foreground">Submitted {new Date(story.submitted_at).toLocaleString("en-GB")}</p><p className="whitespace-pre-wrap break-words text-sm">{story.story_text}</p><div className="flex flex-wrap gap-2">{(["approved", "rejected", "pending"] as const).filter(value => value !== story.status).map(value => <Button key={value} variant={value === "rejected" ? "destructive" : "outline"} disabled={busy || !!review} onClick={() => {setReview({story,status:value}); setNote(""); setError(""); setSuccess("");}}>{value === "approved" ? "Approve publication" : value === "rejected" ? "Reject story" : "Return to pending"}</Button>)}</div></article>)}</div>}
+    {review && <section aria-label="Confirm story review" className="space-y-3 rounded-2xl border border-primary bg-accent p-5"><h2 className="font-semibold">Confirm {review.status}: {review.story.couple_names}</h2><Label htmlFor="story-review-note">Reason for audit (10–1000 characters)</Label><Textarea id="story-review-note" maxLength={1000} value={note} disabled={busy} onChange={event => setNote(event.target.value)} /><div className="flex gap-2"><Button disabled={busy || note.trim().length < 10} onClick={() => void save()}>{busy ? "Saving…" : "Confirm review"}</Button><Button variant="outline" disabled={busy} onClick={() => setReview(null)}>Cancel</Button></div></section>}
+    <div className="flex items-center gap-3"><Button variant="outline" disabled={loading || busy || !!review || offset === 0} onClick={() => setOffset(value => Math.max(0,value-20))}>Previous</Button><span className="text-sm">Page {offset/20+1}</span><Button variant="outline" disabled={loading || busy || !!review || !!error || stories.length < 20} onClick={() => setOffset(value => value+20)}>Next</Button></div>
+  </div>;
 }
-
