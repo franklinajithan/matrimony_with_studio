@@ -1,0 +1,26 @@
+name: Admin browser acceptance
+on:
+  pull_request:
+    paths:
+      - 'src/app/admin/**'
+      - 'src/components/ui/**'
+      - 'scripts/browser-admin-acceptance.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/admin-browser.yml'
+  workflow_dispatch:
+jobs:
+  isolated-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser-admin
