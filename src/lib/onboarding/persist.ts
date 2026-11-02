@@ -37,6 +37,7 @@ export function draftFromProfileRow(row: Record<string, unknown> | null): Onboar
       : Array.isArray(row?.languages)
         ? (row?.languages as string[])
         : [],
+    maritalStatus: stored.maritalStatus || String(intentions.maritalStatus || ""),
     lookingFor: stored.lookingFor || String(intentions.lookingFor || ""),
     relationshipTimeline: stored.relationshipTimeline || String(intentions.relationshipTimeline || ""),
     partnershipStyle: stored.partnershipStyle || String(intentions.partnershipStyle || ""),
@@ -141,11 +142,12 @@ export function profilePatchFromDraft(draft: OnboardingDraft): Record<string, un
     drinking_habits: draft.drinkingHabits,
     hobbies: draft.hobbies,
     religion: draft.religion,
-    photo_url: draft.photoURL || (draft.gender === "female" ? "/profiles/demo-woman-01.jpg" : draft.gender === "male" ? "/profiles/demo-man-01.jpg" : ""),
+    photo_url: draft.photoURL,
     additional_photo_urls: draft.additionalPhotoUrls,
     photo_privacy: draft.photoPrivacy,
     language: draft.languages?.join(", "),
     relationship_intentions: omitEmptyDefaults({
+      maritalStatus: draft.maritalStatus,
       lookingFor: draft.lookingFor,
       relationshipTimeline: draft.relationshipTimeline,
       partnershipStyle: draft.partnershipStyle,
