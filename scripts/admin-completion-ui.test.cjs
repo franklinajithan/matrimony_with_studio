@@ -4,7 +4,7 @@ function fixture(t,file,fetcher){
  const previous=global.fetch;global.fetch=fetcher;t.after(()=>{global.fetch=previous;cleanup?.();});
  const state=[],refs=[],effects=[];let cursor=0,refCursor=0,effectCursor=0,cleanup;
  const react={useState:initial=>{const i=cursor++;if(!(i in state))state[i]=initial;return[state[i],next=>{state[i]=typeof next==='function'?next(state[i]):next;}];},useRef:initial=>{const i=refCursor++;return refs[i]||=( {current:initial});},useEffect:(callback,deps)=>{const i=effectCursor++;if(!effects[i]||deps.some((value,index)=>effects[i].deps[index]!==value)){effects[i]?.cleanup?.();const dispose=callback();effects[i]={deps,cleanup:dispose};cleanup=()=>effects.forEach(effect=>effect.cleanup?.());}}};
- const api=load(file,{react,'next/link':{default:'Link'},'@/components/ui/button':{Button:'Button'},'@/components/ui/textarea':{Textarea:'Textarea'},'@/components/ui/label':{Label:'Label'},'@/components/ui/input':{Input:'Input'}});
+ const api=load(file,{react,'next/link':{default:'Link'},'./price-editor':{PriceEditor:'PriceEditor'},'@/components/ui/button':{Button:'Button'},'@/components/ui/textarea':{Textarea:'Textarea'},'@/components/ui/label':{Label:'Label'},'@/components/ui/input':{Input:'Input'}});
  const component=api.default||api.BillingRecords||api.WorkloadOverview;
  function render(){cursor=0;refCursor=0;effectCursor=0;return component();}
  function find(node,predicate){if(!node||typeof node!=='object')return;if(predicate(node))return node;for(const child of[node.props?.children].flat(Infinity)){const result=find(child,predicate);if(result)return result;}}
