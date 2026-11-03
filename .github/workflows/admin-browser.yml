@@ -2,6 +2,10 @@ name: Admin browser acceptance
 on:
   pull_request:
     paths:
+      - 'src/components/discovery/**'
+      - 'src/components/stories/**'
+      - 'src/lib/matching/**'
+      - 'scripts/browser-discovery-acceptance.mjs'
       - 'src/app/admin/**'
       - 'src/app/(auth)/**'
       - 'src/components/onboarding/**'
@@ -27,5 +31,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser-discovery
       - run: npm run test:browser-admin
       - run: npm run test:browser-registration

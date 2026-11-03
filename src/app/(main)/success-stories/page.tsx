@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   description: "Celebrate meaningful connections with the CupidMatch community. Share your story and inspire someone at the beginning of their journey.",
 };
 
+import { PublishedStories } from '@/components/stories/PublishedStories';
+
 const steps = [
   { icon: MessageCircle, title: "Tell it in your own words", text: "How did you meet? What made the connection feel different? It’s the little details that make it yours." },
   { icon: Heart, title: "Share what feels right", text: "Add a favourite photograph if you’d like. Only include details you and your partner are comfortable sharing." },
@@ -22,6 +24,8 @@ export default function SuccessStoriesPage() {
       <Link href="/success-stories/submit" className={primaryLink}>Share your story <ArrowRight aria-hidden className="h-4 w-4" /></Link>
       <Link href="#sharing-your-story" className={secondaryLink}>How sharing works</Link>
     </PublicHero>
+
+    <PublishedStories />
 
     <section aria-labelledby="community-stories" className="rounded-[2rem] border border-border bg-white/70 px-6 py-10 text-center sm:px-12 sm:py-14">
       <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-accent"><BookHeart aria-hidden className="h-6 w-6 text-primary" /></span>

@@ -30,8 +30,11 @@ export async function createSuccessStory(params: {
   photoUrl: string | null;
   photoStoragePath: string | null;
   contactEmail: string | null;
-  submittedByUid: string | null;
+  publicationConsent: boolean;
 }) {
+  if (params.publicationConsent !== true) throw new Error("Please consent to publication before submitting your story.");
+  const { data: identity, error: authError } = await supabase.auth.getUser();
+  if (authError || !identity.user) throw new Error("Please sign in before submitting your story.");
   const { error } = await supabase.from("success_stories").insert({
     couple_names: params.coupleNames,
     story_text: params.storyText,
@@ -39,10 +42,12 @@ export async function createSuccessStory(params: {
     photo_url: params.photoUrl,
     photo_storage_path: params.photoStoragePath,
     contact_email: params.contactEmail,
-    submitted_by_uid: params.submittedByUid,
+    submitted_by_uid: identity.user.id,
+    publication_consent: true,
+    consent_version: "2026-11-02",
     status: "pending",
   });
-  if (error) throw error;
+  if (error) throw new Error("Your story could not be submitted. Please try again later.");
 }
 
 export function subscribeToSuccessStories(
@@ -73,4 +78,15 @@ export function subscribeToSuccessStories(
   return () => {
     void supabase.removeChannel(channel);
   };
+}
+
+export type PublishedStory = { id: string; couple_names: string; story_text: string; photo_url: string | null; approved_at: string };
+export async function listPublishedStories(offset = 0): Promise<PublishedStory[]> {
+  const { data, error } = await supabase.rpc("published_success_stories", { p_limit: 12, p_offset: offset });
+  if (error) throw new Error("Stories are unavailable. Please try again later.");
+  return data || [];
+}
+export async function withdrawStoryConsent(id: string): Promise<void> {
+  const { data, error } = await supabase.rpc("withdraw_story_consent", { p_id: id });
+  if (error || data !== true) throw new Error("Could not withdraw consent. Refresh and try again.");
 }
