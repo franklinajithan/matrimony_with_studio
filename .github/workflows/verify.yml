@@ -14,6 +14,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node --test scripts/whatsapp-share-preview.test.mjs
+      - run: node --test scripts/auth-session.test.cjs
       - run: npm run test:marriage-onboarding
       - run: npm run test:theme
       - run: npm run test:admin
