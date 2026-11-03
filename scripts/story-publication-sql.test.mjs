@@ -29,3 +29,25 @@ test('withdrawal requires active owner, removes publication atomically, and prev
 test('audit failure rolls back consent withdrawal',async()=>{await fresh();await submit();await approve();await db.exec(`reset role;create function fail_audit()returns trigger language plpgsql as $$begin raise exception 'Audit unavailable';end$$;create trigger fail_audit before insert on admin_audit_log for each row execute function fail_audit();`);await actor();await assert.rejects(db.query(`select withdraw_story_consent('${id}')`),/Audit unavailable/);assert.equal((await db.query('select publication_consent from success_stories')).rows[0].publication_consent,true);await db.exec('reset role;drop trigger fail_audit on admin_audit_log;');});
 test('anonymous clients cannot execute private functions; public pagination is bounded',async()=>{await fresh();await submit();await approve();await db.exec('reset role');for(const signature of['private.published_success_stories(integer,integer)','private.withdraw_story_consent(uuid)','private.record_story_consent()','private.guard_story_review()'])assert.equal((await db.query(`select has_function_privilege('anon','${signature}','EXECUTE') allowed`)).rows[0].allowed,false);await anon();await assert.rejects(db.query(`select withdraw_story_consent('${id}')`),/permission denied/);assert.equal((await db.query('select * from published_success_stories(-1,-10)')).rows.length,1);assert.equal((await db.query('select * from published_success_stories(100000,100000)')).rows.length,0);});
 test('revoked owner and admin sessions cannot read protected submissions',async()=>{await fresh();await submit();for(const who of[a,admin]){await actor(who,false);assert.equal((await db.query('select * from success_stories')).rows.length,0);}});
+
+test('explicit consent cannot bypass pending review on insert', async () => {
+  await fresh();
+  const forgedReviewFields = [
+    ["status, approved_at", "'approved', now()"],
+    ["status", "'approved'"],
+    ["admin_notes", "'Forged moderator approval'"],
+    ["approved_at", "now()"],
+  ];
+  for (const [columns, values] of forgedReviewFields) {
+    await assert.rejects(
+      db.exec(`insert into success_stories(submitted_by_uid, publication_consent, consent_version, ${columns})
+        values ('${a}', true, '2026-11-02', ${values})`),
+      /row-level security/,
+    );
+  }
+  await submit();
+  const story = (await db.query('select status, approved_at, admin_notes from success_stories')).rows[0];
+  assert.deepEqual(story, { status: 'pending', approved_at: null, admin_notes: null });
+  await anon();
+  assert.equal((await db.query('select * from published_success_stories()')).rows.length, 0);
+});
