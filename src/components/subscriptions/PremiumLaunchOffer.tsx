@@ -15,7 +15,7 @@ export function PremiumLaunchOffer({ initialEndsAt = "", available = true }: { i
   }catch(e){setError(e instanceof Error?e.message:"Unable to start Premium.");}
   finally{lock.current=false;setBusy(false);}
  }
- return <section className="space-y-4 rounded-3xl border border-primary bg-accent p-6" aria-label="Two-month Premium launch offer">
+ return <section id="premium-launch-offer" className="space-y-4 rounded-3xl border border-primary bg-accent p-6" aria-label="Two-month Premium launch offer">
   <h2 className="text-2xl font-bold">Premium — free for 2 months</h2>
   <p>Start your two-month Premium launch offer today. No card required. No automatic charges.</p>
   <p className="text-sm text-muted-foreground">One launch offer per account. Your two months start when you activate it. After it ends, you return to Free unless you choose a future paid plan.</p>
