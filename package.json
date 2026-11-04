@@ -20,7 +20,7 @@
     "test:theme": "node --test scripts/theme-contrast.test.mjs",
     "test:marriage-onboarding": "node --import tsx --test scripts/marriage-onboarding.test.cjs",
     "test:browser-registration": "node scripts/browser-registration-acceptance.mjs",
-    "test:payments": "node --test scripts/premium-launch-api.test.cjs scripts/premium-launch-sql.test.mjs scripts/payment-ledger.test.mjs scripts/premium-upgrade-migration.test.mjs scripts/premium-session-acceptance.test.mjs scripts/public-catalogue.test.cjs scripts/membership-catalogue.test.cjs scripts/payment-api.test.cjs && node --import tsx --test src/lib/subscriptions/tide-preparation.test.ts",
+    "test:payments": "node --test scripts/premium-launch-api.test.cjs scripts/premium-launch-sql.test.mjs scripts/payment-ledger.test.mjs scripts/premium-upgrade-migration.test.mjs scripts/premium-session-acceptance.test.mjs scripts/public-catalogue.test.cjs scripts/membership-catalogue.test.cjs scripts/membership-migration.test.mjs scripts/payment-api.test.cjs && node --import tsx --test src/lib/subscriptions/tide-preparation.test.ts",
     "test:browser-payments": "node scripts/browser-payment-acceptance.mjs",
     "test:premium-launch": "node --test scripts/premium-launch-api.test.cjs scripts/premium-launch-sql.test.mjs scripts/premium-upgrade-migration.test.mjs scripts/premium-session-acceptance.test.mjs",
     "test:subscription-domain": "node --import tsx --test src/lib/subscriptions/*.test.ts"
