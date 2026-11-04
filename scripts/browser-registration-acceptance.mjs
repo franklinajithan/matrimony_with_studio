@@ -27,7 +27,7 @@ build.onResolve({filter:/^next\/link$/},()=>({path:'link',namespace:'test-link'}
    browser=await chromium.launch(options);const context=await browser.newContext({viewport});const page=await context.newPage();page.setDefaultTimeout(8000);
    await page.clock.setFixedTime(new Date('2026-11-02T12:00:00Z'));
    const errors=[];page.on('pageerror',e=>errors.push(e.message));
-   let draft={displayName:'Test Member',gender:'female',dob:'1995-05-12',country:'Sri Lanka',region:'Jaffna',languages:['Tamil'],lookingFor:'marriage',relationshipTimeline:'ready',bio:'I value kindness, honesty and a lasting partnership.',educationLevel:"Bachelor's",relocationOpenness:'open',photoPrivacy:'connections'};
+   let draft={displayName:'Test Member',gender:'female',dob:'1995-05-12',height:'165',country:'Sri Lanka',region:'Jaffna',languages:['Tamil'],lookingFor:'marriage',relationshipTimeline:'ready',bio:'I value kindness, honesty and a lasting partnership.',educationLevel:"Bachelor's",relocationOpenness:'open',photoPrivacy:'connections'};
    let storedStep=3,failSave=false,saves=0,publishes=0,releaseSave=null,expectedPrivacy='connections',lastPublished=null;
    await page.route('**/api/plans',route=>route.fulfill({json:{plans:[
     {code:'free',name:'Free',active:true,currency:'GBP',pricesPence:{monthly:0,three_months:null,six_months:null},entitlements:{basicMatching:true}},
@@ -58,7 +58,7 @@ build.onResolve({filter:/^next\/link$/},()=>({path:'link',namespace:'test-link'}
    await page.getByRole('button',{name:'Publish profile',exact:true}).click();assert.equal(publishes,0);checks++;
    await page.getByRole('checkbox',{name:'I confirm these details are accurate and I want to publish my profile for other members to see.',exact:true}).check();await page.getByRole('radio',{name:/Free membership/}).check();await page.getByRole('button',{name:'Publish profile',exact:true}).click();await page.waitForFunction(()=>window.__navigation==='/dashboard');assert.equal(publishes,1);checks++;
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);assert.deepEqual(errors,[]);checks++;
-   draft={displayName:'Minimal Member',gender:'male',dob:'1990-06-10'};storedStep=0;expectedPrivacy='members';
+   draft={displayName:'Minimal Member',gender:'male',dob:'1990-06-10',height:'175'};storedStep=0;expectedPrivacy='members';
    await page.goto(base);await page.locator('#displayName').waitFor();assert.equal(await page.locator('#displayName').inputValue(),'Minimal Member');
    await page.getByRole('button',{name:'Continue',exact:true}).click();await page.locator('#country').waitFor();
    await page.getByRole('button',{name:'Skip optional details and review',exact:true}).click();await page.getByRole('button',{name:'Publish profile',exact:true}).waitFor();checks++;
