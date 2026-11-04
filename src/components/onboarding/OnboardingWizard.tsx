@@ -317,14 +317,19 @@ export function OnboardingWizard() {
       const saved = await persist(snapshot, 7);
       if (!saved.ok) throw new Error(saved.error);
       if (selectedPlan === "premium") {
+        const existingResponse = await fetch("/api/subscription/me", { credentials: "same-origin", cache: "no-store" });
+        const existing = await existingResponse.json().catch(() => ({}));
+        if (!existingResponse.ok) throw new Error("Could not verify existing membership. Please try again.");
+        if (existing.plan !== "premium") {
         const activation = await fetch("/api/membership/premium-launch", {
           method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: "{}",
         });
         const result = await activation.json().catch(() => ({}));
         if (!activation.ok || result.plan !== "premium") throw new Error(result.error || "Premium could not be activated. Your profile has not been published.");
+        }
       }
       const response = await fetch("/api/onboarding/publish", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ draft: snapshot }),
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ draft: snapshot, membershipChoice: selectedPlan }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || payload.ok !== true || payload.isPublished !== true) throw new Error(payload.error || "Could not confirm publication.");
