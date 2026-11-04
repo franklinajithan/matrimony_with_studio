@@ -209,6 +209,16 @@ export default function ProfilePage() {
     setError(null);
     const fetchViewedProfile = async () => {
       try {
+        const {data: authData,error:authError}=await supabase.auth.getUser();
+        if(authError||!authData.user)throw new Error("Sign in to view member profiles.");
+        if(authData.user.id!==viewedUserId){
+          const {error:limitError}=await supabase.rpc("consume_member_profile_view",{p_profile_id:viewedUserId});
+          if(limitError){
+            if(/monthly membership limit/i.test(limitError.message))
+              throw new Error("Your monthly profile-view allowance has been reached. Review your membership to continue.");
+            throw new Error("Could not verify your profile-view allowance. Please try again.");
+          }
+        }
         const data = await getProfile(viewedUserId);
         if (data) {
           const { data: references } = await supabase.rpc("discovery_member_references");
