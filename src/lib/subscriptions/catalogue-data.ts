@@ -26,3 +26,35 @@ export function formatCataloguePrice(pence:number|null,currency:string){
  if(pence===null)return "Not offered";
  return new Intl.NumberFormat("en-GB",{style:"currency",currency}).format(pence/100);
 }
+
+// All customer-facing plan copy derives from the same entitlement keys as the catalogue.
+export const ENTITLEMENT_LABELS:Record<string,string>={
+ advancedFilters:"Advanced matrimonial search",
+ seeWhoLikesYou:"See who liked your profile",
+ unlimitedMessaging:"Expanded messaging",
+ readReceipts:"Message read receipts",
+ familyIntroduction:"Family introductions",
+ fullHoroscope:"Full horoscope comparison",
+ premiumBadge:"Premium profile badge",
+ prioritySupport:"Priority support",
+};
+export function planBenefitLabels(entitlements:Record<string,unknown>,max=7):string[]{
+ const results:string[]=[];
+ const addCount=(key:string,title:string)=>{
+   const value=entitlements[key];
+   if(value===null)results.push(`Unlimited ${title}`);
+   else if(typeof value==="number")results.push(`${value} ${title}`);
+ };
+ addCount("interestsPerMonth","interests/month");
+ addCount("messagesPerMonth","messages/month");
+ addCount("profileViewsPerMonth","profile views/month");
+ const position=entitlements.searchPlacement;
+ if(position===10)results.push("Priority placement among Top 10 eligible matches");
+ else if(position===20)results.push("Priority placement among Top 20 eligible matches");
+ for(const [key,label] of Object.entries(ENTITLEMENT_LABELS)){
+   if(entitlements[key]===true)results.push(label);
+ }
+ addCount("profileBoostsPerMonth","profile boosts/month");
+ addCount("profileSharesPerMonth","profile shares/month");
+ return results.slice(0,max);
+}
