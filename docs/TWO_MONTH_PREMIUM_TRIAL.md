@@ -6,7 +6,7 @@ This is a standalone release against current main, separate from the payment led
 
 Free remains available. Email-confirmed, active, signed-in members may explicitly activate Premium once; phone verification and a payment card are not required. The window starts at the database transaction timestamp and ends two UTC calendar months later, with month-end clamping. For example, 31 December 2026 at 09:00 UTC ends 28 February 2027 at 09:00 UTC. No automatic charge or renewal occurs.
 
-Registration offers Free/Premium. Selecting Premium preserves the internal Membership destination through email signup and Google OAuth; it does not grant access from metadata or the URL. Membership performs the explicit authenticated claim and displays its persisted expiration date/time in UTC. It also offers a route back to complete the matrimonial profile; optional-question requirements are unchanged.
+Registration creates a Free account without a membership choice or trial prompt. Email signup, confirmation resends and social signup continue to profile onboarding. Legacy `plan=premium` signup parameters are ignored. After registration, members can open Membership from their dashboard navigation, explicitly claim the eligible Premium trial and see its persisted expiration date/time in UTC. Optional profile questions remain optional.
 
 Once claimed, repeated selections, reloads, concurrent requests and attempts through the older phone trial RPC cannot restart the window. The account-level guarantee does not claim to detect the same person creating a different account. Admin grants remain privileged, audited support actions.
 
@@ -44,4 +44,4 @@ The additional session acceptance suite runs the production session/activity gua
 
 The read-only preflight is in scripts/trial-production-preflight.sql. Production migration requires explicit owner approval. No activation/payment deployment or production DDL is implied by passing these local checks.
 
-Confirmation resends now preserve the Premium Membership destination. The confirmation screen also preserves it in login and change-email links. Query parameters only select a destination; they never grant a trial. Eight Auth tests and 44 registration/onboarding browser checks cover the completed flow.
+Registration UX follow-up: confirmation resends and the confirmation screen login link now continue to onboarding. Signup and pricing entry points no longer select a plan. Eight Auth tests and 52 registration/onboarding browser checks cover validation, recovery, ignored legacy Premium parameters and the profile-first flow. No database migration or entitlement change is required; existing confirmation links and granted trials remain valid.
