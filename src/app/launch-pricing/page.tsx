@@ -1,22 +1,3 @@
-import Link from "next/link";
-import { PLANS, formatPlanPrice, type PlanCode } from "@/lib/subscriptions/plans";
-export default function LaunchPricingPage(){
- const codes:PlanCode[]=["free","premium","premium_plus"];
- return <main className="mx-auto max-w-6xl space-y-8 px-4 py-12">
- <header className="rounded-3xl border border-border bg-gradient-to-br from-accent to-white p-8 text-center">
- <span className="rounded-full bg-accent px-4 py-2 text-sm font-bold text-primary">CUPIDMATCH LAUNCH OFFER</span>
- <h1 className="mt-6 text-4xl font-bold text-foreground">Premium free for two calendar months</h1>
- <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">Choose Premium and confirm your email, then activate your trial from Membership. No card or phone verification is required. Existing offers keep their promised expiration dates.</p>
- </header>
- <section className="grid gap-5 md:grid-cols-3">{codes.map(code=>{const plan=PLANS[code];return <article key={code} className="flex flex-col rounded-3xl border border-border bg-card p-6 shadow-sm">
- <h2 className="text-2xl font-bold">{plan.name}</h2><p className="mt-2 min-h-12 text-sm text-muted-foreground">{plan.description}</p>
- <p className="mt-6 text-3xl font-bold text-primary">{formatPlanPrice(plan.pricesPence.monthly)}{plan.pricesPence.monthly>0&&<span className="text-base font-normal text-muted-foreground"> / month</span>}</p>
- <p className="mt-2 text-sm text-muted-foreground">3 months: {formatPlanPrice(plan.pricesPence.three_months)}</p>
- <p className="text-sm text-muted-foreground">6 months: {formatPlanPrice(plan.pricesPence.six_months)}</p>
- <div className="mt-6 flex-1 space-y-2 text-sm text-foreground"><p>✓ Profile browsing and basic matching</p><p>✓ Messaging after mutual match</p><p>{plan.entitlements.advancedFilters?"✓ Advanced matching filters":"— Basic matching filters"}</p><p>{plan.entitlements.familyIntroduction?"✓ Family introduction":"— Family introduction not included"}</p></div>
- <div className="mt-8 rounded-xl bg-background p-3 text-center text-xs text-muted-foreground">{code==="free"?"Always-free plan":"Coming soon · No checkout yet"}</div>
- </article>})}</section>
- <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950"><strong>Launch policy preview:</strong> Your two-month trial starts when you activate it, once per eligible account. After the offer ends, the Free plan remains available. Paid checkout is not enabled yet.</div>
- <div className="text-center"><Link href="/signup?plan=premium" className="inline-flex rounded-xl bg-primary px-7 py-3 font-semibold text-white">Create your account</Link></div>
- </main>;
-}
+import Link from 'next/link';
+import { LivePricing } from '@/components/subscriptions/LivePricing';
+export default function LaunchPricingPage(){return <main className="mx-auto max-w-6xl space-y-8 px-4 py-12"><header className="space-y-4 text-center"><h1 className="text-4xl font-bold">Premium free for two calendar months</h1><p>Confirm your email, then activate once from Membership. No card or phone verification is required. After expiry, Free remains available unless another valid entitlement applies.</p><Link className="inline-block rounded-xl bg-primary px-6 py-3 text-primary-foreground" href="/signup?plan=premium">Choose Premium trial</Link></header><LivePricing /></main>;}

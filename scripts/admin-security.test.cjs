@@ -18,6 +18,8 @@ function load(relative, mocks = {}) {
   const requireMock = (name) => {
     if (name === 'server-only') return {};
     if (name === '@/lib/subscriptions/tide-preparation') return {tidePaymentReadiness:()=>{throw Error('Readiness must not run before authorization');}};
+    if (name === '@/components/subscriptions/LivePricing') return {LivePricing:()=>null};
+    if (name === '@/lib/subscriptions/live-catalogue') return {publicCatalogue:()=>{throw Error('Catalogue must not run before authorization');}};
     if (name === '@/lib/subscriptions/plans') return {PLANS:{}};
     if (name === 'zod') return require('zod');
     if (name === 'node:crypto') return require('node:crypto');

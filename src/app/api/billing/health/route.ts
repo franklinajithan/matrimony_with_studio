@@ -1,7 +1,2 @@
-import { NextResponse } from 'next/server';
-import { billingConfigured } from '@/lib/subscriptions/checkout';
-
-export async function GET() {
-  const configured = billingConfigured();
-  return NextResponse.json({ billing: configured ? 'configured' : 'disabled' }, { status: configured ? 200 : 503, headers: { 'Cache-Control': 'no-store' } });
-}
+import {NextResponse} from 'next/server';
+export async function GET(){return NextResponse.json({billing:'disabled',provider:'tide'},{status:503,headers:{'Cache-Control':'no-store'}});}

@@ -5,8 +5,8 @@ import { getPlan } from './plans';
 
 export async function getServerSubscription() {
  const supabase=await createSupabaseServerClient();
- const {data:auth}=await supabase.auth.getUser();
- if(!auth.user)return {user:null,plan:getPlan('free'),subscription:null,trial:null,launchOffer:null};
+ const {data:auth,error:authError}=await supabase.auth.getUser();
+ if(authError||!auth.user)return {user:null,plan:getPlan('free'),subscription:null,trial:null,launchOffer:null,trialAvailable:false};
  const [paid,launch,offer]=await Promise.all([
   supabase.from('user_subscriptions').select('plan_code,status,current_period_end,cancel_at_period_end,provider_customer_id,provider_subscription_id').eq('user_id',auth.user.id).in('status',['active','trialing','past_due']).order('created_at',{ascending:false}),
   supabase.from('member_trials').select('starts_at,ends_at,duration_months,promo_code_id').eq('user_id',auth.user.id).maybeSingle(),
@@ -22,6 +22,6 @@ export async function getServerSubscription() {
  const launchOffer=offer.data;
  const offerActive=!!launchOffer && new Date(launchOffer.starts_at).getTime()<=Date.now() && new Date(launchOffer.ends_at).getTime()>Date.now();
  const plan=effective!=='free'?getPlan(effective):(trialActive||offerActive)?getPlan('premium'):getPlan('free');
- return {user:auth.user,subscription:sub,trial,launchOffer,plan};
+ return {user:auth.user,subscription:sub,trial,launchOffer,plan,trialAvailable:!offer.error};
 }
 export { requireServerAdmin } from '@/lib/auth/admin';

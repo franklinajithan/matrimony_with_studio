@@ -35,3 +35,11 @@ Rollback the application if necessary, but retain the immutable rows and tighten
 `npm run test:premium-launch` exercises the real API, server resolver, PostgreSQL constraints/RLS/claim functions, audit rollback, historical six-month upgrade, legacy trials, month ends and exact expiry. `scripts/auth-session.test.cjs` verifies safe Premium confirmation destinations without granting access. Registration browser tests run the actual React form and onboarding with synthetic HTTP/auth boundaries at 1280px and 390px.
 
 No production migration or deployment is performed by this PR. Payment-related changes remain in the separately stacked PR #90.
+
+## Release follow-up
+
+The resolver now treats an Auth error as unauthenticated even if an identity object is returned, and disables new activation UI when the grant table is missing. This lets the application fail visibly and safely before the approved migration rather than offering a button that can only fail.
+
+The additional session acceptance suite runs the production session/activity guard definitions against isolated PostgreSQL auth.sessions/profiles fixtures: revoked and mismatched sessions, missing session IDs, unconfirmed email, suspended/deactivated/deletion-pending accounts, owner/admin reads and immutable grants. It is not a live GoTrue/OAuth staging run. No remote development branch exists; none is created because the budget is £0.
+
+The read-only preflight is in scripts/trial-production-preflight.sql. Production migration requires explicit owner approval. No activation/payment deployment or production DDL is implied by passing these local checks.

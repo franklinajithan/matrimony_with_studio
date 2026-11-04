@@ -3,10 +3,6 @@ create schema if not exists private;
 -- Production has monthly prices only. Add optional term prices without replacing custom prices.
 alter table public.subscription_plans add column if not exists three_month_price_pence integer check(three_month_price_pence>=0);
 alter table public.subscription_plans add column if not exists six_month_price_pence integer check(six_month_price_pence>=0);
-update public.subscription_plans set
- three_month_price_pence=coalesce(three_month_price_pence,case when code='premium' and monthly_price_pence=799 then 1999 when code='premium_plus' and monthly_price_pence=1499 then 3499 end),
- six_month_price_pence=coalesce(six_month_price_pence,case when code='premium' and monthly_price_pence=799 then 3499 when code='premium_plus' and monthly_price_pence=1499 then 5999 end)
- where code in ('premium','premium_plus') and (three_month_price_pence is null or six_month_price_pence is null);
 create table private.payment_configuration (
  singleton boolean primary key default true check(singleton),
  enabled boolean not null default false, provider text not null default 'tide' check(provider='tide')
@@ -16,7 +12,7 @@ alter table private.payment_configuration enable row level security;
 revoke all on private.payment_configuration from public,anon,authenticated;
 create table public.payment_intents (
  id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id),
- provider text not null check(provider in ('tide','stripe')), plan_code text not null check(plan_code in ('premium','premium_plus')),
+ provider text not null check(provider in ('tide','stripe')), plan_code text not null check(plan_code in ('plus','premium','premium_plus')),
  billing_term text not null check(billing_term in ('monthly','three_months','six_months')),
  amount_pence integer not null check(amount_pence>0), currency text not null default 'GBP' check(currency='GBP'),
  idempotency_key uuid not null, status text not null default 'pending' check(status in ('pending','paid','failed','cancelled','refunded')),
@@ -41,19 +37,18 @@ create policy payment_history_read on public.payment_intents for select to authe
 create policy payment_event_admin_read on public.payment_events for select to authenticated using(
  private.account_session_active() and public.member_is_active(auth.uid()) and public.is_admin());
 -- No authenticated insert/update grants. Only a future trusted server adapter may invoke these service-only routines.
-create function private.prepare_payment_intent(p_user uuid,p_plan text,p_term text,p_key uuid) returns jsonb
+create function private.prepare_payment_intent(p_user uuid,p_plan text,p_term text,p_key uuid,p_expected_amount integer,p_expected_currency text) returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare r public.payment_intents%rowtype; v_price integer; v_expected integer; begin
+declare r public.payment_intents%rowtype; v_price integer; begin
  if not (select enabled from private.payment_configuration where singleton) then raise exception 'Payments disabled' using errcode='42501';end if;
  if p_user is null or not public.member_is_active(p_user) or not exists(select 1 from auth.users where id=p_user and email_confirmed_at is not null) then raise exception 'Ineligible member' using errcode='42501';end if;
  select case p_term when 'monthly' then monthly_price_pence when 'three_months' then three_month_price_pence when 'six_months' then six_month_price_pence end
  into v_price from public.subscription_plans where code=p_plan and coalesce((to_jsonb(subscription_plans)->>'active')::boolean,(to_jsonb(subscription_plans)->>'is_active')::boolean,false) and currency='GBP';
- v_expected:=case p_plan when 'premium' then case p_term when 'monthly' then 799 when 'three_months' then 1999 when 'six_months' then 3499 end when 'premium_plus' then case p_term when 'monthly' then 1499 when 'three_months' then 3499 when 'six_months' then 5999 end end;
- if v_expected is null or v_price is distinct from v_expected then raise exception 'Membership catalogue requires reconciliation before checkout' using errcode='22023';end if;
+ if p_plan not in ('plus','premium','premium_plus') or v_price is null or v_price<=0 or v_price is distinct from p_expected_amount or p_expected_currency is distinct from 'GBP' then raise exception 'Price changed or term unavailable; review the current catalogue' using errcode='22023';end if;
  insert into public.payment_intents(user_id,provider,plan_code,billing_term,amount_pence,idempotency_key)
  values(p_user,'tide',p_plan,p_term,v_price,p_key) on conflict(user_id,idempotency_key) do nothing;
  select * into r from public.payment_intents where user_id=p_user and idempotency_key=p_key for update;
- if r.plan_code<>p_plan or r.billing_term<>p_term then raise exception 'Idempotency conflict' using errcode='22023';end if;
+ if r.plan_code<>p_plan or r.billing_term<>p_term or r.amount_pence<>p_expected_amount then raise exception 'Idempotency conflict' using errcode='22023';end if;
  return to_jsonb(r);
 end $$;
 -- Confirmation recorder is intentionally not connected to HTTP. Only independently verified
@@ -87,9 +82,9 @@ declare r public.payment_intents%rowtype; prior public.payment_events%rowtype; v
  insert into public.admin_audit_log(actor_id,action,target_type,target_id,metadata)values(null,'payment_'||p_status,'payment_intent',p_id::text,jsonb_build_object('provider',r.provider,'event',p_event));
  return to_jsonb(r);
 end $$;
-revoke all on function private.prepare_payment_intent(uuid,text,text,uuid),private.record_verified_payment(uuid,text,text,text,integer,text) from public,anon,authenticated;
+revoke all on function private.prepare_payment_intent(uuid,text,text,uuid,integer,text),private.record_verified_payment(uuid,text,text,text,integer,text) from public,anon,authenticated;
 grant usage on schema private to service_role;
-grant execute on function private.prepare_payment_intent(uuid,text,text,uuid),private.record_verified_payment(uuid,text,text,text,integer,text) to service_role;
+grant execute on function private.prepare_payment_intent(uuid,text,text,uuid,integer,text),private.record_verified_payment(uuid,text,text,text,integer,text) to service_role;
 -- Admins can disable, but cannot enable a provider or grant paid access from the dashboard.
 create function private.disable_payments() returns void language plpgsql security definer set search_path='' as $$
 begin
@@ -122,10 +117,10 @@ revoke all on function public.payment_summary() from public,anon;
 grant execute on function public.payment_summary() to authenticated;
 
 -- Public service-only wrappers let a future server adapter use supabase.rpc without exposing private schema.
-create function public.prepare_payment_intent(p_user uuid,p_plan text,p_term text,p_key uuid) returns jsonb language sql security invoker set search_path='' as $$select private.prepare_payment_intent(p_user,p_plan,p_term,p_key)$$;
+create function public.prepare_payment_intent(p_user uuid,p_plan text,p_term text,p_key uuid,p_expected_amount integer,p_expected_currency text) returns jsonb language sql security invoker set search_path='' as $$select private.prepare_payment_intent(p_user,p_plan,p_term,p_key,p_expected_amount,p_expected_currency)$$;
 create function public.record_verified_payment(p_id uuid,p_event text,p_status text,p_reference text,p_amount integer,p_currency text) returns jsonb language sql security invoker set search_path='' as $$select private.record_verified_payment(p_id,p_event,p_status,p_reference,p_amount,p_currency)$$;
-revoke all on function public.prepare_payment_intent(uuid,text,text,uuid),public.record_verified_payment(uuid,text,text,text,integer,text) from public,anon,authenticated;
-grant execute on function public.prepare_payment_intent(uuid,text,text,uuid),public.record_verified_payment(uuid,text,text,text,integer,text) to service_role;
+revoke all on function public.prepare_payment_intent(uuid,text,text,uuid,integer,text),public.record_verified_payment(uuid,text,text,text,integer,text) from public,anon,authenticated;
+grant execute on function public.prepare_payment_intent(uuid,text,text,uuid,integer,text),public.record_verified_payment(uuid,text,text,text,integer,text) to service_role;
 -- Legacy subscription/trial tables are owner-readable; admin history uses a narrow guarded projection.
 create function private.payment_memberships(p_page integer default 0) returns jsonb language plpgsql security definer set search_path='' as $$
 declare v_subscriptions jsonb;v_trials jsonb;begin

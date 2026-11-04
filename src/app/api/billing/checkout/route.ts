@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { paymentGateway } from '@/lib/subscriptions/payment-gateway';
 import { getServerSubscription } from '@/lib/subscriptions/server';
 const headers={'Cache-Control':'private, no-store'};
-const Input=z.object({plan:z.enum(['premium','premium_plus']),term:z.enum(['monthly','three_months','six_months'])}).strict();
+const Input=z.object({plan:z.enum(['plus','premium','premium_plus']),term:z.enum(['monthly','three_months','six_months'])}).strict();
 export async function POST(request:Request){
  if(request.headers.get('origin')!==new URL(request.url).origin)return NextResponse.json({error:'Invalid origin'},{status:403,headers});
  try{

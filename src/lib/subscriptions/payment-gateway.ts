@@ -13,7 +13,7 @@ export type VerifiedPaymentReceipt = {
 export interface PaymentGateway {
  readonly provider:string;
  readiness():GatewayReadiness;
- createCheckout(input:{intentId:string;plan:PlanCode;term:BillingTerm}):Promise<{url:string;providerReference:string}>;
+ createCheckout(input:{intentId:string;plan:Exclude<PlanCode,'free'>|'plus';term:BillingTerm}):Promise<{url:string;providerReference:string}>;
  verifyConfirmation(body:string,headers:Headers):Promise<VerifiedPaymentReceipt>;
 }
 /** Replace only after official merchant verification, sandbox acceptance and owner approval. */
