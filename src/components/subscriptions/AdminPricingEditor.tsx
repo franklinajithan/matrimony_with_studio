@@ -89,7 +89,9 @@ export function AdminPricingEditor(){
          <h3 className="font-semibold">Included benefits & limits</h3>
          {Object.entries(v.entitlements).map(([key,value])=><div key={key} className="flex items-center justify-between gap-3 text-sm">
            <label htmlFor={`${plan.code}-${key}`} className="flex-1">{descriptions[key]||key.replace(/([A-Z])/g," $1")}</label>
-           {typeof value==="boolean"?<input id={`${plan.code}-${key}`} type="checkbox" checked={value} onChange={e=>entitlement(plan.code,key,e.target.checked)} className="h-5 w-5" />:
+           {key==="searchPlacement"?<select id={`${plan.code}-${key}`} aria-label="Search placement" className="rounded-md border bg-background p-2" value={value===null?"0":String(value)} onChange={e=>entitlement(plan.code,key,Number(e.target.value))}>
+            <option value="0">Normal</option><option value="20">Top 20 priority</option><option value="10">Top 10 priority</option>
+           </select>:typeof value==="boolean"?<input id={`${plan.code}-${key}`} type="checkbox" checked={value} onChange={e=>entitlement(plan.code,key,e.target.checked)} className="h-5 w-5" />:
            <select id={`${plan.code}-${key}`} aria-label={descriptions[key]||key} className="max-w-32 rounded-md border bg-background p-2" value={value===null?"unlimited":String(value)} onChange={e=>entitlement(plan.code,key,e.target.value==="unlimited"?null:Number(e.target.value))}>
              <option value="unlimited">Unlimited</option>{[0,1,2,3,5,10,20,30,50,100,400].map(n=><option key={n} value={n}>{n}</option>)}
              {value!==null&&![0,1,2,3,5,10,20,30,50,100,400].includes(value)&&<option value={value}>{value}</option>}
