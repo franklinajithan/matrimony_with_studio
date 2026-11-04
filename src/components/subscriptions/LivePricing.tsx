@@ -26,7 +26,7 @@ export function LivePricing(){
   <p className="text-xs text-muted-foreground">{plan.code==="free"?"Free membership; no card needed.":fx.currency==="GBP"?"Price is quoted in GBP.":"Estimated converted price; checkout is quoted in GBP."}</p>
   <dl className="space-y-1 text-sm">{plan.pricesPence.three_months!==null&&<div><dt className="inline">3 months: </dt><dd className="inline font-semibold">{fx.format(plan.pricesPence.three_months)}</dd></div>}{plan.pricesPence.six_months!==null&&<div><dt className="inline">6 months: </dt><dd className="inline font-semibold">{fx.format(plan.pricesPence.six_months)}</dd></div>}</dl>
   <ul className="flex-1 space-y-2 text-sm">{planBenefitLabels(plan.entitlements,8).map((label)=><li key={label}>✓ {label}</li>)}</ul>
-  <Button asChild><Link href="/onboarding?step=7">{plan.code==="free"?"Select Free":"Choose "+plan.name}</Link></Button>
+  <Button asChild><Link href={`/signup?plan=${encodeURIComponent(plan.code)}`}>{plan.code==="free"?"Select Free":"Choose "+plan.name}</Link></Button>
  </article>)}
  </div>}
  <p className="text-xs text-muted-foreground">Prices and included benefits come from the single CupidMatch catalogue. Payment checkout is not yet available; no membership will be charged or granted without verified payment.</p>
