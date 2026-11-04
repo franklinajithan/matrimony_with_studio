@@ -27,7 +27,7 @@ import {
 import { auth, onAuthStateChanged } from "@/lib/supabase/auth";
 import { mediaPathForUser, resolveMediaUrl, uploadMediaFile } from "@/lib/supabase/storage";
 import { ProfilePhotoEditor } from "@/components/profile/ProfilePhotoEditor";
-import type { CataloguePlan } from "@/lib/subscriptions/catalogue-data";
+import { planBenefitLabels, type CataloguePlan } from "@/lib/subscriptions/catalogue-data";
 import { usePriceCurrency } from "@/hooks/use-price-currency";
 import { CurrencyPreviewSelector } from "@/components/subscriptions/CurrencyPreviewSelector";
 import { useI18n } from "@/components/i18n/I18nProvider";
@@ -766,18 +766,13 @@ export function OnboardingWizard() {
                     <RadioGroup value={selectedPlan || ""} onValueChange={(value) => { setSelectedPlan(value); setBillingTerm("monthly"); setStepErrors([]); }} className="grid gap-3 md:grid-cols-3" aria-label="Membership plans">
                       {catalogue.map((plan) => {
                         const chosen = selectedPlan === plan.code;
-                        const highlights: Record<string, string[]> = {
-                          free: ["Create a matrimonial profile", "Browse compatible matches", "Basic matching features"],
-                          plus: ["More ways to discover matches", "Expanded matching features", "More control over your search"],
-                          premium: ["Advanced matrimonial matching", "Additional privacy and visibility", "Priority membership features"],
-                        };
                         return <label key={plan.code} className={cn("relative flex cursor-pointer flex-col rounded-2xl border-2 bg-card p-4 transition-colors sm:p-5", chosen ? "border-primary bg-accent/30 shadow-md" : "border-border hover:border-primary/60")}>
                           {plan.code === "premium" && <span className="mb-3 self-start rounded-full bg-[#482153] px-3 py-1 text-xs font-semibold text-[#F9EAC8]">Most complete</span>}
                           <span className="mb-3 flex items-center justify-between gap-2"><strong className="text-xl">{plan.name}</strong><RadioGroupItem value={plan.code} id={`plan-${plan.code}`} /></span>
                           <span className="mb-1 text-3xl font-bold text-primary">{fx.format(plan.pricesPence.monthly)}</span>
                           <span className="mb-4 text-xs text-muted-foreground">{plan.code === "free" ? "No card required" : "per month · billed when purchased"}</span>
                           <span className="mb-3 h-px bg-border" />
-                          <span className="space-y-3 text-sm leading-5">{(highlights[plan.code] || []).map((value) => <span key={value} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><span>{value}</span></span>)}</span>
+                          <span className="space-y-3 text-sm leading-5">{planBenefitLabels(plan.entitlements,5).map((value) => <span key={value} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><span>{value}</span></span>)}</span>
                           <span className={cn("mt-5 rounded-lg px-3 py-2 text-center text-sm font-semibold",chosen ? "bg-primary text-primary-foreground" : "bg-accent text-foreground")}>{chosen ? "Selected" : "Select plan"}</span>
                         </label>;
                       })}
