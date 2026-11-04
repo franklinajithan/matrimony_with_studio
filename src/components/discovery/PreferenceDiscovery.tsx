@@ -23,7 +23,7 @@ import { DIASPORA_COUNTRY_NAMES } from "@/data/diaspora-countries";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { getMessages } from "@/components/i18n/messages";
 
-type Person = Profile & { isShortlisted?: boolean; membershipTier?: "free" | "plus" | "premium" };
+type Person = Profile & { isShortlisted?: boolean; membershipTier?: "free" | "plus" | "premium"; searchPlacement?: number };
 const empty: DiscoveryFilters = { query: "", countries: [], languages: [], religions: [], professions: [], smoking: [], drinking: [] };
 const options = {
   countries: DIASPORA_COUNTRY_NAMES,
@@ -100,11 +100,12 @@ export function PreferenceDiscovery() {
       const profiles = profilePages.flat();
       const shortlisted = await getShortlistedIds(user.id, profiles.map((p) => p.id));
       const {data: tierRows,error: tiersError}=await supabase.rpc("discovery_member_tiers",{p_member_ids:profiles.map(p=>p.id)});
-      const tiers=new Map<string,string>();
-      if(!tiersError && Array.isArray(tierRows))tierRows.forEach((row:{member_id:string;plan_code:string})=>tiers.set(row.member_id,row.plan_code));
+      const tiers=new Map<string,{code:string;placement:number}>();
+      if(!tiersError && Array.isArray(tierRows))tierRows.forEach((row:{member_id:string;plan_code:string;placement:number})=>tiers.set(row.member_id,{code:row.plan_code,placement:row.placement}));
       setPeople(profiles.map((p) => ({
         ...p,isShortlisted:shortlisted.has(p.id),
-        membershipTier:tiers.get(p.id)==="premium"?"premium":tiers.get(p.id)==="plus"?"plus":"free",
+        membershipTier:tiers.get(p.id)?.code==="premium"?"premium":tiers.get(p.id)?.code==="plus"?"plus":"free",
+        searchPlacement:tiers.get(p.id)?.placement??0,
       })));
       const { data: references, error: referencesError } = await supabase.rpc("discovery_member_references");
       if (!referencesError && references) setMemberReferences(Object.fromEntries(references.map((row: { member_id: string; reference: string }) => [row.member_id, row.reference])));
@@ -123,7 +124,7 @@ export function PreferenceDiscovery() {
     // Membership tiers affect placement only after marriage/gender eligibility filtering.
     // The preferred tier receives priority, but finite top-10/top-20 windows cannot
     // guarantee slots when more eligible paid members exist than available positions.
-    const tier=(person:Person)=>person.membershipTier==="premium"?2:person.membershipTier==="plus"?1:0;
+    const tier=(person:Person)=>person.searchPlacement===10?2:person.searchPlacement===20?1:0;
     if(tier(a)!==tier(b))return tier(b)-tier(a);
     return preferences ? preferenceScore(b, preferences).percentage - preferenceScore(a, preferences).percentage : 0;
   }), [people, filters, preferences, requiredGender, sortMode]);
@@ -259,6 +260,8 @@ export function PreferenceDiscovery() {
                 ) : null}
               </h2>
               <p className="mt-1 text-[10px] font-semibold tracking-wide text-gold-foreground sm:text-xs">{memberReferences[person.id] || "CupidMatch member"}</p>
+              {person.searchPlacement===10 && <p className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-primary"><Sparkles className="h-3.5 w-3.5" />Premium featured</p>}
+              {person.searchPlacement===20 && <p className="mt-1 text-[11px] font-medium text-primary">Plus featured</p>}
               {person.isVerified && <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-primary"><BadgeCheck className="h-3.5 w-3.5" />Verified profile</p>}
               {person.height && <p className="mt-1 text-xs text-muted-foreground">{person.height} tall</p>}
               {displayMode === "list" && person.bio && <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-muted-foreground">{person.bio}</p>}
