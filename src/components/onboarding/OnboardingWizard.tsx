@@ -27,6 +27,7 @@ import {
 import { auth, onAuthStateChanged } from "@/lib/supabase/auth";
 import { mediaPathForUser, resolveMediaUrl, uploadMediaFile } from "@/lib/supabase/storage";
 import { ProfilePhotoEditor } from "@/components/profile/ProfilePhotoEditor";
+import { formatCataloguePrice, type CataloguePlan } from "@/lib/subscriptions/catalogue-data";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { getMessages } from "@/components/i18n/messages";
 
@@ -83,7 +84,11 @@ export function OnboardingWizard() {
   const [draftReady, setDraftReady] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<"free" | "premium" | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [catalogue, setCatalogue] = useState<CataloguePlan[]>([]);
+  const [plansError, setPlansError] = useState("");
+  const [plansLoading, setPlansLoading] = useState(true);
+  const [billingTerm, setBillingTerm] = useState<"monthly" | "three_months" | "six_months">("monthly");
   const [navigating, setNavigating] = useState(false);
   const navigationLock = useRef(false);
   const saveTail = useRef<Promise<unknown>>(Promise.resolve());
@@ -223,6 +228,26 @@ export function OnboardingWizard() {
     };
   }, [router, persist]);
 
+  useEffect(() => {
+    if (step !== 7) return;
+    const controller = new AbortController();
+    setPlansLoading(true);
+    setPlansError("");
+    fetch("/api/plans", { cache: "no-store", signal: controller.signal })
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok || !Array.isArray(data.plans)) throw Error("Live membership prices are unavailable. Please try again.");
+        if (!controller.signal.aborted) {
+          const active = (data.plans as CataloguePlan[]).filter((plan) => plan.active);
+          setCatalogue(active);
+          if (!active.some((plan) => plan.code === selectedPlan)) setSelectedPlan(null);
+        }
+      })
+      .catch((error) => { if (!controller.signal.aborted) setPlansError(error instanceof Error ? error.message : "Could not load plans."); })
+      .finally(() => { if (!controller.signal.aborted) setPlansLoading(false); });
+    return () => controller.abort();
+  }, [step]);
+
   const progressValue = ((step + 1) / ONBOARDING_STEPS.length) * 100;
   const current = ONBOARDING_STEPS[step];
 
@@ -307,7 +332,9 @@ export function OnboardingWizard() {
 
   async function handlePublish() {
     if (navigationLock.current || uploading) return;
-    if (!selectedPlan) { setStepErrors(["Choose Free or Premium before publishing your profile."]); return; }
+    if (!selectedPlan || plansLoading || plansError) { setStepErrors(["Choose a membership plan after current prices load."]); return; }
+    const selected = catalogue.find((plan) => plan.code === selectedPlan && plan.active);
+    if (!selected) { setStepErrors(["The selected plan is unavailable."]); return; }
     const snapshot = draftRef.current;
     const errors = validateOnboardingStep(7, snapshot);
     setStepErrors(errors);
@@ -316,17 +343,22 @@ export function OnboardingWizard() {
     try {
       const saved = await persist(snapshot, 7);
       if (!saved.ok) throw new Error(saved.error);
-      if (selectedPlan === "premium") {
-        const existingResponse = await fetch("/api/subscription/me", { credentials: "same-origin", cache: "no-store" });
-        const existing = await existingResponse.json().catch(() => ({}));
-        if (!existingResponse.ok) throw new Error("Could not verify existing membership. Please try again.");
-        if (existing.plan !== "premium") {
-        const activation = await fetch("/api/membership/premium-launch", {
-          method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: "{}",
+      if (selectedPlan !== "free") {
+        if (selected.pricesPence[billingTerm] === null) throw Error("This billing period is not offered for the selected plan.");
+        const checkout = await fetch("/api/billing/checkout", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plan: selectedPlan, term: billingTerm }),
         });
-        const result = await activation.json().catch(() => ({}));
-        if (!activation.ok || result.plan !== "premium") throw new Error(result.error || "Premium could not be activated. Your profile has not been published.");
+        const data = await checkout.json().catch(() => ({}));
+        if (!checkout.ok || typeof data.url !== "string") {
+          throw new Error(data.error || "Secure card checkout is not available yet. Your draft is saved and has not been published.");
         }
+        const target = new URL(data.url);
+        if (target.protocol !== "https:") throw new Error("Checkout returned an invalid secure payment link.");
+        window.location.assign(target.toString());
+        return;
       }
       const response = await fetch("/api/onboarding/publish", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ draft: snapshot, membershipChoice: selectedPlan }),
@@ -709,12 +741,35 @@ export function OnboardingWizard() {
               <p className="text-sm text-muted-foreground">{t.reviewDob}</p>
               <section className="space-y-3 rounded-xl border border-primary/30 bg-accent/30 p-4" aria-label="Choose your membership">
                 <h3 className="text-lg font-semibold">Choose your membership before publishing</h3>
-                <p className="text-sm text-muted-foreground">CupidMatch is a matrimonial service with Free and Premium plans. Some features require a paid membership after introductory offers end.</p>
-                <RadioGroup value={selectedPlan || ""} onValueChange={(value) => { setSelectedPlan(value as "free" | "premium"); setStepErrors([]); }} className="space-y-3">
-                  <label className="flex cursor-pointer gap-3 rounded-lg border bg-background p-4"><RadioGroupItem value="free" id="plan-free" /><span><strong>Free membership</strong><span className="mt-1 block text-sm text-muted-foreground">Publish and use available Free features. Premium features are not included.</span></span></label>
-                  <label className="flex cursor-pointer gap-3 rounded-lg border bg-background p-4"><RadioGroupItem value="premium" id="plan-premium" /><span><strong>Premium — two months free</strong><span className="mt-1 block text-sm text-muted-foreground">Introductory Premium access for eligible members. £0 today, no card and no automatic payment. After the offer ends, Free access remains unless you purchase a plan.</span></span></label>
-                </RadioGroup>
-                <Link href="/launch-pricing" target="_blank" rel="noopener noreferrer" className="inline-block text-sm font-semibold text-primary underline">Compare membership features and pricing</Link>
+                <p className="text-sm text-muted-foreground">Compare all available memberships and current prices. Free members can publish without a card. Paid memberships require successful, verified payment before Premium access is granted.</p>
+                {plansLoading ? <p role="status">Loading current membership prices…</p> : plansError ? <p role="alert" className="text-destructive">{plansError}</p> : catalogue.length !== 3 ? <p role="alert">The complete three-plan catalogue is unavailable. Please contact support before selecting a paid plan.</p> : (
+                  <RadioGroup value={selectedPlan || ""} onValueChange={(value) => { setSelectedPlan(value); setBillingTerm("monthly"); setStepErrors([]); }} className="grid gap-3 md:grid-cols-3">
+                    {catalogue.map((plan) => (
+                      <label key={plan.code} className="flex cursor-pointer gap-3 rounded-xl border bg-background p-4">
+                        <RadioGroupItem value={plan.code} id={`plan-${plan.code}`} />
+                        <span className="min-w-0 space-y-2">
+                          <strong className="block">{plan.name}</strong>
+                          <span className="block text-xl font-bold text-primary">{formatCataloguePrice(plan.pricesPence.monthly, plan.currency)}<span className="text-xs font-normal">{plan.code === "free" ? "" : " / month"}</span></span>
+                          <span className="block text-xs text-muted-foreground">{plan.code === "free" ? "Basic matching and membership features." : "Paid membership with additional matrimonial features."}</span>
+                          <span className="block text-xs text-muted-foreground">{Object.entries(plan.entitlements).filter(([,value]) => value === true).slice(0,5).map(([name]) => name.replace(/([A-Z])/g, " $1").trim()).join(" · ")}</span>
+                        </span>
+                      </label>
+                    ))}
+                  </RadioGroup>
+                )}
+                {selectedPlan && selectedPlan !== "free" && catalogue.some((plan) => plan.code === selectedPlan) && (
+                  <div className="space-y-2 rounded-lg border bg-background p-3">
+                    <label htmlFor="billing-term" className="block text-sm font-medium">Payment period</label>
+                    <select id="billing-term" className="min-h-11 w-full rounded-md border bg-background p-2" value={billingTerm} onChange={(event) => setBillingTerm(event.target.value as "monthly" | "three_months" | "six_months")}>
+                      <option value="monthly">1 month</option>
+                      {catalogue.find((plan) => plan.code === selectedPlan)?.pricesPence.three_months !== null && <option value="three_months">3 months</option>}
+                      {catalogue.find((plan) => plan.code === selectedPlan)?.pricesPence.six_months !== null && <option value="six_months">6 months</option>}
+                    </select>
+                    <p className="text-sm font-semibold">Total: {formatCataloguePrice(catalogue.find((plan) => plan.code === selectedPlan)!.pricesPence[billingTerm], catalogue.find((plan) => plan.code === selectedPlan)!.currency)}</p>
+                    <p className="text-xs text-muted-foreground">You will be redirected to secure checkout when the payment provider is available. No card details are collected on this page. Your profile stays unpublished until payment is verified.</p>
+                  </div>
+                )}
+                <Link href="/launch-pricing" target="_blank" rel="noopener noreferrer" className="inline-block text-sm font-semibold text-primary underline">View complete plan details and feature comparison</Link>
               </section>
               <label className="flex items-start gap-3 rounded-lg border p-4">
                 <Checkbox
@@ -742,9 +797,9 @@ export function OnboardingWizard() {
               {t.continue} <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           ) : (
-            <Button className="min-h-11 flex-1 sm:flex-none" onClick={() => void handlePublish()} disabled={publishing || navigating || uploading}>
+            <Button className="min-h-11 flex-1 sm:flex-none" onClick={() => void handlePublish()} disabled={publishing || navigating || uploading || plansLoading || Boolean(plansError) || catalogue.length !== 3}>
               {publishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {t.publish}
+              {selectedPlan && selectedPlan !== "free" ? "Continue to secure checkout" : t.publish}
             </Button>
           )}
         </div>
