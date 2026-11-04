@@ -114,15 +114,16 @@ revoke all on function public.consume_member_profile_view(uuid) from public,anon
 grant execute on function public.consume_member_profile_view(uuid) to authenticated;
 
 create or replace function public.discovery_member_tiers(p_member_ids uuid[])
-returns table(member_id uuid, plan_code text)
+returns table(member_id uuid, plan_code text, placement integer)
 language plpgsql security definer set search_path='' stable
 as $$
 begin
  if auth.uid() is null then raise exception 'Authentication required' using errcode='42501'; end if;
  if cardinality(p_member_ids)>500 then raise exception 'Too many profiles' using errcode='22023'; end if;
  return query
- select p.id,private.member_membership_tier(p.id)
+ select p.id,private.member_membership_tier(p.id),coalesce((sp.entitlements->>'searchPlacement')::integer,0)
  from public.profiles p
+ join public.subscription_plans sp on sp.code=private.member_membership_tier(p.id) and sp.is_active
  where p.id=any(p_member_ids) and p.is_published and p.suspended_at is null
  and p.id<>auth.uid();
 end $$;
