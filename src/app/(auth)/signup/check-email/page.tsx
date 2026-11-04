@@ -15,7 +15,6 @@ const RESEND_COOLDOWN_SECONDS = 60;
 function CheckEmailContent() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const membershipPlan = searchParams.get("plan") === "premium" ? "premium" : "free";
   const [isSending, setIsSending] = useState(false);
   const [resent, setResent] = useState(false);
   const [cooldown, setCooldown] = useState(0);
@@ -35,7 +34,7 @@ function CheckEmailContent() {
     setIsSending(true);
     setStatusMessage("");
     try {
-      await resendSignupConfirmation(email, membershipPlan);
+      await resendSignupConfirmation(email);
       setResent(true);
       setCooldown(RESEND_COOLDOWN_SECONDS);
       setStatusMessage("A new confirmation link was requested. Check your inbox and spam folder.");
@@ -107,10 +106,10 @@ function CheckEmailContent() {
         </p>
       </CardContent>
       <CardFooter className="flex flex-col items-center gap-2">
-        <Link href={membershipPlan === "premium" ? "/login?next=%2Fmembership" : "/login"} className="text-sm font-medium text-primary hover:underline">
+        <Link href="/login?next=%2Fonboarding" className="text-sm font-medium text-primary hover:underline">
           I have confirmed — log in
         </Link>
-        <Link href={membershipPlan === "premium" ? "/signup?plan=premium" : "/signup"} className="text-sm text-muted-foreground hover:text-primary">
+        <Link href="/signup" className="text-sm text-muted-foreground hover:text-primary">
           Use a different email
         </Link>
       </CardFooter>

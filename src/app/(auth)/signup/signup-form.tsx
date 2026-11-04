@@ -21,10 +21,10 @@ import { getMessages } from "@/components/i18n/messages";
 
 const signupSchema = z
   .object({
-    name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+    name: z.string().trim().min(2, { message: "Name must be at least 2 characters." }),
     promoCode: z.string().max(32).regex(/^[A-Za-z0-9-]*$/, "Use letters, numbers or hyphens only.").optional(),
     phone: z.string().optional(),
-    email: z.string().email({ message: "Enter a valid email address." }),
+    email: z.string().trim().email({ message: "Enter a valid email address." }),
     password: z.string().min(8, { message: "Password must be at least 8 characters." }),
     confirmPassword: z.string().min(8, { message: "Confirm your password." }),
     adultConsent: z.boolean().refine((val) => val === true, { message: "You must be an adult registering for yourself." }),
@@ -40,8 +40,6 @@ export default function SignupPage() {
   const { language } = useI18n();
   const t = getMessages(language).auth;
   const router = useRouter();
-  const [membershipPlan,setMembershipPlan] = useState<"free"|"premium">("free");
-  React.useEffect(()=>{if(new URLSearchParams(window.location.search).get("plan")==="premium")setMembershipPlan("premium");},[]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -66,7 +64,6 @@ export default function SignupPage() {
     setFormError(null);
     try {
       const result = await createUserWithEmailAndPassword(auth, values.email, values.password, {
-        membershipPlan,
         displayName: values.name,
         pendingPhone: values.phone,
         pendingPromoCode: values.promoCode?.trim().toUpperCase(),
@@ -77,7 +74,7 @@ export default function SignupPage() {
           title: "Confirm your email",
           description: "We sent a confirmation link. Open it to continue your profile.",
         });
-        router.push(`/signup/check-email?email=${encodeURIComponent(values.email)}&plan=${membershipPlan}`);
+        router.push(`/signup/check-email?email=${encodeURIComponent(values.email)}`);
         return;
       }
 
@@ -85,7 +82,7 @@ export default function SignupPage() {
         title: "Account created",
         description: "You can now build your profile.",
       });
-      router.push(membershipPlan==="premium"?"/membership":"/dashboard");
+      router.push("/onboarding");
       router.refresh();
     } catch (error: unknown) {
       const code = typeof error === "object" && error && "code" in error ? String((error as { code: string }).code) : "";
@@ -132,9 +129,7 @@ export default function SignupPage() {
             </AlertDescription>
           </Alert>
         )}
-        <label className="block space-y-2 text-sm font-medium">Membership<select aria-label="Membership" className="block w-full rounded-lg border bg-background p-3" value={membershipPlan} onChange={e=>setMembershipPlan(e.target.value as "free"|"premium")} disabled={isLoading}><option value="free">Free — always available</option><option value="premium">Premium — 2 calendar months free, no card</option></select></label>
-        <p className="text-xs text-muted-foreground">Confirm your email, then activate your Premium trial from Membership. No automatic charges.</p>
-        <SocialAuthButtons next={membershipPlan==="premium"?"/membership":"/dashboard"} />
+        <SocialAuthButtons next="/onboarding" />
         <p className="text-center text-xs leading-relaxed text-muted-foreground">
           By continuing with Google or Facebook, you agree to the{" "}
           <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link>{" "}
@@ -180,8 +175,8 @@ export default function SignupPage() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center"><Lock className="mr-2 h-4 w-4 text-muted-foreground" />{t.password}</FormLabel>
-                  <FormControl>
-                    <div className="relative">
+                  <div className="relative">
+                    <FormControl>
                       <Input
                         type={showPassword ? "text" : "password"}
                         autoComplete="new-password"
@@ -190,20 +185,19 @@ export default function SignupPage() {
                         className="pr-10"
                         disabled={isLoading}
                       />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute inset-y-0 right-0 h-full min-w-11 px-3 text-muted-foreground hover:text-primary"
-                        onClick={() => setShowPassword(!showPassword)}
-                        disabled={isLoading}
-                        tabIndex={-1}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
-                      </Button>
-                    </div>
-                  </FormControl>
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute inset-y-0 right-0 h-full min-w-11 px-3 text-muted-foreground hover:text-primary"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={isLoading}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+                    </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -214,8 +208,8 @@ export default function SignupPage() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center"><Lock className="mr-2 h-4 w-4 text-muted-foreground" />{t.confirmPassword}</FormLabel>
-                  <FormControl>
-                    <div className="relative">
+                  <div className="relative">
+                    <FormControl>
                       <Input
                         type={showConfirmPassword ? "text" : "password"}
                         autoComplete="new-password"
@@ -224,20 +218,19 @@ export default function SignupPage() {
                         className="pr-10"
                         disabled={isLoading}
                       />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute inset-y-0 right-0 h-full min-w-11 px-3 text-muted-foreground hover:text-primary"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        disabled={isLoading}
-                        tabIndex={-1}
-                      >
-                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        <span className="sr-only">{showConfirmPassword ? "Hide password" : "Show password"}</span>
-                      </Button>
-                    </div>
-                  </FormControl>
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute inset-y-0 right-0 h-full min-w-11 px-3 text-muted-foreground hover:text-primary"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      disabled={isLoading}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      <span className="sr-only">{showConfirmPassword ? "Hide password" : "Show password"}</span>
+                    </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
