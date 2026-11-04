@@ -11,7 +11,7 @@ type PlanRow = {
  is_active:boolean; entitlements:Record<string,Entitlement>; updated_at:string;
 };
 const descriptions:Record<string,string>={
- interestsPerMonth:"Interests per month",profileSharesPerMonth:"Biodata / profile shares per month",
+ interestsPerMonth:"Interests per month",messagesPerMonth:"Messages per month",profileViewsPerMonth:"Profile views per month",searchPlacement:"Priority search placement (0, 10, or 20)",profileSharesPerMonth:"Biodata / profile shares per month",
  biodataTemplates:"Available biodata templates",profileBoostsPerMonth:"Profile boosts per month",
  advancedFilters:"Advanced search filters",seeWhoLikesYou:"See who likes you",
  unlimitedMessaging:"Unlimited messaging where permitted",readReceipts:"Message read receipts",
@@ -87,8 +87,8 @@ export function AdminPricingEditor(){
            <label htmlFor={`${plan.code}-${key}`} className="flex-1">{descriptions[key]||key.replace(/([A-Z])/g," $1")}</label>
            {typeof value==="boolean"?<input id={`${plan.code}-${key}`} type="checkbox" checked={value} onChange={e=>entitlement(plan.code,key,e.target.checked)} className="h-5 w-5" />:
            <select id={`${plan.code}-${key}`} aria-label={descriptions[key]||key} className="max-w-32 rounded-md border bg-background p-2" value={value===null?"unlimited":String(value)} onChange={e=>entitlement(plan.code,key,e.target.value==="unlimited"?null:Number(e.target.value))}>
-             <option value="unlimited">Unlimited</option>{[0,1,3,5,10,20,50,100].map(n=><option key={n} value={n}>{n}</option>)}
-             {value!==null&&![0,1,3,5,10,20,50,100].includes(value)&&<option value={value}>{value}</option>}
+             <option value="unlimited">Unlimited</option>{[0,1,2,3,5,10,20,30,50,100,400].map(n=><option key={n} value={n}>{n}</option>)}
+             {value!==null&&![0,1,2,3,5,10,20,30,50,100,400].includes(value)&&<option value={value}>{value}</option>}
            </select>}
          </div>)}
        </div>
