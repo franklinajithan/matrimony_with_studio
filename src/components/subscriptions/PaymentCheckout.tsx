@@ -1,0 +1,8 @@
+'use client';
+import { useState } from 'react';
+import { PLANS,formatPlanPrice,type BillingTerm } from '@/lib/subscriptions/plans';
+import { Button } from '@/components/ui/button';
+export function PaymentCheckout(){
+ const [plan,setPlan]=useState<'premium'|'premium_plus'>('premium'),[term,setTerm]=useState<BillingTerm>('monthly');
+ return <section className="space-y-3 rounded-3xl border p-6" aria-label="Paid membership preview"><h2 className="text-2xl font-bold">Upgrade after your trial</h2><p>Free membership stays available. Paid checkout is being prepared; no payment will be taken.</p><label className="block text-sm font-medium">Plan<select aria-label="Plan" className="mt-1 block w-full rounded-lg border bg-background p-3" value={plan} onChange={e=>setPlan(e.target.value as typeof plan)}><option value="premium">Premium</option><option value="premium_plus">Premium+</option></select></label><label className="block text-sm font-medium">Membership period<select aria-label="Membership period" className="mt-1 block w-full rounded-lg border bg-background p-3" value={term} onChange={e=>setTerm(e.target.value as BillingTerm)}><option value="monthly">1 month</option><option value="three_months">3 months</option><option value="six_months">6 months</option></select></label><p className="font-semibold" role="status">Price preview: {formatPlanPrice(PLANS[plan].pricesPence[term])} GBP</p><Button disabled>Paid checkout unavailable</Button><p className="text-sm text-muted-foreground">There is no automatic charging or renewal. Tide Payment Links, if used later, will require independent payment verification before access is granted.</p></section>;
+}

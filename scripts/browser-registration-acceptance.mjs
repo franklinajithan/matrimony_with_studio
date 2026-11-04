@@ -68,9 +68,10 @@ build.onResolve({filter:/^next\/link$/},()=>({path:'link',namespace:'test-link'}
    await page.getByRole('button',{name:'Create account',exact:true}).click();await page.getByText('You must accept the terms to continue.',{exact:true}).waitFor();assert.equal(signups,0);checks++;
    await page.getByRole('checkbox',{name:'I agree to the Terms of Service and Privacy Policy.',exact:true}).check();await page.getByRole('button',{name:'Create account',exact:true}).click();await page.waitForFunction(()=>window.__navigation?.startsWith('/signup/check-email'));assert.equal(signups,1);checks++;
    duplicate=true;await page.getByRole('button',{name:'Create account',exact:true}).click();await page.getByText('An account with this email already exists.',{exact:true}).first().waitFor();checks++;
-   await page.getByRole('button',{name:'Google',exact:true}).click();await page.waitForFunction(()=>window.__oauth?.provider==='google');checks++;
+   await page.getByRole('combobox',{name:'Membership',exact:true}).selectOption('premium');checks++;
+   await page.getByRole('button',{name:'Google',exact:true}).click();await page.waitForFunction(()=>window.__oauth?.provider==='google');assert.equal(await page.evaluate(()=>window.__oauth.next),'/membership');checks++;
    assert.deepEqual(errors,[]);
-   console.log(`PASS signup/onboarding ${viewport.width}px (18 checks)`);await context.close();await browser.close();browser=null;
+   console.log(`PASS signup/onboarding ${viewport.width}px (19 checks)`);await context.close();await browser.close();browser=null;
   }
   console.log(`${checks} registration/onboarding browser checks passed with fixture identity/HTTP boundaries.`);
 }finally{await browser?.close();if(server)await new Promise(resolve=>server.close(resolve));await rm(dir,{recursive:true,force:true});}

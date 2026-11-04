@@ -146,7 +146,7 @@ export async function signInWithOAuth(provider: OAuthProvider, next = "/dashboar
   return data;
 }
 
-export async function createUserWithEmailAndPassword(_auth: unknown, email: string, password: string, extras?: { displayName?: string; pendingPhone?: string; pendingPromoCode?: string }) {
+export async function createUserWithEmailAndPassword(_auth: unknown, email: string, password: string, extras?: { displayName?: string; pendingPhone?: string; pendingPromoCode?: string; membershipPlan?: "free" | "premium" }) {
   // Recheck at submission so an already-open form respects a later admin pause.
   const accessResponse = await fetch('/api/registration', { cache: 'no-store' });
   const access = await accessResponse.json();
@@ -156,7 +156,7 @@ export async function createUserWithEmailAndPassword(_auth: unknown, email: stri
     email,
     password,
     options: {
-      emailRedirectTo: callbackUrl("/dashboard"),
+      emailRedirectTo: callbackUrl(extras?.membershipPlan === "premium" ? "/membership" : "/dashboard"),
       data: { ...(extras?.displayName ? { display_name: extras.displayName } : {}), ...(extras?.pendingPhone ? { pending_phone: extras.pendingPhone } : {}), ...(extras?.pendingPromoCode ? { pending_promo_code: extras.pendingPromoCode } : {}) },
     },
   });

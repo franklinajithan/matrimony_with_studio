@@ -9,6 +9,7 @@ const links = [
   { href: "/admin/users", label: "Members", icon: Users },
   { href: "/admin/verifications", label: "Verification", icon: ShieldCheck },
   { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
+  { href: "/admin/payments", label: "Payments", icon: CreditCard },
   { href: "/admin/plans", label: "Plans", icon: Tags },
   { href: "/admin/promo-codes", label: "Promo Codes", icon: Tags },
   { href: "/admin/success-stories", label: "Stories", icon: Heart },
