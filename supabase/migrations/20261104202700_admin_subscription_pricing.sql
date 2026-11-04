@@ -51,11 +51,11 @@ begin
   if p_entitlements is null or jsonb_typeof(p_entitlements) <> 'object' or p_entitlements = '{}'::jsonb then
     raise exception 'Missing feature configuration' using errcode='22023';
   end if;
-  if exists (select 1 from jsonb_object_keys(previous.entitlements) as item(k) where not p_entitlements ? item.k) then
+  if exists (select 1 from jsonb_object_keys(previous.entitlements) as item(k) where not (p_entitlements ? item.k)) then
     raise exception 'Cannot remove existing feature keys' using errcode='22023';
   end if;
   for feature in select key, value from jsonb_each(p_entitlements) loop
-    if not previous.entitlements ? feature.key then
+    if not (previous.entitlements ? feature.key) then
       raise exception 'Unknown feature key' using errcode='22023';
     end if;
     actual_type := jsonb_typeof(feature.value);
