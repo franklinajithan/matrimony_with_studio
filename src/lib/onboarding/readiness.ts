@@ -20,11 +20,12 @@ export type ProfileReadiness = {
   firstIncompleteStep: number;
 };
 
-// Only basic identity controls readiness; optional answers improve the profile later.
+// Basic identity and height control readiness; optional answers improve the profile later.
 const REQUIRED_CHECKS = [
   { filled: (draft: OnboardingDraft) => Boolean(draft.displayName?.trim() && draft.displayName.trim().length >= 2) },
   { filled: (draft: OnboardingDraft) => draft.gender === "male" || draft.gender === "female" },
   { filled: (draft: OnboardingDraft) => Boolean(draft.dob && isAdult(draft.dob)) },
+  { filled: (draft: OnboardingDraft) => /^(?:[1-9]\d|1\d\d|2[0-4]\d|250)$/.test(draft.height || "") && Number(draft.height) >= 90 },
 ];
 
 const LOOKING_FOR_LABELS: Record<string, string> = {
