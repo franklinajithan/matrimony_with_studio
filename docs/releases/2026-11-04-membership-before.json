@@ -1,0 +1,31 @@
+{
+  "catalogue": [
+    {
+      "code": "free",
+      "name": "Free",
+      "currency": "GBP",
+      "is_active": true,
+      "monthly_price_pence": 0
+    },
+    {
+      "code": "plus",
+      "name": "Plus",
+      "currency": "GBP",
+      "is_active": true,
+      "monthly_price_pence": 999
+    },
+    {
+      "code": "premium",
+      "name": "Premium",
+      "currency": "GBP",
+      "is_active": true,
+      "monthly_price_pence": 1999
+    }
+  ],
+  "launchTable": null,
+  "ledgerTable": null,
+  "oldTrialAcl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+  "legacyTrialCount": 0,
+  "oldTrialFunction": "CREATE OR REPLACE FUNCTION public.activate_member_trial(p_code_hash text DEFAULT NULL::text)\n RETURNS TABLE(duration_months integer, trial_ends_at timestamp with time zone, offer_applied boolean)\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare\n v_user uuid := auth.uid();\n v_auth_created timestamptz;\n v_phone_confirmed timestamptz;\n v_promo public.promo_codes%rowtype;\n v_months integer := 3;\n v_end timestamptz;\n v_start timestamptz;\n v_existing public.member_trials%rowtype;\nbegin\n if v_user is null then raise exception 'Sign in to activate your trial'; end if;\n select created_at,phone_confirmed_at into v_auth_created,v_phone_confirmed from auth.users where id=v_user;\n if v_phone_confirmed is null then raise exception 'Verify your mobile number first'; end if;\n perform pg_advisory_xact_lock(hashtextextended(v_user::text,0));\n select * into v_existing from public.member_trials where user_id=v_user;\n if found then\n   return query select v_existing.duration_months,v_existing.ends_at,(v_existing.promo_code_id is not null);\n   return;\n end if;\n if p_code_hash is not null then\n   if p_code_hash !~ '^[a-f0-9]{64}$' then raise exception 'Invalid invitation code'; end if;\n   select * into v_promo from public.promo_codes where code_hash=p_code_hash for update;\n   if not found or not v_promo.is_active or v_promo.starts_at>now()\n      or (v_promo.expires_at is not null and v_promo.expires_at<now())\n      or v_promo.redemption_count>=v_promo.max_redemptions then\n      raise exception 'Invitation code is invalid, expired or fully redeemed';\n   end if;\n   v_months:=v_promo.duration_months;\n end if;\n v_start:=v_auth_created;\n v_end:=v_start+make_interval(months=>v_months);\n insert into public.member_trials(user_id,starts_at,ends_at,duration_months,promo_code_id)\n values(v_user,v_start,v_end,v_months,case when p_code_hash is null then null else v_promo.id end);\n if p_code_hash is not null then\n   insert into public.promo_redemptions(promo_code_id,user_id,trial_ends_at) values(v_promo.id,v_user,v_end);\n   update public.promo_codes set redemption_count=redemption_count+1 where id=v_promo.id;\n end if;\n return query select v_months,v_end,(p_code_hash is not null);\nend $function$\n",
+  "subscriptionCount": 0
+}

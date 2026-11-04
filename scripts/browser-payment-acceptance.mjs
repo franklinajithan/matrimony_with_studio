@@ -16,15 +16,15 @@ try{
   await page.getByRole('button',{name:'Retry',exact:true}).click();await page.getByText('premium · £7.99').waitFor();checks++;
   await page.getByRole('button',{name:'Start 2 months free'}).click();await page.getByText('Please retry the offer.').waitFor();checks++;
   await page.getByRole('button',{name:'Start 2 months free'}).dblclick();await page.getByText(/4 January 2027/).waitFor();assert.equal(claims,2);checks++;
-  await page.getByLabel('Plan',{exact:true}).selectOption('premium');await page.getByText('Price preview: £19.99 GBP').waitFor();assert.equal(await page.getByLabel('Membership period').locator('option[value="six_months"]').evaluate(el=>el.disabled),true);checks++;
-  assert.equal(await page.getByRole('button',{name:'Paid checkout unavailable'}).isDisabled(),true);checks++;
+  await page.getByLabel('Plan',{exact:true}).selectOption('premium');await page.getByText('Price preview: £19.99 GBP').waitFor();assert.equal(await page.getByLabel('Membership period').locator('option[value="six_months"]').count(),0);checks++;
+  assert.equal(await page.getByRole('link',{name:'View your Premium trial'}).getAttribute('href'),'#premium-launch-offer');checks++;
   assert.equal(await page.locator('input[type="password"],input[autocomplete="cc-number"]').count(),0);checks++;
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);checks++;
   await page.goto(base+'/#unavailable');await page.reload();await page.getByText('Premium trial activation is temporarily unavailable. Free membership remains available.').waitFor();assert.equal(await page.getByRole('button',{name:'Start 2 months free'}).isDisabled(),true);checks++;assert.equal(claims,2);checks++;
   await page.goto(base+'/#legacy');await page.reload();await page.getByText(/1 May 2027/).waitFor();assert.equal(await page.getByRole('button',{name:'Start 2 months free'}).count(),0);checks++;
   await page.route('**/api/admin/payments*',route=>{if(route.request().method()==='POST'){disables++;return route.fulfill({json:{enabled:false}});}return route.fulfill({json:{summary:{verifiedRevenuePence:799,refundedPence:0,pending:1,failed:1,cancelled:0,activeTrials:1,legacyActiveTrials:0,paidSubscriptions:0},payments:[{id:'pay',user_id:'synthetic-member',plan_code:'premium',amount_pence:799,status:'pending'}],trials:[{user_id:'synthetic-member',ends_at:'2027-01-04T12:00:00Z',duration_months:2}],legacyTrials:[],subscriptions:[],events:[],hasMore:false,readiness:{reason:'Tide merchant verification is unavailable.'}}});});
   await page.goto(base+'/#admin');await page.reload();await page.getByRole('heading',{name:'Payment records',exact:true}).waitFor();checks++;
-  await page.getByRole('button',{name:'Keep payments disabled'}).click();await page.getByText('Payments disabled. The action was recorded in the audit log.').waitFor();assert.equal(disables,1);checks++;
+  await page.getByRole('button',{name:'Pause payments'}).click();await page.getByText('Payments paused. The action was recorded in the audit log.').waitFor();assert.equal(disables,1);checks++;
   assert.equal(await page.getByRole('button',{name:/enable live/i}).count(),0);checks++;
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);checks++;
   assert.deepEqual(errors,[]);checks++;await page.close();
