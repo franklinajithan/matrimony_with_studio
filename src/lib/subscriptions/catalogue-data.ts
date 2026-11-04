@@ -26,3 +26,30 @@ export function formatCataloguePrice(pence:number|null,currency:string){
  if(pence===null)return "Not offered";
  return new Intl.NumberFormat("en-GB",{style:"currency",currency}).format(pence/100);
 }
+
+// All customer-facing plan copy derives from the same entitlement keys as the catalogue.
+export const ENTITLEMENT_LABELS:Record<string,string>={
+ advancedFilters:"Advanced matrimonial search",
+ seeWhoLikesYou:"See who liked your profile",
+ unlimitedMessaging:"Expanded messaging",
+ readReceipts:"Message read receipts",
+ familyIntroduction:"Family introductions",
+ fullHoroscope:"Full horoscope comparison",
+ premiumBadge:"Premium profile badge",
+ prioritySupport:"Priority support",
+};
+export function planBenefitLabels(entitlements:Record<string,unknown>,max=5):string[]{
+ const results:string[]=[];
+ for(const [key,label] of Object.entries(ENTITLEMENT_LABELS)){
+   if(entitlements[key]===true)results.push(label);
+ }
+ const addCount=(key:string,title:string)=>{
+   const v=entitlements[key];
+   if(v===null)results.push(`Unlimited ${title}`);
+   else if(typeof v==="number"&&v>0)results.push(`${v} ${title}`);
+ };
+ addCount("interestsPerMonth","interests/month");
+ addCount("profileBoostsPerMonth","profile boosts/month");
+ addCount("profileSharesPerMonth","profile shares/month");
+ return results.slice(0,max);
+}
