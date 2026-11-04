@@ -8,8 +8,9 @@ const other="10000000-0000-4000-8000-000000000002";
 
 test("membership pricing migrations enforce audited edits and atomic monthly quotas",async()=>{
  const db=new PGlite();
+ const run=async(stage,sql)=>{try{await db.exec(sql)}catch(e){throw new Error(`${stage}: ${e instanceof Error?e.message:String(e)}`,{cause:e});}};
  try{
- await db.exec(`create role anon;create role authenticated;
+ await run("bootstrap",`create role anon;create role authenticated;
  create schema auth;create schema private;
  create table auth.users(id uuid primary key);
  insert into auth.users values('${user}'),('${other}');
@@ -29,8 +30,8 @@ test("membership pricing migrations enforce audited edits and atomic monthly quo
  ('free','Free','GBP',0,null,null,true,'{"interestsPerMonth":10,"messagesPerMonth":2,"profileViewsPerMonth":50,"searchPlacement":0,"advancedFilters":false}',now(),1),
  ('plus','Plus','GBP',499,null,null,true,'{"interestsPerMonth":30,"messagesPerMonth":30,"profileViewsPerMonth":400,"searchPlacement":20,"advancedFilters":true}',now(),2),
  ('premium','Premium','GBP',799,null,null,true,'{"interestsPerMonth":null,"messagesPerMonth":null,"profileViewsPerMonth":null,"searchPlacement":10,"advancedFilters":true}',now(),3);`);
- await db.exec(await readFile("supabase/migrations/20261104202700_admin_subscription_pricing.sql","utf8"));
- await db.exec(await readFile("supabase/migrations/20261104204000_membership_quotas.sql","utf8"));
+ await run("admin-price-migration",await readFile("supabase/migrations/20261104202700_admin_subscription_pricing.sql","utf8"));
+ await run("membership-quota-migration",await readFile("supabase/migrations/20261104204000_membership_quotas.sql","utf8"));
  const rows=(await db.query("select code,monthly_price_pence,entitlements->>'interestsPerMonth' interests from public.subscription_plans order by sort_order")).rows;
  assert.deepEqual(rows.map(row=>[row.code,row.monthly_price_pence,row.interests]),[["free",0,"2"],["plus",499,"30"],["premium",799,null]]);
  const updatedAt=(await db.query("select updated_at from public.subscription_plans where code='plus'")).rows[0].updated_at;
