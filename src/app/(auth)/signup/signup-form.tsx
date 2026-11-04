@@ -40,6 +40,8 @@ export default function SignupPage() {
   const { language } = useI18n();
   const t = getMessages(language).auth;
   const router = useRouter();
+  const [membershipPlan,setMembershipPlan] = useState<"free"|"premium">("free");
+  React.useEffect(()=>{if(new URLSearchParams(window.location.search).get("plan")==="premium")setMembershipPlan("premium");},[]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -64,6 +66,7 @@ export default function SignupPage() {
     setFormError(null);
     try {
       const result = await createUserWithEmailAndPassword(auth, values.email, values.password, {
+        membershipPlan,
         displayName: values.name,
         pendingPhone: values.phone,
         pendingPromoCode: values.promoCode?.trim().toUpperCase(),
@@ -82,7 +85,7 @@ export default function SignupPage() {
         title: "Account created",
         description: "You can now build your profile.",
       });
-      router.push("/dashboard");
+      router.push(membershipPlan==="premium"?"/membership":"/dashboard");
       router.refresh();
     } catch (error: unknown) {
       const code = typeof error === "object" && error && "code" in error ? String((error as { code: string }).code) : "";
@@ -129,7 +132,9 @@ export default function SignupPage() {
             </AlertDescription>
           </Alert>
         )}
-        <SocialAuthButtons next="/dashboard" />
+        <label className="block space-y-2 text-sm font-medium">Membership<select aria-label="Membership" className="block w-full rounded-lg border bg-background p-3" value={membershipPlan} onChange={e=>setMembershipPlan(e.target.value as "free"|"premium")} disabled={isLoading}><option value="free">Free — always available</option><option value="premium">Premium — 2 calendar months free, no card</option></select></label>
+        <p className="text-xs text-muted-foreground">Confirm your email, then activate your Premium trial from Membership. No automatic charges.</p>
+        <SocialAuthButtons next={membershipPlan==="premium"?"/membership":"/dashboard"} />
         <p className="text-center text-xs leading-relaxed text-muted-foreground">
           By continuing with Google or Facebook, you agree to the{" "}
           <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link>{" "}

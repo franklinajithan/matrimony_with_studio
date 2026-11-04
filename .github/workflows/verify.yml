@@ -16,6 +16,7 @@ jobs:
       - run: node --test scripts/whatsapp-share-preview.test.mjs
       - run: node --test scripts/auth-session.test.cjs
       - run: npm run test:marriage-onboarding
+      - run: npm run test:premium-launch
       - run: npm run test:theme
       - run: npm run test:admin
       - run: npm run test:horoscope

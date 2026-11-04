@@ -19,7 +19,8 @@
     "test:horoscope": "node --test scripts/horoscope-security.test.mjs scripts/horoscope-api.test.cjs scripts/horoscope-qa-access.test.cjs && node --import tsx --test src/lib/horoscope/*.test.ts scripts/profile-gender.test.ts",
     "test:theme": "node --test scripts/theme-contrast.test.mjs",
     "test:marriage-onboarding": "node --import tsx --test scripts/marriage-onboarding.test.cjs",
-    "test:browser-registration": "node scripts/browser-registration-acceptance.mjs"
+    "test:browser-registration": "node scripts/browser-registration-acceptance.mjs",
+    "test:premium-launch": "node --test scripts/premium-launch-api.test.cjs scripts/premium-launch-sql.test.mjs scripts/premium-upgrade-migration.test.mjs"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.28.0",

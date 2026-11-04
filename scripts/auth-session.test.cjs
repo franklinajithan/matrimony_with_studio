@@ -5,9 +5,9 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const identity = { id: 'test-member', email: 'test@example.invalid', identities: [{}], user_metadata: { full_name: 'Test Member' } };
 function setup(options = {}) {
-  let listener; let unsubscribed = false; let oauth; let signups = 0;
+  let listener; let unsubscribed = false; let oauth; let signups = 0; let signupInput;
   const client = { auth: {
-    signUp: async () => { signups++; return { data: { user: options.user || identity, session: options.session || null }, error: null }; },
+    signUp: async value => { signupInput=value; signups++; return { data: { user: options.user || identity, session: options.session || null }, error: null }; },
     getSession: async () => ({ data: { session: options.session || null }, error: null }),
     onAuthStateChange: cb => { listener = cb; return { data: { subscription: { unsubscribe: () => { unsubscribed = true; } } } }; },
     signInWithOAuth: async value => { oauth = value; return { data: { url: 'https://provider.invalid' }, error: options.oauthError || null }; },
@@ -20,7 +20,7 @@ function setup(options = {}) {
     if (name === './env') return { isSupabaseConfigured: () => true, getSiteUrl: () => 'https://cupidmatch.co.uk' };
     throw new Error(name);
   }, mod, mod.exports);
-  return { api: mod.exports, emit: session => listener('SIGNED_IN', session), unsubscribed: () => unsubscribed, oauth: () => oauth, signups: () => signups };
+  return { api: mod.exports, emit: session => listener('SIGNED_IN', session), unsubscribed: () => unsubscribed, oauth: () => oauth, signups: () => signups, signupInput: () => signupInput };
 }
 test('confirmation-required signup returns identity but never caches a signed-in user', async () => {
   const { api } = setup();
@@ -64,3 +64,5 @@ test('Google OAuth preserves an encoded internal destination and provider errors
   const failed = setup({ oauthError: { message: 'network unavailable' } });
   await assert.rejects(failed.api.signInWithOAuth('google'), /network unavailable/);
 });
+
+test('Premium signup preserves only the safe membership destination, without granting access',async()=>{for(const [membershipPlan,destination]of [['premium','/membership'],['free','/dashboard'],['https://evil.example','/dashboard']]){const s=setup();await s.api.createUserWithEmailAndPassword(null,identity.email,'fixture-pass',{membershipPlan});const u=new URL(s.signupInput().options.emailRedirectTo);assert.equal(u.origin,'https://cupidmatch.co.uk');assert.equal(u.searchParams.get('next'),destination);assert.equal(s.api.auth.currentUser,null);assert.equal(s.signupInput().options.data.plan,undefined);}});

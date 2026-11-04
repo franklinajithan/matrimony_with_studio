@@ -34,6 +34,7 @@ export default function PricingPage() {
     <div className="mx-auto max-w-3xl text-center">
       <span className="inline-flex rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary">{t.eyebrow}</span>
       <h1 className="mt-5 font-headline text-4xl font-semibold tracking-tight sm:text-5xl">{t.title}</h1>
+      <p className="mt-4 font-semibold">Premium is free for two calendar months. No card required. Activate once from Membership after confirming your email.</p>
       <p className="mt-4 text-lg text-muted-foreground">{t.subtitle}</p>
       <label className="mx-auto mt-6 flex w-full max-w-xs items-center gap-2 rounded-xl border bg-card px-3 py-2 text-left text-sm">
         <Globe2 className="h-4 w-4 shrink-0 text-primary" />
