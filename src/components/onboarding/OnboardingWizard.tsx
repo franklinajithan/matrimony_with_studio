@@ -83,6 +83,7 @@ export function OnboardingWizard() {
   const [draftReady, setDraftReady] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<"free" | "premium" | null>(null);
   const [navigating, setNavigating] = useState(false);
   const navigationLock = useRef(false);
   const saveTail = useRef<Promise<unknown>>(Promise.resolve());
@@ -260,6 +261,14 @@ export function OnboardingWizard() {
       });
       return;
     }
+    if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
+      toast({ title: "Unsupported photo", description: "Choose a JPG, PNG or WebP image smaller than 5 MB.", variant: "destructive" });
+      return;
+    }
+    if (kind === "additional" && (draftRef.current.additionalPhotoUrls || []).length >= 5) {
+      toast({ title: "Gallery full", description: "You can add up to five additional photos." });
+      return;
+    }
     setUploading(true);
     try {
       const path = mediaPathForUser(userId, file.name, kind === "primary" ? "profile" : "gallery");
@@ -269,7 +278,7 @@ export function OnboardingWizard() {
       } else {
         updateDraft({
           additionalPhotoUrls: [
-            ...(draft.additionalPhotoUrls || []),
+            ...(draftRef.current.additionalPhotoUrls || []),
             {
               id: uploaded.path,
               url: uploaded.path,
@@ -290,8 +299,15 @@ export function OnboardingWizard() {
     }
   }
 
+  async function handleAdditionalPhotos(files: FileList | null) {
+    if (!files?.length) return;
+    const chosen = Array.from(files).slice(0, Math.max(0, 5 - (draftRef.current.additionalPhotoUrls || []).length));
+    for (const file of chosen) await handlePhoto(file, "additional");
+  }
+
   async function handlePublish() {
     if (navigationLock.current || uploading) return;
+    if (!selectedPlan) { setStepErrors(["Choose Free or Premium before publishing your profile."]); return; }
     const snapshot = draftRef.current;
     const errors = validateOnboardingStep(7, snapshot);
     setStepErrors(errors);
@@ -300,8 +316,20 @@ export function OnboardingWizard() {
     try {
       const saved = await persist(snapshot, 7);
       if (!saved.ok) throw new Error(saved.error);
+      if (selectedPlan === "premium") {
+        const existingResponse = await fetch("/api/subscription/me", { credentials: "same-origin", cache: "no-store" });
+        const existing = await existingResponse.json().catch(() => ({}));
+        if (!existingResponse.ok) throw new Error("Could not verify existing membership. Please try again.");
+        if (existing.plan !== "premium") {
+        const activation = await fetch("/api/membership/premium-launch", {
+          method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: "{}",
+        });
+        const result = await activation.json().catch(() => ({}));
+        if (!activation.ok || result.plan !== "premium") throw new Error(result.error || "Premium could not be activated. Your profile has not been published.");
+        }
+      }
       const response = await fetch("/api/onboarding/publish", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ draft: snapshot }),
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ draft: snapshot, membershipChoice: selectedPlan }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || payload.ok !== true || payload.isPublished !== true) throw new Error(payload.error || "Could not confirm publication.");
@@ -644,7 +672,15 @@ export function OnboardingWizard() {
                 />
               </Field>
               <Field label={t.additionalPhotos} htmlFor="gallery">
-                <Input id="gallery" type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} onChange={(e) => void handlePhoto(e.target.files?.[0], "additional")} className="min-h-11" />
+                <Input id="gallery" type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={uploading || (draft.additionalPhotoUrls || []).length >= 5} onChange={(e) => { void handleAdditionalPhotos(e.target.files); e.target.value = ""; }} className="min-h-11" />
+                <p className="text-sm text-muted-foreground">Add up to five photos, JPG/PNG/WebP, 5 MB each. Photos are optional.</p>
+                {(draft.additionalPhotoUrls || []).length > 0 && <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-label="Additional photo gallery">
+                  {(draft.additionalPhotoUrls || []).map((photo) => <div key={photo.id} className="space-y-2 rounded-lg border p-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={resolveMediaUrl(photo.url)} alt="Additional profile photo" className="aspect-square w-full rounded-md object-cover" />
+                    <Button type="button" variant="outline" size="sm" className="w-full" disabled={uploading} onClick={() => updateDraft({ additionalPhotoUrls: (draftRef.current.additionalPhotoUrls || []).filter((item) => item.id !== photo.id) })}>Remove</Button>
+                  </div>)}
+                </div>}
               </Field>
               <label className="flex items-start gap-3 rounded-lg border p-4">
                 <Checkbox
@@ -671,6 +707,15 @@ export function OnboardingWizard() {
               <ReviewRow label={t.looking} value={draft.lookingFor === "marriage" ? choiceLabels.marriage : ""} emptyLabel={t.notAdded} />
               <ReviewRow label={t.introduction} value={draft.bio} emptyLabel={t.notAdded} />
               <p className="text-sm text-muted-foreground">{t.reviewDob}</p>
+              <section className="space-y-3 rounded-xl border border-primary/30 bg-accent/30 p-4" aria-label="Choose your membership">
+                <h3 className="text-lg font-semibold">Choose your membership before publishing</h3>
+                <p className="text-sm text-muted-foreground">CupidMatch is a matrimonial service with Free and Premium plans. Some features require a paid membership after introductory offers end.</p>
+                <RadioGroup value={selectedPlan || ""} onValueChange={(value) => { setSelectedPlan(value as "free" | "premium"); setStepErrors([]); }} className="space-y-3">
+                  <label className="flex cursor-pointer gap-3 rounded-lg border bg-background p-4"><RadioGroupItem value="free" id="plan-free" /><span><strong>Free membership</strong><span className="mt-1 block text-sm text-muted-foreground">Publish and use available Free features. Premium features are not included.</span></span></label>
+                  <label className="flex cursor-pointer gap-3 rounded-lg border bg-background p-4"><RadioGroupItem value="premium" id="plan-premium" /><span><strong>Premium — two months free</strong><span className="mt-1 block text-sm text-muted-foreground">Introductory Premium access for eligible members. £0 today, no card and no automatic payment. After the offer ends, Free access remains unless you purchase a plan.</span></span></label>
+                </RadioGroup>
+                <Link href="/launch-pricing" target="_blank" rel="noopener noreferrer" className="inline-block text-sm font-semibold text-primary underline">Compare membership features and pricing</Link>
+              </section>
               <label className="flex items-start gap-3 rounded-lg border p-4">
                 <Checkbox
                   checked={Boolean(draft.reviewConfirmed)}
