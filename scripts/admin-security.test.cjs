@@ -17,6 +17,10 @@ function load(relative, mocks = {}) {
   const testModule = { exports: {} };
   const requireMock = (name) => {
     if (name === 'server-only') return {};
+    if (name === '@/lib/subscriptions/tide-preparation') return {tidePaymentReadiness:()=>{throw Error('Readiness must not run before authorization');}};
+    if (name === '@/components/subscriptions/LivePricing') return {LivePricing:()=>null};
+    if (name === '@/lib/subscriptions/live-catalogue') return {publicCatalogue:()=>{throw Error('Catalogue must not run before authorization');}};
+    if (name === '@/lib/subscriptions/plans') return {PLANS:{}};
     if (name === 'zod') return require('zod');
     if (name === 'node:crypto') return require('node:crypto');
     if (Object.hasOwn(mocks, name)) return mocks[name];
@@ -156,7 +160,7 @@ for (const file of files('src/app/api/admin', 'route.ts')) {
     });
     for (const method of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
       if (typeof api[method] !== 'function') continue;
-      const response = await api[method]();
+      const response = await api[method](new Request('https://cupidmatch.co.uk/api/admin/test', {method,headers:{origin:'https://cupidmatch.co.uk'}}));
       assert.equal(response.status, 403);
     }
     assert.ok(checks > 0);
