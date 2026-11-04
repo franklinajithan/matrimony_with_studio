@@ -25,6 +25,7 @@ export function AdminPricingEditor(){
  const fx=usePriceCurrency();
  const [plans,setPlans]=useState<PlanRow[]>([]);
  const [edits,setEdits]=useState<Record<string,PlanRow>>({});
+ const [priceInputs,setPriceInputs]=useState<Record<string,Record<string,string>>>({});
  const [loading,setLoading]=useState(true);
  const [saving,setSaving]=useState("");
  const [error,setError]=useState("");
@@ -36,6 +37,7 @@ export function AdminPricingEditor(){
      const result=await response.json();
      if(!response.ok||!Array.isArray(result.plans))throw Error(result.error||"Unable to load plans");
      setPlans(result.plans);setEdits(Object.fromEntries(result.plans.map((p:PlanRow)=>[p.code,structuredClone(p)])));
+     setPriceInputs(Object.fromEntries(result.plans.map((p:PlanRow)=>[p.code,{monthly_price_pence:money(p.monthly_price_pence),three_month_price_pence:money(p.three_month_price_pence),six_month_price_pence:money(p.six_month_price_pence)}])));
    }catch(e){setError(e instanceof Error?e.message:"Unable to load plans");}
    finally{setLoading(false);}
  },[]);
@@ -45,13 +47,21 @@ export function AdminPricingEditor(){
  async function save(code:string){
   const draft=edits[code],original=plans.find(p=>p.code===code);
   if(!draft||!original)return;
-  if(!confirm(`Save pricing and feature changes for ${draft.name}? Changes will immediately affect public plan displays and future membership eligibility.`))return;
+  let monthly:number|null,three:number|null,six:number|null;
+  try{
+    monthly=parsePrice(priceInputs[code]?.monthly_price_pence??money(draft.monthly_price_pence));
+    three=parsePrice(priceInputs[code]?.three_month_price_pence??money(draft.three_month_price_pence));
+    six=parsePrice(priceInputs[code]?.six_month_price_pence??money(draft.six_month_price_pence));
+    if(monthly===null || (code!=="free"&&monthly<1) || (code==="free"&&monthly!==0))
+       throw Error("Enter a valid monthly GBP price.");
+  }catch(e){setError(e instanceof Error?e.message:"Invalid price");return;}
+  if(!confirm(`Save pricing and feature changes for ${draft.name}? This updates all live quotes and future membership allowances.`))return;
   setSaving(code);setError("");setNotice("");
   try{
     const r=await fetch("/api/admin/plans",{method:"PATCH",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({
-       code,monthlyPricePence:draft.monthly_price_pence,
-       threeMonthPricePence:draft.three_month_price_pence,
-       sixMonthPricePence:draft.six_month_price_pence,
+       code,monthlyPricePence:monthly,
+       threeMonthPricePence:three,
+       sixMonthPricePence:six,
        entitlements:draft.entitlements,expectedUpdatedAt:original.updated_at
     })});
     const data=await r.json().catch(()=>({}));
@@ -77,12 +87,10 @@ export function AdminPricingEditor(){
        <div className="space-y-3">{priceFields.map(([key,label])=>{
          const vPrice=v[key] as number|null;
          return <label key={key} className="block text-sm font-medium">{label}
-           <input type="number" min="0" max="10000" step="0.01" disabled={plan.code==="free"} value={money(vPrice)} placeholder="Not offered" onChange={e=>{
-             try{
-               const parsed=parsePrice(e.target.value);
-               update(plan.code,{[key]:parsed===null?(key==="monthly_price_pence"?0:null):parsed} as Partial<PlanRow>);
-             }catch{setError("Enter valid GBP prices with no more than two decimal places.");}
-           }} className="mt-1 min-h-11 w-full rounded-lg border bg-background px-3" />
+           <input type="text" inputMode="decimal" disabled={plan.code==="free"}
+              value={priceInputs[plan.code]?.[key]??money(vPrice)} placeholder="Not offered"
+              onChange={e=>setPriceInputs(previous=>({...previous,[plan.code]:{...previous[plan.code],[key]:e.target.value}}))}
+              className="mt-1 min-h-11 w-full rounded-lg border bg-background px-3" />
          </label>;
        })}</div>
        <div className="space-y-3 border-t pt-3">
