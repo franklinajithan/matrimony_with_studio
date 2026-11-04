@@ -38,22 +38,22 @@ export const ENTITLEMENT_LABELS:Record<string,string>={
  premiumBadge:"Premium profile badge",
  prioritySupport:"Priority support",
 };
-export function planBenefitLabels(entitlements:Record<string,unknown>,max=5):string[]{
+export function planBenefitLabels(entitlements:Record<string,unknown>,max=7):string[]{
  const results:string[]=[];
- for(const [key,label] of Object.entries(ENTITLEMENT_LABELS)){
-   if(entitlements[key]===true)results.push(label);
- }
  const addCount=(key:string,title:string)=>{
-   const v=entitlements[key];
-   if(v===null)results.push(`Unlimited ${title}`);
-   else if(typeof v==="number"&&v>0)results.push(`${v} ${title}`);
+   const value=entitlements[key];
+   if(value===null)results.push(`Unlimited ${title}`);
+   else if(typeof value==="number")results.push(`${value} ${title}`);
  };
  addCount("interestsPerMonth","interests/month");
  addCount("messagesPerMonth","messages/month");
  addCount("profileViewsPerMonth","profile views/month");
  const position=entitlements.searchPlacement;
- if(position===10)results.push("Priority Top 10 search placement");
- else if(position===20)results.push("Priority Top 20 search placement");
+ if(position===10)results.push("Priority placement among Top 10 eligible matches");
+ else if(position===20)results.push("Priority placement among Top 20 eligible matches");
+ for(const [key,label] of Object.entries(ENTITLEMENT_LABELS)){
+   if(entitlements[key]===true)results.push(label);
+ }
  addCount("profileBoostsPerMonth","profile boosts/month");
  addCount("profileSharesPerMonth","profile shares/month");
  return results.slice(0,max);
