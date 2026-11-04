@@ -30,7 +30,12 @@ test("membership pricing migrations enforce audited edits and atomic monthly quo
  ('free','Free','GBP',0,null,null,true,'{"interestsPerMonth":10,"messagesPerMonth":2,"profileViewsPerMonth":50,"searchPlacement":0,"advancedFilters":false}',now(),1),
  ('plus','Plus','GBP',499,null,null,true,'{"interestsPerMonth":30,"messagesPerMonth":30,"profileViewsPerMonth":400,"searchPlacement":20,"advancedFilters":true}',now(),2),
  ('premium','Premium','GBP',799,null,null,true,'{"interestsPerMonth":null,"messagesPerMonth":null,"profileViewsPerMonth":null,"searchPlacement":10,"advancedFilters":true}',now(),3);`);
- await run("admin-price-migration",await readFile("supabase/migrations/20261104202700_admin_subscription_pricing.sql","utf8"));
+ const adminSql=await readFile("supabase/migrations/20261104202700_admin_subscription_pricing.sql","utf8");
+ const atFunction=adminSql.indexOf("create or replace function public.admin_update_subscription_plan(");
+ const atGrant=adminSql.indexOf("\nrevoke all on function public.admin_update_subscription_plan");
+ await run("admin-permission-revoke",adminSql.slice(0,atFunction));
+ await run("admin-pricing-function",adminSql.slice(atFunction,atGrant));
+ await run("admin-function-grants",adminSql.slice(atGrant));
  await run("membership-quota-migration",await readFile("supabase/migrations/20261104204000_membership_quotas.sql","utf8"));
  const rows=(await db.query("select code,monthly_price_pence,entitlements->>'interestsPerMonth' interests from public.subscription_plans order by sort_order")).rows;
  assert.deepEqual(rows.map(row=>[row.code,row.monthly_price_pence,row.interests]),[["free",0,"2"],["plus",499,"30"],["premium",799,null]]);
