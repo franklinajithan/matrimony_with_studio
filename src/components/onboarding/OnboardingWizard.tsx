@@ -524,6 +524,13 @@ export function OnboardingWizard() {
                 <Input id="dob" type="date" value={draft.dob || ""} onChange={(e) => updateDraft({ dob: e.target.value })} className="min-h-11" />
                 <p className="text-sm text-muted-foreground">{t.dobHelp}</p>
               </Field>
+              <Field label="Height (required)" htmlFor="height">
+                <div className="relative">
+                  <Input id="height" type="number" inputMode="numeric" min="90" max="250" step="1" required aria-required="true" value={draft.height || ""} onChange={(e) => updateDraft({ height: e.target.value })} placeholder="e.g. 165" className="min-h-11 pr-14" />
+                  <span className="pointer-events-none absolute right-4 top-3 text-sm text-muted-foreground">cm</span>
+                </div>
+                <p className="text-sm text-muted-foreground">Enter your height in centimetres (90–250 cm). This is required for matrimonial profiles.</p>
+              </Field>
               <Field label={t.profession} htmlFor="profession">
                 <Input id="profession" value={draft.profession || ""} onChange={(e) => updateDraft({ profession: e.target.value })} className="min-h-11" />
               </Field>
@@ -734,42 +741,71 @@ export function OnboardingWizard() {
           {step === 7 && (
             <div className="space-y-5">
               <ReviewRow label={t.name} value={draft.displayName} emptyLabel={t.notAdded} />
+              <ReviewRow label="Height" value={draft.height ? `${draft.height} cm` : ""} emptyLabel="Required" />
               <ReviewRow label={t.location} value={[draft.region, draft.country].filter(Boolean).join(", ")} emptyLabel={t.notAdded} />
               <ReviewRow label={t.languages} value={(draft.languages || []).join(", ")} emptyLabel={t.notAdded} />
               <ReviewRow label={t.looking} value={draft.lookingFor === "marriage" ? choiceLabels.marriage : ""} emptyLabel={t.notAdded} />
               <ReviewRow label={t.introduction} value={draft.bio} emptyLabel={t.notAdded} />
               <p className="text-sm text-muted-foreground">{t.reviewDob}</p>
-              <section className="space-y-3 rounded-xl border border-primary/30 bg-accent/30 p-4" aria-label="Choose your membership">
-                <h3 className="text-lg font-semibold">Choose your membership before publishing</h3>
-                <p className="text-sm text-muted-foreground">Compare all available memberships and current prices. Free members can publish without a card. Paid memberships require successful, verified payment before Premium access is granted.</p>
-                {plansLoading ? <p role="status">Loading current membership prices…</p> : plansError ? <p role="alert" className="text-destructive">{plansError}</p> : catalogue.length !== 3 ? <p role="alert">The complete three-plan catalogue is unavailable. Please contact support before selecting a paid plan.</p> : (
-                  <RadioGroup value={selectedPlan || ""} onValueChange={(value) => { setSelectedPlan(value); setBillingTerm("monthly"); setStepErrors([]); }} className="grid gap-3 md:grid-cols-3">
-                    {catalogue.map((plan) => (
-                      <label key={plan.code} className="flex cursor-pointer gap-3 rounded-xl border bg-background p-4">
-                        <RadioGroupItem value={plan.code} id={`plan-${plan.code}`} />
-                        <span className="min-w-0 space-y-2">
-                          <strong className="block">{plan.name}</strong>
-                          <span className="block text-xl font-bold text-primary">{formatCataloguePrice(plan.pricesPence.monthly, plan.currency)}<span className="text-xs font-normal">{plan.code === "free" ? "" : " / month"}</span></span>
-                          <span className="block text-xs text-muted-foreground">{plan.code === "free" ? "Basic matching and membership features." : "Paid membership with additional matrimonial features."}</span>
-                          <span className="block text-xs text-muted-foreground">{Object.entries(plan.entitlements).filter(([,value]) => value === true).slice(0,5).map(([name]) => name.replace(/([A-Z])/g, " $1").trim()).join(" · ")}</span>
-                        </span>
-                      </label>
-                    ))}
-                  </RadioGroup>
-                )}
-                {selectedPlan && selectedPlan !== "free" && catalogue.some((plan) => plan.code === selectedPlan) && (
-                  <div className="space-y-2 rounded-lg border bg-background p-3">
-                    <label htmlFor="billing-term" className="block text-sm font-medium">Payment period</label>
-                    <select id="billing-term" className="min-h-11 w-full rounded-md border bg-background p-2" value={billingTerm} onChange={(event) => setBillingTerm(event.target.value as "monthly" | "three_months" | "six_months")}>
-                      <option value="monthly">1 month</option>
-                      {catalogue.find((plan) => plan.code === selectedPlan)?.pricesPence.three_months !== null && <option value="three_months">3 months</option>}
-                      {catalogue.find((plan) => plan.code === selectedPlan)?.pricesPence.six_months !== null && <option value="six_months">6 months</option>}
-                    </select>
-                    <p className="text-sm font-semibold">Total: {formatCataloguePrice(catalogue.find((plan) => plan.code === selectedPlan)!.pricesPence[billingTerm], catalogue.find((plan) => plan.code === selectedPlan)!.currency)}</p>
-                    <p className="text-xs text-muted-foreground">You will be redirected to secure checkout when the payment provider is available. No card details are collected on this page. Your profile stays unpublished until payment is verified.</p>
+              <section className="overflow-hidden rounded-2xl border border-primary/20 bg-background shadow-sm" aria-label="Choose your membership">
+                <div className="space-y-3 bg-gradient-to-br from-[#2D1538] via-[#482153] to-[#683974] p-5 text-white sm:p-7">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#E9CF93]">Your CupidMatch journey</p>
+                  <h3 className="text-2xl font-bold leading-tight sm:text-3xl">Choose the right plan for your marriage journey</h3>
+                  <p className="text-sm leading-6 text-white/85">Three clear choices. Compare benefits and choose what works for you before your profile goes live.</p>
+                  <div className="flex flex-wrap gap-2 text-xs text-[#F4E9D4]">
+                    <span className="rounded-full border border-white/30 px-3 py-1">✓ Free plan available</span>
+                    <span className="rounded-full border border-white/30 px-3 py-1">✓ Secure payment for upgrades</span>
                   </div>
-                )}
-                <Link href="/launch-pricing" target="_blank" rel="noopener noreferrer" className="inline-block text-sm font-semibold text-primary underline">View complete plan details and feature comparison</Link>
+                </div>
+                <div className="space-y-5 p-3 sm:p-6">
+                  {plansLoading ? <p role="status" className="p-4">Loading current membership prices…</p> : plansError ? <p role="alert" className="p-4 text-destructive">{plansError}</p> : catalogue.length !== 3 ? <p role="alert" className="p-4">The complete three-plan catalogue is unavailable. Please contact support before selecting a plan.</p> : (
+                    <RadioGroup value={selectedPlan || ""} onValueChange={(value) => { setSelectedPlan(value); setBillingTerm("monthly"); setStepErrors([]); }} className="grid gap-3 md:grid-cols-3" aria-label="Membership plans">
+                      {catalogue.map((plan) => {
+                        const chosen = selectedPlan === plan.code;
+                        const highlights: Record<string, string[]> = {
+                          free: ["Create a matrimonial profile", "Browse compatible matches", "Basic matching features"],
+                          plus: ["More ways to discover matches", "Expanded matching features", "More control over your search"],
+                          premium: ["Advanced matrimonial matching", "Additional privacy and visibility", "Priority membership features"],
+                        };
+                        return <label key={plan.code} className={cn("relative flex cursor-pointer flex-col rounded-2xl border-2 bg-card p-4 transition-colors sm:p-5", chosen ? "border-primary bg-accent/30 shadow-md" : "border-border hover:border-primary/60")}>
+                          {plan.code === "premium" && <span className="mb-3 self-start rounded-full bg-[#482153] px-3 py-1 text-xs font-semibold text-[#F9EAC8]">Most complete</span>}
+                          <span className="mb-3 flex items-center justify-between gap-2"><strong className="text-xl">{plan.name}</strong><RadioGroupItem value={plan.code} id={`plan-${plan.code}`} /></span>
+                          <span className="mb-1 text-3xl font-bold text-primary">{formatCataloguePrice(plan.pricesPence.monthly, plan.currency)}</span>
+                          <span className="mb-4 text-xs text-muted-foreground">{plan.code === "free" ? "No card required" : "per month · billed when purchased"}</span>
+                          <span className="mb-3 h-px bg-border" />
+                          <span className="space-y-3 text-sm leading-5">{(highlights[plan.code] || []).map((value) => <span key={value} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><span>{value}</span></span>)}</span>
+                          <span className={cn("mt-5 rounded-lg px-3 py-2 text-center text-sm font-semibold",chosen ? "bg-primary text-primary-foreground" : "bg-accent text-foreground")}>{chosen ? "Selected" : "Select plan"}</span>
+                        </label>;
+                      })}
+                    </RadioGroup>
+                  )}
+                  {selectedPlan && selectedPlan !== "free" && catalogue.some((plan) => plan.code === selectedPlan) && (
+                    <div className="space-y-3 rounded-xl border bg-accent/30 p-4">
+                      <label htmlFor="billing-term" className="block text-sm font-semibold">Choose your membership duration</label>
+                      <select id="billing-term" className="min-h-11 w-full rounded-lg border bg-background px-3" value={billingTerm} onChange={(event) => setBillingTerm(event.target.value as "monthly" | "three_months" | "six_months")}>
+                        <option value="monthly">1 month</option>
+                        {catalogue.find((plan) => plan.code === selectedPlan)?.pricesPence.three_months !== null && <option value="three_months">3 months</option>}
+                        {catalogue.find((plan) => plan.code === selectedPlan)?.pricesPence.six_months !== null && <option value="six_months">6 months</option>}
+                      </select>
+                      <div className="flex items-center justify-between border-t pt-3"><span className="font-medium">Total</span><strong className="text-xl text-primary">{formatCataloguePrice(catalogue.find((plan) => plan.code === selectedPlan)!.pricesPence[billingTerm], catalogue.find((plan) => plan.code === selectedPlan)!.currency)}</strong></div>
+                      <p className="text-xs text-muted-foreground">Your saved profile remains a draft until a supported checkout is completed and payment verified. No card information is collected on CupidMatch.</p>
+                    </div>
+                  )}
+                  <div className="space-y-2 border-t pt-4">
+                    <p className="text-sm font-semibold">Compare membership benefits</p>
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[430px] text-left text-xs sm:text-sm"><thead><tr className="border-b"><th scope="col" className="py-2">Feature</th>{catalogue.map((plan) => <th key={plan.code} scope="col" className="px-2 py-2 text-center">{plan.name}</th>)}</tr></thead><tbody>{[
+                        ["Basic matching","basicMatching"],
+                        ["Advanced search","advancedFilters"],
+                        ["Full compatibility","fullCompatibility"],
+                        ["See who likes you","seeWhoLikesYou"],
+                        ["See profile visitors","seeProfileVisitors"],
+                        ["Priority support","prioritySupport"],
+                      ].map(([label,key])=><tr key={key} className="border-b last:border-0"><th scope="row" className="py-2 font-normal">{label}</th>{catalogue.map((plan)=><td key={plan.code} className="px-2 py-2 text-center">{plan.entitlements[key] === true ? "✓" : "—"}</td>)}</tr>)}</tbody></table>
+                    </div>
+                    <Link href="/launch-pricing" target="_blank" rel="noopener noreferrer" className="inline-block text-sm font-semibold text-primary underline">See full plan details</Link>
+                  </div>
+                </div>
               </section>
               <label className="flex items-start gap-3 rounded-lg border p-4">
                 <Checkbox
