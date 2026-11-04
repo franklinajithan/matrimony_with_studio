@@ -12,6 +12,7 @@ const adultDraft = {
   displayName: "Amina Perera",
   gender: "female",
   dob: "1995-03-12",
+  height: "165",
   country: "Sri Lanka",
   region: "Colombo",
   languages: ["English", "Sinhala"],
@@ -28,8 +29,14 @@ describe("onboarding validation", () => {
   it("uses DOB itself for adult eligibility without a second checkbox", () => {
     expect(isAdult("2015-01-01")).toBe(false);
     expect(isAdult("1980-06-29")).toBe(true);
-    expect(validateOnboardingStep(0, parseOnboardingDraft({ displayName: "Ajithan", gender: "male", dob: "1980-06-29", confirmedAdult: false }))).toEqual([]);
+    expect(validateOnboardingStep(0, parseOnboardingDraft({ displayName: "Ajithan", gender: "male", dob: "1980-06-29", height: "170", confirmedAdult: false }))).toEqual([]);
     expect(validateOnboardingStep(0, parseOnboardingDraft({ displayName: "Amina", dob: "2015-01-01", confirmedAdult: true }))).not.toEqual([]);
+  });
+
+  it("requires a valid height before profile publication", () => {
+    expect(validateForPublish(parseOnboardingDraft({ ...adultDraft, height: "" })).some(error => error.includes("Height"))).toBe(true);
+    expect(validateForPublish(parseOnboardingDraft({ ...adultDraft, height: "85" })).length).toBeGreaterThan(0);
+    expect(validateForPublish(parseOnboardingDraft({ ...adultDraft, height: "165" }))).toEqual([]);
   });
 
   it("checks the exact 18th birthday boundary", () => {
