@@ -29,6 +29,12 @@ build.onResolve({filter:/^next\/link$/},()=>({path:'link',namespace:'test-link'}
    const errors=[];page.on('pageerror',e=>errors.push(e.message));
    let draft={displayName:'Test Member',gender:'female',dob:'1995-05-12',country:'Sri Lanka',region:'Jaffna',languages:['Tamil'],lookingFor:'marriage',relationshipTimeline:'ready',bio:'I value kindness, honesty and a lasting partnership.',educationLevel:"Bachelor's",relocationOpenness:'open',photoPrivacy:'connections'};
    let storedStep=3,failSave=false,saves=0,publishes=0,releaseSave=null,expectedPrivacy='connections',lastPublished=null;
+   await page.route('**/api/plans',route=>route.fulfill({json:{plans:[
+    {code:'free',name:'Free',active:true,currency:'GBP',pricesPence:{monthly:0,three_months:null,six_months:null},entitlements:{basicMatching:true}},
+    {code:'plus',name:'Plus',active:true,currency:'GBP',pricesPence:{monthly:999,three_months:null,six_months:null},entitlements:{advancedFilters:true}},
+    {code:'premium',name:'Premium',active:true,currency:'GBP',pricesPence:{monthly:1999,three_months:null,six_months:null},entitlements:{advancedFilters:true,fullCompatibility:true}}
+   ]}}));
+   await page.route('**/api/billing/checkout',route=>route.fulfill({status:503,json:{error:'Checkout provider is not configured.'}}));
    await page.route('**/api/onboarding/draft',route=>route.fulfill({json:{draft,step:storedStep,isPublished:false}}));
    await page.route('**/api/onboarding/save',async route=>{saves++;const body=route.request().postDataJSON();if(failSave)return route.fulfill({status:503,json:{error:'Temporary save failure'}});if(releaseSave){await releaseSave;}draft={...body.draft};storedStep=body.step;await route.fulfill({json:{ok:true,draft,step:storedStep}});});
    await page.route('**/api/onboarding/publish',async route=>{publishes++;const body=route.request().postDataJSON();assert.equal(body.draft.reviewConfirmed,true);assert.equal(body.membershipChoice,'free');assert.equal(body.draft.photoPrivacy,expectedPrivacy);lastPublished=body.draft;await route.fulfill({json:{ok:true,isPublished:true,step:8}});});
