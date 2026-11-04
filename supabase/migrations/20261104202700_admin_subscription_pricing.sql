@@ -35,8 +35,8 @@ begin
     raise exception 'Only GBP base prices can be edited' using errcode='22023';
   end if;
   if p_monthly_price_pence is null
-     or p_monthly_price_pence < case when p_code='free' then 0 else 1 end
-     or p_monthly_price_pence > case when p_code='free' then 0 else 100000 end then
+     or (p_code='free' and p_monthly_price_pence<>0)
+     or (p_code<>'free' and (p_monthly_price_pence<1 or p_monthly_price_pence>100000)) then
     raise exception 'Monthly price outside allowed range' using errcode='22023';
   end if;
   if p_code='free' and (p_three_month_price_pence is not null or p_six_month_price_pence is not null) then
