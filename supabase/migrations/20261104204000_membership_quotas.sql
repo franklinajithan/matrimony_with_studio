@@ -81,15 +81,32 @@ drop trigger if exists enforce_message_membership_quota on public.messages;
 create trigger enforce_message_membership_quota before insert on public.messages
 for each row execute function private.enforce_message_membership_quota();
 
+-- A view allowance counts distinct member profiles, not repeat refreshes of the same profile.
+create table if not exists private.membership_profile_view_events (
+ viewer_id uuid not null references auth.users(id) on delete cascade,
+ viewed_id uuid not null references auth.users(id) on delete cascade,
+ period_start date not null,
+ created_at timestamptz not null default now(),
+ primary key(viewer_id,viewed_id,period_start),
+ constraint no_self_view check (viewer_id<>viewed_id)
+);
+alter table private.membership_profile_view_events enable row level security;
+revoke all on private.membership_profile_view_events from public,anon,authenticated;
+
 create or replace function public.consume_member_profile_view(p_profile_id uuid)
 returns jsonb language plpgsql security definer set search_path=''
 as $$
 declare caller uuid := auth.uid();
+ v_inserted integer; v_period date := date_trunc('month', now() at time zone 'UTC')::date;
 begin
  if caller is null then raise exception 'Not authenticated' using errcode='42501'; end if;
  if caller=p_profile_id then return jsonb_build_object('allowed',true,'charged',false); end if;
  if not exists(select 1 from public.profiles p where p.id=p_profile_id and p.is_published=true and p.suspended_at is null)
  then raise exception 'Profile unavailable' using errcode='P0001'; end if;
+ insert into private.membership_profile_view_events(viewer_id,viewed_id,period_start)
+ values(caller,p_profile_id,v_period) on conflict do nothing;
+ get diagnostics v_inserted=row_count;
+ if v_inserted=0 then return jsonb_build_object('allowed',true,'charged',false); end if;
  perform private.charge_membership_usage(caller,'profileViewsPerMonth');
  return jsonb_build_object('allowed',true,'charged',true);
 end $$;
