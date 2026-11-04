@@ -8,7 +8,7 @@ const other="10000000-0000-4000-8000-000000000002";
 
 test("membership pricing migrations enforce audited edits and atomic monthly quotas",async()=>{
  const db=new PGlite();
- const run=async(stage,sql)=>{try{await db.exec(sql)}catch(e){throw new Error(`${stage}: ${e instanceof Error?e.message:String(e)}`,{cause:e});}};
+ const run=async(stage,sql)=>{try{await db.exec(sql)}catch(e){throw new Error(`${stage}: ${e instanceof Error?e.message:String(e)} (position ${e?.position??"none"}, detail ${e?.detail??"none"}, internal ${e?.internalQuery??"none"})`,{cause:e});}};
  try{
  await run("bootstrap",`create role anon;create role authenticated;
  create schema auth;create schema private;
