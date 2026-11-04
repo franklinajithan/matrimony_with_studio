@@ -131,6 +131,7 @@ const stepSchemas: Record<number, z.ZodTypeAny> = {
     displayName: z.string().trim().min(2, "Please enter your name."),
     gender: z.enum(["male", "female"], { errorMap: () => ({ message: "Please select Male or Female." }) }),
     dob: z.string().min(8, "Date of birth is required."),
+    height: z.string().trim().regex(/^(?:[1-9]\d|1\d\d|2[0-4]\d|250)$/, "Height must be a whole number between 90 and 250 cm.").refine((value) => Number(value) >= 90, "Height must be between 90 and 250 cm."),
   }).superRefine((value, ctx) => {
     if (!isAdult(value.dob)) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "You must be 18 or older to create a profile.", path: ["dob"] });
