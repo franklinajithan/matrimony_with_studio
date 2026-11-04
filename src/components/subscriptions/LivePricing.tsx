@@ -2,15 +2,10 @@
 import {useEffect,useState} from "react";
 import Link from "next/link";
 import {Button} from "@/components/ui/button";
-import type {CataloguePlan} from "@/lib/subscriptions/catalogue-data";
+import {planBenefitLabels,type CataloguePlan} from "@/lib/subscriptions/catalogue-data";
 import {usePriceCurrency} from "@/hooks/use-price-currency";
 import {CurrencyPreviewSelector} from "./CurrencyPreviewSelector";
 
-const benefits:Record<string,string>={
- advancedFilters:"Advanced search",seeWhoLikesYou:"See who likes you",unlimitedMessaging:"Expanded messaging",
- readReceipts:"Read receipts",familyIntroduction:"Family introductions",fullHoroscope:"Horoscope comparison",
- premiumBadge:"Premium badge",prioritySupport:"Priority support",
-};
 export function LivePricing(){
  const [plans,setPlans]=useState<CataloguePlan[]>([]);
  const [loading,setLoading]=useState(true),[error,setError]=useState(false),[reload,setReload]=useState(0);
@@ -30,7 +25,7 @@ export function LivePricing(){
   <div><h2 className="text-2xl font-bold">{plan.name}</h2><p className="mt-2 text-3xl font-bold text-primary">{fx.format(plan.pricesPence.monthly)}<span className="text-sm font-normal text-muted-foreground">{plan.code==="free"?"":" / month"}</span></p></div>
   <p className="text-xs text-muted-foreground">{plan.code==="free"?"Free membership; no card needed.":fx.currency==="GBP"?"Price is quoted in GBP.":"Estimated converted price; checkout is quoted in GBP."}</p>
   <dl className="space-y-1 text-sm">{plan.pricesPence.three_months!==null&&<div><dt className="inline">3 months: </dt><dd className="inline font-semibold">{fx.format(plan.pricesPence.three_months)}</dd></div>}{plan.pricesPence.six_months!==null&&<div><dt className="inline">6 months: </dt><dd className="inline font-semibold">{fx.format(plan.pricesPence.six_months)}</dd></div>}</dl>
-  <ul className="flex-1 space-y-2 text-sm">{Object.entries(benefits).filter(([key])=>plan.entitlements[key]===true).map(([key,label])=><li key={key}>✓ {label}</li>)}{Number.isInteger(plan.entitlements.interestsPerMonth)&&<li>{plan.entitlements.interestsPerMonth} interests per month</li>}{plan.entitlements.interestsPerMonth===null&&<li>Unlimited interests</li>}</ul>
+  <ul className="flex-1 space-y-2 text-sm">{planBenefitLabels(plan.entitlements,8).map((label)=><li key={label}>✓ {label}</li>)}</ul>
   <Button asChild><Link href="/onboarding?step=7">{plan.code==="free"?"Select Free":"Choose "+plan.name}</Link></Button>
  </article>)}
  </div>}
