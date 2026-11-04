@@ -59,7 +59,11 @@ begin
       raise exception 'Unknown feature key' using errcode='22023';
     end if;
     actual_type := jsonb_typeof(feature.value);
-    if feature.key in ('interestsPerMonth','messagesPerMonth','profileViewsPerMonth','profileSharesPerMonth','biodataTemplates','profileBoostsPerMonth','searchPlacement') then
+    if feature.key='searchPlacement' then
+      if actual_type <> 'number' or feature.value::text not in ('0','10','20') then
+        raise exception 'Invalid search priority' using errcode='22023';
+      end if;
+    elsif feature.key in ('interestsPerMonth','messagesPerMonth','profileViewsPerMonth','profileSharesPerMonth','biodataTemplates','profileBoostsPerMonth') then
       if actual_type not in ('null','number') or (actual_type='number' and
            (feature.value::text !~ '^[0-9]+$' or (feature.value::text)::numeric > 100000)) then
         raise exception 'Invalid feature limit' using errcode='22023';
