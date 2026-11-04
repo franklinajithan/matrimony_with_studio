@@ -3,6 +3,8 @@
 import {useCallback,useEffect,useState} from "react";
 import {Button} from "@/components/ui/button";
 import {formatCataloguePrice,parsePrice} from "@/lib/subscriptions/catalogue-data";
+import {usePriceCurrency} from "@/hooks/use-price-currency";
+import {CurrencyPreviewSelector} from "./CurrencyPreviewSelector";
 
 type Entitlement = boolean | number | null;
 type PlanRow = {
@@ -20,6 +22,7 @@ const descriptions:Record<string,string>={
 };
 function money(value:number|null){return value===null?"":(value/100).toFixed(2);}
 export function AdminPricingEditor(){
+ const fx=usePriceCurrency();
  const [plans,setPlans]=useState<PlanRow[]>([]);
  const [edits,setEdits]=useState<Record<string,PlanRow>>({});
  const [loading,setLoading]=useState(true);
@@ -63,13 +66,14 @@ export function AdminPricingEditor(){
    <p className="text-sm text-muted-foreground">GBP is the source of truth. Changes are audited. Keep paid feature promises consistent with implemented member permissions; changes to entitlement JSON cannot add new product features by themselves.</p>
    {error&&<p role="alert" className="rounded-xl border border-destructive p-3 text-destructive">{error}</p>}
    {notice&&<p role="status" className="rounded-xl border p-3">{notice}</p>}
+   <CurrencyPreviewSelector currency={fx.currency} onChange={fx.setCurrency} rates={fx.rates} error={fx.error}/>
    <Button variant="outline" onClick={()=>void reload()}>Reload production catalogue</Button>
    <div className="grid gap-5 xl:grid-cols-3">
    {plans.map(plan=>{
      const v=edits[plan.code];if(!v)return null;
      const priceFields:[keyof PlanRow,string][]=[["monthly_price_pence","Monthly price (£)"],["three_month_price_pence","Three months (£)"],["six_month_price_pence","Six months (£)"]];
      return <section key={plan.code} className="space-y-4 rounded-2xl border bg-card p-5">
-       <div><h2 className="text-xl font-bold">{plan.name}</h2><p className="text-sm text-muted-foreground">Current: {formatCataloguePrice(plan.monthly_price_pence,plan.currency)}/month</p><p className="text-xs text-muted-foreground">Last updated {new Date(plan.updated_at).toLocaleString("en-GB")}</p></div>
+       <div><h2 className="text-xl font-bold">{plan.name}</h2><p className="text-sm text-muted-foreground">Current: {formatCataloguePrice(plan.monthly_price_pence,plan.currency)}/month · {fx.format(plan.monthly_price_pence)} {fx.currency!=="GBP"?"(estimate)":""}</p><p className="text-xs text-muted-foreground">Last updated {new Date(plan.updated_at).toLocaleString("en-GB")}</p></div>
        <div className="space-y-3">{priceFields.map(([key,label])=>{
          const vPrice=v[key] as number|null;
          return <label key={key} className="block text-sm font-medium">{label}
