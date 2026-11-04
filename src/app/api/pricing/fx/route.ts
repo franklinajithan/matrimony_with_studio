@@ -5,7 +5,7 @@ type FxItem = {date:string; base:string; quote:string; rate:number};
 export async function GET(){
  try{
    const [euro,dollar] = await Promise.all(["eur","usd"].map(async currency=>{
-     const response=await fetch(`https://api.frankfurter.dev/v2/providers/ecb/rate/gbp/${currency}`,{next:{revalidate:3600}});
+     const response=await fetch(`https://api.frankfurter.dev/v2/rate/gbp/${currency}?providers=ecb`,{next:{revalidate:3600}});
      if(!response.ok)throw Error("Rates unavailable");
      const data:FxItem=await response.json();
      if(data.base?.toUpperCase()!=="GBP"||data.quote?.toLowerCase()!==currency||!Number.isFinite(data.rate)||data.rate<=0||!/^\d{4}-\d{2}-\d{2}$/.test(data.date))
