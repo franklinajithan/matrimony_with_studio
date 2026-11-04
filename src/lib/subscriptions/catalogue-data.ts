@@ -49,6 +49,11 @@ export function planBenefitLabels(entitlements:Record<string,unknown>,max=5):str
    else if(typeof v==="number"&&v>0)results.push(`${v} ${title}`);
  };
  addCount("interestsPerMonth","interests/month");
+ addCount("messagesPerMonth","messages/month");
+ addCount("profileViewsPerMonth","profile views/month");
+ const position=entitlements.searchPlacement;
+ if(position===10)results.push("Priority Top 10 search placement");
+ else if(position===20)results.push("Priority Top 20 search placement");
  addCount("profileBoostsPerMonth","profile boosts/month");
  addCount("profileSharesPerMonth","profile shares/month");
  return results.slice(0,max);
