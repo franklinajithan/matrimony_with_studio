@@ -211,8 +211,8 @@ export async function updatePassword(password: string) {
   if (error) mapAuthError(error, "Could not update password");
 }
 
-export async function resendSignupConfirmation(email: string) {
-  const { error } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: callbackUrl("/dashboard") } });
+export async function resendSignupConfirmation(email: string, membershipPlan?: "free" | "premium") {
+  const { error } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: callbackUrl(membershipPlan === "premium" ? "/membership" : "/dashboard") } });
   if (error) mapAuthError(error, "Could not resend confirmation email");
 }
 
