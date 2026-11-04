@@ -77,7 +77,7 @@ export default function SignupPage() {
           title: "Confirm your email",
           description: "We sent a confirmation link. Open it to continue your profile.",
         });
-        router.push(`/signup/check-email?email=${encodeURIComponent(values.email)}`);
+        router.push(`/signup/check-email?email=${encodeURIComponent(values.email)}&plan=${membershipPlan}`);
         return;
       }
 

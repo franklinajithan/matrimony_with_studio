@@ -43,3 +43,5 @@ The resolver now treats an Auth error as unauthenticated even if an identity obj
 The additional session acceptance suite runs the production session/activity guard definitions against isolated PostgreSQL auth.sessions/profiles fixtures: revoked and mismatched sessions, missing session IDs, unconfirmed email, suspended/deactivated/deletion-pending accounts, owner/admin reads and immutable grants. It is not a live GoTrue/OAuth staging run. No remote development branch exists; none is created because the budget is £0.
 
 The read-only preflight is in scripts/trial-production-preflight.sql. Production migration requires explicit owner approval. No activation/payment deployment or production DDL is implied by passing these local checks.
+
+Confirmation resends now preserve the Premium Membership destination. The confirmation screen also preserves it in login and change-email links. Query parameters only select a destination; they never grant a trial. Eight Auth tests and 44 registration/onboarding browser checks cover the completed flow.
