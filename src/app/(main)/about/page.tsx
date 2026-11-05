@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { company } from "@/lib/company";
 import { ArrowRight, Globe2, HeartHandshake, ShieldCheck, Users } from "lucide-react";
 import { PublicPage, PublicHero, PublicClosing, primaryLink, secondaryLink } from "@/components/marketing/PublicPage";
 
@@ -31,6 +32,12 @@ export default function AboutUsPage() {
     <section aria-labelledby="values"><p className="text-xs font-bold uppercase tracking-[.2em] text-muted-foreground">What matters to us</p><h2 id="values" className="mt-3 font-serif text-3xl font-semibold sm:text-4xl">Built around real connection.</h2><div className="mt-7 grid gap-4 md:grid-cols-3">{values.map(({icon: Icon,title,text})=><article key={title} className="rounded-3xl border border-border bg-white/70 p-6 sm:p-7"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent"><Icon aria-hidden className="h-5 w-5 text-primary" /></span><h3 className="mt-5 font-serif text-xl font-semibold">{title}</h3><p className="mt-3 text-sm leading-6 text-muted-foreground">{text}</p></article>)}</div></section>
 
     <section className="flex flex-col gap-5 rounded-3xl border border-border bg-background p-7 sm:flex-row sm:items-start sm:p-9"><Globe2 aria-hidden className="h-9 w-9 shrink-0 text-primary" /><div><h2 className="font-serif text-2xl font-semibold sm:text-3xl">Across borders, close to home.</h2><p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">From Sri Lanka to the UK, Canada, Australia and beyond, CupidMatch is a meeting place for people who want culture and compatibility to be part of their next chapter.</p><Link href="/safety" className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">Learn about privacy and safety <ArrowRight aria-hidden className="h-4 w-4" /></Link></div></section>
+    <section aria-labelledby="company" className="rounded-3xl border border-border bg-background p-7 sm:p-9">
+      <h2 id="company" className="font-serif text-2xl font-semibold">The company behind CupidMatch</h2>
+      <p className="mt-3 leading-7 text-muted-foreground">CupidMatch is a digital product operated by {company.name}. The company develops and operates software and online platforms, including our matrimonial platform.</p>
+      <p className="mt-3 text-sm leading-6 text-muted-foreground">Company No. {company.number}. Registered office: {company.registeredOffice}.</p>
+      <Link href="/contact" className="mt-4 inline-flex min-h-11 items-center font-semibold text-primary underline underline-offset-4">View company details</Link>
+    </section>
     <PublicClosing title="Your next chapter starts with a hello." description="Tell your story, share what matters to you and discover people looking for a meaningful connection." href="/signup" label="Create your profile" />
   </PublicPage>;
 }

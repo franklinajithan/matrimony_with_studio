@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { company } from "@/lib/company";
 
 import { Logo } from "@/components/shared/Logo";
 import { Globe } from "lucide-react";
@@ -136,6 +137,12 @@ export function Footer() {
               </li>
             </ul>
           </div>
+        </div>
+
+        <div className="mt-10 space-y-2 text-sm leading-6 text-muted-foreground">
+          <p>CupidMatch is operated by {company.name} · Company No. {company.number}.</p>
+          <p>Registered office: {company.registeredOffice}</p>
+          <Link href="/contact" className={linkClass}>Company details</Link>
         </div>
 
         {/* Bottom Bar */}
