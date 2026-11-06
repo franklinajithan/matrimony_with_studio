@@ -5,12 +5,13 @@ import { getServerSubscription } from "@/lib/subscriptions/server";
 import { PremiumLaunchOffer } from "@/components/subscriptions/PremiumLaunchOffer";
 import { PaymentHistory } from "@/components/subscriptions/PaymentHistory";
 import { PaymentCheckout } from "@/components/subscriptions/PaymentCheckout";
+import { ManageStripeSubscription } from "@/components/subscriptions/ManageStripeSubscription";
 export const dynamic = "force-dynamic";
 export default async function MembershipPage(){
  const db=await createSupabaseServerClient();
  const {data:auth}=await db.auth.getUser();
  if(!auth.user)redirect("/login?next=%2Fmembership");
- const {plan,trial,launchOffer,trialAvailable}=await getServerSubscription();
+ const {plan,trial,launchOffer,trialAvailable,subscription}=await getServerSubscription();
  const offer=launchOffer??trial;
  const ends=offer?new Date(offer.ends_at):null;
  const remaining=ends?Math.max(0,Math.ceil((ends.getTime()-Date.now())/86400000)):0;
@@ -23,8 +24,9 @@ export default async function MembershipPage(){
  </section>
  <PremiumLaunchOffer initialEndsAt={offer?.ends_at??""} available={trialAvailable} />
  <PaymentCheckout />
+ <ManageStripeSubscription hasCustomer={Boolean(subscription?.provider_customer_id && subscription?.provider_subscription_id)} />
  <PaymentHistory />
  <div className="grid gap-3 sm:grid-cols-2"><Link className="rounded-xl border bg-card p-4 font-semibold text-primary hover:bg-accent" href="/launch-pricing">Explore membership plans →</Link><Link className="rounded-xl border bg-card p-4 font-semibold text-primary hover:bg-accent" href="/dashboard">Back to dashboard →</Link></div>
- <p className="text-sm text-muted-foreground">Your Premium trial costs £0 and needs no card. Free membership remains available after it ends.</p>
+ <p className="text-sm text-muted-foreground">Your introductory trial costs £0 and requires no card. Paid Stripe subscriptions, once enabled and purchased, renew monthly until cancelled.</p>
  </main>;
 }
