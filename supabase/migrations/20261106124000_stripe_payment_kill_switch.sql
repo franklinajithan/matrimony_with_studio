@@ -8,3 +8,6 @@ revoke all on function public.stripe_checkout_allowed() from public,anon,authent
 grant execute on function public.stripe_checkout_allowed() to service_role;
 -- The singleton is intentionally left disabled. A reviewed/approved launch must
 -- explicitly enable private.payment_configuration in a controlled migration.
+
+-- The private singleton is not readable by the server identity by default.
+grant select on private.payment_configuration to service_role;
