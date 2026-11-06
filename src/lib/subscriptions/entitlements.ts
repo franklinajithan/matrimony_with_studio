@@ -7,6 +7,7 @@ const PAID_STATES = new Set(['active', 'trialing']);
 export function effectivePlanCode(subscription?: SubscriptionState | null): PlanCode {
   if (!subscription?.planCode || !PAID_STATES.has(subscription.status ?? '') || !periodIsCurrent(subscription.currentPeriodEnd)) return 'free';
   if (subscription.planCode === 'premium_plus') return 'premium_plus';
+  if (subscription.planCode === 'plus') return 'plus';
   if (subscription.planCode === 'premium') return 'premium';
   return 'free';
 }

@@ -1,6 +1,7 @@
 import type { PlanCode } from './plans';
 export const PLAN_TAGLINES: Record<PlanCode,string> = {
   free: 'Start your search',
+  plus: 'More ways to connect',
   premium: 'For serious partner searching',
   premium_plus: 'Privacy, visibility and priority',
 };

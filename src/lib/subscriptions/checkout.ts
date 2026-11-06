@@ -2,6 +2,7 @@ import 'server-only';
 import type { BillingTerm, PlanCode } from './plans';
 
 const ENV_KEYS: Record<Exclude<PlanCode, 'free'>, Record<BillingTerm, string>> = {
+  plus: {monthly:'STRIPE_PRICE_PLUS_MONTHLY',three_months:'STRIPE_PRICE_PLUS_3_MONTHS',six_months:'STRIPE_PRICE_PLUS_6_MONTHS'},
   premium: {
     monthly: 'STRIPE_PRICE_PREMIUM_MONTHLY',
     three_months: 'STRIPE_PRICE_PREMIUM_3_MONTHS',
