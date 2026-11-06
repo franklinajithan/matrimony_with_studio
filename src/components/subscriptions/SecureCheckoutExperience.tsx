@@ -54,7 +54,7 @@ export function SecureCheckoutExperience(){
  const selected=plans.find(x=>x.code===plan);
  const quote=selected?.pricesPence[term]??null;
  const availableTerms:Term[]=["monthly","three_months","six_months"].filter(x=>selected?.pricesPence[x as Term]!=null) as Term[];
- const ready=provider?.configured&&provider.checkoutEnabled&&provider.webhookEnabled;
+ const ready=Boolean(provider?.configured&&provider.checkoutEnabled&&provider.webhookEnabled&&country==="GB"&&term==="monthly");
  const price=selected?formatMarketMoney(quote,selected.currency):"—";
  const perMonth=quote!=null&&selected?formatMarketMoney(Math.round(quote/TERM_COUNT[term]),selected.currency):"—";
  async function beginCheckout(){
@@ -65,7 +65,7 @@ export function SecureCheckoutExperience(){
   try{
    const response=await fetch("/api/billing/checkout",{method:"POST",credentials:"same-origin",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({plan:selected.code,term,country,billing:{name:billingName.trim(),email:billingEmail.trim(),postalCode:postalCode.trim()},consent:true})});
+    body:JSON.stringify({plan:selected.code,term})});
    const result=await response.json().catch(()=>({}));
    if(!response.ok||typeof result.url!=="string")throw Error(result.error||"Secure card checkout is not ready.");
    const url=new URL(result.url);
@@ -97,12 +97,12 @@ export function SecureCheckoutExperience(){
         {availableTerms.map(x=><option key={x} value={x}>{TERM_LABEL[x]}</option>)}
        </select>
       </label>
-      <p className="text-xs text-muted-foreground">{marketActive?"Admin-approved local market price.":"No approved local market override; UK GBP base prices apply."} Your country selection is for the displayed quote, not proof of billing residency.</p>
+      <p className="text-xs text-muted-foreground">{marketActive?"Admin-approved local market price.":"No approved local market override; UK GBP base prices apply."} Only the UK GBP monthly plan is currently configured for Stripe; other displayed country prices cannot be charged yet.</p>
      </>}
     </section>
     <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
      <div className="flex items-center justify-between gap-3"><h2 className="text-xl font-semibold">2. Billing details</h2><span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-primary">Step 2 of 3</span></div>
-     <p className="text-xs text-muted-foreground">These details are entered for checkout preparation only. They are not sent or saved while payment integration is disabled.</p>
+     <p className="text-xs text-muted-foreground">Stripe securely collects billing information at its hosted checkout. These details are not stored by CupidMatch.</p>
      <div className="grid gap-4 sm:grid-cols-2">
       <label className="text-sm font-medium">Full name
        <input autoComplete="name" value={billingName} onChange={e=>setBillingName(e.target.value)} maxLength={120} placeholder="Name on your billing account" className="mt-2 min-h-11 w-full rounded-lg border bg-background px-3"/>
@@ -127,14 +127,14 @@ export function SecureCheckoutExperience(){
          <div><span className="mb-1 block text-xs text-muted-foreground">Security code</span><div className="flex h-11 items-center rounded-lg border bg-background px-3 text-sm text-muted-foreground">•••</div></div>
         </div>
        </div>
-       <p className="text-xs text-muted-foreground">These are display-only placeholders—not card-entry controls. Once Tide approves an eligible checkout product, the secure payment provider will handle real card details. CupidMatch will not store card numbers or CVV.</p>
+       <p className="text-xs text-muted-foreground">These are display-only placeholders—not card-entry controls. Stripe Checkout will securely collect card details after you continue. CupidMatch will not store card numbers or CVV.</p>
      </div>
      {!ready&&<div className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="status"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0"/>Card checkout is awaiting merchant approval and technical verification. No payment can be made or charged now.</div>}
      <label className="flex items-start gap-3 text-sm"><Checkbox checked={accepted} onCheckedChange={v=>setAccepted(v===true)} className="mt-0.5"/><span>I accept the <Link href="/terms" className="underline text-primary">Terms of Service</Link> and <Link href="/privacy" className="underline text-primary">Privacy Policy</Link>.</span></label>
-     <label className="flex items-start gap-3 text-sm"><Checkbox checked={consent} onCheckedChange={v=>setConsent(v===true)} className="mt-0.5"/><span>I understand the selected plan and amount must be confirmed by a secure payment provider before any paid membership is activated.</span></label>
+     <label className="flex items-start gap-3 text-sm"><Checkbox checked={consent} onCheckedChange={v=>setConsent(v===true)} className="mt-0.5"/><span>I understand this is a recurring monthly subscription billed through Stripe until I cancel it. Paid access starts only after Stripe confirms payment.</span></label>
      {attemptError&&<p className="text-sm text-destructive" role="alert">{attemptError}</p>}
      <Button className="h-auto min-h-12 w-full whitespace-normal px-3 py-3 text-center text-sm leading-5 sm:text-base" disabled={!ready||loading||!selected||!accepted||!consent||submitting||quote==null||!billingEmail||!billingName} onClick={()=>void beginCheckout()}>
-       <LockKeyhole className="mr-2 h-4 w-4"/>{ready?`Continue to secure payment · ${price}`:"Secure card checkout — awaiting Tide approval"}
+       <LockKeyhole className="mr-2 h-4 w-4"/>{ready?`Continue to secure payment · ${price}`:"Secure Stripe checkout — not enabled yet"}
      </Button>
     </section>
    </div>
