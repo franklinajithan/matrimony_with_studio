@@ -351,19 +351,8 @@ export function OnboardingWizard() {
       if (!saved.ok) throw new Error(saved.error);
       if (selectedPlan !== "free") {
         if (selected.pricesPence[billingTerm] === null) throw Error("This billing period is not offered for the selected plan.");
-        const checkout = await fetch("/api/billing/checkout", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ plan: selectedPlan, term: billingTerm }),
-        });
-        const data = await checkout.json().catch(() => ({}));
-        if (!checkout.ok || typeof data.url !== "string") {
-          throw new Error(data.error || "Secure card checkout is not available yet. Your draft is saved and has not been published.");
-        }
-        const target = new URL(data.url);
-        if (target.protocol !== "https:") throw new Error("Checkout returned an invalid secure payment link.");
-        window.location.assign(target.toString());
+        // Save draft first; merchant payment has not been initiated and profile stays unpublished.
+        router.push(`/checkout?plan=${encodeURIComponent(selectedPlan)}&term=${encodeURIComponent(billingTerm)}&country=${encodeURIComponent(pricingCountry)}`);
         return;
       }
       const response = await fetch("/api/onboarding/publish", {
