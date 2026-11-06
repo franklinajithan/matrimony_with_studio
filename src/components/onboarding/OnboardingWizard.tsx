@@ -28,7 +28,7 @@ import { auth, onAuthStateChanged } from "@/lib/supabase/auth";
 import { mediaPathForUser, resolveMediaUrl, uploadMediaFile } from "@/lib/supabase/storage";
 import { ProfilePhotoEditor } from "@/components/profile/ProfilePhotoEditor";
 import { planBenefitLabels, type CataloguePlan } from "@/lib/subscriptions/catalogue-data";
-import { formatMarketMoney, type CountryCode } from "@/lib/subscriptions/country-markets";
+import { formatMarketMoney, isCountryCode, type CountryCode } from "@/lib/subscriptions/country-markets";
 import { CountryMarketSelector } from "@/components/subscriptions/CountryMarketSelector";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { getMessages } from "@/components/i18n/messages";
@@ -88,6 +88,7 @@ export function OnboardingWizard() {
   const [uploading, setUploading] = useState(false);
   const [pricingCountry, setPricingCountry] = useState<CountryCode>("GB");
   const [marketOverride, setMarketOverride] = useState(false);
+  useEffect(() => { const requested = new URLSearchParams(window.location.search).get("country"); if (requested && isCountryCode(requested)) setPricingCountry(requested); }, []);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [catalogue, setCatalogue] = useState<CataloguePlan[]>([]);
   const [plansError, setPlansError] = useState("");
