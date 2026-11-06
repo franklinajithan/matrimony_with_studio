@@ -5,7 +5,7 @@ export const COUNTRY_MARKETS = [
  {code:"US",name:"United States",currency:"USD"},
  {code:"CA",name:"Canada",currency:"CAD"},
  {code:"AU",name:"Australia",currency:"AUD"},
- {code:"NZ",name:"New Zealand",currency:"AUD"},
+ {code:"NZ",name:"New Zealand",currency:"NZD"},
  {code:"DE",name:"Germany",currency:"EUR"},
  {code:"FR",name:"France",currency:"EUR"},
  {code:"IE",name:"Ireland",currency:"EUR"},
@@ -14,12 +14,12 @@ export const COUNTRY_MARKETS = [
  {code:"ES",name:"Spain",currency:"EUR"},
  {code:"PT",name:"Portugal",currency:"EUR"},
  {code:"CH",name:"Switzerland",currency:"CHF"},
- {code:"SG",name:"Singapore",currency:"USD"},
- {code:"AE",name:"United Arab Emirates",currency:"USD"},
- {code:"ZA",name:"South Africa",currency:"USD"}
+ {code:"SG",name:"Singapore",currency:"SGD"},
+ {code:"AE",name:"United Arab Emirates",currency:"AED"},
+ {code:"ZA",name:"South Africa",currency:"ZAR"}
 ] as const;
 export type CountryCode = (typeof COUNTRY_MARKETS)[number]["code"];
-export type MarketCurrency = "GBP"|"LKR"|"INR"|"USD"|"CAD"|"AUD"|"EUR"|"CHF";
+export type MarketCurrency = "GBP"|"LKR"|"INR"|"USD"|"CAD"|"AUD"|"EUR"|"CHF"|"NZD"|"SGD"|"AED"|"ZAR";
 export function isCountryCode(s:string):s is CountryCode{return COUNTRY_MARKETS.some(x=>x.code===s);}
 export function defaultCountryCurrency(s:CountryCode):MarketCurrency {
  return COUNTRY_MARKETS.find(x=>x.code===s)!.currency;
