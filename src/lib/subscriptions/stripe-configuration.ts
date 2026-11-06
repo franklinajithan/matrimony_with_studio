@@ -19,8 +19,8 @@ export function stripeConfiguration(env: NodeJS.ProcessEnv = process.env): Strip
   const webhook = env.STRIPE_WEBHOOK_SECRET || '';
   const plus = env.STRIPE_PRICE_PLUS_MONTHLY || '';
   const premium = env.STRIPE_PRICE_PREMIUM_MONTHLY || '';
-  const isTest = key.startsWith('sk_test_');
-  const isLive = key.startsWith('sk_live_');
+  const isTest = /^(sk|rk)_test_/.test(key);
+  const isLive = /^(sk|rk)_live_/.test(key);
   const mode = isTest ? 'test' : isLive ? 'live' : 'unconfigured';
   const validPrices = [plus, premium].every(x => /^price_[A-Za-z0-9]+$/.test(x)) && plus !== premium;
   const configured = (isTest || isLive) && webhook.startsWith('whsec_') && validPrices;
