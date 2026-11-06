@@ -35,9 +35,9 @@ await db.exec(`
 await db.exec(await readFile('supabase/migrations/20261106121500_stripe_verified_webhook_memberships.sql','utf8'));
 const start=new Date(Date.now()-86400000).toISOString();
 const end=new Date(Date.now()+29*86400000).toISOString();
-const apply=(event,paid,status,customer='cus_good123',intentId=intent,sub='sub_good123',plan='plus')=>db.query(
+const apply=(event,paid,status,customer='cus_good123',intentId=intent,sub='sub_good123',plan='plus',periodStart=start,periodEnd=end)=>db.query(
  'select public.apply_verified_stripe_subscription($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) accepted',
- [event,intentId,plan,sub,customer,paid,status,start,end,false]
+ [event,intentId,plan,sub,customer,paid,status,periodStart,periodEnd,false]
 );
 test('pending webhook does not grant membership and paid webhook activates Plus exactly once',async()=>{
  const pending=await apply('evt_pending123',false,'active');
@@ -51,6 +51,21 @@ test('pending webhook does not grant membership and paid webhook activates Plus 
  assert.equal(rows[0].status,'active');assert.equal(rows[0].provider_subscription_id,'sub_good123');
  assert.equal((await db.query('select status from payment_intents where id=$1',[intent])).rows[0].status,'paid');
  assert.equal((await db.query('select count(*)::integer n from payment_events')).rows[0].n,2);
+});
+test('renewal updates cannot grant unpaid months',async()=>{
+ const prior=(await db.query('select current_period_end from user_subscriptions')).rows[0].current_period_end;
+ const extendedStart=end;
+ const extendedEnd=new Date(Date.now()+59*86400000).toISOString();
+ await apply('evt_sub_unpaid123',false,'active','cus_good123',intent,'sub_good123','plus',extendedStart,extendedEnd);
+ const unverified=(await db.query('select current_period_end from user_subscriptions')).rows[0].current_period_end;
+ assert.equal(new Date(unverified).getTime(),new Date(prior).getTime());
+ await apply('evt_invoice_paid123',true,'active','cus_good123',intent,'sub_good123','plus',extendedStart,extendedEnd);
+ const verified=(await db.query('select current_period_end from user_subscriptions')).rows[0].current_period_end;
+ assert.equal(new Date(verified).getTime(),new Date(extendedEnd).getTime());
+ // Out-of-order old paid events must never shrink the paid-through date.
+ await apply('evt_old_invoice123',true,'active','cus_good123',intent,'sub_good123','plus',start,end);
+ const afterReplay=(await db.query('select current_period_end from user_subscriptions')).rows[0].current_period_end;
+ assert.equal(new Date(afterReplay).getTime(),new Date(extendedEnd).getTime());
 });
 test('cancellation changes subscription without erasing paid payment records',async()=>{
  await apply('evt_cancel123',false,'canceled');
