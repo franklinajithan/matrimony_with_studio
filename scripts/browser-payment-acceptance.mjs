@@ -27,10 +27,10 @@ try{
   await page.goto(base+'/?country=GB&plan=premium#checkout');
   await page.getByRole('heading',{name:'Complete your CupidMatch membership'}).waitFor();
   await page.getByRole('heading',{name:'Order summary'}).waitFor();
-  await page.getByText('Secure card checkout — awaiting Tide approval').waitFor();
-  assert.equal(await page.getByRole('button',{name:/Secure card checkout/}).isDisabled(),true);
+  await page.getByText('Secure Stripe checkout — not enabled yet').waitFor();
+  assert.equal(await page.getByRole('button',{name:/Secure Stripe checkout/}).isDisabled(),true);
   assert.equal(await page.locator('input[autocomplete="cc-number"],input[autocomplete="cc-csc"],input[name="cardNumber"]').count(),0);
-  assert.equal(await page.getByText('Card number',{exact:true}).count(),1);
+  assert.equal(await page.getByText(/enter your card number, expiry date/).count(),1);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);checks++;
   await page.goto(base+'/#admin');await page.reload();await page.getByRole('heading',{name:'Payment records',exact:true}).waitFor();checks++;
   await page.getByRole('button',{name:'Pause payments'}).click();await page.getByText('Payments paused. The action was recorded in the audit log.').waitFor();assert.equal(disables,1);checks++;
