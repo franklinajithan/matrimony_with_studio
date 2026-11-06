@@ -61,7 +61,7 @@ export async function POST(request:Request) {
   }
   const start=item.current_period_start??subscription.current_period_start;
   const end=item.current_period_end??subscription.current_period_end;
-  if(!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||end<=start)throw new Error('Invalid billing period');
+  if(typeof start!=='number'||typeof end!=='number'||!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||end<=start)throw new Error('Invalid billing period');
   const {createSupabaseAdminClient}=await import('@/lib/supabase/admin');
   const db=createSupabaseAdminClient();
   const {error}=await db.rpc('apply_verified_stripe_subscription',{
