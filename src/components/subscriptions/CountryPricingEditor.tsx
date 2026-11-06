@@ -93,7 +93,7 @@ export function CountryPricingEditor(){
    </label>
    <label className="text-sm font-medium">Local currency
     <select className="mt-1 w-full rounded-lg border bg-background p-3" value={draft.currency} onChange={e=>setDraft(d=>({...d,currency:e.target.value as MarketCurrency}))}>
-     {(["GBP","EUR","USD","LKR","INR","CAD","AUD","CHF"] as MarketCurrency[]).map(c=><option key={c} value={c}>{c}</option>)}
+     {(["GBP","EUR","USD","LKR","INR","CAD","AUD","CHF","NZD","SGD","AED","ZAR"] as MarketCurrency[]).map(c=><option key={c} value={c}>{c}</option>)}
     </select>
    </label>
   </div>
