@@ -13,9 +13,9 @@ export async function getServerSubscription() {
   supabase.from('premium_launch_offers').select('starts_at,ends_at,duration_months').eq('user_id',auth.user.id).maybeSingle(),
   supabase.from('subscription_plans').select('code,name,entitlements,monthly_price_pence,three_month_price_pence,six_month_price_pence').eq('is_active',true)
  ]);
- const current=(paid.data??[]).filter(row=>effectivePlanCode({planCode:row.plan_code==='plus'?'premium_plus':row.plan_code,status:row.status,currentPeriodEnd:row.current_period_end})!=='free');
- const sub=current.find(row=>['plus','premium_plus'].includes(row.plan_code))??current[0]??null;
- const paidCode=sub?.plan_code==='plus'?'premium_plus':sub?.plan_code;
+ const current=(paid.data??[]).filter(row=>effectivePlanCode({planCode:row.plan_code,status:row.status,currentPeriodEnd:row.current_period_end})!=='free');
+ const sub=current[0]??null;
+ const paidCode=sub?.plan_code;
  const state:SubscriptionState|null=sub?{planCode:paidCode,status:sub.status,currentPeriodEnd:sub.current_period_end}:null;
  const effective=effectivePlanCode(state);
  const trial=launch.data;
