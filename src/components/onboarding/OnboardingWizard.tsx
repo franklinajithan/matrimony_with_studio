@@ -35,10 +35,6 @@ import { getMessages } from "@/components/i18n/messages";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
-const LOOKING_FOR = [
-  { id: "marriage", label: "Seeking a spouse for marriage" },
-];
-
 const TIMELINES = [
   { id: "ready", label: "Ready when the right person is" },
   { id: "1-2-years", label: "Within 1–2 years" },
@@ -588,12 +584,7 @@ export function OnboardingWizard() {
                   ))}
                 </select>
               </Field>
-              <ChoiceGroup
-                legend={t.looking}
-                value={draft.lookingFor || ""}
-                options={LOOKING_FOR.map((o) => ({ ...o, label: choiceLabels[o.id] || o.label }))}
-                onChange={(lookingFor) => updateDraft({ lookingFor })}
-              />
+              <p className="rounded-xl border border-primary/20 bg-accent/40 p-4 text-sm text-foreground">{t.marriageOnlyInfo}</p>
               <ChoiceGroup
                 legend={t.timeline}
                 value={draft.relationshipTimeline || ""}
@@ -601,7 +592,7 @@ export function OnboardingWizard() {
                 onChange={(relationshipTimeline) => updateDraft({ relationshipTimeline })}
               />
               <Field label={t.spouseQualities} htmlFor="partnershipStyle">
-                <Textarea id="partnershipStyle" rows={4} value={draft.partnershipStyle || ""} onChange={(e) => updateDraft({ partnershipStyle: e.target.value })} />
+                <Textarea id="partnershipStyle" rows={4} value={draft.partnershipStyle || ""} onChange={(e) => updateDraft({ partnershipStyle: e.target.value })} placeholder={t.spouseQualitiesHelp} />
               </Field>
             </div>
           )}
@@ -639,11 +630,11 @@ export function OnboardingWizard() {
               <Field label={t.hobbies} htmlFor="hobbies">
                 <Input id="hobbies" value={draft.hobbies || ""} onChange={(e) => updateDraft({ hobbies: e.target.value })} className="min-h-11" />
               </Field>
-              <Field label="How important is faith in daily life? (optional)" htmlFor="faithImportance">
+              <Field label={t.faithInMarriage} htmlFor="faithImportance">
                 <Input id="faithImportance" value={draft.faithImportance || ""} onChange={(e) => updateDraft({ faithImportance: e.target.value })} className="min-h-11" />
               </Field>
               <Field label={t.familyMarriageRole} htmlFor="familyImportance">
-                <Input id="familyImportance" value={draft.familyImportance || ""} onChange={(e) => updateDraft({ familyImportance: e.target.value })} className="min-h-11" />
+                <Input id="familyImportance" value={draft.familyImportance || ""} onChange={(e) => updateDraft({ familyImportance: e.target.value })} className="min-h-11" placeholder={t.familyMarriageHelp} />
               </Field>
             </div>
           )}
@@ -658,7 +649,7 @@ export function OnboardingWizard() {
                 <Input id="culturalBackground" value={draft.culturalBackground || ""} onChange={(e) => updateDraft({ culturalBackground: e.target.value })} className="min-h-11" />
               </Field>
               <Field label={t.familyInvolvement} htmlFor="familyInvolvement">
-                <Input id="familyInvolvement" value={draft.familyInvolvement || ""} onChange={(e) => updateDraft({ familyInvolvement: e.target.value })} className="min-h-11" />
+                <Input id="familyInvolvement" value={draft.familyInvolvement || ""} onChange={(e) => updateDraft({ familyInvolvement: e.target.value })} className="min-h-11" placeholder={t.familyIntroductionHelp} />
               </Field>
               <Field label={t.traditions} htmlFor="festivalImportance">
                 <Textarea id="festivalImportance" rows={3} value={draft.festivalImportance || ""} onChange={(e) => updateDraft({ festivalImportance: e.target.value })} />
@@ -687,10 +678,10 @@ export function OnboardingWizard() {
                 />
               </Field>
               <Field label={t.longDistance} htmlFor="longDistanceOk">
-                <Input id="longDistanceOk" className="min-h-11" value={draft.longDistanceOk || ""} onChange={(e) => updateDraft({ longDistanceOk: e.target.value })} />
+                <Input id="longDistanceOk" className="min-h-11" value={draft.longDistanceOk || ""} onChange={(e) => updateDraft({ longDistanceOk: e.target.value })} placeholder={t.longDistanceHelp} />
               </Field>
               <Field label={t.familyResponsibilities} htmlFor="familyResponsibilities">
-                <Textarea id="familyResponsibilities" rows={3} value={draft.familyResponsibilities || ""} onChange={(e) => updateDraft({ familyResponsibilities: e.target.value })} />
+                <Textarea id="familyResponsibilities" rows={3} value={draft.familyResponsibilities || ""} onChange={(e) => updateDraft({ familyResponsibilities: e.target.value })} placeholder={t.familyResponsibilitiesHelp} />
               </Field>
             </div>
           )}
@@ -739,7 +730,7 @@ export function OnboardingWizard() {
               <ReviewRow label="Height" value={draft.height ? `${draft.height} cm` : ""} emptyLabel="Required" />
               <ReviewRow label={t.location} value={[draft.region, draft.country].filter(Boolean).join(", ")} emptyLabel={t.notAdded} />
               <ReviewRow label={t.languages} value={(draft.languages || []).join(", ")} emptyLabel={t.notAdded} />
-              <ReviewRow label={t.looking} value={draft.lookingFor === "marriage" ? choiceLabels.marriage : ""} emptyLabel={t.notAdded} />
+              <ReviewRow label={t.looking} value={choiceLabels.marriage} />
               <ReviewRow label={t.introduction} value={draft.bio} emptyLabel={t.notAdded} />
               <p className="text-sm text-muted-foreground">{t.reviewDob}</p>
               <section className="overflow-hidden rounded-2xl border border-primary/20 bg-background shadow-sm" aria-label="Choose your membership">
@@ -891,9 +882,9 @@ function ReviewRow({ label, value, emptyLabel = "Not added yet" }: { label: stri
 function getOnboardingChoiceLabels(language: string): Record<string,string> {
  const labels: Record<string,Record<string,string>> = {
   en:{marriage:"Seeking a spouse for marriage",ready:"Ready for marriage when I meet the right person","1-2-years":"Within 1–2 years",exploring:"Planning for marriage, timing undecided",open:"Open to relocating",partner:"Willing if my partner needs to stay",stay:"I need to stay where I am",unsure:"Not sure yet",members:"Visible to members after I publish",connections:"Visible to accepted connections only",hidden:"Keep photos hidden for now"},
-  ta:{marriage:"திருமணம்",ready:"சரியான நபர் கிடைத்தால் தயார்","1-2-years":"1–2 ஆண்டுகளுக்குள்",exploring:"கவனமாக ஆராய்கிறேன்",open:"இடமாற்றத்திற்கு தயாராக உள்ளேன்",partner:"துணை தங்க வேண்டுமெனில் தயாராக உள்ளேன்",stay:"நான் இருக்கும் இடத்திலேயே இருக்க வேண்டும்",unsure:"இன்னும் உறுதி இல்லை",members:"வெளியிட்ட பின் உறுப்பினர்களுக்கு தெரியும்",connections:"ஏற்றுக்கொண்ட தொடர்புகளுக்கு மட்டும்",hidden:"இப்போது புகைப்படங்களை மறைத்து வைக்கவும்"},
-  si:{marriage:"විවාහය",ready:"නිවැරදි පුද්ගලයා හමු වූ විට සූදානම්","1-2-years":"වසර 1–2 ඇතුළත",exploring:"සැලකිල්ලෙන් සොයමින්",open:"ස්ථානය මාරු කිරීමට විවෘතයි",partner:"සහකරුට රැඳී සිටීමට අවශ්‍ය නම් සලකා බලමි",stay:"මට මෙහිම සිටිය යුතුයි",unsure:"තවම තීරණය කර නැහැ",members:"ප්‍රකාශයට පත් කළ පසු සාමාජිකයින්ට පෙනේ",connections:"පිළිගත් සම්බන්ධතා සඳහා පමණයි",hidden:"දැනට ඡායාරූප සඟවා තබන්න"},
-  fr:{marriage:"Mariage",ready:"Prêt lorsque la bonne personne se présente","1-2-years":"Dans 1 à 2 ans",exploring:"J'explore avec attention",open:"Ouvert à déménager",partner:"Disposé si mon partenaire doit rester",stay:"Je dois rester où je suis",unsure:"Pas encore sûr",members:"Visible par les membres après publication",connections:"Visible uniquement par les connexions acceptées",hidden:"Masquer mes photos pour le moment"},
-  nl:{marriage:"Huwelijk",ready:"Klaar wanneer de juiste persoon er is","1-2-years":"Binnen 1–2 jaar",exploring:"Rustig aan het verkennen",open:"Sta open voor verhuizen",partner:"Bereid als mijn partner moet blijven",stay:"Ik moet blijven waar ik ben",unsure:"Nog niet zeker",members:"Zichtbaar voor leden na publicatie",connections:"Alleen zichtbaar voor geaccepteerde connecties",hidden:"Foto's voorlopig verborgen houden"}
+  ta:{marriage:"திருமணம்",ready:"சரியான நபர் கிடைத்தால் தயார்","1-2-years":"1–2 ஆண்டுகளுக்குள்",exploring:"திருமணத் திட்டம் உள்ளது; காலம் இன்னும் தீர்மானிக்கவில்லை",open:"இடமாற்றத்திற்கு தயாராக உள்ளேன்",partner:"துணை தங்க வேண்டுமெனில் தயாராக உள்ளேன்",stay:"நான் இருக்கும் இடத்திலேயே இருக்க வேண்டும்",unsure:"இன்னும் உறுதி இல்லை",members:"வெளியிட்ட பின் உறுப்பினர்களுக்கு தெரியும்",connections:"ஏற்றுக்கொண்ட தொடர்புகளுக்கு மட்டும்",hidden:"இப்போது புகைப்படங்களை மறைத்து வைக்கவும்"},
+  si:{marriage:"විවාහය",ready:"නිවැරදි පුද්ගලයා හමු වූ විට සූදානම්","1-2-years":"වසර 1–2 ඇතුළත",exploring:"විවාහ කාලය තවම තීරණය කර නැත",open:"ස්ථානය මාරු කිරීමට විවෘතයි",partner:"සහකරුට රැඳී සිටීමට අවශ්‍ය නම් සලකා බලමි",stay:"මට මෙහිම සිටිය යුතුයි",unsure:"තවම තීරණය කර නැහැ",members:"ප්‍රකාශයට පත් කළ පසු සාමාජිකයින්ට පෙනේ",connections:"පිළිගත් සම්බන්ධතා සඳහා පමණයි",hidden:"දැනට ඡායාරූප සඟවා තබන්න"},
+  fr:{marriage:"Mariage",ready:"Prêt lorsque la bonne personne se présente","1-2-years":"Dans 1 à 2 ans",exploring:"Projet de mariage, calendrier à définir",open:"Ouvert à déménager",partner:"Disposé si mon partenaire doit rester",stay:"Je dois rester où je suis",unsure:"Pas encore sûr",members:"Visible par les membres après publication",connections:"Visible uniquement par les connexions acceptées",hidden:"Masquer mes photos pour le moment"},
+  nl:{marriage:"Huwelijk",ready:"Klaar wanneer de juiste persoon er is","1-2-years":"Binnen 1–2 jaar",exploring:"Huwelijksplannen, termijn nog open",open:"Sta open voor verhuizen",partner:"Bereid als mijn partner moet blijven",stay:"Ik moet blijven waar ik ben",unsure:"Nog niet zeker",members:"Zichtbaar voor leden na publicatie",connections:"Alleen zichtbaar voor geaccepteerde connecties",hidden:"Foto's voorlopig verborgen houden"}
  }; return labels[language] || labels.en;
 }
