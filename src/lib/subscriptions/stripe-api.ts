@@ -30,7 +30,8 @@ export function stripeCheckoutReady() {
  const isLive = /^(sk|rk)_live_/.test(key);
  const environmentSafe = process.env.VERCEL_ENV === 'production'
    ? (isLive && process.env.STRIPE_LIVE_APPROVED === 'true') : isTest;
- return process.env.STRIPE_CHECKOUT_ENABLED === 'true' && environmentSafe &&
+ return process.env.STRIPE_CHECKOUT_ENABLED === 'true' &&
+   process.env.STRIPE_WEBHOOK_PROCESSING_ENABLED === 'true' && environmentSafe &&
    /^price_[a-zA-Z0-9]+$/.test(process.env.STRIPE_PRICE_PLUS_MONTHLY||'') &&
    /^price_[a-zA-Z0-9]+$/.test(process.env.STRIPE_PRICE_PREMIUM_MONTHLY||'') &&
    (process.env.STRIPE_PRICE_PLUS_MONTHLY !== process.env.STRIPE_PRICE_PREMIUM_MONTHLY) &&
