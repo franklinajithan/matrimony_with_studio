@@ -2,7 +2,7 @@
 -- A disabled or missing market ALWAYS falls back to GBP; never infer a chargeable currency.
 create table if not exists public.subscription_country_prices(
  country_code text primary key check(country_code ~ '^[A-Z]{2}$' and country_code <> 'GB'),
- currency text not null check(currency in ('EUR','USD','LKR','INR','CAD','AUD','CHF','GBP')),
+ currency text not null check(currency in ('EUR','USD','LKR','INR','CAD','AUD','CHF','GBP','NZD','SGD','AED','ZAR')),
  enabled boolean not null default false,
  plus_monthly_minor integer not null check(plus_monthly_minor between 1 and 10000000),
  premium_monthly_minor integer not null check(premium_monthly_minor between 1 and 10000000),
@@ -48,7 +48,7 @@ begin
    raise exception 'Administrator required' using errcode='42501';
  end if;
  if p_country_code !~ '^[A-Z]{2}$' or p_country_code='GB'
-    or p_currency not in ('EUR','USD','LKR','INR','CAD','AUD','CHF','GBP')
+    or p_currency not in ('EUR','USD','LKR','INR','CAD','AUD','CHF','GBP','NZD','SGD','AED','ZAR')
     or p_enabled is null or p_plus_monthly not between 1 and 10000000
     or p_premium_monthly not between 1 and 10000000
     or (p_plus_three is not null and p_plus_three not between 1 and 60000000)
