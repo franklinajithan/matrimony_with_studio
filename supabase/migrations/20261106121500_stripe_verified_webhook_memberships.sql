@@ -3,7 +3,7 @@
 -- verifying the raw Stripe signature and fetching the subscription from Stripe.
 -- Existing membership data and user trials are preserved.
 create or replace function public.apply_verified_stripe_subscription(
- p_event_id text, p_intent_id uuid, p_subscription_id text,
+ p_event_id text, p_intent_id uuid, p_plan_code text, p_subscription_id text,
  p_customer_id text, p_paid boolean, p_stripe_status text,
  p_period_start timestamptz, p_period_end timestamptz,
  p_cancel_at_period_end boolean
@@ -18,7 +18,7 @@ begin
   or p_stripe_status not in ('active','trialing','past_due','unpaid','canceled','incomplete','incomplete_expired')
  then raise exception 'Invalid verified Stripe subscription data'; end if;
  select * into v_intent from public.payment_intents
-  where id=p_intent_id and provider='stripe'
+  where id=p_intent_id and provider='stripe' and plan_code=p_plan_code
   and billing_term='monthly' and currency='GBP'
   and ((plan_code='plus' and amount_pence=499)
        or (plan_code='premium' and amount_pence=799))
@@ -64,9 +64,9 @@ begin
  return true;
 end;
 $$;
-revoke all on function public.apply_verified_stripe_subscription(text,uuid,text,text,boolean,text,timestamptz,timestamptz,boolean)
+revoke all on function public.apply_verified_stripe_subscription(text,uuid,text,text,text,boolean,text,timestamptz,timestamptz,boolean)
  from public,anon,authenticated;
-grant execute on function public.apply_verified_stripe_subscription(text,uuid,text,text,boolean,text,timestamptz,timestamptz,boolean)
+grant execute on function public.apply_verified_stripe_subscription(text,uuid,text,text,text,boolean,text,timestamptz,timestamptz,boolean)
  to service_role;
 
 -- Existing payment ledgers deliberately deny client writes; grant the dedicated
