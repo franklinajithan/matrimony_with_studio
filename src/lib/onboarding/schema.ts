@@ -163,9 +163,9 @@ export function validateForPublish(draft: OnboardingDraft): string[] {
 export const ONBOARDING_STEPS = [
   { id: 0, title: "About you", description: "Basic details and adult eligibility" },
   { id: 1, title: "Where you live", description: "Country, region and languages" },
-  { id: 2, title: "Marriage plans", description: "Optional marriage preferences" },
-  { id: 3, title: "About your life", description: "Optional details for a future spouse" },
-  { id: 4, title: "Culture", description: "Optional family and cultural preferences" },
+  { id: 2, title: "Your marriage plans", description: "Marriage readiness and the qualities you value in a spouse" },
+  { id: 3, title: "Life and values", description: "What you would like a future spouse to know" },
+  { id: 4, title: "Family and traditions", description: "How you envision family involvement in marriage" },
   { id: 5, title: "Life after marriage", description: "Optional settlement and family plans" },
   { id: 6, title: "Photos", description: "Photos and privacy" },
   { id: 7, title: "Review", description: "Check and publish when you are ready" },
