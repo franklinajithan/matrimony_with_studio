@@ -7,7 +7,7 @@ export const dynamic="force-dynamic";
 const headers={"Cache-Control":"private, no-store"};
 const payload=z.object({
  country:z.string().refine(isCountryCode).refine(v=>v!=="GB"),
- currency:z.enum(["GBP","EUR","USD","LKR","INR","CAD","AUD","CHF"]),
+ currency:z.enum(["GBP","EUR","USD","LKR","INR","CAD","AUD","CHF","NZD","SGD","AED","ZAR"]),
  enabled:z.boolean(),
  plusMonthly:z.number().int().min(1).max(10000000),
  premiumMonthly:z.number().int().min(1).max(10000000),
