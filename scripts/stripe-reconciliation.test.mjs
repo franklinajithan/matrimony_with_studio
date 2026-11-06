@@ -35,9 +35,9 @@ await db.exec(`
 await db.exec(await readFile('supabase/migrations/20261106121500_stripe_verified_webhook_memberships.sql','utf8'));
 const start=new Date(Date.now()-86400000).toISOString();
 const end=new Date(Date.now()+29*86400000).toISOString();
-const apply=(event,paid,status,customer='cus_good123',intentId=intent,sub='sub_good123')=>db.query(
+const apply=(event,paid,status,customer='cus_good123',intentId=intent,sub='sub_good123',plan='plus')=>db.query(
  'select public.apply_verified_stripe_subscription($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) accepted',
- [event,intentId,'plus',sub,customer,paid,status,start,end,false]
+ [event,intentId,plan,sub,customer,paid,status,start,end,false]
 );
 test('pending webhook does not grant membership and paid webhook activates Plus exactly once',async()=>{
  const pending=await apply('evt_pending123',false,'active');
@@ -60,4 +60,9 @@ test('cancellation changes subscription without erasing paid payment records',as
 test('unrecognized payment intent cannot create entitlement',async()=>{
  await assert.rejects(apply('evt_bad123',true,'active','cus_good123','30000000-0000-4000-8000-000000000003'));
  assert.equal((await db.query('select count(*)::integer n from user_subscriptions')).rows[0].n,1);
+});
+
+test('rejects a Stripe price mapped to another plan',async()=>{
+ await assert.rejects(apply('evt_wrongplan123',true,'active','cus_good123',intent,'sub_good123','premium'));
+ assert.equal((await db.query("select count(*)::integer n from payment_events where provider_event_id='evt_wrongplan123'")).rows[0].n,0);
 });
