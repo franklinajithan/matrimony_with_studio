@@ -17,7 +17,7 @@ export async function countryCatalogue(countryInput="GB"):Promise<CountryCatalog
   .select("country_code,currency,enabled,plus_monthly_minor,premium_monthly_minor,plus_three_month_minor,premium_three_month_minor,plus_six_month_minor,premium_six_month_minor")
   .eq("country_code",country).eq("enabled",true).maybeSingle();
  if(marketError)throw Error("Country pricing unavailable");
- if(!market)return {plans,country,currency:"GBP",isOverride:false,chargeCurrency:"GBP",paymentEnabled:false};
+ if(!market||!market.enabled)return {plans,country,currency:"GBP",isOverride:false,chargeCurrency:"GBP",paymentEnabled:false};
  if(!["EUR","USD","LKR","INR","CAD","AUD","CHF","GBP"].includes(market.currency))throw Error("Unsupported market currency");
  const prices:Record<string,{monthly:number;three_months:number|null;six_months:number|null}>={
    plus:{monthly:market.plus_monthly_minor,three_months:market.plus_three_month_minor,six_months:market.plus_six_month_minor},
