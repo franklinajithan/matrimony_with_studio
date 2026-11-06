@@ -11,7 +11,7 @@ export async function countryCatalogue(countryInput="GB"):Promise<CountryCatalog
  const db=await createSupabaseServerClient();
  const {data,error}=await db.from("subscription_plans").select("*").order("sort_order");
  if(error||!data)throw Error("Catalogue unavailable");
- const plans=data.map(cataloguePlan).filter(plan=>plan.active);
+ const plans=data.map(cataloguePlan).filter(plan=>plan.active).map(({updatedAt,...plan})=>{void updatedAt;return plan;});
  if(country==="GB")return {plans,country,currency:"GBP",isOverride:false,chargeCurrency:"GBP",paymentEnabled:false};
  const {data:market,error:marketError}=await db.from("subscription_country_prices")
   .select("country_code,currency,enabled,plus_monthly_minor,premium_monthly_minor,plus_three_month_minor,premium_three_month_minor,plus_six_month_minor,premium_six_month_minor")
