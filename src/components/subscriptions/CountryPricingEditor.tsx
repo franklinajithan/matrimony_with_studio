@@ -117,7 +117,7 @@ export function CountryPricingEditor(){
   </div>
   <label className="flex items-center gap-3 rounded-lg border p-3 text-sm font-medium">
    <input type="checkbox" className="h-5 w-5" checked={draft.enabled} onChange={e=>setDraft(d=>({...d,enabled:e.target.checked}))}/>
-   Enable this market's local prices
+   Enable local prices for this market
   </label>
   <div className="flex flex-wrap items-center gap-3">
    <Button variant="outline" disabled={!baseline||!(draft.currency==="GBP"||draft.currency==="EUR"||draft.currency==="USD")} onClick={suggestedConversion}>Suggest prices from current GBP rates</Button>
