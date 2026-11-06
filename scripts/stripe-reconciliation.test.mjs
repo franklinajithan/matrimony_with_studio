@@ -36,8 +36,8 @@ await db.exec(await readFile('supabase/migrations/20261106121500_stripe_verified
 const start=new Date(Date.now()-86400000).toISOString();
 const end=new Date(Date.now()+29*86400000).toISOString();
 const apply=(event,paid,status,customer='cus_good123',intentId=intent,sub='sub_good123')=>db.query(
- 'select public.apply_verified_stripe_subscription($1,$2,$3,$4,$5,$6,$7,$8,$9) accepted',
- [event,intentId,sub,customer,paid,status,start,end,false]
+ 'select public.apply_verified_stripe_subscription($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) accepted',
+ [event,intentId,'plus',sub,customer,paid,status,start,end,false]
 );
 test('pending webhook does not grant membership and paid webhook activates Plus exactly once',async()=>{
  const pending=await apply('evt_pending123',false,'active');
