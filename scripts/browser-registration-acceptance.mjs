@@ -29,7 +29,7 @@ build.onResolve({filter:/^next\/link$/},()=>({path:'link',namespace:'test-link'}
    const errors=[];page.on('pageerror',e=>errors.push(e.message));
    let draft={displayName:'Test Member',gender:'female',dob:'1995-05-12',height:'165',country:'Sri Lanka',region:'Jaffna',languages:['Tamil'],lookingFor:'marriage',relationshipTimeline:'ready',bio:'I value kindness, honesty and a lasting partnership.',educationLevel:"Bachelor's",relocationOpenness:'open',photoPrivacy:'connections'};
    let storedStep=3,failSave=false,saves=0,publishes=0,releaseSave=null,expectedPrivacy='connections',lastPublished=null;
-   await page.route('**/api/plans',route=>route.fulfill({json:{plans:[
+   await page.route('**/api/plans**',route=>route.fulfill({json:{plans:[
     {code:'free',name:'Free',active:true,currency:'GBP',pricesPence:{monthly:0,three_months:null,six_months:null},entitlements:{basicMatching:true}},
     {code:'plus',name:'Plus',active:true,currency:'GBP',pricesPence:{monthly:999,three_months:null,six_months:null},entitlements:{advancedFilters:true}},
     {code:'premium',name:'Premium',active:true,currency:'GBP',pricesPence:{monthly:1999,three_months:null,six_months:null},entitlements:{advancedFilters:true,fullCompatibility:true}}
