@@ -8,6 +8,8 @@ const intent='10000000-0000-4000-8000-000000000001';
 const user='20000000-0000-4000-8000-000000000001';
 await db.exec(`
  create role service_role;
+ create role anon;
+ create role authenticated;
  create table public.payment_intents(
   id uuid primary key, user_id uuid not null,provider text not null,
   plan_code text not null,billing_term text not null,amount_pence integer not null,
