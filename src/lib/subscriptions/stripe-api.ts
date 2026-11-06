@@ -28,8 +28,9 @@ export function stripeCheckoutReady() {
  const key = process.env.STRIPE_SECRET_KEY || '';
  const isTest = /^(sk|rk)_test_/.test(key);
  const isLive = /^(sk|rk)_live_/.test(key);
- return process.env.STRIPE_CHECKOUT_ENABLED === 'true' &&
-   (isTest || (isLive && process.env.STRIPE_LIVE_APPROVED === 'true')) &&
+ const environmentSafe = process.env.VERCEL_ENV === 'production'
+   ? (isLive && process.env.STRIPE_LIVE_APPROVED === 'true') : isTest;
+ return process.env.STRIPE_CHECKOUT_ENABLED === 'true' && environmentSafe &&
    /^price_[a-zA-Z0-9]+$/.test(process.env.STRIPE_PRICE_PLUS_MONTHLY||'') &&
    /^price_[a-zA-Z0-9]+$/.test(process.env.STRIPE_PRICE_PREMIUM_MONTHLY||'') &&
    (process.env.STRIPE_PRICE_PLUS_MONTHLY !== process.env.STRIPE_PRICE_PREMIUM_MONTHLY) &&
