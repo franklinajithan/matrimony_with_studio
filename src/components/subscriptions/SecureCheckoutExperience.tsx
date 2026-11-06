@@ -30,9 +30,6 @@ export function SecureCheckoutExperience(){
  const [error,setError]=useState("");
  const [accepted,setAccepted]=useState(false);
  const [submitting,setSubmitting]=useState(false);
- const [billingEmail,setBillingEmail]=useState("");
- const [billingName,setBillingName]=useState("");
- const [postalCode,setPostalCode]=useState("");
  const [consent,setConsent]=useState(false);
  const [attemptError,setAttemptError]=useState("");
  useEffect(()=>{
@@ -60,7 +57,7 @@ export function SecureCheckoutExperience(){
  async function beginCheckout(){
   setAttemptError("");
   if(!ready)return;
-  if(!selected||quote==null||!accepted||!consent||!billingEmail.trim()||!billingName.trim())return;
+  if(!selected||quote==null||!accepted||!consent)return;
   setSubmitting(true);
   try{
    const response=await fetch("/api/billing/checkout",{method:"POST",credentials:"same-origin",
@@ -69,7 +66,7 @@ export function SecureCheckoutExperience(){
    const result=await response.json().catch(()=>({}));
    if(!response.ok||typeof result.url!=="string")throw Error(result.error||"Secure card checkout is not ready.");
    const url=new URL(result.url);
-   if(url.protocol!=="https:")throw Error("The payment provider did not return a secure checkout URL.");
+   if(url.protocol!=="https:" || url.hostname!=="checkout.stripe.com")throw Error("The payment provider did not return a valid Stripe Checkout URL.");
    window.location.assign(url.href);
   }catch(e){setAttemptError(e instanceof Error?e.message:"Checkout is unavailable. No payment was taken.");}
   finally{setSubmitting(false);}
@@ -77,14 +74,14 @@ export function SecureCheckoutExperience(){
  return <main className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
   <Link href="/membership" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"><ArrowLeft className="h-4 w-4"/> Back to memberships</Link>
   <div className="mt-6 max-w-3xl space-y-2">
-   <div className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-primary"><LockKeyhole className="h-3.5 w-3.5"/> Protected checkout preparation</div>
+   <div className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-primary"><LockKeyhole className="h-3.5 w-3.5"/> Stripe-hosted secure checkout</div>
    <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Complete your CupidMatch membership</h1>
-   <p className="text-muted-foreground">Review the plan, confirm your billing details, then pay securely through an approved payment provider.</p>
+   <p className="text-muted-foreground">Review the membership and recurring amount, then pay securely on Stripe when checkout is available.</p>
   </div>
   <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.82fr)]">
    <div className="space-y-6">
     <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
-     <div className="flex items-center justify-between gap-3"><h2 className="text-xl font-semibold">1. Membership details</h2><span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-primary">Step 1 of 3</span></div>
+     <div className="flex items-center justify-between gap-3"><h2 className="text-xl font-semibold">1. Membership details</h2><span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-primary">Step 1 of 2</span></div>
      <CountryMarketSelector country={country} onChange={setCountry}/>
      {loading?<p role="status">Checking live country pricing…</p>:error?<p role="alert" className="text-sm text-destructive">{error}</p>:<>
       <div className="grid gap-3 sm:grid-cols-2">{plans.filter(x=>x.code==="plus"||x.code==="premium").map(x=><button type="button" key={x.code} onClick={()=>{setPlan(x.code);setTerm("monthly");}} aria-pressed={plan===x.code} className={`rounded-xl border-2 p-4 text-left transition-colors ${plan===x.code?"border-primary bg-accent/40":"border-border hover:border-primary/60"}`}>
@@ -97,43 +94,23 @@ export function SecureCheckoutExperience(){
         {availableTerms.map(x=><option key={x} value={x}>{TERM_LABEL[x]}</option>)}
        </select>
       </label>
-      <p className="text-xs text-muted-foreground">{marketActive?"Admin-approved local market price.":"No approved local market override; UK GBP base prices apply."} Only the UK GBP monthly plan is currently configured for Stripe; other displayed country prices cannot be charged yet.</p>
+      <p className="text-xs text-muted-foreground">{marketActive?"Admin-approved local market price.":"No approved local market override; UK GBP base prices apply."} Only UK GBP monthly memberships are configured for Stripe at present. Other market quotes are for information only.</p>
      </>}
     </section>
     <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
-     <div className="flex items-center justify-between gap-3"><h2 className="text-xl font-semibold">2. Billing details</h2><span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-primary">Step 2 of 3</span></div>
-     <p className="text-xs text-muted-foreground">Stripe securely collects billing information at its hosted checkout. These details are not stored by CupidMatch.</p>
-     <div className="grid gap-4 sm:grid-cols-2">
-      <label className="text-sm font-medium">Full name
-       <input autoComplete="name" value={billingName} onChange={e=>setBillingName(e.target.value)} maxLength={120} placeholder="Name on your billing account" className="mt-2 min-h-11 w-full rounded-lg border bg-background px-3"/>
-      </label>
-      <label className="text-sm font-medium">Billing email
-       <input type="email" autoComplete="email" value={billingEmail} onChange={e=>setBillingEmail(e.target.value)} maxLength={254} placeholder="you@example.com" className="mt-2 min-h-11 w-full rounded-lg border bg-background px-3"/>
-      </label>
-     </div>
-     <label className="block text-sm font-medium">Billing postcode / ZIP (optional)
-      <input autoComplete="postal-code" value={postalCode} onChange={e=>setPostalCode(e.target.value)} maxLength={24} placeholder="Postal code" className="mt-2 min-h-11 w-full rounded-lg border bg-background px-3"/>
-     </label>
-    </section>
-    <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
-     <div className="flex items-center justify-between gap-3"><h2 className="text-xl font-semibold">3. Card payment</h2><span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-primary">Step 3 of 3</span></div>
-     <div className="flex items-center gap-2 text-sm font-medium"><CreditCard className="h-5 w-5 text-primary"/> Credit or debit card <span className="ml-auto text-xs text-muted-foreground">Visa · Mastercard</span></div>
-     <div className="space-y-3 rounded-xl border border-dashed bg-accent/20 p-4">
-       <div className="flex items-center justify-between"><span className="text-sm font-semibold text-primary">Secure provider-hosted card fields</span><LockKeyhole className="h-4 w-4 text-primary"/></div>
-       <div className="space-y-2">
-        <div><span className="mb-1 block text-xs text-muted-foreground">Card number</span><div className="flex h-11 items-center rounded-lg border bg-background px-3 text-sm text-muted-foreground" aria-label="Card number entry unavailable until merchant approval">•••• •••• •••• ••••</div></div>
-        <div className="grid grid-cols-2 gap-3">
-         <div><span className="mb-1 block text-xs text-muted-foreground">Expiry date</span><div className="flex h-11 items-center rounded-lg border bg-background px-3 text-sm text-muted-foreground">MM / YY</div></div>
-         <div><span className="mb-1 block text-xs text-muted-foreground">Security code</span><div className="flex h-11 items-center rounded-lg border bg-background px-3 text-sm text-muted-foreground">•••</div></div>
-        </div>
+     <div className="flex items-center justify-between gap-3"><h2 className="text-xl font-semibold">2. Secure card payment</h2><span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-primary">Step 2 of 2</span></div>
+     <div className="flex items-start gap-3 rounded-xl border bg-accent/20 p-4">
+       <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+       <div className="space-y-1">
+         <p className="font-semibold">Pay securely with Stripe Checkout</p>
+         <p className="text-sm text-muted-foreground">When payments are enabled, continue to Stripe to enter your card number, expiry date, security code and billing details. CupidMatch never receives or stores your full card number or CVV.</p>
        </div>
-       <p className="text-xs text-muted-foreground">These are display-only placeholders—not card-entry controls. Stripe Checkout will securely collect card details after you continue. CupidMatch will not store card numbers or CVV.</p>
      </div>
-     {!ready&&<div className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="status"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0"/>Card checkout is awaiting merchant approval and technical verification. No payment can be made or charged now.</div>}
+     {!ready&&<div className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="status"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0"/>Card checkout is awaiting merchant approval and technical verification. No payment can be made or charged on CupidMatch now.</div>}
      <label className="flex items-start gap-3 text-sm"><Checkbox checked={accepted} onCheckedChange={v=>setAccepted(v===true)} className="mt-0.5"/><span>I accept the <Link href="/terms" className="underline text-primary">Terms of Service</Link> and <Link href="/privacy" className="underline text-primary">Privacy Policy</Link>.</span></label>
      <label className="flex items-start gap-3 text-sm"><Checkbox checked={consent} onCheckedChange={v=>setConsent(v===true)} className="mt-0.5"/><span>I understand this is a recurring monthly subscription billed through Stripe until I cancel it. Paid access starts only after Stripe confirms payment.</span></label>
      {attemptError&&<p className="text-sm text-destructive" role="alert">{attemptError}</p>}
-     <Button className="h-auto min-h-12 w-full whitespace-normal px-3 py-3 text-center text-sm leading-5 sm:text-base" disabled={!ready||loading||!selected||!accepted||!consent||submitting||quote==null||!billingEmail||!billingName} onClick={()=>void beginCheckout()}>
+     <Button className="h-auto min-h-12 w-full whitespace-normal px-3 py-3 text-center text-sm leading-5 sm:text-base" disabled={!ready||loading||!selected||!accepted||!consent||submitting||quote==null} onClick={()=>void beginCheckout()}>
        <LockKeyhole className="mr-2 h-4 w-4"/>{ready?`Continue to secure payment · ${price}`:"Secure Stripe checkout — not enabled yet"}
      </Button>
     </section>
