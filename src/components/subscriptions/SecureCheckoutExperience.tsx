@@ -133,7 +133,7 @@ export function SecureCheckoutExperience(){
      <label className="flex items-start gap-3 text-sm"><Checkbox checked={accepted} onCheckedChange={v=>setAccepted(v===true)} className="mt-0.5"/><span>I accept the <Link href="/terms" className="underline text-primary">Terms of Service</Link> and <Link href="/privacy" className="underline text-primary">Privacy Policy</Link>.</span></label>
      <label className="flex items-start gap-3 text-sm"><Checkbox checked={consent} onCheckedChange={v=>setConsent(v===true)} className="mt-0.5"/><span>I understand the selected plan and amount must be confirmed by a secure payment provider before any paid membership is activated.</span></label>
      {attemptError&&<p className="text-sm text-destructive" role="alert">{attemptError}</p>}
-     <Button className="min-h-12 w-full text-base" disabled={!ready||loading||!selected||!accepted||!consent||submitting||quote==null||!billingEmail||!billingName} onClick={()=>void beginCheckout()}>
+     <Button className="h-auto min-h-12 w-full whitespace-normal px-3 py-3 text-center text-sm leading-5 sm:text-base" disabled={!ready||loading||!selected||!accepted||!consent||submitting||quote==null||!billingEmail||!billingName} onClick={()=>void beginCheckout()}>
        <LockKeyhole className="mr-2 h-4 w-4"/>{ready?`Continue to secure payment · ${price}`:"Secure card checkout — awaiting Tide approval"}
      </Button>
     </section>
