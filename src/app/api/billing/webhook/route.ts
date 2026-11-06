@@ -46,9 +46,10 @@ export async function POST(request:Request) {
   const item=subscription.items?.data?.[0];
   if(subscription.items?.data?.length!==1 || !item)throw new Error('Unexpected subscription items');
   const priceId=item.price.id;
-  const expected=priceId===process.env.STRIPE_PRICE_PLUS_MONTHLY?499:
-   priceId===process.env.STRIPE_PRICE_PREMIUM_MONTHLY?799:null;
-  if(expected===null)throw new Error('Stripe subscription is not a configured plan');
+  const expectedPlan=priceId===process.env.STRIPE_PRICE_PLUS_MONTHLY?'plus':
+   priceId===process.env.STRIPE_PRICE_PREMIUM_MONTHLY?'premium':null;
+  const expected=expectedPlan==='plus'?499:expectedPlan==='premium'?799:null;
+  if(expected===null||!expectedPlan)throw new Error('Stripe subscription is not a configured plan');
   if(event.type.startsWith('checkout.session.')) {
    if(obj.client_reference_id!==intentId||obj.subscription!==subId)
     throw new Error('Checkout reference mismatch');
@@ -65,7 +66,7 @@ export async function POST(request:Request) {
   const {createSupabaseAdminClient}=await import('@/lib/supabase/admin');
   const db=createSupabaseAdminClient();
   const {error}=await db.rpc('apply_verified_stripe_subscription',{
-   p_event_id:event.id,p_intent_id:intentId,
+   p_event_id:event.id,p_intent_id:intentId,p_plan_code:expectedPlan,
    p_subscription_id:subId,p_customer_id:subscription.customer,
    p_paid:paid,p_stripe_status:subscription.status,
    p_period_start:new Date(start*1000).toISOString(),
