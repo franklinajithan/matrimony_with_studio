@@ -85,6 +85,24 @@ export function CountryPricingEditor(){
   <div><h2 className="text-xl font-bold">Country pricing management</h2>
    <p className="mt-1 text-sm text-muted-foreground">Set independent local prices by market. Disabled or unconfigured countries use the GBP base catalogue. Free always remains free.</p></div>
   {baseline&&<p className="text-sm">UK reference: Plus <strong>{formatMarketMoney(baseline.plus,"GBP")}</strong> · Premium <strong>{formatMarketMoney(baseline.premium,"GBP")}</strong></p>}
+  <div className="space-y-2">
+   <h3 className="font-semibold">Market overview</h3>
+   <div className="max-h-72 overflow-auto rounded-lg border">
+    <table className="w-full min-w-[520px] text-left text-sm">
+     <thead className="sticky top-0 bg-background"><tr><th className="p-2">Market</th><th className="p-2">State</th><th className="p-2">Plus / month</th><th className="p-2">Premium / month</th><th className="p-2">Edit</th></tr></thead>
+     <tbody>{COUNTRY_MARKETS.filter(m=>m.code!=="GB").map(m=>{
+      const r=rows.find(x=>x.country_code===m.code);
+      return <tr key={m.code} className="border-t">
+       <td className="p-2">{m.name}</td>
+       <td className="p-2">{r?(r.enabled?"Enabled":"Disabled"):"GBP fallback"}</td>
+       <td className="p-2">{r?formatMarketMoney(r.plus_monthly_minor,r.currency):"—"}</td>
+       <td className="p-2">{r?formatMarketMoney(r.premium_monthly_minor,r.currency):"—"}</td>
+       <td className="p-2"><button className="font-semibold text-primary underline" type="button" onClick={()=>choose(m.code)}>Edit</button></td>
+      </tr>;
+     })}</tbody>
+    </table>
+   </div>
+  </div>
   <div className="grid gap-4 sm:grid-cols-2">
    <label className="text-sm font-medium">Country
     <select className="mt-1 w-full rounded-lg border bg-background p-3" value={country} onChange={e=>choose(e.target.value as CountryCode)}>
