@@ -28,8 +28,8 @@ import { auth, onAuthStateChanged } from "@/lib/supabase/auth";
 import { mediaPathForUser, resolveMediaUrl, uploadMediaFile } from "@/lib/supabase/storage";
 import { ProfilePhotoEditor } from "@/components/profile/ProfilePhotoEditor";
 import { planBenefitLabels, type CataloguePlan } from "@/lib/subscriptions/catalogue-data";
-import { usePriceCurrency } from "@/hooks/use-price-currency";
-import { CurrencyPreviewSelector } from "@/components/subscriptions/CurrencyPreviewSelector";
+import { formatMarketMoney, type CountryCode } from "@/lib/subscriptions/country-markets";
+import { CountryMarketSelector } from "@/components/subscriptions/CountryMarketSelector";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { getMessages } from "@/components/i18n/messages";
 
@@ -86,7 +86,8 @@ export function OnboardingWizard() {
   const [draftReady, setDraftReady] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const fx = usePriceCurrency();
+  const [pricingCountry, setPricingCountry] = useState<CountryCode>("GB");
+  const [marketOverride, setMarketOverride] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [catalogue, setCatalogue] = useState<CataloguePlan[]>([]);
   const [plansError, setPlansError] = useState("");
@@ -108,7 +109,7 @@ export function OnboardingWizard() {
   }, [draft]);
   useEffect(() => {
     stepRef.current = step;
-  }, [step]);
+  }, [step, pricingCountry]);
   useEffect(() => {
     draftReadyRef.current = draftReady;
   }, [draftReady]);
@@ -236,13 +237,14 @@ export function OnboardingWizard() {
     const controller = new AbortController();
     setPlansLoading(true);
     setPlansError("");
-    fetch("/api/plans", { cache: "no-store", signal: controller.signal })
+    fetch(`/api/plans?country=${pricingCountry}`, { cache: "no-store", signal: controller.signal })
       .then(async (response) => {
         const data = await response.json();
         if (!response.ok || !Array.isArray(data.plans)) throw Error("Live membership prices are unavailable. Please try again.");
         if (!controller.signal.aborted) {
           const active = (data.plans as CataloguePlan[]).filter((plan) => plan.active);
           setCatalogue(active);
+          setMarketOverride(Boolean(data.isOverride));
           if (!active.some((plan) => plan.code === selectedPlan)) setSelectedPlan(null);
         }
       })
@@ -761,7 +763,8 @@ export function OnboardingWizard() {
                   </div>
                 </div>
                 <div className="space-y-5 p-3 sm:p-6">
-                  <CurrencyPreviewSelector currency={fx.currency} onChange={fx.setCurrency} rates={fx.rates} error={fx.error}/>
+                  <CountryMarketSelector country={pricingCountry} onChange={setPricingCountry}/>
+                  <p className="text-xs text-muted-foreground">{marketOverride?"Approved local prices are displayed for the selected market.":"This country has no local price override; UK GBP prices apply."}</p>
                   {plansLoading ? <p role="status" className="p-4">Loading current membership prices…</p> : plansError ? <p role="alert" className="p-4 text-destructive">{plansError}</p> : catalogue.length !== 3 ? <p role="alert" className="p-4">The complete three-plan catalogue is unavailable. Please contact support before selecting a plan.</p> : (
                     <RadioGroup value={selectedPlan || ""} onValueChange={(value) => { setSelectedPlan(value); setBillingTerm("monthly"); setStepErrors([]); }} className="grid gap-3 md:grid-cols-3" aria-label="Membership plans">
                       {catalogue.map((plan) => {
@@ -769,7 +772,7 @@ export function OnboardingWizard() {
                         return <label key={plan.code} className={cn("relative flex cursor-pointer flex-col rounded-2xl border-2 bg-card p-4 transition-colors sm:p-5", chosen ? "border-primary bg-accent/30 shadow-md" : "border-border hover:border-primary/60")}>
                           {plan.code === "premium" && <span className="mb-3 self-start rounded-full bg-[#482153] px-3 py-1 text-xs font-semibold text-[#F9EAC8]">Most complete</span>}
                           <span className="mb-3 flex items-center justify-between gap-2"><strong className="text-xl">{plan.name}</strong><RadioGroupItem value={plan.code} id={`plan-${plan.code}`} /></span>
-                          <span className="mb-1 text-3xl font-bold text-primary">{fx.format(plan.pricesPence.monthly)}</span>
+                          <span className="mb-1 text-3xl font-bold text-primary">{formatMarketMoney(plan.pricesPence.monthly,plan.currency)}</span>
                           <span className="mb-4 text-xs text-muted-foreground">{plan.code === "free" ? "No card required" : "per month · billed when purchased"}</span>
                           <span className="mb-3 h-px bg-border" />
                           <span className="space-y-3 text-sm leading-5">{planBenefitLabels(plan.entitlements,5).map((value) => <span key={value} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><span>{value}</span></span>)}</span>
@@ -786,7 +789,7 @@ export function OnboardingWizard() {
                         {catalogue.find((plan) => plan.code === selectedPlan)?.pricesPence.three_months !== null && <option value="three_months">3 months</option>}
                         {catalogue.find((plan) => plan.code === selectedPlan)?.pricesPence.six_months !== null && <option value="six_months">6 months</option>}
                       </select>
-                      <div className="flex items-center justify-between border-t pt-3"><span className="font-medium">Total</span><strong className="text-xl text-primary">{fx.format(catalogue.find((plan) => plan.code === selectedPlan)!.pricesPence[billingTerm])}</strong></div>
+                      <div className="flex items-center justify-between border-t pt-3"><span className="font-medium">Total</span><strong className="text-xl text-primary">{formatMarketMoney(catalogue.find((plan) => plan.code === selectedPlan)!.pricesPence[billingTerm],catalogue.find((plan) => plan.code === selectedPlan)!.currency)}</strong></div>
                       <p className="text-xs text-muted-foreground">Your saved profile remains a draft until a supported checkout is completed and payment verified. No card information is collected on CupidMatch.</p>
                     </div>
                   )}
