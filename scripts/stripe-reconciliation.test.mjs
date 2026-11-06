@@ -6,7 +6,7 @@ const db=new PGlite();
 after(()=>db.close());
 const intent='10000000-0000-4000-8000-000000000001';
 const user='20000000-0000-4000-8000-000000000001';
-await db.exec(\`
+await db.exec(`
  create role service_role;
  create table public.payment_intents(
   id uuid primary key, user_id uuid not null,provider text not null,
@@ -28,8 +28,8 @@ await db.exec(\`
   payment_intent_id uuid unique,updated_at timestamptz not null default now()
  );
  insert into public.payment_intents(id,user_id,provider,plan_code,billing_term,amount_pence,currency)
- values('\${intent}','\${user}','stripe','plus','monthly',499,'GBP');
-\`);
+ values('${intent}','${user}','stripe','plus','monthly',499,'GBP');
+`);
 await db.exec(await readFile('supabase/migrations/20261106121500_stripe_verified_webhook_memberships.sql','utf8'));
 const start=new Date(Date.now()-86400000).toISOString();
 const end=new Date(Date.now()+29*86400000).toISOString();
