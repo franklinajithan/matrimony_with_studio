@@ -36,6 +36,8 @@ export async function POST(request:Request) {
   const {createSupabaseAdminClient}=await import('@/lib/supabase/admin');
   const {randomUUID}=await import('node:crypto');
   const db=createSupabaseAdminClient();
+  const gate=await db.rpc('stripe_checkout_allowed');
+  if(gate.error || gate.data!==true)return NextResponse.json({error:'Payments are paused by the CupidMatch administrator.'},{status:503,headers});
   const idempotencyKey=randomUUID();
   const {data:intent,error:dbError}=await db.from('payment_intents').insert({
    user_id:user.id,provider:'stripe',plan_code:plan,billing_term:'monthly',
