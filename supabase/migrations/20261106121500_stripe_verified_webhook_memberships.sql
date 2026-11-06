@@ -8,7 +8,8 @@ create or replace function public.apply_verified_stripe_subscription(
  p_period_start timestamptz, p_period_end timestamptz,
  p_cancel_at_period_end boolean
 ) returns boolean language plpgsql security invoker set search_path = '' as $$
-declare v_intent public.payment_intents%rowtype; v_old_status text; v_status text; v_existing uuid;
+declare v_intent public.payment_intents%rowtype; v_old_status text; v_status text;
+ v_paid_until timestamptz; v_effective_start timestamptz; v_effective_end timestamptz;
 begin
  if p_event_id !~ '^evt_[A-Za-z0-9]+$'
   or p_subscription_id !~ '^sub_[A-Za-z0-9]+$'
@@ -38,10 +39,23 @@ begin
  end if;
  select status into v_status from public.payment_intents where id=p_intent_id;
  if v_status='paid' then
+  -- Only a verified PAID event may move the paid-through date forward.
+  -- Subscription status events and failed invoices must never grant unpaid months.
+  select current_period_end,current_period_start into v_paid_until,v_effective_start
+  from public.user_subscriptions where payment_intent_id=p_intent_id for update;
+  if v_paid_until is null and not p_paid then
+   insert into public.payment_events(intent_id,provider,provider_event_id,previous_status,status)
+   values(p_intent_id,'stripe',p_event_id,v_old_status,'paid');
+   return true;
+  end if;
+  v_effective_end:=case when p_paid then greatest(coalesce(v_paid_until,p_period_end),p_period_end)
+      else v_paid_until end;
+  v_effective_start:=case when p_paid and (v_paid_until is null or p_period_end>=v_paid_until)
+       then p_period_start else coalesce(v_effective_start,p_period_start) end;
   v_status:=case
    when p_stripe_status in ('canceled','incomplete_expired') then 'cancelled'
    when p_stripe_status in ('past_due','unpaid','incomplete') then 'past_due'
-   when p_period_end<=now() then 'expired'
+   when v_effective_end<=now() then 'expired'
    else 'active' end;
   insert into public.user_subscriptions(
    user_id,plan_code,status,provider,provider_customer_id,
@@ -49,7 +63,7 @@ begin
    cancel_at_period_end,payment_intent_id
   ) values (
    v_intent.user_id,v_intent.plan_code,v_status,'stripe',p_customer_id,
-   p_subscription_id,p_period_start,p_period_end,p_cancel_at_period_end,p_intent_id
+   p_subscription_id,v_effective_start,v_effective_end,p_cancel_at_period_end,p_intent_id
   ) on conflict (payment_intent_id) do update set
    status=excluded.status,provider_customer_id=excluded.provider_customer_id,
    current_period_start=excluded.current_period_start,
