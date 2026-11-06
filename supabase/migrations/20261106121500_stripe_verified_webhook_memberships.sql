@@ -68,3 +68,9 @@ revoke all on function public.apply_verified_stripe_subscription(text,uuid,text,
  from public,anon,authenticated;
 grant execute on function public.apply_verified_stripe_subscription(text,uuid,text,text,boolean,text,timestamptz,timestamptz,boolean)
  to service_role;
+
+-- Existing payment ledgers deliberately deny client writes; grant the dedicated
+-- server identity only the columns needed for verified Stripe reconciliation.
+grant select,insert,update on public.payment_intents to service_role;
+grant select,insert on public.payment_events to service_role;
+grant select,insert,update on public.user_subscriptions to service_role;
