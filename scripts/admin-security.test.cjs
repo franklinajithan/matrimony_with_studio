@@ -21,6 +21,7 @@ function load(relative, mocks = {}) {
     if (name === '@/components/subscriptions/LivePricing') return {LivePricing:()=>null};
     if (name === '@/components/subscriptions/AdminPricingEditor') return {AdminPricingEditor:()=>null};
     if (name === '@/components/subscriptions/CountryPricingEditor') return {CountryPricingEditor:()=>null};
+    if (name === '@/lib/subscriptions/country-markets') return {isCountryCode:code=>['GB','LK','IN','US'].includes(code)};
     if (name === '@/lib/subscriptions/live-catalogue') return {publicCatalogue:()=>{throw Error('Catalogue must not run before authorization');}};
     if (name === '@/lib/subscriptions/plans') return {PLANS:{}};
     if (name === 'zod') return require('zod');
