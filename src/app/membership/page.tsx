@@ -27,7 +27,7 @@ export default async function MembershipPage({searchParams}:{searchParams:Promis
  {checkoutResult==="cancelled"&&<p role="status" className="rounded-xl border p-4 text-sm">You left checkout. No new membership has been activated.</p>}
  <PremiumLaunchOffer initialEndsAt={offer?.ends_at??""} available={trialAvailable} />
  <PaymentCheckout />
- <ManageStripeSubscription hasCustomer={Boolean(subscription?.provider_customer_id && subscription?.provider_subscription_id)} />
+ <ManageStripeSubscription hasCustomer={Boolean(subscription?.provider==='stripe' && subscription?.provider_customer_id && subscription?.provider_subscription_id)} />
  <PaymentHistory />
  <div className="grid gap-3 sm:grid-cols-2"><Link className="rounded-xl border bg-card p-4 font-semibold text-primary hover:bg-accent" href="/launch-pricing">Explore membership plans →</Link><Link className="rounded-xl border bg-card p-4 font-semibold text-primary hover:bg-accent" href="/dashboard">Back to dashboard →</Link></div>
  <p className="text-sm text-muted-foreground">Your introductory trial costs £0 and requires no card. Paid Stripe subscriptions, once enabled and purchased, renew monthly until cancelled.</p>

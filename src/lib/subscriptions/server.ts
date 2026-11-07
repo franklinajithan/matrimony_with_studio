@@ -8,7 +8,7 @@ export async function getServerSubscription() {
  const {data:auth,error:authError}=await supabase.auth.getUser();
  if(authError||!auth.user)return {user:null,plan:getPlan('free'),subscription:null,trial:null,launchOffer:null,trialAvailable:false};
  const [paid,launch,offer,catalogue]=await Promise.all([
-  supabase.from('user_subscriptions').select('plan_code,status,current_period_end,cancel_at_period_end,provider_customer_id,provider_subscription_id').eq('user_id',auth.user.id).in('status',['active','trialing','past_due']).order('created_at',{ascending:false}),
+  supabase.from('user_subscriptions').select('plan_code,status,current_period_end,cancel_at_period_end,provider,provider_customer_id,provider_subscription_id').eq('user_id',auth.user.id).in('status',['active','trialing','past_due']).order('created_at',{ascending:false}),
   supabase.from('member_trials').select('starts_at,ends_at,duration_months,promo_code_id').eq('user_id',auth.user.id).maybeSingle(),
   supabase.from('premium_launch_offers').select('starts_at,ends_at,duration_months').eq('user_id',auth.user.id).maybeSingle(),
   supabase.from('subscription_plans').select('code,name,entitlements,monthly_price_pence,three_month_price_pence,six_month_price_pence').eq('is_active',true)
