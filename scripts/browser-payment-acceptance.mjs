@@ -26,7 +26,10 @@ try{
   await page.route('**/api/admin/payments*',route=>{if(route.request().method()==='POST'){disables++;return route.fulfill({json:{enabled:false}});}return route.fulfill({json:{summary:{verifiedRevenuePence:799,refundedPence:0,pending:1,failed:1,cancelled:0,activeTrials:1,legacyActiveTrials:0,paidSubscriptions:0},payments:[{id:'pay',user_id:'synthetic-member',plan_code:'premium',amount_pence:799,status:'pending'}],trials:[{user_id:'synthetic-member',ends_at:'2027-01-04T12:00:00Z',duration_months:2}],legacyTrials:[],subscriptions:[],events:[],hasMore:false,readiness:{reason:'Tide merchant verification is unavailable.'}}});});
   await page.goto(base+'/?country=GB&plan=premium#checkout');
   await page.getByRole('heading',{name:'Complete your CupidMatch membership'}).waitFor();
-  await page.getByRole('heading',{name:'Order summary'}).waitFor();
+  await page.getByRole('heading',{name:'Your selected membership'}).waitFor();
+  assert.equal(await page.getByRole('heading',{name:'Order summary'}).count(),0);
+  assert.equal(await page.getByRole('link',{name:'Change plan'}).count(),1);
+  assert.equal(await page.getByText('Compare membership benefits').count(),0);
   await page.getByText('Secure Stripe checkout — not enabled yet').waitFor();
   assert.equal(await page.getByRole('button',{name:/Secure Stripe checkout/}).isDisabled(),true);
   assert.equal(await page.locator('input[autocomplete="cc-number"],input[autocomplete="cc-csc"],input[name="cardNumber"]').count(),0);
