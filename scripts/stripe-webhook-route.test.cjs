@@ -1,4 +1,4 @@
-const { test } = require('node:test');
+const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { createHmac } = require('node:crypto');
 const { load } = require('./helpers/load-ts.cjs');
@@ -6,6 +6,15 @@ const { load } = require('./helpers/load-ts.cjs');
 const SECRET='whsec_synthetic_test_only';
 const PLUS='price_plusSynthetic123';
 const PREMIUM='price_premiumSynthetic123';
+const previous=Object.fromEntries(['STRIPE_WEBHOOK_PROCESSING_ENABLED','STRIPE_WEBHOOK_SECRET','STRIPE_PRICE_PLUS_MONTHLY','STRIPE_PRICE_PREMIUM_MONTHLY'].map(key=>[key,process.env[key]]));
+Object.assign(process.env,{
+ STRIPE_WEBHOOK_PROCESSING_ENABLED:'true',
+ STRIPE_WEBHOOK_SECRET:SECRET,
+ STRIPE_PRICE_PLUS_MONTHLY:PLUS,
+ STRIPE_PRICE_PREMIUM_MONTHLY:PREMIUM,
+});
+after(()=>{for(const [key,value] of Object.entries(previous)){if(value===undefined)delete process.env[key];else process.env[key]=value;}});
+
 const intent='10000000-0000-4000-8000-000000000001';
 const sub='sub_synthetic123';
 const customer='cus_synthetic123';
