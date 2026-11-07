@@ -30,20 +30,20 @@ function fixture({stripeStatus='active',dbError=null,wrongPrice=false}={}) {
   items:{data:[{price:{id:wrongPrice?'price_wrong':PLUS},current_period_start:start,current_period_end:end}]},
   metadata:{cupidmatch_intent_id:intent}
  };
- const module=load('src/app/api/billing/webhook/route.ts',{
+ const webhookHandler=load('src/app/api/billing/webhook/route.ts',{
   'next/server':{NextResponse:{json:(body,init={})=>Response.json(body,init)}},
   '@/lib/subscriptions/stripe-invoice-period':load('src/lib/subscriptions/stripe-invoice-period.ts'),
   '@/lib/subscriptions/stripe-api':{stripeRequest:async path=>{stripeCalls.push(path);return subscription}},
   '@/lib/subscriptions/stripe-webhook-signature':{verifyStripeWebhookSignature:signature},
   '@/lib/supabase/admin':{createSupabaseAdminClient:()=>({rpc:async(name,args)=>{rpcCalls.push({name,args});return {error:dbError}}})}
  });
- return {module,rpcCalls,stripeCalls};
+ return {webhookHandler,rpcCalls,stripeCalls};
 }
 async function send(f,event,{tamper=false,malformedSignature=false}={}) {
  const raw=JSON.stringify(event);const stamp=Math.floor(Date.now()/1000);
  const hash=createHmac('sha256',SECRET).update(stamp+'.'+raw).digest('hex');
  const header=malformedSignature?`t=${stamp},v1=0000`:`t=${stamp},v1=${hash}`;
- const response=await f.module.POST(new Request('https://cupidmatch.co.uk/api/billing/webhook',{
+ const response=await f.webhookHandler.POST(new Request('https://cupidmatch.co.uk/api/billing/webhook',{
   method:'POST',headers:{'stripe-signature':header,'content-type':'application/json'},
   body:tamper?raw+' ':raw
  }));
