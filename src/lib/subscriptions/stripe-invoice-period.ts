@@ -25,6 +25,6 @@ export function paidInvoicePeriod(invoice: Invoice, subscriptionId: string, pric
  });
  if(candidates.length!==1)return null;
  const {start,end}=candidates[0].period??{};
- if(!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || !start || !end || end<=start)return null;
+ if(typeof start!=='number' || typeof end!=='number' || !Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start<=0 || end<=start)return null;
  return {start:start as number,end:end as number};
 }
