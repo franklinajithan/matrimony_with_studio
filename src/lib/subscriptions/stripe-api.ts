@@ -38,3 +38,11 @@ export function stripeCheckoutReady() {
    (process.env.STRIPE_WEBHOOK_SECRET||'').startsWith('whsec_') &&
    !!process.env.SUPABASE_SERVICE_ROLE_KEY;
 }
+
+/** Cancellation and card updates must remain available when new sales are paused. */
+export function stripePortalReady(){
+ const key=process.env.STRIPE_SECRET_KEY||'';
+ return process.env.VERCEL_ENV==='production'
+  ? /^(sk|rk)_live_/.test(key)
+  : /^(sk|rk)_test_/.test(key);
+}
