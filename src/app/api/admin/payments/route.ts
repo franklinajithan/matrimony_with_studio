@@ -3,6 +3,7 @@ import { requireServerAdmin } from '@/lib/auth/admin';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { tidePaymentReadiness } from '@/lib/subscriptions/tide-preparation';
 import { publicCatalogue } from '@/lib/subscriptions/live-catalogue';
+import { stripeCheckoutReady } from '@/lib/subscriptions/stripe-api';
 export const dynamic='force-dynamic';
 const headers={'Cache-Control':'private, no-store'};
 export async function GET(request:Request){
@@ -28,8 +29,17 @@ export async function POST(request:Request){
  try{
   if(!await requireServerAdmin())return NextResponse.json({error:'Forbidden'},{status:403,headers});
   const body=await request.json().catch(()=>null);
-  if(!body||Object.keys(body).length!==1||body.action!=='disable')return NextResponse.json({error:'Only disabling payments is supported. Live activation requires a verified provider and approval.'},{status:400,headers});
-  const db=await createSupabaseServerClient();const {error}=await db.rpc('disable_payments');if(error)throw error;
-  return NextResponse.json({enabled:false},{headers});
- }catch{return NextResponse.json({error:'Could not confirm payments were disabled. Please retry.'},{status:503,headers});}
+  if(!body || typeof body!=='object' || Array.isArray(body))return NextResponse.json({error:'Invalid payment action'},{status:400,headers});
+  const keys=Object.keys(body);
+  const disabling=keys.length===1&&body.action==='disable';
+  const enabling=keys.length===2&&body.action==='enable_stripe'&&body.confirmation==='ENABLE STRIPE PAYMENTS';
+  if(!disabling&&!enabling)return NextResponse.json({error:'Invalid payment action or confirmation'},{status:400,headers});
+  // Server environment and account readiness must be explicitly approved
+  // before any administrator can enable a new subscription checkout.
+  if(enabling&&!stripeCheckoutReady())return NextResponse.json({error:'Stripe activation checks are incomplete. No payment state was changed.'},{status:503,headers});
+  const db=await createSupabaseServerClient();
+  const {error}=await db.rpc(enabling?'enable_stripe_payments':'disable_payments');
+  if(error)throw error;
+  return NextResponse.json({enabled:enabling},{headers});
+ }catch{return NextResponse.json({error:'Could not confirm payment configuration change. No activation was confirmed.'},{status:503,headers});}
 }
