@@ -24,7 +24,7 @@
     "test:browser-payments": "node scripts/browser-payment-acceptance.mjs",
     "test:premium-launch": "node --test scripts/premium-launch-api.test.cjs scripts/premium-launch-sql.test.mjs scripts/premium-upgrade-migration.test.mjs scripts/premium-session-acceptance.test.mjs",
     "test:subscription-domain": "node --import tsx --test src/lib/subscriptions/*.test.ts",
-    "test:stripe": "node --test scripts/stripe-preparation.test.cjs scripts/stripe-reconciliation.test.mjs && node --import tsx --test src/lib/subscriptions/stripe-invoice-period.test.ts"
+    "test:stripe": "node --test scripts/stripe-preparation.test.cjs scripts/stripe-reconciliation.test.mjs scripts/stripe-webhook-route.test.cjs && node --import tsx --test src/lib/subscriptions/stripe-invoice-period.test.ts"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.28.0",
