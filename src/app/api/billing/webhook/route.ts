@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { paidInvoicePeriod } from '@/lib/subscriptions/stripe-invoice-period';
 export const runtime='nodejs';
 const safe={ 'Cache-Control':'no-store' };
 const kinds=new Set([
@@ -60,8 +61,16 @@ export async function POST(request:Request) {
   } else if(event.type==='invoice.paid'){
    paid=obj.paid===true && obj.status==='paid' && obj.currency==='gbp' && Number(obj.amount_paid)>=expected;
   }
-  const start=item.current_period_start??subscription.current_period_start;
-  const end=item.current_period_end??subscription.current_period_end;
+  let start=item.current_period_start??subscription.current_period_start;
+  let end=item.current_period_end??subscription.current_period_end;
+  if(event.type==='invoice.paid') {
+   // A paid invoice proves only its own service period, never a later period
+   // already visible on the Stripe subscription due to out-of-order delivery.
+   const invoicePeriod=paidInvoicePeriod(obj,subId,priceId);
+   if(!invoicePeriod)throw new Error('Paid invoice period cannot be verified');
+   start=invoicePeriod.start;
+   end=invoicePeriod.end;
+  }
   if(typeof start!=='number'||typeof end!=='number'||!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||end<=start)throw new Error('Invalid billing period');
   const {createSupabaseAdminClient}=await import('@/lib/supabase/admin');
   const db=createSupabaseAdminClient();
