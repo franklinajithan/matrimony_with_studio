@@ -4,7 +4,6 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getServerSubscription } from "@/lib/subscriptions/server";
 import { PremiumLaunchOffer } from "@/components/subscriptions/PremiumLaunchOffer";
 import { PaymentHistory } from "@/components/subscriptions/PaymentHistory";
-import { PaymentCheckout } from "@/components/subscriptions/PaymentCheckout";
 import { ManageStripeSubscription } from "@/components/subscriptions/ManageStripeSubscription";
 export const dynamic = "force-dynamic";
 export default async function MembershipPage({searchParams}:{searchParams:Promise<{checkout?:string}>}){
@@ -26,10 +25,10 @@ export default async function MembershipPage({searchParams}:{searchParams:Promis
  {checkoutResult==="return"&&<p role="status" className="rounded-xl border p-4 text-sm">You have returned from Stripe. Your membership will update only after Stripe confirms your payment. Refresh this page to see your verified access.</p>}
  {checkoutResult==="cancelled"&&<p role="status" className="rounded-xl border p-4 text-sm">You left checkout. No new membership has been activated.</p>}
  <PremiumLaunchOffer initialEndsAt={offer?.ends_at??""} available={trialAvailable} />
- <PaymentCheckout />
+ <section className="rounded-3xl border p-5 sm:p-6"><h2 className="text-xl font-bold">Explore membership options</h2><p className="mt-2 text-sm text-muted-foreground">Compare Free, Plus and Premium in one place before choosing a membership.</p><Link className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground sm:w-auto" href="/launch-pricing">Compare plans</Link></section>
  <ManageStripeSubscription hasCustomer={Boolean(subscription?.provider==='stripe' && subscription?.provider_customer_id && subscription?.provider_subscription_id)} />
  <PaymentHistory />
- <div className="grid gap-3 sm:grid-cols-2"><Link className="rounded-xl border bg-card p-4 font-semibold text-primary hover:bg-accent" href="/launch-pricing">Explore membership plans →</Link><Link className="rounded-xl border bg-card p-4 font-semibold text-primary hover:bg-accent" href="/dashboard">Back to dashboard →</Link></div>
+ <Link className="inline-flex font-semibold text-primary hover:underline" href="/dashboard">Back to dashboard →</Link>
  <p className="text-sm text-muted-foreground">Your introductory trial costs £0 and requires no card. Paid Stripe subscriptions, once enabled and purchased, renew monthly until cancelled.</p>
  </main>;
 }
