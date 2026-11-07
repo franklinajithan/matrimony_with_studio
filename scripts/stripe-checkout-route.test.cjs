@@ -1,9 +1,14 @@
 const {test,after}=require('node:test');
 const assert=require('node:assert/strict');
 const {load}=require('./helpers/load-ts.cjs');
-const original=process.env.STRIPE_CHECKOUT_ENABLED;
-process.env.STRIPE_CHECKOUT_ENABLED='true';
-after(()=>{if(original===undefined)delete process.env.STRIPE_CHECKOUT_ENABLED;else process.env.STRIPE_CHECKOUT_ENABLED=original;});
+const keys=['STRIPE_CHECKOUT_ENABLED','STRIPE_PRICE_PLUS_MONTHLY','STRIPE_PRICE_PREMIUM_MONTHLY'];
+const previous=Object.fromEntries(keys.map(key=>[key,process.env[key]]));
+Object.assign(process.env,{
+ STRIPE_CHECKOUT_ENABLED:'true',
+ STRIPE_PRICE_PLUS_MONTHLY:'price_plusSynthetic123',
+ STRIPE_PRICE_PREMIUM_MONTHLY:'price_premiumSynthetic123'
+});
+after(()=>{for(const [key,value] of Object.entries(previous)){if(value===undefined)delete process.env[key];else process.env[key]=value;}});
 const intentId='10000000-0000-4000-8000-000000000001';
 const user={id:'20000000-0000-4000-8000-000000000001',email:'sample@example.invalid'};
 function fixture({plan='plus',priceAmount=499,priceActive=true,dbGate=true,sub=null,stripeReady=true}={}){
