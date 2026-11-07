@@ -18,6 +18,7 @@ function load(relative, mocks = {}) {
   const requireMock = (name) => {
     if (name === 'server-only') return {};
     if (name === '@/lib/subscriptions/tide-preparation') return {tidePaymentReadiness:()=>{throw Error('Readiness must not run before authorization');}};
+    if (name === '@/lib/subscriptions/stripe-api') return {stripeCheckoutReady:()=>{throw Error('Stripe readiness must not run before authorization');}};
     if (name === '@/components/subscriptions/LivePricing') return {LivePricing:()=>null};
     if (name === '@/components/subscriptions/AdminPricingEditor') return {AdminPricingEditor:()=>null};
     if (name === '@/components/subscriptions/CountryPricingEditor') return {CountryPricingEditor:()=>null};
