@@ -1,5 +1,10 @@
 name: Public Browser Smoke
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'e2e/public-site-smoke.spec.ts'
+      - '.github/workflows/public-browser-smoke.yml'
   pull_request:
     paths:
       - 'e2e/public-site-smoke.spec.ts'
