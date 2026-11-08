@@ -242,13 +242,15 @@ export function OnboardingWizard() {
           const active = (data.plans as CataloguePlan[]).filter((plan) => plan.active);
           setCatalogue(active);
           setMarketOverride(Boolean(data.isOverride));
-          if (!active.some((plan) => plan.code === selectedPlan)) setSelectedPlan(null);
+          // Revalidate against the latest market without retriggering the fetch
+          // when a member changes their selection.
+          setSelectedPlan((current) => active.some((plan) => plan.code === current) ? current : null);
         }
       })
       .catch((error) => { if (!controller.signal.aborted) setPlansError(error instanceof Error ? error.message : "Could not load plans."); })
       .finally(() => { if (!controller.signal.aborted) setPlansLoading(false); });
     return () => controller.abort();
-  }, [step]);
+  }, [step, pricingCountry]);
 
   const progressValue = ((step + 1) / ONBOARDING_STEPS.length) * 100;
   const current = ONBOARDING_STEPS[step];

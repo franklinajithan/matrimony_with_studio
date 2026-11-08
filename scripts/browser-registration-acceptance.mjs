@@ -29,11 +29,12 @@ build.onResolve({filter:/^next\/link$/},()=>({path:'link',namespace:'test-link'}
    const errors=[];page.on('pageerror',e=>errors.push(e.message));
    let draft={displayName:'Test Member',gender:'female',dob:'1995-05-12',height:'165',country:'Sri Lanka',region:'Jaffna',languages:['Tamil'],lookingFor:'marriage',relationshipTimeline:'ready',bio:'I value kindness, honesty and a lasting partnership.',educationLevel:"Bachelor's",relocationOpenness:'open',photoPrivacy:'connections'};
    let storedStep=3,failSave=false,saves=0,publishes=0,releaseSave=null,expectedPrivacy='connections',lastPublished=null;
-   await page.route('**/api/plans**',route=>route.fulfill({json:{plans:[
+   const planRequests=[];
+   await page.route('**/api/plans**',route=>{const market=new URL(route.request().url()).searchParams.get('country')||'GB';planRequests.push(market);return route.fulfill({json:{isOverride:market==='LK',plans:[
     {code:'free',name:'Free',active:true,currency:'GBP',pricesPence:{monthly:0,three_months:null,six_months:null},entitlements:{basicMatching:true}},
     {code:'plus',name:'Plus',active:true,currency:'GBP',pricesPence:{monthly:999,three_months:null,six_months:null},entitlements:{advancedFilters:true}},
-    {code:'premium',name:'Premium',active:true,currency:'GBP',pricesPence:{monthly:1999,three_months:null,six_months:null},entitlements:{advancedFilters:true,fullCompatibility:true}}
-   ]}}));
+    {code:'premium',name:'Premium',active:true,currency:market==='LK'?'LKR':'GBP',pricesPence:{monthly:market==='LK'?84000:1999,three_months:null,six_months:null},entitlements:{advancedFilters:true,fullCompatibility:true}}
+   ].map(plan=>plan.code==='plus'?{...plan,currency:market==='LK'?'LKR':'GBP',pricesPence:{...plan.pricesPence,monthly:market==='LK'?42000:999}}:plan)}});});
    await page.route('**/api/billing/checkout',route=>route.fulfill({status:503,json:{error:'Checkout provider is not configured.'}}));
    await page.route('**/api/onboarding/draft',route=>route.fulfill({json:{draft,step:storedStep,isPublished:false}}));
    await page.route('**/api/onboarding/save',async route=>{saves++;const body=route.request().postDataJSON();if(failSave)return route.fulfill({status:503,json:{error:'Temporary save failure'}});if(releaseSave){await releaseSave;}draft={...body.draft};storedStep=body.step;await route.fulfill({json:{ok:true,draft,step:storedStep}});});
@@ -56,6 +57,12 @@ build.onResolve({filter:/^next\/link$/},()=>({path:'link',namespace:'test-link'}
    await page.getByRole('button',{name:'Continue',exact:true}).click();await page.getByRole('radio',{name:'Visible to accepted connections only',exact:true}).waitFor();
    await page.getByRole('button',{name:'Continue',exact:true}).click();await page.getByRole('button',{name:'Publish profile',exact:true}).waitFor();
    await page.getByRole('button',{name:'Publish profile',exact:true}).click();assert.equal(publishes,0);checks++;
+   await page.getByRole('combobox',{name:'Country for membership prices'}).selectOption('LK');
+   await page.getByText(/LKR\s*420/).waitFor();
+   assert.ok(planRequests.includes('LK'),'Country change must request local pricing');
+   await page.getByRole('combobox',{name:'Country for membership prices'}).selectOption('GB');
+   await page.getByText(/£9\.99/).waitFor();
+   checks++;
    await page.getByRole('checkbox',{name:'I confirm these details are accurate and I want to publish my profile for other members to see.',exact:true}).check();await page.locator('#plan-free').check();await page.getByRole('button',{name:'Publish profile',exact:true}).click();await page.waitForFunction(()=>window.__navigation==='/dashboard');assert.equal(publishes,1);checks++;
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);assert.deepEqual(errors,[]);checks++;
    draft={displayName:'Minimal Member',gender:'male',dob:'1990-06-10',height:'175'};storedStep=0;expectedPrivacy='members';
