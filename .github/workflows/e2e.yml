@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   member-journey:
-    if: ${{ vars.QA_BASE_URL != '' }}
+    if: ${{ vars.QA_BASE_URL != '' && vars.QA_ISOLATED_STAGING == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -27,7 +27,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Verify QA target
         run: |
-          echo "Testing $PLAYWRIGHT_BASE_URL"
+          # Authenticated tests can write data. Require explicit isolated-staging approval.\n          case "$PLAYWRIGHT_BASE_URL" in\n            https://cupidmatch.co.uk|https://cupidmatch.co.uk/*|https://www.cupidmatch.co.uk|https://www.cupidmatch.co.uk/*|https://matrimony-with-studio.vercel.app|https://matrimony-with-studio.vercel.app/*)\n              echo "::error::Authenticated QA must not target production domains"\n              exit 1\n              ;;\n          esac\n          echo "Checking isolated QA target"
           curl --fail --location --retry 3 --retry-delay 2 "$PLAYWRIGHT_BASE_URL/login" > /dev/null
         env:
           PLAYWRIGHT_BASE_URL: ${{ vars.QA_BASE_URL }}
