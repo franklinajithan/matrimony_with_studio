@@ -139,10 +139,16 @@ test.describe("CupidMatch member-to-member QA", () => {
     await pageA.goto("/discover");
     const interestButton = pageA.getByTestId(`profile-${idB}-interest`);
     await expect(interestButton, "QA-010: B must be discoverable by A").toBeVisible({ timeout: 20_000 });
-    if (!(await interestButton.isDisabled())) {
+    if (await interestButton.getAttribute("data-interest-state") === "available") {
       await interestButton.click();
-      await expect(interestButton, "QA-020/021: interest changes to sent").toBeDisabled({ timeout: 10_000 });
     }
+    // Disabled also means "sending", which can turn back into "available"
+    // when the backend rejects a request. Require a settled, persisted success
+    // rather than treating a loading spinner as delivery.
+    await expect(
+      interestButton,
+      "QA-020/021: interest must be confirmed sent, not merely disabled while loading. Check the UI error toast if this fails."
+    ).toHaveAttribute("data-interest-state", "sent", { timeout: 15_000 });
 
     // QA-022/030: B receives and accepts A's request.
     await pageB.goto("/interests");
