@@ -46,28 +46,33 @@ begin
       raise exception 'This connection has been removed. Send a new interest.'
         using errcode = 'P0001';
     end if;
-    return query select v_sender, v_receiver;
-    return;
-  end if;
+  elsif v_status = 'pending' then
+    update public.match_requests mr
+       set status = 'accepted', updated_at = now()
+     where mr.id = p_request_id and mr.status = 'pending';
+    if not found then
+      raise exception 'Interest request is no longer pending'
+        using errcode = 'P0001';
+    end if;
 
-  if v_status is distinct from 'pending' then
+    -- DO UPDATE previously required an UPDATE privilege/policy on connections,
+    -- which members do not have. DO NOTHING safely handles concurrent accepts.
+    insert into public.connections (member_a_id, member_b_id, created_from_request_id)
+    values (v_a, v_b, p_request_id)
+    on conflict (member_a_id, member_b_id) do nothing;
+  else
     raise exception 'Interest request is no longer pending'
       using errcode = 'P0001';
   end if;
 
-  update public.match_requests mr
-     set status = 'accepted', updated_at = now()
-   where mr.id = p_request_id and mr.status = 'pending';
-  if not found then
-    raise exception 'Interest request is no longer pending'
-      using errcode = 'P0001';
-  end if;
-
-  -- DO UPDATE previously required an UPDATE privilege/policy on connections,
-  -- which members do not have. DO NOTHING safely handles concurrent accepts.
-  insert into public.connections (member_a_id, member_b_id, created_from_request_id)
-  values (v_a, v_b, p_request_id)
-  on conflict (member_a_id, member_b_id) do nothing;
+  -- The chat must be committed alongside the accepted connection; relying on a
+  -- later browser request can leave the members connected but unable to message.
+  -- Preserve existing conversations and their unread/message history.
+  insert into public.chats
+    (id, participant_1, participant_2, last_message_text)
+  values
+    (v_a::text || '_' || v_b::text, v_a, v_b, 'You are now connected!')
+  on conflict (id) do nothing;
 
   return query select v_sender, v_receiver;
 end;
