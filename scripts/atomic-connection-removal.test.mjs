@@ -30,3 +30,21 @@ test("client invokes authorized RPC and confirms result", () => {
   const removal = client.split("export async function removeConnection(")[1].split("async function listConnectionsFromAcceptedRequests")[0];
   assert.doesNotMatch(removal, /\.from\("connections"\)\.delete\(/);
 });
+
+const acceptance = readFileSync(
+  new URL("../supabase/migrations/20261108130000_harden_interest_acceptance.sql", import.meta.url),
+  "utf8",
+);
+
+test("interest acceptance requires fresh pending consent", () => {
+  assert.match(acceptance, /security invoker/i);
+  assert.match(acceptance, /v_receiver\s*<>\s*auth\.uid\(\)/i);
+  assert.match(acceptance, /for update/i);
+  assert.match(acceptance, /v_status\s*=\s*'accepted'/i);
+  assert.match(acceptance, /if not exists\s*\(\s*select 1 from public\.connections/i);
+  assert.match(acceptance, /v_status is distinct from 'pending'/i);
+  assert.match(acceptance, /status\s*=\s*'accepted'/i);
+  assert.match(acceptance, /on conflict\s*\(member_a_id, member_b_id\)\s*do nothing/i);
+  assert.doesNotMatch(acceptance, /on conflict[\s\S]*do update/i);
+  assert.match(acceptance, /grant execute .* to authenticated/i);
+});
