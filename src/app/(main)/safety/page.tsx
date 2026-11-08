@@ -1,4 +1,12 @@
+import type { Metadata } from "next";
 import { PrivacySection } from "@/components/landing/LandingSections";
+
+
+export const metadata: Metadata = {
+  title: "Online Matrimony Safety and Privacy",
+  description: "Learn how CupidMatch helps you control what you share, recognise verification status and block or report accounts.",
+  alternates: { canonical: "/safety" },
+};
 
 export default function SafetyPage() {
   return (
