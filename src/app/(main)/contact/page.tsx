@@ -5,7 +5,7 @@ import { company } from "@/lib/company";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/contact" },
-  title: "Contact and Company Details | CupidMatch",
+  title: "Contact and Company Details",
   description: "Company information for CupidMatch, a digital product operated by Arulvexa Technologies Ltd, company number 17563017.",
 };
 

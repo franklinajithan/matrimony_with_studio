@@ -5,7 +5,7 @@ import { Footer } from "@/components/navigation/Footer";
 
 const url = "https://cupidmatch.co.uk/family-assisted-matrimony";
 export const metadata: Metadata = {
-  title: "Family-Assisted Sri Lankan Matrimony | CupidMatch",
+  title: "Family-Assisted Sri Lankan Matrimony",
   description: "Guidance for Sri Lankan families helping an adult relative find a matrimonial introduction, with consent, privacy and respectful communication.",
   alternates: { canonical: url },
   openGraph: {

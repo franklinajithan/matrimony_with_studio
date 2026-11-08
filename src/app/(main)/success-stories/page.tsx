@@ -5,7 +5,7 @@ import { PublicPage, PublicHero, PublicClosing, primaryLink, secondaryLink } fro
 
 export const metadata: Metadata = {
   alternates: { canonical: "/success-stories" },
-  title: "Community Stories | CupidMatch",
+  title: "Community Stories",
   description: "Celebrate meaningful connections with the CupidMatch community. Share your story and inspire someone at the beginning of their journey.",
 };
 
