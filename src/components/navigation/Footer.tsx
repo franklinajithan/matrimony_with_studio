@@ -94,6 +94,7 @@ export function Footer() {
             <h2 className={headingClass}>{copy.support}</h2>
             <ul className="mt-4 space-y-3">
               <li>
+                <Link href="/feedback" className={linkClass}>Feedback &amp; support</Link>
                 <Link href="/contact" className={linkClass}>
                   {copy.contact}
                 </Link>

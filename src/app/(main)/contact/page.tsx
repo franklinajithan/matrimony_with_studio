@@ -29,6 +29,7 @@ export default function ContactPage() {
         </CardContent>
       </Card>
       <nav aria-label="Support information" className="flex flex-wrap gap-6">
+        <Link href="/feedback" className="inline-flex min-h-11 items-center text-primary underline underline-offset-4">Feedback &amp; support</Link>
         <Link href="/safety" className="inline-flex min-h-11 items-center text-primary underline underline-offset-4">Safety guidance</Link>
         <Link href="/privacy" className="inline-flex min-h-11 items-center text-primary underline underline-offset-4">Privacy policy</Link>
       </nav>

@@ -1,3 +1,4 @@
+import { countFeedbackNeedingReply } from "@/lib/feedback/inbox";
 import { getAdminDashboardMetrics, type AdminDashboardMetrics } from "@/lib/admin/dashboard";
 import { requireAdminPage } from "@/app/admin/guard";
 import { Users, Activity, RefreshCw, UserCheck, BookHeart, CreditCard, BadgePoundSterling, Shield, ArrowUpRight, ArrowRight, LayoutDashboard, Sparkles, ShieldAlert } from "lucide-react";
@@ -16,10 +17,13 @@ const modules = [
 
 export default async function AdminDashboardPage() {
   await requireAdminPage();
-  let metrics: AdminDashboardMetrics | null = null;
-  try { metrics = await getAdminDashboardMetrics(); } catch { /* Never present unavailable counts as zero. */ }
+  const [metrics, feedbackCount]: [AdminDashboardMetrics | null, number | null] = await Promise.all([
+    getAdminDashboardMetrics().catch(() => null),
+    countFeedbackNeedingReply(),
+  ]);
 
   const stats = [
+    { title: "Feedback awaiting reply", value: feedbackCount ?? undefined, icon: BookHeart, description: "Member and guest enquiries", href: "/admin/feedback", tint: "bg-accent text-primary" },
     { title: "Total members", value: metrics?.members, icon: Users, description: "Registered members excluding admins", href: "/admin/users", tint: "bg-accent text-primary" },
     { title: "Active members", value: metrics?.activeUsers, icon: Activity, description: "Signed in within the last 30 days", href: "/admin/users", tint: "bg-emerald-50 text-emerald-700" },
     { title: "Unverified profiles", value: metrics?.pendingVerification, icon: ShieldAlert, description: "Published profiles awaiting verification", href: "/admin/verifications", tint: "bg-amber-50 text-amber-700" },
