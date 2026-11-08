@@ -1,5 +1,5 @@
 export const searchPages = [
-  "/", "/about", "/pricing", "/safety", "/contact", "/matrimony-guides",
+  "/", "/about", "/pricing", "/safety", "/contact", "/matrimony-guides", "/matrimony-biodata-guide",
   "/how-it-works", "/international-matrimony",
   "/sri-lankan-matrimony-uk", "/indian-matrimony-uk", "/tamil-matrimony-uk",
   "/sinhala-matrimony", "/horoscope-matching", "/family-assisted-matrimony",
