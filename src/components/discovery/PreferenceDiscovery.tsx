@@ -328,6 +328,7 @@ export function PreferenceDiscovery() {
               size="sm"
               className="min-w-0 px-1.5"
               data-testid={`profile-${person.id}-interest`}
+              data-interest-state={busy[`i-${person.id}`] ? "sending" : sent.has(person.id) ? "sent" : "available"}
               disabled={sent.has(person.id) || busy[`i-${person.id}`]}
               onClick={() => void interest(person.id)}
             >
