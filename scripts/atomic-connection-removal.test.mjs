@@ -42,7 +42,7 @@ test("interest acceptance requires fresh pending consent", () => {
   assert.match(acceptance, /for update/i);
   assert.match(acceptance, /v_status\s*=\s*'accepted'/i);
   assert.match(acceptance, /if not exists\s*\(\s*select 1 from public\.connections/i);
-  assert.match(acceptance, /v_status is distinct from 'pending'/i);
+  assert.match(acceptance, /elsif v_status = 'pending'/i);
   assert.match(acceptance, /status\s*=\s*'accepted'/i);
   assert.match(acceptance, /on conflict\s*\(member_a_id, member_b_id\)\s*do nothing/i);
   assert.match(acceptance, /insert into public\.chats/i);
