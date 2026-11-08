@@ -299,6 +299,9 @@ export default function SettingsPage() {
           </Form>
         </CardContent>
       </Card>
+      <Link href="/analytics-privacy" className="text-sm text-primary underline">
+        Analytics settings
+      </Link>
     </div>
   );
 } 

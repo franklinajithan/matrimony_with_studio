@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { activityPage } from "@/lib/analytics/pages";
@@ -33,22 +32,16 @@ function currentVisit(): Visit {
 
 export function VisitorAnalytics() {
   const path = usePathname();
-  const [consent, setConsent] = useState<"yes" | "no" | "unset">();
-  const [settings, setSettings] = useState(false);
-  useEffect(() => {
-    const stored = document.cookie.split("; ").find(value => value.startsWith(consentKey + "="));
-    setConsent(stored === consentKey + "=yes" ? "yes" : stored === consentKey + "=no" ? "no" : "unset");
-  }, []);
   useEffect(() => {
     const page = activityPage(path);
-    if (consent !== "yes" || !page) return;
+    if (!page || !hasAnalyticsConsent()) return;
     let visit: ReturnType<typeof currentVisit>;
     try { visit = currentVisit(); } catch { return; }
     let view = crypto.randomUUID();
     let seconds = 0;
     let visibleSince = document.hidden ? null : performance.now();
     function send() {
-      if (!document.cookie.split("; ").includes(consentKey + "=yes")) return;
+      if (!hasAnalyticsConsent()) return;
       const now = performance.now();
       if (visibleSince !== null) {
         seconds += Math.min(now - visibleSince, 20_000) / 1000;
@@ -87,29 +80,33 @@ export function VisitorAnalytics() {
       window.removeEventListener("pagehide", send);
       if (visibleSince !== null) send();
     };
-  }, [consent, path]);
+  }, [path]);
+  return null;
+}
+
+function hasAnalyticsConsent() {
+  return document.cookie.split("; ").includes(consentKey + "=yes");
+}
+
+export function AnalyticsSettings() {
+  const [enabled, setEnabled] = useState<boolean>();
+  useEffect(() => setEnabled(hasAnalyticsConsent()), []);
 
   function choose(value: "yes" | "no") {
     document.cookie = `${consentKey}=${value}; Path=/; Max-Age=15552000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
     if (value === "no") {
       try { sessionStorage.removeItem(visitKey); } catch { /* Storage may be disabled. */ }
     }
-    setConsent(value);
-    setSettings(false);
+    setEnabled(hasAnalyticsConsent());
   }
 
-  if (path.startsWith("/admin") || !consent) return null;
-  if (consent !== "unset" && !settings) {
-    return <button type="button" onClick={() => setSettings(true)}
-      className="fixed bottom-24 right-3 z-30 rounded-md border bg-card px-2 py-1 text-xs text-foreground shadow-sm md:bottom-3">Analytics settings</button>;
-  }
-  return <section aria-label="Optional visitor analytics" className="fixed inset-x-3 bottom-24 z-50 mx-auto max-w-xl space-y-3 rounded-xl border bg-card p-4 text-card-foreground shadow-lg md:bottom-4">
-    <h2 className="font-semibold">Optional visitor analytics</h2>
-    <p className="text-sm">Help us improve CupidMatch by sharing the pages you visit, approximate country, browser and estimated time on each page. Reports are kept for 30 days. Change your choice in Analytics settings.</p>
+  if (enabled === undefined) return null;
+  return <section aria-label="Analytics settings" className="space-y-3">
+    <h2 className="font-semibold">Analytics settings</h2>
+    <p role="status" className="text-sm">{enabled ? "Analytics are enabled." : "Analytics are off."}</p>
     <div className="flex flex-wrap items-center gap-2">
       <Button type="button" variant="outline" onClick={() => choose("no")}>Decline analytics</Button>
       <Button type="button" variant="outline" onClick={() => choose("yes")}>Allow analytics</Button>
-      <Link className="px-2 text-sm underline" href="/analytics-privacy">Analytics privacy</Link>
     </div>
   </section>;
 }

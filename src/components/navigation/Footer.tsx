@@ -128,6 +128,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/analytics-privacy" className={linkClass}>
+                  Analytics settings
+                </Link>
+              </li>
+              <li>
                 <Link href="/terms" className={linkClass}>
                   {copy.terms}
                 </Link>
