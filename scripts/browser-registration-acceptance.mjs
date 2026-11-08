@@ -58,10 +58,10 @@ build.onResolve({filter:/^next\/link$/},()=>({path:'link',namespace:'test-link'}
    await page.getByRole('button',{name:'Continue',exact:true}).click();await page.getByRole('button',{name:'Publish profile',exact:true}).waitFor();
    await page.getByRole('button',{name:'Publish profile',exact:true}).click();assert.equal(publishes,0);checks++;
    await page.getByRole('combobox',{name:'Country for membership prices'}).selectOption('LK');
-   await page.getByText(/LKR\\s*420/).waitFor();
+   await page.getByText(/LKR\s*420/).waitFor();
    assert.ok(planRequests.includes('LK'),'Country change must request local pricing');
    await page.getByRole('combobox',{name:'Country for membership prices'}).selectOption('GB');
-   await page.getByText(/£9\\.99/).waitFor();
+   await page.getByText(/£9\.99/).waitFor();
    checks++;
    await page.getByRole('checkbox',{name:'I confirm these details are accurate and I want to publish my profile for other members to see.',exact:true}).check();await page.locator('#plan-free').check();await page.getByRole('button',{name:'Publish profile',exact:true}).click();await page.waitForFunction(()=>window.__navigation==='/dashboard');assert.equal(publishes,1);checks++;
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);assert.deepEqual(errors,[]);checks++;
