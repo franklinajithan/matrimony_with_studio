@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { requireServerAdmin } from '@/lib/auth/admin';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { tidePaymentReadiness } from '@/lib/subscriptions/tide-preparation';
 import { publicCatalogue } from '@/lib/subscriptions/live-catalogue';
 import { stripeCheckoutReady } from '@/lib/subscriptions/stripe-api';
+import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 export const dynamic='force-dynamic';
 const headers={'Cache-Control':'private, no-store'};
 export async function GET(request:Request){
@@ -21,7 +21,22 @@ export async function GET(request:Request){
   ]);
   if(results.some(r=>r.error))throw Error('Unavailable');
   const [summary,payments,trials,memberships,events]=results;
-  return NextResponse.json({summary:summary.data,payments:(payments.data??[]).slice(0,25),trials:(trials.data??[]).slice(0,25),legacyTrials:(memberships.data?.legacyTrials??[]).slice(0,25),subscriptions:(memberships.data?.subscriptions??[]).slice(0,25),events:(events.data??[]).slice(0,25),hasMore:(memberships.data?.legacyTrials??[]).length>25||(memberships.data?.subscriptions??[]).length>25||results.slice(1).some(r=>Array.isArray(r.data)&&r.data.length>25),plans:await publicCatalogue(),readiness:tidePaymentReadiness()},{headers});
+  let paymentsEnabled=false;
+  if(stripeCheckoutReady()){
+   try{
+    const gate=await createSupabaseAdminClient().rpc('stripe_checkout_allowed');
+    paymentsEnabled=!gate.error && gate.data===true;
+   }catch {paymentsEnabled=false;}
+  }
+  const readiness={
+   provider:'stripe' as const,
+   mode:process.env.VERCEL_ENV==='production'?'live':'test',
+   enabled:paymentsEnabled,
+   reason:paymentsEnabled
+    ?'Stripe live subscription checkout is enabled.'
+    :'Stripe subscription checkout is paused or requires configuration.',
+  };
+  return NextResponse.json({summary:summary.data,payments:(payments.data??[]).slice(0,25),trials:(trials.data??[]).slice(0,25),legacyTrials:(memberships.data?.legacyTrials??[]).slice(0,25),subscriptions:(memberships.data?.subscriptions??[]).slice(0,25),events:(events.data??[]).slice(0,25),hasMore:(memberships.data?.legacyTrials??[]).length>25||(memberships.data?.subscriptions??[]).length>25||results.slice(1).some(r=>Array.isArray(r.data)&&r.data.length>25),plans:await publicCatalogue(),readiness},{headers});
  }catch{return NextResponse.json({error:'Payment dashboard is unavailable. No payment state has changed.'},{status:503,headers});}
 }
 export async function POST(request:Request){
