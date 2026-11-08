@@ -5,7 +5,7 @@ import { openFeedback } from "@/lib/feedback/actions";
 import { loadFeedback } from "@/lib/feedback/inbox";
 import { getServerAuthUser } from "@/lib/supabase/server";
 
-export const metadata = { title: "Feedback & support | CupidMatch" };
+export const metadata = { title: "Feedback & support", robots: { index: false, follow: true } };
 
 export default async function FeedbackPage({ searchParams }: {
   searchParams: Promise<{ thread?: string; sent?: string; new?: string; page?: string }>;

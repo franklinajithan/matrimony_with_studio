@@ -1,12 +1,8 @@
 import type { MetadataRoute } from "next";
+import { searchPages } from "@/lib/analytics/pages";
 
-const baseUrl = "https://cupidmatch.co.uk";
+const siteUrl = "https://cupidmatch.co.uk";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const pages = ["", "/about", "/discover", "/pricing", "/safety", "/contact", "/privacy", "/terms", "/accessibility", "/community-guidelines", "/how-it-works", "/international-matrimony", "/sri-lankan-matrimony-uk", "/indian-matrimony-uk", "/tamil-matrimony-uk", "/sinhala-matrimony", "/horoscope-matching", "/family-assisted-matrimony", "/sri-lankan-matrimony-sri-lanka", "/sri-lankan-matrimony-canada", "/sri-lankan-matrimony-australia", "/sri-lankan-matrimony-france", "/sri-lankan-matrimony-germany", "/sri-lankan-matrimony-switzerland"];
-  return pages.map((path) => ({
-    url: `${baseUrl}${path}`,
-    changeFrequency: path === "" ? "weekly" : "monthly",
-    priority: path === "" ? 1 : path === "/discover" ? 0.8 : 0.5,
-  }));
+  return searchPages.map(path => ({ url: new URL(path, siteUrl).href }));
 }

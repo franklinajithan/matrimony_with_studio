@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import PwaRegistration from '@/components/PwaRegistration';
+import { VisitorAnalytics } from "@/components/analytics/VisitorAnalytics";
 import { Toaster } from "@/components/ui/toaster";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 
@@ -59,6 +60,7 @@ export default function RootLayout({
         <I18nProvider>{children}</I18nProvider>
         <Toaster />
         <PwaRegistration />
+        <VisitorAnalytics />
       </body>
     </html>
   );

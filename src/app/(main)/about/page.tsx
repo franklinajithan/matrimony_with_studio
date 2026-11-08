@@ -5,6 +5,7 @@ import { ArrowRight, Globe2, HeartHandshake, ShieldCheck, Users } from "lucide-r
 import { PublicPage, PublicHero, PublicClosing, primaryLink, secondaryLink } from "@/components/marketing/PublicPage";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/about" },
   title: "About CupidMatch | Culture, connection and shared values",
   description: "Get to know CupidMatch, a matrimony community connecting Sri Lankans around the world through shared values and meaningful introductions.",
 };
