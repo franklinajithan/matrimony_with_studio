@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,11 +10,13 @@ export function FeedbackForm({ action, reply = false, guest = false }: {
   reply?: boolean;
   guest?: boolean;
 }) {
+  const [email, setEmail] = useState("");
+  const [subject, setSubject] = useState("");
   const [error, submit, pending] = useActionState(action, "");
   return <form action={submit} className="space-y-4">
     {!reply && <>
       {guest && <label className="block space-y-1"><span>Email for your reply</span>
-        <Input name="email" type="email" autoComplete="email" maxLength={254} required />
+        <Input name="email" value={email} onChange={event => setEmail(event.target.value)} type="email" autoComplete="email" maxLength={254} required />
       </label>}
       <label className="block space-y-1"><span>Category</span>
         <select name="category" className="block h-10 w-full rounded-md border border-input bg-background px-3">
@@ -22,7 +24,7 @@ export function FeedbackForm({ action, reply = false, guest = false }: {
         </select>
       </label>
       <label className="block space-y-1"><span>Subject</span>
-        <Input name="subject" maxLength={120} required />
+        <Input name="subject" value={subject} onChange={event => setSubject(event.target.value)} maxLength={120} required />
       </label>
     </>}
     <label className="block space-y-1"><span>{reply ? "Your reply" : "Message"}</span>
