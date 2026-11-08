@@ -4,10 +4,12 @@ on:
     branches: [main]
     paths:
       - 'e2e/public-site-smoke.spec.ts'
+      - 'e2e/public-route-coverage.spec.ts'
       - '.github/workflows/public-browser-smoke.yml'
   pull_request:
     paths:
       - 'e2e/public-site-smoke.spec.ts'
+      - 'e2e/public-route-coverage.spec.ts'
       - 'playwright.config.ts'
       - '.github/workflows/public-browser-smoke.yml'
   workflow_dispatch:
@@ -24,7 +26,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Read-only production public smoke
-        run: npx playwright test e2e/public-site-smoke.spec.ts --project=chromium --project=mobile-chrome
+        run: npx playwright test e2e/public-site-smoke.spec.ts e2e/public-route-coverage.spec.ts --project=chromium --project=mobile-chrome
         env:
           PLAYWRIGHT_BASE_URL: https://cupidmatch.co.uk
       - name: Upload browser failure evidence
