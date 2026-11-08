@@ -2,6 +2,7 @@
 -- CI runs this against an ephemeral Postgres service.
 create schema auth;
 create role authenticated nologin;
+create role anon nologin;
 create or replace function auth.uid() returns uuid language sql stable as $$
   select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid;
 $$;
