@@ -57,11 +57,23 @@ const IntelligentMatchSuggestionsOutputSchema = z.array(z.object({
 
 export type IntelligentMatchSuggestionsOutput = z.infer<typeof IntelligentMatchSuggestionsOutputSchema>;
 
+// AI scoring is optional: profile browsing must remain available without
+// a configured Google AI provider. Never initialize Genkit at module load.
+let matchFlow: ((input: IntelligentMatchSuggestionsInput) => Promise<IntelligentMatchSuggestionsOutput>) | undefined;
+
 export async function intelligentMatchSuggestions(input: IntelligentMatchSuggestionsInput): Promise<IntelligentMatchSuggestionsOutput> {
-  return intelligentMatchSuggestionsFlow(input);
+  if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_API_KEY) return [];
+  try {
+    return await getMatchFlow()(input);
+  } catch {
+    // Failure of optional suggestions must not break normal member profiles.
+    return [];
+  }
 }
 
-const prompt = ai.definePrompt({
+function getMatchFlow(): (input: IntelligentMatchSuggestionsInput) => Promise<IntelligentMatchSuggestionsOutput> {
+  if (matchFlow) return matchFlow;
+  const prompt = ai.definePrompt({
   name: 'intelligentMatchSuggestionsPrompt',
   input: { schema: IntelligentMatchSuggestionsInputSchema },
   output: { schema: IntelligentMatchSuggestionsOutputSchema },
@@ -133,4 +145,7 @@ const intelligentMatchSuggestionsFlow = ai.defineFlow(
     return output!;
   }
 );
+  matchFlow = intelligentMatchSuggestionsFlow;
+  return matchFlow;
+}
 
