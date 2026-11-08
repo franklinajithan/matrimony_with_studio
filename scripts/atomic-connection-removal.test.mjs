@@ -50,3 +50,17 @@ test("interest acceptance requires fresh pending consent", () => {
   assert.doesNotMatch(acceptance, /on conflict[\s\S]*do update/i);
   assert.match(acceptance, /grant execute .* to authenticated/i);
 });
+
+const chatAccess = readFileSync(
+  new URL("../supabase/migrations/20261108140000_revoke_disconnected_chat_access.sql", import.meta.url),
+  "utf8",
+);
+
+test("old chats and messages require an active connection", () => {
+  assert.match(chatAccess, /create or replace function public\.is_chat_participant/i);
+  assert.match(chatAccess, /join public\.connections c/i);
+  assert.match(chatAccess, /auth\.uid\(\) in \(ch\.participant_1, ch\.participant_2\)/i);
+  assert.match(chatAccess, /create policy chats_select_participants/i);
+  assert.match(chatAccess, /create policy chats_update_participants/i);
+  assert.match(chatAccess, /grant execute .* to authenticated/i);
+});
