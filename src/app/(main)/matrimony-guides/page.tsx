@@ -32,6 +32,7 @@ export default function MatrimonyGuide() {
     <section className="space-y-3">
       <h2 className="text-2xl font-semibold">Start with your community or location</h2>
       <ul className="space-y-2 text-primary underline">
+        <li><Link href="/matrimony-biodata-guide">How to write a marriage biodata</Link></li>
         <li><Link href="/sri-lankan-matrimony-uk">Sri Lankan matrimony in the UK</Link></li>
         <li><Link href="/tamil-matrimony-uk">Tamil matrimony in the UK</Link></li>
         <li><Link href="/safety">Safety guidance for introductions</Link></li>
