@@ -31,9 +31,13 @@ test("QA-R01 random partner preference combinations", async ({ page }) => {
     ["discover-filter-marriage-timeline",8,["Within 1–2 years","Ready when it feels right","Still exploring"]],
   ] as const;
 
+  // Load once: navigating back to Discover on every scenario used most of the
+  // 240-second timeout and could reset auth/render state mid-suite.
+  await page.goto("/discover");
+  await expect(page.getByTestId("discover-filters-open")).toBeVisible({ timeout: 20_000 });
+  await page.getByTestId("discover-filters-open").click();
   for (let n=1;n<=50;n++) {
-    await page.goto("/discover");
-    await page.getByTestId("discover-filters-open").click();
+    await page.getByTestId("discover-filter-clear").click();
     const chosen: [number,string][] = [];
     for (const [testId,index,values] of fields) if (rnd()<0.45) {
       const value=pick(values); chosen.push([index,value]);

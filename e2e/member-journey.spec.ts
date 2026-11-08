@@ -161,6 +161,14 @@ test.describe("CupidMatch member-to-member QA", () => {
           throw new Error("QA-030: CupidMatch failed while creating the accepted connection/chat.");
         }),
       ]);
+    } else {
+      // A missing pending request is only valid if these two members are already
+      // connected. Never silently skip the acceptance precondition.
+      await pageB.goto("/connections");
+      await expect(
+        pageB.getByTestId(`connection-${idA}-remove`),
+        "QA-022: neither a pending interest nor an established connection exists; inspect delivery or reset the isolated QA fixtures."
+      ).toBeVisible({ timeout: 20_000 });
     }
 
     // QA-032/033: both members see the connection.
