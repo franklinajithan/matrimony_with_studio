@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, Users, ShieldCheck, CreditCard, Tags, Heart, Shield } from "lucide-react";
 
 const links = [
+  { href: "/admin/analytics", label: "Analytics", icon: LayoutDashboard },
   { href: "/admin/feedback", label: "Feedback", icon: Shield },
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/users", label: "Members", icon: Users },

@@ -21,6 +21,7 @@ jobs:
       - run: npm run test:subscription-domain
       - run: npm run test:theme
       - run: npm run test:admin
+      - run: node --test scripts/visitor-activity.test.mjs
       - run: npm run test:horoscope
       - run: node --test scripts/optional-ai-profile.test.cjs
       - run: npx tsc --noEmit
@@ -31,4 +32,3 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
-

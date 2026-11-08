@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { company } from "@/lib/company";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/contact" },
   title: "Contact and Company Details | CupidMatch",
   description: "Company information for CupidMatch, a digital product operated by Arulvexa Technologies Ltd, company number 17563017.",
 };

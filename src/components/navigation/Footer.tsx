@@ -81,6 +81,7 @@ export function Footer() {
             <h2 className={headingClass}>Matrimony &amp; Matchmaking</h2>
             <ul className="mt-4 space-y-3">
               <li><Link href="/international-matrimony" className={linkClass}>International Matrimony</Link></li>
+              <li><Link href="/matrimony-guides" className={linkClass}>Matrimony guide</Link></li>
               <li><Link href="/sri-lankan-matrimony-uk" className={linkClass}>Sri Lankan Matrimony UK</Link></li>
               <li><Link href="/tamil-matrimony-uk" className={linkClass}>Tamil Matrimony UK</Link></li>
               <li><Link href="/indian-matrimony-uk" className={linkClass}>Indian Matrimony UK</Link></li>
