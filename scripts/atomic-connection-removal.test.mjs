@@ -45,6 +45,8 @@ test("interest acceptance requires fresh pending consent", () => {
   assert.match(acceptance, /v_status is distinct from 'pending'/i);
   assert.match(acceptance, /status\s*=\s*'accepted'/i);
   assert.match(acceptance, /on conflict\s*\(member_a_id, member_b_id\)\s*do nothing/i);
+  assert.match(acceptance, /insert into public\.chats/i);
+  assert.match(acceptance, /on conflict\s*\(id\)\s*do nothing/i);
   assert.doesNotMatch(acceptance, /on conflict[\s\S]*do update/i);
   assert.match(acceptance, /grant execute .* to authenticated/i);
 });
