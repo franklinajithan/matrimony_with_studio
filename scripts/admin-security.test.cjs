@@ -130,7 +130,9 @@ for (const file of adminPages) {
       let checks = 0;
       const guard = { requireAdminPage: async () => { checks++; if (!authorized) throw denied; return user; } };
       const page = load(file, {
-        '@/app/admin/guard': guard, './guard': guard,
+        '@/app/admin/guard': guard, './guard': guard, '../guard': guard,
+        '@/lib/feedback/inbox': { countFeedbackNeedingReply: async () => 0, loadFeedback: async () => null },
+        '@/components/feedback/FeedbackInbox': { FeedbackInbox: 'FeedbackInbox', feedbackPageNumber: () => 0 },
         '@/lib/admin/dashboard': { getAdminDashboardMetrics: async () => ({ members: 14, activeUsers: 3, pendingVerification: 12, updatedAt: '2026-09-18T10:00:00Z' }) },
         '@/lib/supabase/server': { createSupabaseServerClient: async () => ({ from: table => { assert.equal(table, 'admin_audit_log'); return { select: () => ({ order: () => ({ limit: async () => ({ data: [], error: null }) }) }) }; } }) },
         './controls': { default: 'HoroscopeControls' },
@@ -141,8 +143,8 @@ for (const file of adminPages) {
         'lucide-react': componentStubs, 'next/link': { default: 'Link' },
         '@/lib/subscriptions/plans': { PLANS: {}, formatPlanPrice: () => '' },
       });
-      if (authorized) assert.ok(await page.default({ children: 'protected' }));
-      else await assert.rejects(page.default({ children: 'protected' }), error => error === denied);
+      if (authorized) assert.ok(await page.default({ children: 'protected', searchParams: Promise.resolve({}) }));
+      else await assert.rejects(page.default({ children: 'protected', searchParams: Promise.resolve({}) }), error => error === denied);
       assert.equal(checks, 1);
     });
   }
