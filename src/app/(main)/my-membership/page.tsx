@@ -2,21 +2,16 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MONTHLY_ALLOWANCES } from "@/lib/subscriptions/catalogue-data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
-
-const meters = {
-  interestsPerMonth: "Interest requests",
-  messagesPerMonth: "Messages",
-  profileViewsPerMonth: "Profile views",
-} as const;
 
 type Allowance = { used: number; limit: number | null; remaining: number | null };
 type MembershipSnapshot = {
   plan: string;
   resetsAt: string;
-  allowances: Record<keyof typeof meters, Allowance>;
+  allowances: Record<keyof typeof MONTHLY_ALLOWANCES, Allowance>;
   advancedFilters: boolean;
   profileHighlighting: boolean;
   searchPlacement: number;
@@ -42,12 +37,12 @@ export default async function MyMembershipPage() {
             </p>
           </CardHeader>
           <CardContent className="space-y-5">
-            {(Object.keys(meters) as Array<keyof typeof meters>).map(key => {
+            {(Object.keys(MONTHLY_ALLOWANCES) as Array<keyof typeof MONTHLY_ALLOWANCES>).map(key => {
               const { used, limit, remaining } = membership.allowances[key];
               return <section key={key} className="space-y-1">
-                <h2 className="font-semibold">{meters[key]}</h2>
+                <h2 className="font-semibold">{MONTHLY_ALLOWANCES[key].label}</h2>
                 <p className="text-sm">{limit === null ? `${used} used · Unlimited` : `${used} of ${limit} used · ${remaining} remaining`}</p>
-                {limit !== null && limit > 0 && <progress aria-label={meters[key]} className="w-full accent-primary" max={limit} value={Math.min(used, limit)} />}
+                {limit !== null && limit > 0 && <progress aria-label={MONTHLY_ALLOWANCES[key].label} className="w-full accent-primary" max={limit} value={Math.min(used, limit)} />}
                 {remaining === 0 && <p className="text-sm text-muted-foreground">Your current allowance is exhausted. Compare plans for more access.</p>}
               </section>;
             })}

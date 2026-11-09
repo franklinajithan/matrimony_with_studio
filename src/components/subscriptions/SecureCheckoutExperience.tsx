@@ -7,7 +7,7 @@ import {CreditCard,LockKeyhole,AlertCircle,ArrowLeft} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Checkbox} from "@/components/ui/checkbox";
 import {COUNTRY_MARKETS,formatMarketMoney,isCountryCode,type CountryCode} from "@/lib/subscriptions/country-markets";
-import {type CataloguePlan} from "@/lib/subscriptions/catalogue-data";
+import {monthlyAllowanceLabels,type CataloguePlan} from "@/lib/subscriptions/catalogue-data";
 
 type Term="monthly"|"three_months"|"six_months";
 type ProviderState={provider:string;configured:boolean;checkoutEnabled:boolean;webhookEnabled:boolean};
@@ -79,6 +79,9 @@ export function SecureCheckoutExperience(){
       <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-semibold">Your selected membership</h2><Link href="/launch-pricing" className="text-sm font-semibold text-primary underline">Change plan</Link></div>
       {loading?<p role="status">Checking membership price…</p>:error?<p role="alert" className="text-sm text-destructive">{error}</p>:!selected?<p role="alert" className="text-sm text-destructive">Choose a valid paid plan to continue. <Link className="underline" href="/launch-pricing">Compare plans</Link></p>:<>
       <div className="flex items-center justify-between gap-4"><div><p className="text-xl font-bold">{selected.name}</p><p className="text-sm text-muted-foreground">{TERM_LABEL[term]} · {COUNTRY_MARKETS.find(x=>x.code===country)?.name}</p></div><strong className="text-2xl text-primary">{price}</strong></div>
+      <ul aria-label="Monthly membership allowances" className="space-y-1 text-sm">
+       {monthlyAllowanceLabels(selected.entitlements).map(label => <li key={label}>{label}</li>)}
+      </ul>
       {term!=="monthly"&&<p role="status" className="text-sm text-amber-800">Only monthly Stripe subscriptions are supported right now. <Link className="underline" href="/launch-pricing">Select a monthly plan</Link>.</p>}
       {country!=="GB"&&<p role="status" className="text-sm text-amber-800">Stripe checkout is currently available only for the UK GBP market. Your local price is for information only.</p>}
       <p className="text-xs text-muted-foreground">The final recurring amount is confirmed on Stripe before any card is charged.</p>

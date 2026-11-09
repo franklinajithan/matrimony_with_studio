@@ -12,6 +12,11 @@ export function LivePricing({signedIn=false}:{signedIn?:boolean}){
  const [country,setCountry]=useState<CountryCode>("GB");
  const [isOverride,setIsOverride]=useState(false);
  const [currency,setCurrency]=useState("GBP");
+ useEffect(() => {
+  const refresh = () => setReload(value => value + 1);
+  window.addEventListener("focus", refresh);
+  return () => window.removeEventListener("focus", refresh);
+ }, []);
  useEffect(()=>{const controller=new AbortController();setLoading(true);setError(false);
   void fetch(`/api/plans?country=${country}`,{cache:"no-store",signal:controller.signal}).then(async response=>{
    const body=await response.json();if(!response.ok||!Array.isArray(body.plans))throw Error("Unavailable");
