@@ -173,7 +173,12 @@ export async function sendMessage(params: {
     text: params.text,
     is_read: false,
   });
-  if (messageError) throw messageError;
+  if (messageError) {
+    if (messageError.message.includes("Monthly membership limit reached for messagesPerMonth")) {
+      throw new Error("You have reached your monthly message limit. Review your membership to send more messages.");
+    }
+    throw new Error(messageError.message);
+  }
 
   const chat = await getChat(params.chatId);
   const unreadBy = { ...(chat?.unreadBy || {}) };

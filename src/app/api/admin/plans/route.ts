@@ -17,9 +17,14 @@ const RequestSchema = z.object({
 export async function GET() {
   if (!await requireServerAdmin()) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers });
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.from("subscription_plans").select("*").order("sort_order");
-  if (error) return NextResponse.json({ error: "Could not load plans" }, { status: 503, headers });
-  return NextResponse.json({ plans: data }, { headers });
+  const [plans, history] = await Promise.all([
+    supabase.from("subscription_plans").select("*").order("sort_order"),
+    supabase.from("admin_audit_log").select("id,actor_id,target_id,created_at,metadata")
+      .eq("action", "admin_subscription_plan_updated").eq("target_type", "subscription_plans")
+      .order("created_at", { ascending: false }).limit(50),
+  ]);
+  if (plans.error || history.error) return NextResponse.json({ error: "Could not load plans" }, { status: 503, headers });
+  return NextResponse.json({ plans: plans.data, history: history.data }, { headers });
 }
 
 export async function PATCH(request: Request) {
@@ -41,7 +46,7 @@ export async function PATCH(request: Request) {
     p_expected_updated_at: v.expectedUpdatedAt,
   });
   if (error) return NextResponse.json({
-    error: error.code === "40001" ? "Prices changed since you opened the form. Refresh and review before saving."
+    error: error.code === "40001" ? "Plan settings changed since you opened the form. Refresh and review before saving."
       : error.code === "42501" ? "Administrator permission required."
       : "Could not save the plan. Check feature values and database migration.",
   }, { status: error.code === "40001" ? 409 : error.code === "42501" ? 403 : 503, headers });

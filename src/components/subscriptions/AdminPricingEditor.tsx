@@ -12,10 +12,16 @@ type PlanRow = {
  three_month_price_pence:number|null; six_month_price_pence:number|null;
  is_active:boolean; entitlements:Record<string,Entitlement>; updated_at:string;
 };
+type PlanChange = { id: string; actor_id: string | null; target_id: string; created_at: string; metadata: { before?: PlanRow; after?: PlanRow } };
+const featureDefaults: Record<string, Record<string, Entitlement>> = {
+ free: { interestsPerMonth: 2, messagesPerMonth: 2, profileViewsPerMonth: 50, searchPlacement: 0, profileHighlighting: false, advancedFilters: false },
+ plus: { interestsPerMonth: 30, messagesPerMonth: 30, profileViewsPerMonth: 400, searchPlacement: 20, profileHighlighting: true, advancedFilters: true },
+ premium: { interestsPerMonth: null, messagesPerMonth: null, profileViewsPerMonth: null, searchPlacement: 10, profileHighlighting: true, advancedFilters: true },
+};
 const descriptions:Record<string,string>={
  interestsPerMonth:"Interests per month",messagesPerMonth:"Messages per month",profileViewsPerMonth:"Profile views per month",searchPlacement:"Priority search placement (0, 10, or 20)",profileSharesPerMonth:"Biodata / profile shares per month",
  biodataTemplates:"Available biodata templates",profileBoostsPerMonth:"Profile boosts per month",
- advancedFilters:"Advanced search filters",seeWhoLikesYou:"See who likes you",
+ profileHighlighting:"Profile highlighting",advancedFilters:"Advanced search filters",seeWhoLikesYou:"See who likes you",
  unlimitedMessaging:"Unlimited messaging where permitted",readReceipts:"Message read receipts",
  familyIntroduction:"Family introductions",fullHoroscope:"Full horoscope compatibility",
  premiumBadge:"Premium badge",prioritySupport:"Priority support",
@@ -23,6 +29,7 @@ const descriptions:Record<string,string>={
 function money(value:number|null){return value===null?"":(value/100).toFixed(2);}
 export function AdminPricingEditor(){
  const fx=usePriceCurrency();
+ const [history, setHistory] = useState<PlanChange[]>([]);
  const [plans,setPlans]=useState<PlanRow[]>([]);
  const [edits,setEdits]=useState<Record<string,PlanRow>>({});
  const [priceInputs,setPriceInputs]=useState<Record<string,Record<string,string>>>({});
@@ -36,6 +43,7 @@ export function AdminPricingEditor(){
      const response=await fetch("/api/admin/plans",{cache:"no-store",credentials:"same-origin"});
      const result=await response.json();
      if(!response.ok||!Array.isArray(result.plans))throw Error(result.error||"Unable to load plans");
+     setHistory(result.history ?? []);
      setPlans(result.plans);setEdits(Object.fromEntries(result.plans.map((p:PlanRow)=>[p.code,structuredClone(p)])));
      setPriceInputs(Object.fromEntries(result.plans.map((p:PlanRow)=>[p.code,{monthly_price_pence:money(p.monthly_price_pence),three_month_price_pence:money(p.three_month_price_pence),six_month_price_pence:money(p.six_month_price_pence)}])));
    }catch(e){setError(e instanceof Error?e.message:"Unable to load plans");}
@@ -55,6 +63,10 @@ export function AdminPricingEditor(){
     if(monthly===null || (code!=="free"&&monthly<1) || (code==="free"&&monthly!==0))
        throw Error("Enter a valid monthly GBP price.");
   }catch(e){setError(e instanceof Error?e.message:"Invalid price");return;}
+  if (Object.values(draft.entitlements).some(value => typeof value === "number" && (!Number.isInteger(value) || value < 0 || value > 100000))) {
+    setError("Enter whole-number limits between 0 and 100,000, or leave the field blank for unlimited.");
+    return;
+  }
   if(!confirm(`Save pricing and feature changes for ${draft.name}? This updates all live quotes and future membership allowances.`))return;
   setSaving(code);setError("");setNotice("");
   try{
@@ -100,16 +112,43 @@ export function AdminPricingEditor(){
            {key==="searchPlacement"?<select id={`${plan.code}-${key}`} aria-label="Search placement" className="rounded-md border bg-background p-2" value={value===null?"0":String(value)} onChange={e=>entitlement(plan.code,key,Number(e.target.value))}>
             <option value="0">Normal</option><option value="20">Top 20 priority</option><option value="10">Top 10 priority</option>
            </select>:typeof value==="boolean"?<input id={`${plan.code}-${key}`} type="checkbox" checked={value} onChange={e=>entitlement(plan.code,key,e.target.checked)} className="h-5 w-5" />:
-           <select id={`${plan.code}-${key}`} aria-label={descriptions[key]||key} className="max-w-32 rounded-md border bg-background p-2" value={value===null?"unlimited":String(value)} onChange={e=>entitlement(plan.code,key,e.target.value==="unlimited"?null:Number(e.target.value))}>
-             <option value="unlimited">Unlimited</option>{[0,1,2,3,5,10,20,30,50,100,400].map(n=><option key={n} value={n}>{n}</option>)}
-             {value!==null&&![0,1,2,3,5,10,20,30,50,100,400].includes(value)&&<option value={value}>{value}</option>}
-           </select>}
+           <input id={`${plan.code}-${key}`} type="number" min={0} max={100000} step={1}
+             value={value ?? ""} placeholder="Unlimited" className="w-28 rounded-md border bg-background p-2"
+             onChange={e=>entitlement(plan.code,key,e.target.value === "" ? null : e.target.valueAsNumber)}/>}
          </div>)}
        </div>
-       <Button onClick={()=>void save(plan.code)} disabled={Boolean(saving)||plan.code==="free"} className="w-full">{saving===plan.code?"Saving…":"Save plan & features"}</Button>
+       <p className="text-xs text-muted-foreground">Leave a limit blank for unlimited. Set it to zero to disable the allowance.</p>
+       <details>
+         <summary className="cursor-pointer text-sm font-medium">Preview membership benefits</summary>
+         <ul className="mt-2 space-y-1 text-sm">
+           {Object.keys(featureDefaults[plan.code] ?? {}).filter(key => key in v.entitlements).map(key => {
+             const value = v.entitlements[key];
+             return <li key={key}>{descriptions[key]} · {value === null ? "Unlimited" : typeof value === "boolean" ? value ? "Enabled" : "Disabled" : key === "searchPlacement" ? value ? `Top ${value}` : "Normal" : value}</li>;
+           })}
+         </ul>
+       </details>
+       {featureDefaults[plan.code] && <Button variant="outline" className="w-full" disabled={Boolean(saving)} onClick={()=>{
+         const defaults = Object.entries(featureDefaults[plan.code]).filter(([key]) => key in v.entitlements);
+         update(plan.code, { entitlements: { ...v.entitlements, ...Object.fromEntries(defaults) } });
+       }}>Load feature defaults</Button>}
+       <Button onClick={()=>void save(plan.code)} disabled={Boolean(saving)} className="w-full">{saving===plan.code?"Saving…":"Save plan & features"}</Button>
      </section>;
    })}
    </div>
-   <p className="text-xs text-muted-foreground">Changes affect future plan quotes, not historical receipts. Paid purchases still require an enabled, verified payment provider; saving a plan never activates checkout.</p>
+   <section className="space-y-2 rounded-2xl border bg-card p-5">
+     <h2 className="font-semibold">Recent plan changes</h2>
+     {history.length === 0 && <p className="text-sm text-muted-foreground">No recorded changes.</p>}
+     {history.map(change => {
+       const before = change.metadata.before;
+       const after = change.metadata.after;
+       const changed = Object.keys(after?.entitlements ?? {}).filter(key => before?.entitlements[key] !== after?.entitlements[key]);
+       return <details key={change.id} className="border-t py-2 text-sm">
+         <summary className="cursor-pointer">{change.target_id} · {new Date(change.created_at).toLocaleString("en-GB")}</summary>
+         <p className="break-all text-muted-foreground">Administrator {change.actor_id ?? "Account removed"}</p>
+         {changed.map(key => <p key={key}>{descriptions[key] ?? key} · {String(before?.entitlements[key] ?? "Unlimited")} → {String(after?.entitlements[key] ?? "Unlimited")}</p>)}
+       </details>;
+     })}
+   </section>
+   <p className="text-xs text-muted-foreground">Price changes affect future plan quotes. Paid purchases still require an enabled, verified payment provider; saving a plan never activates checkout.</p>
  </div>;
 }

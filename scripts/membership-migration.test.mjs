@@ -59,5 +59,41 @@ test("membership pricing migrations enforce audited edits and atomic monthly quo
  assert.equal(viewed1.charged,true);assert.equal(viewed2.charged,false);
  count=(await db.query("select used_count from public.subscription_usage where user_id=$1 and feature_key='profileViewsPerMonth'",[user])).rows[0].used_count;
  assert.equal(count,1);
+ await run("allowance snapshot migration",await readFile("supabase/migrations/20261109095845_membership_allowance_snapshot.sql","utf8"));
+ await assert.rejects(db.query("insert into public.match_requests(id,sender_id,receiver_id,status) values ('bypass',$1,$2,'accepted')", [user,other]), /must be pending/);
+ await assert.rejects(db.query("update public.match_requests set receiver_id=$1 where id='m1'", [user]), /participants cannot be changed/);
+ await assert.rejects(db.query("update public.match_requests set status='accepted' where id='m1'"), /Only the recipient/);
+ const snapshot = async () => (await db.query("select public.my_membership_allowances() as value")).rows[0].value;
+ let membership = await snapshot();
+ assert.equal(membership.plan, "free");
+ assert.equal(membership.profileHighlighting, false);
+ assert.equal(membership.advancedFilters, false);
+ assert.deepEqual(membership.allowances.messagesPerMonth, { used: 2, limit: 2, remaining: 0 });
+ assert.deepEqual(membership.allowances.profileViewsPerMonth, { used: 1, limit: 50, remaining: 49 });
+ assert.equal(membership.resetsAt, (await db.query("select ((date_trunc('month',now() at time zone 'UTC') + interval '1 month')::date)::text as reset")).rows[0].reset);
+ await assert.rejects(db.query("select * from public.consume_subscription_usage('interestsPerMonth',null)"), /Unsupported feature/);
+ await db.exec("update public.subscription_plans set entitlements = entitlements || '{\"profileBoostsPerMonth\":0}'::jsonb where code='free'");
+ assert.deepEqual((await db.query("select * from public.consume_subscription_usage('profileBoostsPerMonth',null)")).rows, [
+   { allowed: false, used_count: 0 },
+ ]);
+ const free = (await db.query("select entitlements, updated_at from public.subscription_plans where code='free'")).rows[0];
+ await db.query("select public.admin_update_subscription_plan('free',0,null,null,$1::jsonb,$2::timestamptz)", [
+   JSON.stringify({ ...free.entitlements, messagesPerMonth: 3, profileHighlighting: true }), free.updated_at,
+ ]);
+ membership = await snapshot();
+ assert.equal(membership.profileHighlighting, true);
+ assert.deepEqual(membership.allowances.messagesPerMonth, { used: 2, limit: 3, remaining: 1 });
+ await db.query("insert into public.messages(chat_id,sender_id,text) values ('c1',$1,'allowed after change')", [user]);
+ await db.query("insert into public.user_subscriptions values ($1,'premium','active',now() + interval '1 day',now())", [user]);
+ membership = await snapshot();
+ assert.equal(membership.plan, "premium");
+ assert.deepEqual(membership.allowances.messagesPerMonth, { used: 3, limit: null, remaining: null });
+ await db.query("update public.user_subscriptions set current_period_end=now()-interval '1 day' where user_id=$1", [user]);
+ membership = await snapshot();
+ assert.equal(membership.plan, "free");
+ assert.deepEqual(membership.allowances.messagesPerMonth, { used: 3, limit: 3, remaining: 0 });
+ await assert.rejects(db.query("insert into public.messages(chat_id,sender_id,text) values ('c1',$1,'over limit after expiry')", [user]), /Monthly membership limit/);
+ await db.exec("create or replace function auth.uid() returns uuid language sql stable as $$ select null::uuid $$;");
+ await assert.rejects(db.query("select public.my_membership_allowances()"), /Authentication required/);
  }finally{await db.close();}
 });

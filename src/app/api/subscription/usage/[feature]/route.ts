@@ -3,6 +3,7 @@ import {getServerSubscription} from "@/lib/subscriptions/server";
 import {createSupabaseServerClient} from "@/lib/supabase/server";
 
 const FEATURES=new Set(["interestsPerMonth","messagesPerMonth","profileViewsPerMonth","profileSharesPerMonth","biodataTemplates","profileBoostsPerMonth"]);
+const SOCIAL_FEATURES = new Set(["interestsPerMonth", "messagesPerMonth", "profileViewsPerMonth"]);
 const headers={"Cache-Control":"private, no-store"};
 export async function GET(_request:Request,context:{params:Promise<{feature:string}>}){
  const {user,plan,subscription}=await getServerSubscription();
@@ -10,6 +11,16 @@ export async function GET(_request:Request,context:{params:Promise<{feature:stri
  const {feature}=await context.params;
  if(!FEATURES.has(feature))return NextResponse.json({error:"Unknown metered feature"},{status:404,headers});
  const db=await createSupabaseServerClient();
+ if (SOCIAL_FEATURES.has(feature)) {
+   const { data, error } = await db.rpc("my_membership_allowances");
+   if (error || !data?.allowances?.[feature]) {
+     return NextResponse.json({ error: "Membership usage unavailable" }, { status: 503, headers });
+   }
+   return NextResponse.json({
+     plan: data.plan, feature, periodStart: data.periodStart, resetsAt: data.resetsAt,
+     ...data.allowances[feature],
+   }, { headers });
+ }
  const code=subscription?.plan_code==="plus"?"plus":plan.code==="premium_plus"?"premium":plan.code;
  const start=new Date();
  const periodStart=`${start.getUTCFullYear()}-${String(start.getUTCMonth()+1).padStart(2,"0")}-01`;

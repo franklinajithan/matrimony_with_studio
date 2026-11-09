@@ -153,6 +153,7 @@ export default function SettingsPage() {
 
   return (
     <div className="container max-w-2xl py-8 space-y-4">
+      <Card><CardHeader><CardTitle>My Membership</CardTitle><CardDescription>Check your plan, allowances and next reset date.</CardDescription></CardHeader><CardContent><Button asChild variant="outline"><Link href="/my-membership">View membership</Link></Button></CardContent></Card>
       <Card><CardHeader><CardTitle>Profile verification</CardTitle><CardDescription>Request review and track your verification status.</CardDescription></CardHeader><CardContent><Button asChild variant="outline"><Link href="/verification">Manage verification request</Link></Button></CardContent></Card>
       <Card>
         <CardHeader>

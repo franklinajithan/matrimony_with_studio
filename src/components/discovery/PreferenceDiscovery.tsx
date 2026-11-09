@@ -23,7 +23,7 @@ import { DIASPORA_COUNTRY_NAMES } from "@/data/diaspora-countries";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { getMessages } from "@/components/i18n/messages";
 
-type Person = Profile & { isShortlisted?: boolean; membershipTier?: "free" | "plus" | "premium"; searchPlacement?: number };
+type Person = Profile & { isShortlisted?: boolean; highlighted?: boolean; searchPlacement?: number };
 const empty: DiscoveryFilters = { query: "", countries: [], languages: [], religions: [], professions: [], smoking: [], drinking: [] };
 const options = {
   countries: DIASPORA_COUNTRY_NAMES,
@@ -56,6 +56,7 @@ export function PreferenceDiscovery() {
   const [filters, setFilters] = useState<DiscoveryFilters>(empty);
   const [requiredGender, setRequiredGender] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
+  const [advancedFilters, setAdvancedFilters] = useState(false);
   const [sheet, setSheet] = useState(false);
   const [displayMode, setDisplayMode] = useState<"grid" | "list">("grid");
   const [sortMode, setSortMode] = useState<"compatible" | "youngest" | "oldest" | "name">("compatible");
@@ -96,6 +97,12 @@ export function PreferenceDiscovery() {
       const defaults = empty;
       setPreferences(saved);
       setFilters({ ...defaults, query: params.get("q") || "", ageMin: params.get("ageMin") ? Number(params.get("ageMin")) : defaults.ageMin, ageMax: params.get("ageMax") ? Number(params.get("ageMax")) : defaults.ageMax, countries: params.get("country") ? [params.get("country")!] : defaults.countries, languages: params.get("language") ? [params.get("language")!] : defaults.languages, religions: params.get("religion") ? [params.get("religion")!] : defaults.religions });
+      const [membership, catalogue] = await Promise.all([
+        supabase.rpc("my_membership_allowances"),
+        supabase.from("subscription_plans").select("code,entitlements").eq("is_active", true),
+      ]);
+      setAdvancedFilters(membership.data?.advancedFilters === true);
+      const highlightedPlans = new Set((catalogue.data ?? []).filter(row => row.entitlements?.profileHighlighting === true).map(row => row.code));
       const [profilePages, sentIds] = await Promise.all([Promise.all(Array.from({ length: 5 }, (_, i) => listProfiles({ limit: 100, offset: i * 100, excludeId: user.id }))), listSentInterestReceiverIds(user.id)]);
       const profiles = profilePages.flat();
       const shortlisted = await getShortlistedIds(user.id, profiles.map((p) => p.id));
@@ -104,7 +111,7 @@ export function PreferenceDiscovery() {
       if(!tiersError && Array.isArray(tierRows))tierRows.forEach((row:{member_id:string;plan_code:string;placement:number})=>tiers.set(row.member_id,{code:row.plan_code,placement:row.placement}));
       setPeople(profiles.map((p) => ({
         ...p,isShortlisted:shortlisted.has(p.id),
-        membershipTier:tiers.get(p.id)?.code==="premium"?"premium":tiers.get(p.id)?.code==="plus"?"plus":"free",
+        highlighted: highlightedPlans.has(tiers.get(p.id)?.code ?? ""),
         searchPlacement:tiers.get(p.id)?.placement??0,
       })));
       const { data: references, error: referencesError } = await supabase.rpc("discovery_member_references");
@@ -117,17 +124,20 @@ export function PreferenceDiscovery() {
 
   useEffect(() => { void load(); }, [load]);
   const hasSaved = Boolean(preferences && hasPreferences(preferences));
-  const results = useMemo(() => people.filter((p) => profileMatchesFilters(p, { ...filters, gender: requiredGender || filters.gender })).sort((a, b) => {
-    if (sortMode === "name") return (a.displayName || "").localeCompare(b.displayName || "");
-    if (sortMode === "youngest") return (a.ageYears ?? 999) - (b.ageYears ?? 999);
-    if (sortMode === "oldest") return (b.ageYears ?? -1) - (a.ageYears ?? -1);
-    // Membership tiers affect placement only after marriage/gender eligibility filtering.
-    // The preferred tier receives priority, but finite top-10/top-20 windows cannot
-    // guarantee slots when more eligible paid members exist than available positions.
-    const tier=(person:Person)=>person.searchPlacement===10?2:person.searchPlacement===20?1:0;
-    if(tier(a)!==tier(b))return tier(b)-tier(a);
-    return preferences ? preferenceScore(b, preferences).percentage - preferenceScore(a, preferences).percentage : 0;
-  }), [people, filters, preferences, requiredGender, sortMode]);
+  const results = useMemo(() => {
+    const eligible = people.filter(person => profileMatchesFilters(person, { ...filters, gender: requiredGender || filters.gender }));
+    eligible.sort((a, b) => {
+      if (sortMode === "name") return (a.displayName || "").localeCompare(b.displayName || "");
+      if (sortMode === "youngest") return (a.ageYears ?? 999) - (b.ageYears ?? 999);
+      if (sortMode === "oldest") return (b.ageYears ?? -1) - (a.ageYears ?? -1);
+      return preferences ? preferenceScore(b, preferences).percentage - preferenceScore(a, preferences).percentage : 0;
+    });
+    if (sortMode !== "compatible") return eligible;
+    const topTen = eligible.filter(person => person.searchPlacement === 10).slice(0, 10);
+    const topTwenty = eligible.filter(person => person.searchPlacement === 20).slice(0, 20 - topTen.length);
+    const preferred = new Set([...topTen, ...topTwenty]);
+    return [...preferred, ...eligible.filter(person => !preferred.has(person))];
+  }, [people, filters, preferences, requiredGender, sortMode]);
   useEffect(() => { setVisibleCount(20); }, [filters, requiredGender, sortMode]);
   const reset = () => setFilters({ ...empty, gender: requiredGender });
   const clear = () => setFilters({ ...empty, gender: requiredGender });
@@ -169,7 +179,7 @@ export function PreferenceDiscovery() {
     <Choice label={t.country} value={first(filters.countries)} values={options.countries} onChange={(v) => setFilters((f) => ({ ...f, countries: list(v) }))}/><Choice label={t.language} value={first(filters.languages)} values={options.languages} onChange={(v) => setFilters((f) => ({ ...f, languages: list(v) }))}/><Choice label={t.religion} value={first(filters.religions)} values={options.religions} onChange={(v) => setFilters((f) => ({ ...f, religions: list(v) }))}/>
     <div><Label>{t.profession}</Label><Input className="mt-2" placeholder="e.g. Engineer" value={filters.professions[0] || ""} onChange={(e) => setFilters((f) => ({ ...f, professions: e.target.value ? [e.target.value] : [] }))}/></div>
     <Choice label={t.smoking} value={first(filters.smoking)} values={["Never", "Occasionally", "Socially"]} onChange={(v) => setFilters((f) => ({ ...f, smoking: list(v) }))}/><Choice label={t.drinking} value={first(filters.drinking)} values={["Never", "Occasionally", "Socially"]} onChange={(v) => setFilters((f) => ({ ...f, drinking: list(v) }))}/>
-    <div className="border-t border-border pt-4"><p className="mb-3 text-sm font-semibold text-primary-dark">More partner preferences</p><div className="space-y-4">
+    {advancedFilters ? <div className="border-t border-border pt-4"><p className="mb-3 text-sm font-semibold text-primary-dark">More partner preferences</p><div className="space-y-4">
       <Choice testId="discover-filter-gender" label="Gender" value={requiredGender || filters.gender || "all"} values={options.genders} onChange={(v) => setFilters((f) => ({ ...f, gender: v === "all" ? undefined : v }))}/>
       <Choice testId="discover-filter-marital-status" label="Marital status" value={first(filters.maritalStatuses || [])} values={options.maritalStatuses} onChange={(v) => setFilters((f) => ({ ...f, maritalStatuses: list(v) }))}/>
       <div><Label>Height (cm)</Label><div className="mt-2 grid grid-cols-2 gap-2"><Input data-testid="discover-filter-height-min" inputMode="numeric" placeholder="Min" value={filters.heightMin || ""} onChange={(e) => setFilters((f) => ({ ...f, heightMin: e.target.value }))}/><Input data-testid="discover-filter-height-max" inputMode="numeric" placeholder="Max" value={filters.heightMax || ""} onChange={(e) => setFilters((f) => ({ ...f, heightMax: e.target.value }))}/></div></div>
@@ -178,7 +188,7 @@ export function PreferenceDiscovery() {
       <Choice testId="discover-filter-relocation" label="Relocation" value={filters.relocation || "all"} values={options.future.relocation} onChange={(v) => setFilters((f) => ({ ...f, relocation: v === "all" ? undefined : v }))}/>
       <Choice testId="discover-filter-family" label="Family involvement" value={filters.familyInvolvement || "all"} values={options.future.family} onChange={(v) => setFilters((f) => ({ ...f, familyInvolvement: v === "all" ? undefined : v }))}/>
       <Choice testId="discover-filter-marriage-timeline" label="Marriage timeline" value={filters.marriageTimeline || "all"} values={options.future.timeline} onChange={(v) => setFilters((f) => ({ ...f, marriageTimeline: v === "all" ? undefined : v }))}/>
-    </div></div>
+    </div></div> : <p className="border-t pt-4 text-sm text-muted-foreground">Advanced partner filters are available on eligible plans. <a className="underline" href="/my-membership">View membership</a></p>}
     <div className="grid grid-cols-2 gap-2"><Button data-testid="discover-filter-clear" variant="outline" onClick={clear}><X className="mr-2 h-4 w-4"/>{t.clear}</Button><Button data-testid="discover-filter-reset" onClick={() => { reset(); setSheet(false); }}><RotateCcw className="mr-2 h-4 w-4"/>{t.reset}</Button></div>
   </div>;
 
@@ -260,8 +270,7 @@ export function PreferenceDiscovery() {
                 ) : null}
               </h2>
               <p className="mt-1 text-[10px] font-semibold tracking-wide text-gold-foreground sm:text-xs">{memberReferences[person.id] || "CupidMatch member"}</p>
-              {person.searchPlacement===10 && <p className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-primary"><Sparkles className="h-3.5 w-3.5" />Premium featured</p>}
-              {person.searchPlacement===20 && <p className="mt-1 text-[11px] font-medium text-primary">Plus featured</p>}
+              {person.highlighted && <p className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-primary"><Sparkles className="h-3.5 w-3.5" />Featured profile</p>}
               {person.isVerified && <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-primary"><BadgeCheck className="h-3.5 w-3.5" />Verified profile</p>}
               {person.height && <p className="mt-1 text-xs text-muted-foreground">{person.height} tall</p>}
               {displayMode === "list" && person.bio && <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-muted-foreground">{person.bio}</p>}
