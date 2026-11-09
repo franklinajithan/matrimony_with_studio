@@ -208,7 +208,7 @@ export async function loadDashboardOverview(userId: string): Promise<DashboardOv
         id: `like-${like.likerId}`,
         type: "interest",
         title: `${names.get(like.likerId) || "A member"} expressed interest`,
-        href: "/dashboard/interests",
+        href: "/interests",
         at: like.createdAt ? Date.parse(like.createdAt) : 0,
       });
     }
@@ -226,8 +226,8 @@ export async function loadDashboardOverview(userId: string): Promise<DashboardOv
       items.push({
         id: `pending-${row.id}`,
         type: "connection",
-        title: `${names.get(row.senderUid) || "A member"} sent a connection request`,
-        href: "/messages",
+        title: `${names.get(row.senderUid) || "A member"} sent an interest request`,
+        href: "/interests",
         at: row.createdAt?.toMillis() || 0,
       });
     }
