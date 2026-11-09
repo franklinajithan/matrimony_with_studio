@@ -92,6 +92,8 @@ export default async function RegionalMatrimonyPage({ params }: PageProps) {
           <h2 className="text-2xl font-semibold text-primary-dark">Explore more</h2>
           <ul className="flex flex-wrap gap-4 text-sm font-semibold text-primary">
             {area.related.map(([label, href]) => <li key={href}><Link className="underline" href={href}>{label}</Link></li>)}
+            <li><Link className="underline" href="/matrimony-guides/long-distance-matrimony">Long-distance matrimony checklist</Link></li>
+            <li><Link className="underline" href="/matrimony-guides/first-matrimony-call">Questions for a first matrimony call</Link></li>
             <li><Link className="underline" href="/family-assisted-matrimony">Family introductions</Link></li>
             <li><Link className="underline" href="/safety">Online safety</Link></li>
           </ul>
