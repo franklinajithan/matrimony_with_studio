@@ -35,6 +35,7 @@ export const dashboardAccountNav: DashboardNavItem[] = [
   { href: "/dashboard/horoscope", label: "Horoscope", icon: Sparkles, match: "prefix" },
   { href: "/dashboard/preferences", label: "Partner preferences", icon: SlidersHorizontal, match: "prefix" },
   { href: "/dashboard/privacy", label: "Privacy and safety", icon: Shield, match: "prefix" },
+  { href: "/dashboard/family-helper", label: "Family helper", icon: Users, match: "prefix" },
   { href: "/pricing", label: "Subscription", icon: CreditCard, match: "prefix" },
 ];
 
@@ -61,6 +62,7 @@ export function titleForDashboardPath(pathname: string): string {
   if (pathname.startsWith("/connections")) return "Connections";
   if (pathname.startsWith("/messages")) return "Messages";
   if (pathname.startsWith("/dashboard/privacy")) return "Privacy and safety";
+  if (pathname.startsWith("/dashboard/family-helper")) return "Family helper";
   if (pathname.startsWith("/dashboard/edit-profile/match-details")) return "Match profile";
   if (pathname.startsWith("/dashboard/edit-profile")) return "My profile";
   if (pathname.startsWith("/dashboard/horoscope")) return "Horoscope";
