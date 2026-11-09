@@ -202,7 +202,7 @@ export function DashboardOverview() {
   const [interestedIds, setInterestedIds] = useState<Set<string>>(() => new Set());
   const [visit, setVisit] = useState<{ userId: string; previous: number | null } | null>(null);
   const visitOwner = useRef<string | null>(null);
-  const requestVersion = useRef(0);
+  const requestVersion = useRef({ value: 0 });
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -214,13 +214,13 @@ export function DashboardOverview() {
 
   const load = useCallback(async () => {
     if (!userId) return;
-    const version = ++requestVersion.current;
+    const version = ++requestVersion.current.value;
     const openedAt = Date.now();
     setLoading(true);
     setError(null);
     try {
       const overview = await loadDashboardOverview(userId);
-      if (version !== requestVersion.current) return;
+      if (version !== requestVersion.current.value) return;
       setData(overview);
       if (overview.recent.status === "ok" && visitOwner.current !== userId) {
         visitOwner.current = userId;
@@ -236,11 +236,11 @@ export function DashboardOverview() {
         setVisit({ userId, previous });
       }
     } catch (err) {
-      if (version !== requestVersion.current) return;
+      if (version !== requestVersion.current.value) return;
       setError(err instanceof Error ? err.message : "Could not load your overview.");
       setData(null);
     } finally {
-      if (version === requestVersion.current) setLoading(false);
+      if (version === requestVersion.current.value) setLoading(false);
     }
   }, [userId]);
 
@@ -249,8 +249,9 @@ export function DashboardOverview() {
       if (authReady && !userId) setLoading(false);
       return;
     }
+    const request = requestVersion.current;
     void load();
-    return () => { requestVersion.current++; };
+    return () => { request.value++; };
   }, [authReady, load, userId]);
 
   const handleInterest = async (profileId: string) => {
