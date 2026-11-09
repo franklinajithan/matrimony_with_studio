@@ -5,7 +5,7 @@ import { Footer } from "@/components/navigation/Footer";
 
 const url = "https://cupidmatch.co.uk/international-matrimony";
 export const metadata: Metadata = {
-  title: "International Sri Lankan & Indian Matrimony",
+  title: "Tamil, Sri Lankan & Indian Matrimony Worldwide",
   description: "Explore cross-border Sri Lankan, Tamil, Sinhala and Indian matrimonial introductions in the UK, Sri Lanka, Australia, Canada, France, Germany and Switzerland.",
   alternates: { canonical: url },
   openGraph: { type: "website", url, title: "International Matrimony | CupidMatch", description: "Meaningful marriage-focused introductions across seven countries." },
@@ -30,12 +30,30 @@ export default function InternationalMatrimonyPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, "\\u003c") }} />
       <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground"><Link href="/" className="underline">Home</Link> / International matrimony</nav>
       <p className="mt-10 text-xs font-bold uppercase tracking-[.2em] text-gold-foreground">CupidMatch · Across borders, connected by values</p>
-      <h1 className="mt-4 max-w-4xl font-serif text-4xl font-semibold leading-tight text-primary-dark sm:text-6xl">International Sri Lankan &amp; Indian Matrimony</h1>
+      <h1 className="mt-4 max-w-4xl font-serif text-4xl font-semibold leading-tight text-primary-dark sm:text-6xl">Tamil, Sri Lankan &amp; Indian Matrimony Worldwide</h1>
       <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">A meaningful connection does not have to stop at a border. CupidMatch is designed for marriage-focused introductions among Sri Lankan, Tamil, Sinhala and Indian communities, including people exploring relationships across different countries.</p>
       <div className="mt-9 flex flex-wrap gap-3">
         <Link href="/signup" className="rounded-full bg-primary px-6 py-3 font-semibold text-white">Create your biodata</Link>
         <Link href="/how-it-works" className="rounded-full border border-gold/40 px-6 py-3 font-semibold text-primary">How CupidMatch works</Link>
       </div>
+      <section className="mt-16" aria-labelledby="regional-guides">
+        <h2 id="regional-guides" className="font-serif text-3xl font-semibold text-primary-dark">Find matrimony guidance by region</h2>
+        <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+          <li className="rounded-xl border bg-card p-4">
+            <h3 className="font-semibold">United Kingdom</h3>
+            <div className="mt-2 flex flex-wrap gap-3 text-sm text-primary">
+              <Link className="underline" href="/tamil-matrimony-uk">Tamil matrimony UK</Link>
+              <Link className="underline" href="/sri-lankan-matrimony-uk">Sri Lankan matrimony UK</Link>
+              <Link className="underline" href="/indian-matrimony-uk">Indian matrimony UK</Link>
+            </div>
+          </li>
+          {[["Canada", "canada"], ["Australia", "australia"], ["Europe", "europe"]].map(([name, slug]) => (
+            <li key={slug} className="rounded-xl border bg-card p-4">
+              <Link className="font-semibold text-primary underline" href={`/matrimony/${slug}`}>Tamil, Sri Lankan &amp; Indian matrimony in {name}</Link>
+            </li>
+          ))}
+        </ul>
+      </section>
       <section className="mt-16" aria-labelledby="regions">
         <h2 id="regions" className="font-serif text-3xl font-semibold text-primary-dark">Countries we are focusing on</h2>
         <p className="mt-3 max-w-3xl leading-7 text-muted-foreground">Our international focus includes the following countries. The number of available members and matching results in each location will depend on current registrations and account features.</p>

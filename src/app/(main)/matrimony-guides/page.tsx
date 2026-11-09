@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { matrimonyGuidePath, matrimonyGuides } from "@/lib/matrimony-guides";
 
 export const metadata: Metadata = {
   title: "Matrimony Guide for Sri Lankan and Tamil Singles in the UK",
@@ -36,6 +37,17 @@ export default function MatrimonyGuide() {
         <li><Link href="/sri-lankan-matrimony-uk">Sri Lankan matrimony in the UK</Link></li>
         <li><Link href="/tamil-matrimony-uk">Tamil matrimony in the UK</Link></li>
         <li><Link href="/safety">Safety guidance for introductions</Link></li>
+      </ul>
+    </section>
+    <section className="space-y-4">
+      <h2 className="text-2xl font-semibold">Practical matrimony guides</h2>
+      <ul className="space-y-3">
+        {matrimonyGuides.map(({ slug, title, description }) => (
+          <li key={slug} className="rounded-xl border bg-card p-4">
+            <Link href={matrimonyGuidePath(slug)} className="font-semibold text-primary underline">{title}</Link>
+            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+          </li>
+        ))}
       </ul>
     </section>
     <Link className="inline-flex rounded-full bg-primary px-5 py-3 font-semibold text-primary-foreground" href="/signup">Create your CupidMatch profile</Link>
