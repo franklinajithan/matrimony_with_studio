@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
+  BookOpen,
+  FileText,
   CheckCircle2,
   Heart,
   Loader2,
@@ -23,6 +25,7 @@ import { PageFrame } from "@/components/dashboard/PageHero";
 import { auth, onAuthStateChanged } from "@/lib/supabase/auth";
 import {
   loadDashboardOverview,
+  type ActivityItem,
   type CountResult,
   type DashboardOverviewData,
   type DiscoveryPerson,
@@ -40,6 +43,46 @@ import { getMessages } from "@/components/i18n/messages";
 
 function countText(result: CountResult) {
   return result.status === "error" ? "—" : String(result.value);
+}
+
+const activityIcons = { interest: Heart, connection: Users, message: MessageCircle };
+
+function ActivityPanel({ items, previousVisit, unavailable }: {
+  items: ActivityItem[];
+  previousVisit: number | null;
+  unavailable: boolean;
+}) {
+  return (
+    <section aria-labelledby="activity-heading" className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-foreground">Your inbox at a glance</p>
+      <h2 id="activity-heading" className="mt-1 text-xl font-semibold">Recent activity</h2>
+      {unavailable ? (
+        <p className="mt-3 text-sm text-muted-foreground">Activity couldn’t load. Refresh to try again.</p>
+      ) : items.length ? (
+        <ul className="mt-3 divide-y divide-border">
+          {items.slice(0, 4).map(item => {
+            const Icon = activityIcons[item.type];
+            const isNew = previousVisit !== null && item.at > previousVisit;
+            return (
+              <li key={item.id}>
+                <Link href={item.href} className="group flex min-h-14 items-center gap-3 rounded-lg py-2 text-sm hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-primary"><Icon aria-hidden className="h-4 w-4" /></span>
+                  <span className="min-w-0 flex-1 break-words font-medium">{item.title}</span>
+                  {isNew && <span className="shrink-0 rounded-full bg-gold-soft px-2 py-0.5 text-xs font-semibold text-primary-dark">New</span>}
+                  <ArrowRight aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-primary" />
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <div className="mt-3 rounded-xl bg-accent/50 p-4">
+          <p className="text-sm text-muted-foreground">Your interests, connections and unread messages will appear here as you meet people.</p>
+          <Link href="/discover" className="mt-2 inline-flex text-sm font-semibold text-primary underline">Explore matches</Link>
+        </div>
+      )}
+    </section>
+  );
 }
 
 function OverviewSkeleton() {
@@ -157,6 +200,9 @@ export function DashboardOverview() {
   const [authReady, setAuthReady] = useState(false);
   const [likingId, setLikingId] = useState<string | null>(null);
   const [interestedIds, setInterestedIds] = useState<Set<string>>(() => new Set());
+  const [visit, setVisit] = useState<{ userId: string; previous: number | null } | null>(null);
+  const visitOwner = useRef<string | null>(null);
+  const requestVersion = useRef({ value: 0 });
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -168,15 +214,33 @@ export function DashboardOverview() {
 
   const load = useCallback(async () => {
     if (!userId) return;
+    const version = ++requestVersion.current.value;
+    const openedAt = Date.now();
     setLoading(true);
     setError(null);
     try {
-      setData(await loadDashboardOverview(userId));
+      const overview = await loadDashboardOverview(userId);
+      if (version !== requestVersion.current.value) return;
+      setData(overview);
+      if (overview.recent.status === "ok" && visitOwner.current !== userId) {
+        visitOwner.current = userId;
+        let previous: number | null = null;
+        try {
+          const key = `cupidmatch:dashboard-visit:${userId}`;
+          const saved = Number(localStorage.getItem(key));
+          if (Number.isFinite(saved) && saved > 0 && saved <= openedAt) previous = saved;
+          localStorage.setItem(key, String(openedAt));
+        } catch {
+          // Recent activity is still available when browser storage is disabled.
+        }
+        setVisit({ userId, previous });
+      }
     } catch (err) {
+      if (version !== requestVersion.current.value) return;
       setError(err instanceof Error ? err.message : "Could not load your overview.");
       setData(null);
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current.value) setLoading(false);
     }
   }, [userId]);
 
@@ -185,7 +249,9 @@ export function DashboardOverview() {
       if (authReady && !userId) setLoading(false);
       return;
     }
+    const request = requestVersion.current;
     void load();
+    return () => { request.value++; };
   }, [authReady, load, userId]);
 
   const handleInterest = async (profileId: string) => {
@@ -232,7 +298,7 @@ export function DashboardOverview() {
 
   if (loading) return <div role="status"><span className="sr-only">Loading your overview</span><OverviewSkeleton /></div>;
 
-  if (error || !data) {
+  if (error || !data || data.profile.id !== userId) {
     return (
       <Card className="mx-auto max-w-3xl border-border">
         <CardHeader><CardTitle>We could not load your overview</CardTitle><CardDescription>{error || "Something went wrong."}</CardDescription></CardHeader>
@@ -247,26 +313,27 @@ export function DashboardOverview() {
   const languages = formatLanguageList(draft.languages);
   const lookingFor = formatLookingFor(draft.lookingFor);
   const relocation = formatRelocation(draft.relocationOpenness);
-  const conversation =
-    data.recent.status === "ok" && data.recent.items.length > 0 ? data.recent.items[0] : null;
+  const recentItems = data.recent.status === "ok" ? data.recent.items : [];
+  const previousVisit = visit?.userId === userId ? visit.previous : null;
+  const nextAction = readiness.isPublished ? readiness.nextActions[0] : readiness.primaryAction;
 
   return (
     <PageFrame>
-      <header className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="font-headline text-3xl font-semibold tracking-tight text-primary-dark sm:text-4xl">{t.welcome}, {displayName}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{t.journey}</p>
-        </div>
-      </header>
-      <section className="relative isolate overflow-hidden rounded-3xl bg-primary-dark p-6 text-white sm:p-8">
+      <header className="relative isolate overflow-hidden rounded-3xl bg-gradient-to-br from-primary-dark via-primary to-primary-dark p-6 text-white shadow-lg sm:p-9">
         <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-32 -z-10 h-96 w-96 rounded-full border border-gold/50" />
         <Sparkles aria-hidden="true" className="absolute right-6 top-6 h-6 w-6 text-gold-light" />
-        <h2 className="max-w-sm pr-6 font-headline text-2xl font-semibold leading-tight sm:text-3xl">Make a meaningful <span className="text-gold-light">connection</span></h2>
-        <p className="mt-3 max-w-lg text-sm leading-relaxed text-gold-light">{t.hero}</p>
-        <Button asChild className="mt-5 min-h-11 rounded-xl bg-gold-soft px-5 text-primary-dark hover:bg-gold-light">
-          <Link href="/discover">{t.discover}<ArrowRight className="ml-2 h-4 w-4" /></Link>
-        </Button>
-      </section>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-light">{t.journey}</p>
+        <h1 className="mt-3 max-w-xl pr-6 font-headline text-3xl font-semibold leading-tight sm:text-5xl">{t.welcome}, {displayName}</h1>
+        <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/85">{t.hero}</p>
+        <div className="mt-5 flex flex-wrap gap-2">
+          <Button asChild className="min-h-11 rounded-xl bg-gold-soft px-5 text-primary-dark hover:bg-gold-light">
+            <Link href={nextAction?.href ?? "/discover"}>{nextAction?.label ?? t.discover}<ArrowRight className="ml-2 h-4 w-4" /></Link>
+          </Button>
+          <Button variant="ghost" className="min-h-11 rounded-xl border border-white/40 text-white hover:bg-white/10 hover:text-white" onClick={() => void load()}>
+            <RefreshCw aria-hidden className="mr-2 h-4 w-4" />Refresh overview
+          </Button>
+        </div>
+      </header>
 
       <section aria-label="Your activity" className="grid grid-cols-3 gap-2 sm:gap-4">
         <Link href="/dashboard/interests" className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-border bg-card p-3 transition hover:bg-accent sm:flex-row sm:items-center sm:gap-3 sm:p-4">
@@ -282,6 +349,29 @@ export function DashboardOverview() {
           <span><strong className="block text-lg text-foreground">{countText(data.unreadMessages)}</strong><span className="text-xs text-muted-foreground">{t.unread}</span></span>
         </Link>
       </section>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.75fr)]">
+        <ActivityPanel items={recentItems} previousVisit={previousVisit} unavailable={data.recent.status === "error"} />
+        <section aria-labelledby="shortcuts-heading" className="rounded-3xl border border-border bg-accent/40 p-5 sm:p-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-foreground">Take the next step</p>
+          <h2 id="shortcuts-heading" className="mt-1 text-xl font-semibold">Your matrimony toolkit</h2>
+          <ul className="mt-4 space-y-2">
+            {[
+              { href: "/dashboard/preferences", label: "Update partner preferences", icon: SlidersHorizontal },
+              { href: "/biodata", label: "Open Biodata Studio", icon: FileText },
+              { href: "/matrimony-guides", label: "Read matrimony guides", icon: BookOpen },
+            ].map(({ href, label, icon: Icon }) => (
+              <li key={href}>
+                <Link href={href} className="flex min-h-11 items-center gap-3 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-primary hover:bg-background">
+                  <Icon aria-hidden className="h-4 w-4 shrink-0" />
+                  <span className="flex-1">{label}</span>
+                  <ArrowRight aria-hidden className="h-4 w-4 shrink-0" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
 
       <section aria-labelledby="matches-heading" className="space-y-4">
         <div className="flex items-end justify-between gap-3">
@@ -333,19 +423,6 @@ export function DashboardOverview() {
 
 
 
-      {conversation ? (
-        <section aria-labelledby="conversation-heading" className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-foreground">Keep the connection moving</p>
-              <h2 id="conversation-heading" className="mt-1 text-xl font-semibold text-foreground">Continue your conversation</h2>
-              <p className="mt-1 text-sm text-muted-foreground">{conversation.title}</p>
-            </div>
-            <Button asChild className="rounded-xl"><Link href={conversation.href}>Open conversation<ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
-          </div>
-        </section>
-      ) : null}
-
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_330px]">
         <section className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -355,6 +432,15 @@ export function DashboardOverview() {
             </div>
             <Button asChild variant="outline" size="sm" className="rounded-xl"><Link href={readiness.primaryAction.href}>{readiness.primaryAction.label}</Link></Button>
           </div>
+          {readiness.nextActions.length > 0 && (
+            <ul className="mt-4 space-y-2" aria-label="Optional profile improvements">
+              {readiness.nextActions.map(action => (
+                <li key={action.id}><Link href={action.href} className="flex min-h-10 items-center justify-between gap-3 rounded-lg bg-accent/50 px-3 text-sm font-medium text-primary hover:bg-accent">
+                  {action.label}<ArrowRight aria-hidden className="h-4 w-4 shrink-0" />
+                </Link></li>
+              ))}
+            </ul>
+          )}
           <Progress value={readiness.percent} className="mt-5 h-2.5 bg-accent" aria-label="Profile completion" />
           <p className="mt-3 text-sm text-muted-foreground">
             {readiness.isPublished ? "Your profile is published and ready to be discovered." : "Finish the most useful details, then publish when you’re comfortable."}
