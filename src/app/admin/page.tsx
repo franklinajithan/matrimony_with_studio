@@ -8,6 +8,7 @@ const modules = [
   { title: "Registration controls", detail: "Pause or reopen new member registrations", icon: Users, href: "/admin/registration", tint: "bg-accent text-primary", category: "SITE ACCESS" },
   { title: "Member management", detail: "Member directory, profiles and account review", icon: Users, href: "/admin/users", tint: "bg-accent text-primary", category: "COMMUNITY" },
   { title: "Verification centre", detail: "Review submitted requests and profile status", icon: UserCheck, href: "/admin/verifications", tint: "bg-blue-50 text-blue-700", category: "TRUST & SAFETY" },
+  { title: "Assisted matchmaking", detail: "Review member requests and prepare shortlists", icon: UserCheck, href: "/admin/assisted-matchmaking", tint: "bg-blue-50 text-blue-700", category: "TRUST & SAFETY" },
   { title: "Subscriptions", detail: "View memberships and subscription records", icon: CreditCard, href: "/admin/subscriptions", tint: "bg-emerald-50 text-emerald-700", category: "REVENUE" },
   { title: "Invitation codes", detail: "Generate, disable and track special launch offers", icon: Sparkles, href: "/admin/promo-codes", tint: "bg-accent text-primary", category: "GROWTH" },
   { title: "Plans & pricing", detail: "Review plan pricing and feature entitlements", icon: BadgePoundSterling, href: "/admin/plans", tint: "bg-amber-50 text-amber-700", category: "REVENUE" },

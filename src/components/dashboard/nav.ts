@@ -34,6 +34,7 @@ export const dashboardAccountNav: DashboardNavItem[] = [
   { href: "/biodata", label: "Biodata Studio", icon: FileText, match: "prefix" },
   { href: "/dashboard/horoscope", label: "Horoscope", icon: Sparkles, match: "prefix" },
   { href: "/dashboard/preferences", label: "Partner preferences", icon: SlidersHorizontal, match: "prefix" },
+  { href: "/dashboard/assisted-matchmaking", label: "Assisted matchmaking", icon: Heart, match: "prefix" },
   { href: "/dashboard/privacy", label: "Privacy and safety", icon: Shield, match: "prefix" },
   { href: "/pricing", label: "Subscription", icon: CreditCard, match: "prefix" },
 ];
@@ -65,6 +66,7 @@ export function titleForDashboardPath(pathname: string): string {
   if (pathname.startsWith("/dashboard/edit-profile")) return "My profile";
   if (pathname.startsWith("/dashboard/horoscope")) return "Horoscope";
   if (pathname.startsWith("/dashboard/preferences")) return "Partner preferences";
+  if (pathname.startsWith("/dashboard/assisted-matchmaking")) return "Assisted matchmaking";
   if (pathname.startsWith("/onboarding")) return "Complete your profile";
   if (pathname.startsWith("/biodata/templates")) return "Biodata templates";
   if (pathname.startsWith("/biodata") && pathname.includes("/edit")) return "Edit biodata";
