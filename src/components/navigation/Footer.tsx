@@ -73,6 +73,7 @@ export function Footer() {
                   {copy.pricing}
                 </Link>
               </li>
+              <li><Link href="/links" className={linkClass}>Social links and apps</Link></li>
             </ul>
           </div>
 
