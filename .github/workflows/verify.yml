@@ -22,6 +22,7 @@ jobs:
       - run: npm run test:theme
       - run: npm run test:admin
       - run: node --test scripts/visitor-activity.test.mjs
+      - run: node --test scripts/assisted-matchmaking.test.mjs
       - run: npm run test:horoscope
       - run: node --test scripts/optional-ai-profile.test.cjs
       - run: npx tsc --noEmit
