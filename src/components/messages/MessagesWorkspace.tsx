@@ -134,6 +134,28 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
   }, [toast]);
 
   const userId = currentUser?.uid ?? null;
+  const [messageAllowance, setMessageAllowance] = useState<{ remaining: number | null } | null>(null);
+
+  const refreshMessageAllowance = useCallback(async (signal?: AbortSignal) => {
+    try {
+      const response = await fetch("/api/subscription/usage/messagesPerMonth", { cache: "no-store", signal });
+      if (response.ok && !signal?.aborted) setMessageAllowance(await response.json());
+    } catch {
+      // The message write remains authoritative if the display cannot refresh.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+    const controller = new AbortController();
+    const refresh = () => void refreshMessageAllowance(controller.signal);
+    refresh();
+    window.addEventListener("focus", refresh);
+    return () => {
+      controller.abort();
+      window.removeEventListener("focus", refresh);
+    };
+  }, [refreshMessageAllowance, userId]);
 
   useEffect(() => {
     return onAuthStateChanged(auth, (user) => {
@@ -406,11 +428,18 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
     router.push("/messages");
   }, [router]);
 
+  const retryMessage = useRef<{ chatId: string; text: string; id: string } | null>(null);
+
   const handleSend = async () => {
     const text = draft.trim();
     if (!text || !currentUser || !selectedChatId || !selectedConversation || isSending) return;
 
-    const optimisticId = `local-${Date.now()}`;
+    const previous = retryMessage.current;
+    const messageId = previous?.chatId === selectedChatId && previous.text === text
+      ? previous.id
+      : crypto.randomUUID();
+    retryMessage.current = { chatId: selectedChatId, text, id: messageId };
+    const optimisticId = `local-${messageId}`;
     const optimistic: ChatMessage = {
       id: optimisticId,
       text,
@@ -421,16 +450,16 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
     };
 
     setDraft("");
-    setMessages((prev) => [...prev, optimistic]);
+    setMessages((prev) => [...prev.filter(message => message.id !== optimisticId), optimistic]);
     setIsSending(true);
 
     try {
       await sendMessage({
         chatId: selectedChatId,
-        senderId: currentUser.uid,
-        otherUserId: selectedConversation.otherUserId,
+        messageId,
         text,
       });
+      retryMessage.current = null;
     } catch (error) {
       setMessages((prev) =>
         prev.map((m) => (m.id === optimisticId ? { ...m, pending: false, failed: true } : m))
@@ -443,6 +472,7 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
       });
     } finally {
       setIsSending(false);
+      void refreshMessageAllowance();
       textareaRef.current?.focus();
     }
   };
@@ -773,6 +803,10 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
               </div>
 
               <footer className="shrink-0 border-t border-border/60 bg-background px-2 py-2 sm:px-4 lg:px-6">
+                {messageAllowance && <p aria-live="polite" className="mb-1 px-2 text-xs text-muted-foreground">
+                  {messageAllowance.remaining === null ? "Unlimited messages" : `${messageAllowance.remaining} messages remaining this month`}
+                  {messageAllowance.remaining === 0 && <> · <Link href="/my-membership" className="underline">Review membership</Link></>}
+                </p>}
                 <div className="flex w-full items-end gap-1.5 sm:gap-2">
                   <Button
                     type="button"

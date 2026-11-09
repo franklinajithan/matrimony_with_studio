@@ -56,6 +56,13 @@ export async function sendInterest(params: {
     throw new Error("You cannot send an interest to yourself.");
   }
 
+  function writeError(error: { message: string }) {
+    if (error.message.includes("Monthly membership limit reached for interestsPerMonth")) {
+      return new Error("You have reached your monthly interest request limit. Upgrade your membership to send more requests.");
+    }
+    return new Error(error.message);
+  }
+
   const id = `${params.senderUid}_${params.receiverUid}`;
 
   const { data: existing, error: existingError } = await supabase
@@ -96,7 +103,7 @@ export async function sendInterest(params: {
         updated_at: new Date().toISOString(),
       })
       .eq("id", id);
-    if (updateError) throw updateError;
+    if (updateError) throw writeError(updateError);
     return { id };
   }
 
@@ -107,7 +114,7 @@ export async function sendInterest(params: {
     status: "pending",
     message: params.message || null,
   });
-  if (error) throw error;
+  if (error) throw writeError(error);
   return { id };
 }
 

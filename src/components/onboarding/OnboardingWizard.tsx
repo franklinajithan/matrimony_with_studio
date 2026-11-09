@@ -27,7 +27,7 @@ import {
 import { auth, onAuthStateChanged } from "@/lib/supabase/auth";
 import { mediaPathForUser, resolveMediaUrl, uploadMediaFile } from "@/lib/supabase/storage";
 import { ProfilePhotoEditor } from "@/components/profile/ProfilePhotoEditor";
-import { type CataloguePlan } from "@/lib/subscriptions/catalogue-data";
+import { monthlyAllowanceLabels, type CataloguePlan } from "@/lib/subscriptions/catalogue-data";
 import { formatMarketMoney, isCountryCode, type CountryCode } from "@/lib/subscriptions/country-markets";
 import { CountryMarketSelector } from "@/components/subscriptions/CountryMarketSelector";
 import { useI18n } from "@/components/i18n/I18nProvider";
@@ -748,7 +748,10 @@ export function OnboardingWizard() {
                       const chosen=selectedPlan===plan.code;
                       return <label key={plan.code} className={cn("flex min-h-16 cursor-pointer items-center gap-3 rounded-xl border-2 px-4 py-3 transition-colors",chosen?"border-primary bg-accent/30":"border-border hover:border-primary/60")}>
                         <RadioGroupItem value={plan.code} id={`plan-${plan.code}`}/>
-                        <span className="min-w-0 flex-1 font-semibold">{plan.name}</span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block font-semibold">{plan.name}</span>
+                          <span className="block text-xs text-muted-foreground">{monthlyAllowanceLabels(plan.entitlements).join(" · ")}</span>
+                        </span>
                         <span className="shrink-0 text-right"><strong className="block text-lg text-primary">{formatMarketMoney(plan.pricesPence.monthly,plan.currency)}</strong><span className="text-xs text-muted-foreground">{plan.code==="free"?"no card":"/ month"}</span></span>
                       </label>;
                     })}

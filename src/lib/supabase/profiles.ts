@@ -166,6 +166,17 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   return mapProfile(published);
 }
 
+export async function openMemberProfile(userId: string): Promise<Profile | null> {
+  const { data, error } = await supabase.rpc("open_member_profile", { p_profile_id: userId });
+  if (error) {
+    if (error.message.includes("Monthly membership limit")) {
+      throw new Error("Your monthly profile-view allowance has been reached. Review your membership to continue.");
+    }
+    throw new Error(error.message);
+  }
+  return mapProfile(data);
+}
+
 export async function listProfiles(options?: { limit?: number; offset?: number; excludeId?: string }): Promise<Profile[]> {
   const limit = options?.limit ?? 20;
   const offset = options?.offset ?? 0;

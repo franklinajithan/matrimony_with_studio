@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getServerSubscription } from '@/lib/subscriptions/server';
 import type { MeteredFeature } from '@/lib/subscriptions/usage';
 
-const FEATURES = new Set<MeteredFeature>(['interestsPerMonth','profileSharesPerMonth','biodataTemplates','profileBoostsPerMonth']);
+const FEATURES = new Set<MeteredFeature>(['profileSharesPerMonth','biodataTemplates','profileBoostsPerMonth']);
 export async function POST(_request: Request, context: { params: Promise<{ feature: string }> }) {
   const { user, plan } = await getServerSubscription();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

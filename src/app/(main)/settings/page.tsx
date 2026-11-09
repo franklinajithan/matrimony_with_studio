@@ -16,6 +16,7 @@ import { extractStoragePath, mediaPathForUser, resolveMediaUrl, uploadFile } fro
 import { getProfile, updateUserProfile } from "@/lib/supabase/profiles";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import { CurrentMonthlyAllowances } from "@/components/subscriptions/CurrentMonthlyAllowances";
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters."),
@@ -153,6 +154,7 @@ export default function SettingsPage() {
 
   return (
     <div className="container max-w-2xl py-8 space-y-4">
+      <Card><CardHeader><CardTitle>My Membership</CardTitle><CardDescription>Check your plan, allowances and next reset date.</CardDescription></CardHeader><CardContent className="space-y-3"><CurrentMonthlyAllowances /><Button asChild variant="outline"><Link href="/my-membership">View membership</Link></Button></CardContent></Card>
       <Card><CardHeader><CardTitle>Profile verification</CardTitle><CardDescription>Request review and track your verification status.</CardDescription></CardHeader><CardContent><Button asChild variant="outline"><Link href="/verification">Manage verification request</Link></Button></CardContent></Card>
       <Card>
         <CardHeader>

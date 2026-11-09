@@ -38,16 +38,28 @@ export const ENTITLEMENT_LABELS:Record<string,string>={
  premiumBadge:"Premium profile badge",
  prioritySupport:"Priority support",
 };
+export const MONTHLY_ALLOWANCES = {
+ interestsPerMonth: { label: "Interest requests", unit: "interests/month" },
+ messagesPerMonth: { label: "Messages", unit: "messages/month" },
+ profileViewsPerMonth: { label: "Profile views", unit: "profile views/month" },
+} as const;
+
+export function monthlyAllowanceLabels(entitlements: Record<string, unknown>): string[] {
+ return Object.entries(MONTHLY_ALLOWANCES).flatMap(([key, { unit }]) => {
+  const value = entitlements[key];
+  if (value === null) return [`Unlimited ${unit}`];
+  if (typeof value === "number" && Number.isSafeInteger(value) && value >= 0) return [`${value} ${unit}`];
+  return [];
+ });
+}
+
 export function planBenefitLabels(entitlements:Record<string,unknown>,max=7):string[]{
- const results:string[]=[];
+ const results = monthlyAllowanceLabels(entitlements);
  const addCount=(key:string,title:string)=>{
    const value=entitlements[key];
    if(value===null)results.push(`Unlimited ${title}`);
    else if(typeof value==="number")results.push(`${value} ${title}`);
  };
- addCount("interestsPerMonth","interests/month");
- addCount("messagesPerMonth","messages/month");
- addCount("profileViewsPerMonth","profile views/month");
  const position=entitlements.searchPlacement;
  if(position===10)results.push("Priority placement among Top 10 eligible matches");
  else if(position===20)results.push("Priority placement among Top 20 eligible matches");

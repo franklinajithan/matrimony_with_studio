@@ -19,3 +19,17 @@ test('feature comparison shows specific monthly quotas and placement priority',(
  for(const text of ['30 interests/month','30 messages/month','400 profile views/month','Top 20'])assert.ok(plus.includes(text));
  for(const text of ['Unlimited interests/month','Unlimited messages/month','Unlimited profile views/month','Top 10'])assert.ok(premium.includes(text));
 });
+
+test('membership displays use edited allowance values, including zero and unlimited', () => {
+ const { monthlyAllowanceLabels } = load('src/lib/subscriptions/catalogue-data.ts');
+ const edited = fixtures.map((plan, index) => cataloguePlan({
+  ...plan,
+  entitlements: { ...plan.entitlements, interestsPerMonth: index + 5, messagesPerMonth: null, profileViewsPerMonth: 0 },
+ }));
+ for (const [index, plan] of edited.entries()) {
+  const expected = [`${index + 5} interests/month`, 'Unlimited messages/month', '0 profile views/month'];
+  assert.deepEqual(monthlyAllowanceLabels(plan.entitlements), expected);
+  assert.deepEqual(planBenefitLabels(plan.entitlements).slice(0, 3), expected);
+ }
+ assert.deepEqual(monthlyAllowanceLabels({}), []);
+});
