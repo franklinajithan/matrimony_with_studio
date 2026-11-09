@@ -30,6 +30,7 @@ import {
   type DashboardOverviewData,
   type DiscoveryPerson,
 } from "@/lib/supabase/dashboard";
+import { acknowledgeMatchVisit, loadNewMatches, readMatchVisit, type MatchVisit, type NewMatchesResult } from "@/lib/supabase/new-matches";
 import { sendInterest } from "@/lib/supabase/matches";
 import {
   firstName,
@@ -80,6 +81,57 @@ function ActivityPanel({ items, previousVisit, unavailable }: {
           <p className="text-sm text-muted-foreground">Your interests, connections and unread messages will appear here as you meet people.</p>
           <Link href="/discover" className="mt-2 inline-flex text-sm font-semibold text-primary underline">Explore matches</Link>
         </div>
+      )}
+    </section>
+  );
+}
+
+function NewMatchesPanel({ result, onRetry }: {
+  result: NewMatchesResult | null;
+  onRetry: () => void;
+}) {
+  if (result?.status === "unpublished") return null;
+
+  const description = {
+    preferences: "Save your partner preferences to see newly available profiles that fit what you’re looking for.",
+    "first-visit": "New profiles that fit your preferences will appear here on future visits.",
+    empty: "No profiles matching your saved preferences became available since your last visit.",
+    error: "New matches couldn’t load. Please try again.",
+  };
+
+  return (
+    <section aria-labelledby="new-matches-heading" className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-6">
+      <h2 id="new-matches-heading" className="text-xl font-semibold">New Matches</h2>
+      {!result ? (
+        <p role="status" className="mt-2 text-sm text-muted-foreground">Loading new matches…</p>
+      ) : result.status === "ok" ? (
+        <>
+          <p className="mt-2 text-sm text-muted-foreground">Newly available since your last visit, based on your saved preferences.</p>
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {result.people.map((person) => (
+              <li key={person.id} className="min-w-0">
+                <Link href={`/profile/${person.id}`} className="flex min-h-14 items-center gap-3 rounded-xl border border-border p-2 hover:bg-accent">
+                  <MemberAvatar name={person.displayName || "Member"} photoURL={person.photoURL || ""} className="h-10 w-10 shrink-0" alt="" />
+                  <span className="min-w-0 flex-1 break-words text-sm font-medium">{person.displayName || "Member"}</span>
+                  <ArrowRight aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <>
+          <p className="mt-2 text-sm text-muted-foreground">{description[result.status]}</p>
+          {result.status === "error" ? (
+            <Button variant="outline" className="mt-3" onClick={onRetry}>Try again</Button>
+          ) : (
+            <Button asChild variant="outline" className="mt-3">
+              {result.status === "preferences"
+                ? <Link href="/dashboard/preferences">Set partner preferences</Link>
+                : <Link href="/discover">Browse profiles</Link>}
+            </Button>
+          )}
+        </>
       )}
     </section>
   );
@@ -202,6 +254,8 @@ export function DashboardOverview() {
   const [interestedIds, setInterestedIds] = useState<Set<string>>(() => new Set());
   const [visit, setVisit] = useState<{ userId: string; previous: number | null } | null>(null);
   const visitOwner = useRef<string | null>(null);
+  const [newMatches, setNewMatches] = useState<NewMatchesResult | null>(null);
+  const matchVisit = useRef<{ userId: string; visit: MatchVisit; acknowledged: boolean } | null>(null);
   const requestVersion = useRef({ value: 0 });
 
   useEffect(() => {
@@ -222,6 +276,7 @@ export function DashboardOverview() {
       const overview = await loadDashboardOverview(userId);
       if (version !== requestVersion.current.value) return;
       setData(overview);
+      setNewMatches(null);
       if (overview.recent.status === "ok" && visitOwner.current !== userId) {
         visitOwner.current = userId;
         let previous: number | null = null;
@@ -235,6 +290,27 @@ export function DashboardOverview() {
         }
         setVisit({ userId, previous });
       }
+      // Keep the window on manual refresh, while recording successful visits across devices.
+      void (async () => {
+        try {
+          let current = matchVisit.current;
+          if (current?.userId !== userId) {
+            const visit = await readMatchVisit();
+            if (version !== requestVersion.current.value) return;
+            current = { userId, visit, acknowledged: false };
+            matchVisit.current = current;
+          }
+          const result = await loadNewMatches(overview.profile, current.visit);
+          if (version !== requestVersion.current.value) return;
+          if (!current.acknowledged) {
+            await acknowledgeMatchVisit(current.visit);
+            current.acknowledged = true;
+          }
+          if (version === requestVersion.current.value) setNewMatches(result);
+        } catch {
+          if (version === requestVersion.current.value) setNewMatches({ status: "error" });
+        }
+      })();
     } catch (err) {
       if (version !== requestVersion.current.value) return;
       setError(err instanceof Error ? err.message : "Could not load your overview.");
@@ -372,6 +448,8 @@ export function DashboardOverview() {
           </ul>
         </section>
       </div>
+
+      {profile.isPublished && <NewMatchesPanel result={newMatches} onRetry={() => void load()} />}
 
       <section aria-labelledby="matches-heading" className="space-y-4">
         <div className="flex items-end justify-between gap-3">
