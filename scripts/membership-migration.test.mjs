@@ -93,6 +93,62 @@ test("membership pricing migrations enforce audited edits and atomic monthly quo
  assert.equal(membership.plan, "free");
  assert.deepEqual(membership.allowances.messagesPerMonth, { used: 3, limit: 3, remaining: 0 });
  await assert.rejects(db.query("insert into public.messages(chat_id,sender_id,text) values ('c1',$1,'over limit after expiry')", [user]), /Monthly membership limit/);
+ await db.exec(`
+   alter table public.messages add column is_read boolean default false;
+   alter table public.messages add column created_at timestamptz default clock_timestamp();
+   create table public.chats(id text primary key, participant_1 uuid, participant_2 uuid,
+     unread_by jsonb, last_message_text text, last_message_sender_id uuid, last_message_at timestamptz);
+   insert into public.chats(id,participant_1,participant_2) values('c1','${user}','${other}');
+   create view public.discovery_profiles as select id, 'Name'::text as display_name, 'private bio'::text as bio,
+     null::text as photo_url, null::text as data_ai_hint, null::text as location, null::text as profession,
+     null::text as country, null::text as region, '[]'::jsonb as languages, false as is_verified,
+     '["gallery"]'::jsonb as additional_photo_urls, 30 as age_years, now() as created_at, now() as updated_at,
+     null::text as religion, '170'::text as height, 'Degree'::text as education_level, null::text as smoking_habits,
+     null::text as drinking_habits, '{}'::jsonb as relationship_intentions, '{}'::jsonb as values_lifestyle,
+     '{}'::jsonb as cultural_family, '{}'::jsonb as settlement, '{"matchDetails":{"maritalStatus":"Never married"}}'::jsonb as extra
+     from public.profiles where is_published and suspended_at is null;
+   grant usage on schema auth to authenticated;
+   grant select on public.chats, public.messages to authenticated;
+   grant insert on public.messages to authenticated;
+   grant update on public.chats to authenticated;
+ `);
+ await run("profile and message enforcement",await readFile("supabase/migrations/20261109101448_enforce_member_profile_access.sql","utf8"));
+ await db.exec("set role authenticated");
+ let card = (await db.query("select bio, height, additional_photo_urls from public.discovery_profiles where id=$1",[other])).rows[0];
+ assert.deepEqual(card, { bio: null, height: null, additional_photo_urls: [] });
+ await assert.rejects(db.query("select * from private.membership_profile_details"), /permission denied/);
+ const detail = (await db.query("select public.open_member_profile($1) as value",[other])).rows[0].value;
+ assert.equal(detail.bio,"private bio");
+ await db.exec("reset role");
+ await db.exec(`insert into public.user_subscriptions values ('${user}','plus','active',now() + interval '1 day',now())`);
+ await db.exec("set role authenticated");
+ card = (await db.query("select bio, height, additional_photo_urls from public.discovery_profiles where id=$1",[other])).rows[0];
+ assert.deepEqual(card, { bio: null, height: "170", additional_photo_urls: [] });
+ const message = "10000000-0000-4000-8000-000000000003";
+ await db.query("select public.send_member_message($1,'c1','same message')",[message]);
+ await db.query("select public.send_member_message($1,'c1','same message')",[message]);
+ await assert.rejects(db.query("select public.send_member_message($1,'c1','changed message')",[message]), /Message ID already used/);
+ assert.equal((await snapshot()).allowances.messagesPerMonth.used,4);
+ assert.equal((await db.query("select unread_by from public.chats where id='c1'")).rows[0].unread_by[other],1);
+ await db.exec("reset role");
+ const freshProfile = "10000000-0000-4000-8000-000000000004";
+ await db.query("insert into auth.users values ($1)",[freshProfile]);
+ await db.query("insert into public.profiles values ($1,true,null)",[freshProfile]);
+ await db.exec("update public.subscription_usage set used_count=case feature_key when 'messagesPerMonth' then 29 when 'profileViewsPerMonth' then 400 else 30 end");
+ await db.exec("set role authenticated");
+ const lastPlus = "10000000-0000-4000-8000-000000000005";
+ await db.query("select public.send_member_message($1,'c1','last Plus message')",[lastPlus]);
+ await db.query("select public.send_member_message($1,'c1','last Plus message')",[lastPlus]);
+ await assert.rejects(db.query("select public.send_member_message(gen_random_uuid(),'c1','over quota')"), /Monthly membership limit/);
+ await assert.rejects(db.query("select public.open_member_profile($1)",[freshProfile]), /Monthly membership limit/);
+ assert.equal((await snapshot()).allowances.messagesPerMonth.remaining,0);
+ await db.exec("reset role");
+ await db.exec("update public.user_subscriptions set plan_code='premium' where status='active'");
+ await db.exec("set role authenticated");
+ await db.query("select public.send_member_message(gen_random_uuid(),'c1','Premium message')");
+ assert.equal((await db.query("select public.open_member_profile($1) as value",[freshProfile])).rows[0].value.bio,"private bio");
+ assert.deepEqual((await snapshot()).allowances.profileViewsPerMonth,{used:401,limit:null,remaining:null});
+ await db.exec("reset role");
  await db.exec("create or replace function auth.uid() returns uuid language sql stable as $$ select null::uuid $$;");
  await assert.rejects(db.query("select public.my_membership_allowances()"), /Authentication required/);
  }finally{await db.close();}

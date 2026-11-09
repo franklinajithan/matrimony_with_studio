@@ -36,7 +36,7 @@ import {
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { auth, onAuthStateChanged, type AuthUser as FirebaseUser } from "@/lib/supabase/auth";
-import { getProfile } from "@/lib/supabase/profiles";
+import { getProfile, openMemberProfile } from "@/lib/supabase/profiles";
 import { supabase } from "@/lib/supabase/client";
 import { likeProfile, unlikeProfile, subscribeToLike } from "@/lib/supabase/likes";
 import {
@@ -211,15 +211,9 @@ export default function ProfilePage() {
       try {
         const {data: authData,error:authError}=await supabase.auth.getUser();
         if(authError||!authData.user)throw new Error("Sign in to view member profiles.");
-        if(authData.user.id!==viewedUserId){
-          const {error:limitError}=await supabase.rpc("consume_member_profile_view",{p_profile_id:viewedUserId});
-          if(limitError){
-            if(/monthly membership limit/i.test(limitError.message))
-              throw new Error("Your monthly profile-view allowance has been reached. Review your membership to continue.");
-            throw new Error("Could not verify your profile-view allowance. Please try again.");
-          }
-        }
-        const data = await getProfile(viewedUserId);
+        const data = authData.user.id === viewedUserId
+          ? await getProfile(viewedUserId)
+          : await openMemberProfile(viewedUserId);
         if (data) {
           const { data: references } = await supabase.rpc("discovery_member_references");
           const memberReference = Array.isArray(references) ? references.find((row: { member_id: string; reference: string }) => row.member_id === viewedUserId)?.reference : null;

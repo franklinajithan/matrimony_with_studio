@@ -161,40 +161,16 @@ export async function listMessages(chatId: string, options?: { limit?: number; b
     .sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
 }
 
-export async function sendMessage(params: {
-  chatId: string;
-  senderId: string;
-  otherUserId: string;
-  text: string;
-}) {
-  const { error: messageError } = await supabase.from("messages").insert({
-    chat_id: params.chatId,
-    sender_id: params.senderId,
-    text: params.text,
-    is_read: false,
+export async function sendMessage(params: { chatId: string; messageId: string; text: string }) {
+  const { error } = await supabase.rpc("send_member_message", {
+    p_message_id: params.messageId,
+    p_chat_id: params.chatId,
+    p_text: params.text,
   });
-  if (messageError) {
-    if (messageError.message.includes("Monthly membership limit reached for messagesPerMonth")) {
-      throw new Error("You have reached your monthly message limit. Review your membership to send more messages.");
-    }
-    throw new Error(messageError.message);
+  if (error?.message.includes("Monthly membership limit reached for messagesPerMonth")) {
+    throw new Error("You have reached your monthly message limit. Review your membership to send more messages.");
   }
-
-  const chat = await getChat(params.chatId);
-  const unreadBy = { ...(chat?.unreadBy || {}) };
-  unreadBy[params.otherUserId] = Number(unreadBy[params.otherUserId] || 0) + 1;
-  unreadBy[params.senderId] = 0;
-
-  const { error: chatError } = await supabase
-    .from("chats")
-    .update({
-      last_message_text: params.text,
-      last_message_sender_id: params.senderId,
-      last_message_at: new Date().toISOString(),
-      unread_by: unreadBy,
-    })
-    .eq("id", params.chatId);
-  if (chatError) throw chatError;
+  if (error) throw new Error(error.message);
 }
 
 export async function markMessagesRead(chatId: string, userId: string) {

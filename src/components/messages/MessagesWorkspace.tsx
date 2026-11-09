@@ -428,11 +428,18 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
     router.push("/messages");
   }, [router]);
 
+  const retryMessage = useRef<{ chatId: string; text: string; id: string } | null>(null);
+
   const handleSend = async () => {
     const text = draft.trim();
     if (!text || !currentUser || !selectedChatId || !selectedConversation || isSending) return;
 
-    const optimisticId = `local-${Date.now()}`;
+    const previous = retryMessage.current;
+    const messageId = previous?.chatId === selectedChatId && previous.text === text
+      ? previous.id
+      : crypto.randomUUID();
+    retryMessage.current = { chatId: selectedChatId, text, id: messageId };
+    const optimisticId = `local-${messageId}`;
     const optimistic: ChatMessage = {
       id: optimisticId,
       text,
@@ -443,16 +450,16 @@ export function MessagesWorkspace({ initialChatId }: { initialChatId?: string })
     };
 
     setDraft("");
-    setMessages((prev) => [...prev, optimistic]);
+    setMessages((prev) => [...prev.filter(message => message.id !== optimisticId), optimistic]);
     setIsSending(true);
 
     try {
       await sendMessage({
         chatId: selectedChatId,
-        senderId: currentUser.uid,
-        otherUserId: selectedConversation.otherUserId,
+        messageId,
         text,
       });
+      retryMessage.current = null;
     } catch (error) {
       setMessages((prev) =>
         prev.map((m) => (m.id === optimisticId ? { ...m, pending: false, failed: true } : m))
