@@ -2,6 +2,10 @@ import { PGlite } from "@electric-sql/pglite";
 import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+
+const { load } = createRequire(import.meta.url)("./helpers/load-ts.cjs");
+const { cataloguePlan, monthlyAllowanceLabels } = load("src/lib/subscriptions/catalogue-data.ts");
 
 const user="10000000-0000-4000-8000-000000000001";
 const other="10000000-0000-4000-8000-000000000002";
@@ -149,6 +153,49 @@ test("membership pricing migrations enforce audited edits and atomic monthly quo
  assert.equal((await db.query("select public.open_member_profile($1) as value",[freshProfile])).rows[0].value.bio,"private bio");
  assert.deepEqual((await snapshot()).allowances.profileViewsPerMonth,{used:401,limit:null,remaining:null});
  await db.exec("reset role");
+ // Run the same admin edit through the catalogue, member snapshot and real
+ // writes for each tier, including Premium after unlimited becomes capped.
+ for (const [index, tier] of ["free", "plus", "premium"].entries()) {
+   await db.query("delete from public.user_subscriptions where user_id=$1", [user]);
+   if (tier !== "free") {
+     await db.query("insert into public.user_subscriptions values ($1,$2,'active',now()+interval '1 day',now())", [user,tier]);
+   }
+   const planRow = (await db.query("select * from public.subscription_plans where code=$1", [tier])).rows[0];
+   const keys = ["interestsPerMonth", "messagesPerMonth", "profileViewsPerMonth"];
+   const before = await snapshot();
+   const limits = Object.fromEntries(keys.map(key => [key, before.allowances[key].used + 1]));
+   await db.exec("set role authenticated");
+   await db.query("select public.admin_update_subscription_plan($1,$2,$3,$4,$5::jsonb,$6::timestamptz)", [
+     tier, planRow.monthly_price_pence, planRow.three_month_price_pence, planRow.six_month_price_pence,
+     JSON.stringify({ ...planRow.entitlements, ...limits }), planRow.updated_at,
+   ]);
+   await db.exec("reset role");
+   const saved = cataloguePlan((await db.query("select * from public.subscription_plans where code=$1", [tier])).rows[0]);
+   assert.equal(saved.pricesPence.monthly, planRow.monthly_price_pence);
+   assert.deepEqual(monthlyAllowanceLabels(saved.entitlements), [
+     `${limits.interestsPerMonth} interests/month`,
+     `${limits.messagesPerMonth} messages/month`,
+     `${limits.profileViewsPerMonth} profile views/month`,
+   ]);
+   const allowedProfile = `20000000-0000-4000-8000-00000000000${index * 2 + 1}`;
+   const blockedProfile = `20000000-0000-4000-8000-00000000000${index * 2 + 2}`;
+   for (const profile of [allowedProfile, blockedProfile]) {
+     await db.query("insert into auth.users values ($1)", [profile]);
+     await db.query("insert into public.profiles values ($1,true,null)", [profile]);
+   }
+   await db.exec("set role authenticated");
+   assert.equal((await snapshot()).plan, tier);
+   for (const key of keys) assert.equal((await snapshot()).allowances[key].remaining, 1, `${tier} ${key}`);
+   await db.query("select public.send_member_message(gen_random_uuid(),'c1',$1)", [`${tier} final message`]);
+   await db.query("select public.open_member_profile($1)", [allowedProfile]);
+   await assert.rejects(db.query("select public.send_member_message(gen_random_uuid(),'c1','over limit')"), /Monthly membership limit/);
+   await assert.rejects(db.query("select public.open_member_profile($1)", [blockedProfile]), /Monthly membership limit/);
+   await db.exec("reset role");
+   await db.query("insert into public.match_requests(id,sender_id,receiver_id,status) values ($1,$2,$3,'pending')", [`${tier}-final`,user,allowedProfile]);
+   await assert.rejects(db.query("insert into public.match_requests(id,sender_id,receiver_id,status) values ($1,$2,$3,'pending')", [`${tier}-blocked`,user,blockedProfile]), /Monthly membership limit/);
+   const after = await snapshot();
+   for (const key of keys) assert.deepEqual(after.allowances[key], { used: limits[key], limit: limits[key], remaining: 0 }, `${tier} ${key}`);
+ }
  await db.exec("create or replace function auth.uid() returns uuid language sql stable as $$ select null::uuid $$;");
  await assert.rejects(db.query("select public.my_membership_allowances()"), /Authentication required/);
  }finally{await db.close();}
