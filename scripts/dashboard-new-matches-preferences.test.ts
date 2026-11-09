@@ -6,8 +6,8 @@ import type { Profile } from "../src/lib/supabase/types";
 test("new matches use saved preferences, Discover gender and strict age evidence", () => {
   const member = { extra: { gender: "Man", partnerPreferences: {
     countries: ["United Kingdom"], languages: ["Tamil"], ageMin: 24, ageMax: 32,
-  } } } as Profile;
-  const candidate = { extra: { gender: "Woman" }, country: "United Kingdom", languages: ["Tamil"], ageYears: 28 } as Profile;
+  } } } as unknown as Profile;
+  const candidate = { extra: { gender: "Woman" }, country: "United Kingdom", languages: ["Tamil"], ageYears: 28 } as unknown as Profile;
   const preferences = partnerPreferencesFromProfile(member);
   assert.ok(hasPartnerPreferences(preferences));
   assert.ok(matchesNewProfile(candidate, member, preferences));
@@ -17,5 +17,5 @@ test("new matches use saved preferences, Discover gender and strict age evidence
   assert.ok(matchesNewProfile(candidate, member, { ...preferences, gender: "Woman" }));
   assert.ok(!hasPartnerPreferences(partnerPreferencesFromProfile({ extra: { partnerPreferences: {
     gender: "No preference", relocation: "Doesn't matter",
-  } } } as Profile)));
+  } } } as unknown as Profile)));
 });
