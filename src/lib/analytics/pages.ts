@@ -1,6 +1,7 @@
 export const searchPages = [
   "/", "/about", "/pricing", "/safety", "/contact", "/matrimony-guides", "/matrimony-biodata-guide",
   "/how-it-works", "/links", "/international-matrimony",
+  "/matrimony/canada", "/matrimony/australia", "/matrimony/europe",
   "/sri-lankan-matrimony-uk", "/indian-matrimony-uk", "/tamil-matrimony-uk",
   "/sinhala-matrimony", "/horoscope-matching", "/family-assisted-matrimony",
   "/sri-lankan-matrimony-sri-lanka", "/sri-lankan-matrimony-canada",
