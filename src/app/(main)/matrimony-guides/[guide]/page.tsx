@@ -41,6 +41,15 @@ export default async function GuidePage({ params }: Props) {
           <p className="leading-8">{text}</p>
         </section>
       ))}
+      <section className="space-y-5" aria-labelledby="guide-questions">
+        <h2 id="guide-questions" className="text-2xl font-semibold">Common questions</h2>
+        {guide.questions.map(({ question, answer }) => (
+          <div key={question} className="space-y-2 rounded-xl border bg-card p-5">
+            <h3 className="font-semibold">{question}</h3>
+            <p className="leading-7 text-muted-foreground">{answer}</p>
+          </div>
+        ))}
+      </section>
       <div className="flex flex-wrap items-center gap-4">
         <Link href="/signup" className="inline-flex rounded-full bg-primary px-5 py-3 font-semibold text-primary-foreground">Create a free profile</Link>
         <Link href={guide.related.href} className="text-primary underline">{guide.related.label}</Link>
