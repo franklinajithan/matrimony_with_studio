@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,7 +98,7 @@ export function AssistedMatchmaking({ adviser }: { adviser: boolean }) {
           <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">{current.note}</p>
           {current.shortlist.length > 0 && (
             <ul className="list-disc space-y-1 pl-5">
-              {current.shortlist.map(person => <li key={person.id}><CandidateName person={person} /></li>)}
+              {current.shortlist.map(person => <li key={person.id}><Link className="underline" href={`/profile/${person.id}`}><CandidateName person={person} /></Link></li>)}
             </ul>
           )}
           {view?.available && current.status === "review_ready" && (
