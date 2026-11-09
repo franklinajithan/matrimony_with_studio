@@ -25,9 +25,8 @@ test("new match migration tracks availability, protects visit state and filters 
     grant update on public.profiles to authenticated;
     create function public.member_is_active(p_id uuid) returns boolean language sql stable as
       $$ select exists(select 1 from public.profiles where id = p_id and suspended_at is null and deletion_requested_at is null) $$;
-    create table public.blocks (blocker uuid, blocked uuid);
-    create function public.are_blocked(a uuid, b uuid) returns boolean language sql stable as
-      $$ select exists(select 1 from public.blocks where (blocker = a and blocked = b) or (blocker = b and blocked = a)) $$;
+    create table public.blocks (blocker_id uuid, blocked_id uuid);
+    alter table public.blocks enable row level security;
     create view public.discovery_profiles as
       select id, display_name, case when photo_privacy = 'members' then photo_url end as photo_url
       from public.profiles where is_published and suspended_at is null;

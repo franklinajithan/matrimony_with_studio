@@ -75,7 +75,12 @@ language sql stable security definer set search_path = '' as $$
       where viewer.id = auth.uid() and viewer.is_published and viewer.deletion_requested_at is null
     )
     and p.id <> auth.uid() and p.is_published and p.suspended_at is null
-    and p.deletion_requested_at is null and not public.are_blocked(auth.uid(), p.id)
+    and p.deletion_requested_at is null
+    and not exists (
+      select 1 from public.blocks b
+      where (b.blocker_id = auth.uid() and b.blocked_id = p.id)
+         or (b.blocker_id = p.id and b.blocked_id = auth.uid())
+    )
     and p.discovery_available_at > p_since and p.discovery_available_at <= p_until
     and (p_before_at is null or (p.discovery_available_at, p.id) < (p_before_at, p_before_id))
   order by p.discovery_available_at desc, p.id desc

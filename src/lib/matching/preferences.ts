@@ -56,8 +56,9 @@ export function matchesNewProfile(candidate: Profile, member: Profile, preferenc
 export function hasPartnerPreferences(p: PartnerPreferences): boolean {
   return Boolean(p.ageMin || p.ageMax || [
     p.countries, p.languages, p.religions, p.professions, p.smoking, p.drinking,
-    p.maritalStatuses, p.education,
-  ].some((values) => values?.length) || p.heightMin || p.heightMax ||
+    p.education,
+  ].some((values) => values?.length) || p.maritalStatuses?.some((value) => !neutral(value)) ||
+    p.heightMin || p.heightMax ||
     [p.gender, p.relocation, p.wantsChildren, p.familyInvolvement, p.marriageTimeline].some((value) => !neutral(value) && value?.toLowerCase() !== "all"));
 }
 
