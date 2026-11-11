@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { getServerAuthUser, createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -83,7 +84,12 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: "Verification provider returned an invalid destination." }, { status: 502 });
   }
-  const { error: insertError } = await supabase.from("photo_verification_sessions").insert({
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!serviceKey || !supabaseUrl) return NextResponse.json({ error: "Secure verification storage is unavailable." }, { status: 503 });
+  // Server-only credential; never expose this client or its key to browsers.
+  const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { error: insertError } = await admin.from("photo_verification_sessions").insert({
     user_id: user.id,
     provider: "didit",
     provider_session_id: result.session_id,
