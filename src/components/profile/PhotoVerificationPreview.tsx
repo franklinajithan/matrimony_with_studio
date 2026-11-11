@@ -1,199 +1,142 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 
-type Quality = { width: number; height: number; notes: string[] };
-type Phase = "instructions" | "camera" | "finished";
-const MAX_SIZE = 10 * 1024 * 1024;
-const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp"]);
-const prompts = ["Look straight at the camera", "Slowly turn your head left", "Slowly turn your head right"] as const;
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+type PhotoCheck = { width: number; height: number; notices: string[] };
+const approved = new Set(["image/jpeg", "image/png", "image/webp"]);
 
-async function inspectPhoto(file: File): Promise<Quality> {
-  if (!ALLOWED.has(file.type)) throw new Error("Choose a JPEG, PNG or WebP photo.");
-  if (file.size > MAX_SIZE) throw new Error("Photo must be smaller than 10 MB.");
-  if (!file.size) throw new Error("This photo is empty.");
-  const url = URL.createObjectURL(file);
+async function checkImage(file: File): Promise<PhotoCheck> {
+  if (!approved.has(file.type)) throw new Error("Use a JPEG, PNG or WebP image.");
+  if (file.size === 0 || file.size > MAX_FILE_SIZE) throw new Error("Choose a photo under 5 MB.");
+  const objectUrl = URL.createObjectURL(file);
   try {
     const image = new Image();
-    image.src = url;
+    image.src = objectUrl;
     await image.decode();
     if (image.naturalWidth < 400 || image.naturalHeight < 400) {
-      throw new Error("Photo is too small. Choose an image at least 400 × 400 pixels.");
+      throw new Error("Choose a clear picture at least 400 × 400 pixels.");
     }
-    const notes: string[] = [];
+    const notices: string[] = [];
     if (image.naturalWidth < 800 || image.naturalHeight < 800) {
-      notes.push("For the sharpest profile photo, use an image at least 800 × 800 pixels.");
+      notices.push("For best results, upload a photo 800 × 800 pixels or larger.");
     }
-    if (image.naturalWidth / image.naturalHeight > 2 || image.naturalHeight / image.naturalWidth > 2.5) {
-      notes.push("A portrait or square photo works best for your profile.");
-    }
-    return { width: image.naturalWidth, height: image.naturalHeight, notes };
+    const ratio = image.naturalWidth / image.naturalHeight;
+    if (ratio > 2 || ratio < 0.4) notices.push("A square or portrait crop is preferable.");
+    return { width: image.naturalWidth, height: image.naturalHeight, notices };
   } catch (error) {
-    if (error instanceof Error && error.message !== "The source image cannot be decoded.") {
-      throw error;
-    }
-    throw new Error("Unable to read this image. Choose another photo.");
+    if (error instanceof Error && error.message.startsWith("Choose")) throw error;
+    throw new Error("Could not open the photo. Try a different file.");
   } finally {
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(objectUrl);
   }
 }
 
 export default function PhotoVerificationPreview() {
   const [preview, setPreview] = useState<string | null>(null);
-  const [quality, setQuality] = useState<Quality | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [phase, setPhase] = useState<Phase>("instructions");
-  const [step, setStep] = useState(0);
-  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [photoCheck, setPhotoCheck] = useState<PhotoCheck | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const [consented, setConsented] = useState(false);
-  const video = useRef<HTMLVideoElement>(null);
-  const stream = useRef<MediaStream | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
-  function stopCamera() {
-    stream.current?.getTracks().forEach((track) => track.stop());
-    stream.current = null;
-    if (video.current) video.current.srcObject = null;
-  }
-
-  useEffect(() => () => {
-    stream.current?.getTracks().forEach((track) => track.stop());
-  }, []);
-
-  useEffect(() => {
-    if (phase === "camera" && stream.current && video.current) {
-      video.current.srcObject = stream.current;
-      void video.current.play().catch(() => setCameraError("Camera preview could not start."));
-    }
-  }, [phase]);
-
-  async function choosePhoto(file?: File) {
-    setError(null);
-    setQuality(null);
-    setPreview((old) => { if (old) URL.revokeObjectURL(old); return null; });
+  async function handlePhoto(file?: File) {
+    setPhotoError(null);
+    setPhotoCheck(null);
+    setPreview(null);
     if (!file) return;
     try {
-      const details = await inspectPhoto(file);
-      setQuality(details);
+      const result = await checkImage(file);
+      setPhotoCheck(result);
       setPreview(URL.createObjectURL(file));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "This photo could not be checked.");
+    } catch (error) {
+      setPhotoError(error instanceof Error ? error.message : "Unable to check image.");
     }
   }
 
-  async function startCamera() {
-    setCameraError(null);
-    if (!consented) {
-      setCameraError("Please acknowledge the camera preview notice first.");
-      return;
-    }
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setCameraError("This browser does not support camera access. Try a recent mobile or desktop browser.");
-      return;
-    }
+  async function beginScan() {
+    if (!consented || loading) return;
+    setLoading(true);
+    setScanError(null);
     try {
-      const media = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
-      stream.current = media;
-      setStep(0);
-      setPhase("camera");
-    } catch {
-      setCameraError("Camera access was denied or unavailable. Check your browser permissions and try again.");
+      const response = await fetch("/api/photo-verification/session", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ consent: true }),
+      });
+      const result = await response.json() as { url?: string; error?: string };
+      if (!response.ok || !result.url) throw new Error(result.error || "Unable to open verification.");
+      const url = new URL(result.url);
+      if (url.protocol !== "https:" || !url.hostname.endsWith(".didit.me")) {
+        throw new Error("Untrusted verification destination.");
+      }
+      window.location.assign(url.toString());
+    } catch (error) {
+      setScanError(error instanceof Error ? error.message : "Unable to open verification.");
+      setLoading(false);
     }
-  }
-
-  function nextStep() {
-    if (step < prompts.length - 1) {
-      setStep((previous) => previous + 1);
-    } else {
-      stopCamera();
-      setPhase("finished");
-    }
-  }
-
-  function reset() {
-    stopCamera();
-    setStep(0);
-    setPhase("instructions");
-    setCameraError(null);
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10 text-foreground">
-      <a href="/dashboard" className="text-sm underline underline-offset-4">← Back to dashboard</a>
-      <h1 className="mt-6 text-3xl font-bold">Profile photo check</h1>
-      <p className="mt-3 text-muted-foreground">
-        Check your photo and practise the live-selfie steps. This is a test preview, not a biometric identity check.
-        No photo is uploaded by this page, and no verified badge is awarded.
-      </p>
+    <main className="mx-auto max-w-2xl space-y-7 px-4 py-8 text-foreground">
+      <Link href="/dashboard" className="text-sm text-primary underline">← Back to dashboard</Link>
+      <header className="space-y-3 text-center">
+        <span aria-hidden="true" className="text-4xl">◉</span>
+        <h1 className="text-3xl font-bold">Verify your profile picture</h1>
+        <p className="text-muted-foreground">Help members trust that your profile photograph shows the person behind your account.</p>
+      </header>
 
-      <section className="mt-8 rounded-2xl border p-5">
-        <h2 className="text-xl font-semibold">1. Choose a suitable profile photo</h2>
-        <ul className="mt-3 list-disc space-y-1 pl-6 text-sm">
-          <li>Use a recent photo showing only you, with your face fully visible.</li>
-          <li>Use good lighting, a clear focus, and a simple background.</li>
-          <li>Avoid sunglasses, face-covering filters, screenshots and heavily edited images.</li>
-          <li>Upload JPEG, PNG or WebP, up to 10 MB. Minimum 400 × 400 pixels.</li>
-        </ul>
-        <label htmlFor="photo-check-input" className="mt-5 block font-medium">Select a photo to check on this device</label>
-        <input id="photo-check-input" type="file" accept="image/jpeg,image/png,image/webp"
-          className="mt-2 block w-full text-sm" onChange={(event) => void choosePhoto(event.target.files?.[0])} />
-        {error && <p role="alert" className="mt-3 text-sm text-red-600">{error}</p>}
-        {preview && quality && (
-          <div className="mt-4">
+      <section className="space-y-4 rounded-2xl border border-primary/20 bg-background p-5">
+        <h2 className="text-xl font-semibold">1. Check your profile photo</h2>
+        <p className="text-sm text-muted-foreground">Use a recent solo portrait with good lighting. Make sure your whole face is clearly visible. Avoid sunglasses, heavy filters and group photos.</p>
+        <label className="block text-sm font-medium" htmlFor="photo-quality-check">Check a photo on your device</label>
+        <input id="photo-quality-check" className="block w-full text-sm" type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={(e) => void handlePhoto(e.target.files?.[0])} />
+        {photoError && <p role="alert" className="text-sm text-destructive">{photoError}</p>}
+        {preview && photoCheck && (
+          <div className="space-y-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={preview} alt="Your selected photo preview" className="max-h-80 w-auto rounded-lg object-contain" />
-            <p className="mt-2 text-sm">Image dimensions: {quality.width} × {quality.height} pixels.</p>
-            <p className="mt-1 text-sm font-medium text-green-700">File type, size and image dimensions passed.</p>
-            {quality.notes.map((note) => <p key={note} className="mt-1 text-sm text-amber-700">{note}</p>)}
-            <p className="mt-2 text-xs text-muted-foreground">
-              Face count, face match, lighting and liveness have not been automatically verified.
-            </p>
+            <img src={preview} alt="Local photo preview" className="mx-auto max-h-64 rounded-xl object-contain" />
+            <p className="text-sm text-green-700">Image dimensions, type and size passed: {photoCheck.width} × {photoCheck.height}.</p>
+            {photoCheck.notices.map((notice) => <p key={notice} className="text-sm text-amber-700">{notice}</p>)}
+            <p className="text-xs text-muted-foreground">This image remains on this device. Face quality and identity have not been verified by this check.</p>
           </div>
         )}
+        <p className="text-xs text-muted-foreground">To use a different main photo for verification, first save it on your CupidMatch profile. Selecting a file here does not upload it.</p>
       </section>
 
-      <section className="mt-6 rounded-2xl border p-5">
-        <h2 className="text-xl font-semibold">2. Practise live selfie verification</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          This camera-only demo does not record, transmit or store any footage. Turning your head is
-          not proof of liveness; a secure verification provider is required before badges can be enabled.
+      <section className="space-y-4 rounded-2xl border border-primary/20 bg-background p-5">
+        <h2 className="text-xl font-semibold">2. Live face scan</h2>
+        <div className="mx-auto flex h-52 w-52 items-center justify-center rounded-full border-[6px] border-dashed border-primary/40 bg-primary/5">
+          <div className="space-y-2 text-center">
+            <span className="block text-6xl text-primary" aria-hidden="true">◎</span>
+            <span className="block text-sm font-medium">Live selfie check</span>
+          </div>
+        </div>
+        <p className="text-sm text-muted-foreground">A specialised verification provider will guide you to centre your face and complete its automatic liveness challenge. It may use different movements from the examples shown.</p>
+        <ol className="list-decimal space-y-1 pl-6 text-sm">
+          <li>Open the secure live scan on your phone.</li>
+          <li>Allow camera access and position your face inside the frame.</li>
+          <li>Follow the provider's automatic prompts until the scan completes.</li>
+        </ol>
+        <p className="rounded-lg border p-3 text-xs text-muted-foreground">
+          <strong>Privacy:</strong> This uses biometric information processed by an external provider. Before enabling, CupidMatch must publish the provider's retention, deletion and contact details and a lawful basis/UK GDPR special-category condition. Declining does not prevent normal registration.
         </p>
-        {phase === "instructions" && (
-          <div className="mt-4 space-y-4">
-            <label className="flex items-start gap-3 text-sm">
-              <input type="checkbox" checked={consented} onChange={(event) => setConsented(event.target.checked)} />
-              <span>I understand this is a local camera preview, not a real identity or biometric verification.</span>
-            </label>
-            <button type="button" onClick={() => void startCamera()} disabled={!consented}
-              className="rounded-lg bg-primary px-5 py-3 font-medium text-primary-foreground disabled:opacity-50">
-              Open camera preview
-            </button>
-          </div>
-        )}
-        {phase === "camera" && (
-          <div className="mt-5 space-y-4">
-            <p aria-live="polite" className="font-semibold">Step {step + 1} of 3: {prompts[step]}</p>
-            <video ref={video} autoPlay muted playsInline aria-label="Live camera preview"
-              className="w-full max-w-md rounded-xl bg-black" style={{ transform: "scaleX(-1)" }} />
-            <div className="flex flex-wrap gap-3">
-              <button type="button" onClick={nextStep} className="rounded-lg bg-primary px-5 py-3 text-primary-foreground">
-                {step === 2 ? "Finish practice" : "Next instruction"}
-              </button>
-              <button type="button" onClick={reset} className="rounded-lg border px-5 py-3">Cancel</button>
-            </div>
-          </div>
-        )}
-        {phase === "finished" && (
-          <div className="mt-4 space-y-3">
-            <p role="status" className="font-medium">Camera practice finished. Your profile has not been verified.</p>
-            <button type="button" onClick={reset} className="rounded-lg border px-5 py-3">Try again</button>
-          </div>
-        )}
-        {cameraError && <p role="alert" className="mt-3 text-sm text-red-600">{cameraError}</p>}
+        <label className="flex items-start gap-3 text-sm">
+          <input type="checkbox" className="mt-1" checked={consented} onChange={(e) => setConsented(e.target.checked)} />
+          <span>I explicitly agree to open the biometric liveness verification service for the purpose of checking my profile photograph. I understand it is optional and can contact support for an alternative review.</span>
+        </label>
+        <button onClick={() => void beginScan()} type="button" disabled={!consented || loading}
+          className="w-full rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground disabled:opacity-50">
+          {loading ? "Preparing secure scan…" : "Start live face verification"}
+        </button>
+        {scanError && <p role="alert" className="rounded-lg border border-destructive/40 p-3 text-sm text-destructive">{scanError}</p>}
+        <p className="text-center text-xs text-muted-foreground">A completed liveness scan alone does not issue a Photo Verified badge. Secure comparison with the saved profile photo and provider verdict integration are still required.</p>
       </section>
-      <p className="mt-6 text-sm text-muted-foreground">
-        Real face verification will require a secure provider, explicit biometric consent,
-        a privacy assessment and a member appeal process. See development issue #136.
-      </p>
     </main>
   );
 }
