@@ -167,7 +167,8 @@ export function LocalFaceScan() {
       await videoRef.current.play();
       // Dynamic, pinned ESM import: no API key or paid verification service required.
       // Module and model are downloaded from public model/CDN hosting.
-      const toolkit = await import(/* webpackIgnore: true */ MODULE_URL);\n      if (startAttemptRef.current !== thisAttempt) return;
+      const toolkit = await import(/* webpackIgnore: true */ MODULE_URL);
+      if (startAttemptRef.current !== thisAttempt) return;
       const wasm = await toolkit.FilesetResolver.forVisionTasks(WASM_URL);
       const detector: Detector = await toolkit.FaceLandmarker.createFromOptions(wasm, {
         baseOptions: { modelAssetPath: MODEL_URL, delegate: "CPU" },
