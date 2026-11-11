@@ -690,6 +690,14 @@ export function OnboardingWizard() {
 
           {step === 6 && (
             <div className="space-y-5">
+              <section className="rounded-xl border border-primary/20 bg-accent/20 p-4" aria-label="Profile photo quality and verification">
+                <h3 className="font-semibold text-primary">Choose a clear profile picture</h3>
+                <p className="mt-2 text-sm text-muted-foreground">Use a recent, well-lit, sharp solo portrait. Keep your face visible, without sunglasses or heavy filters.</p>
+                <Link href="/photo-verification-preview" className="mt-3 inline-flex min-h-11 items-center rounded-lg border border-primary px-4 py-2 text-sm font-semibold text-primary underline-offset-4 hover:underline">
+                  Check photo quality and try selfie camera
+                </Link>
+                <p className="mt-2 text-xs text-muted-foreground">This is a photo-quality and camera practice preview, not actual identity verification. No verified badge is issued yet.</p>
+              </section>
               <Field label={t.profilePhoto} htmlFor="photo">
                 <ProfilePhotoEditor
                   currentUrl={draft.photoURL ? resolveMediaUrl(draft.photoURL) : null}
@@ -728,6 +736,14 @@ export function OnboardingWizard() {
 
           {step === 7 && (
             <div className="space-y-5">
+              <section className="rounded-xl border border-primary/20 bg-accent/20 p-4" aria-label="Profile photo quality test">
+                <h3 className="font-semibold text-primary">Profile picture quality check</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Check that your photo is clear and practise the selfie camera steps before publishing.</p>
+                <Link href="/photo-verification-preview" className="mt-3 inline-flex min-h-11 items-center rounded-lg border border-primary px-4 py-2 text-sm font-semibold text-primary hover:underline">
+                  Open photo quality and selfie test
+                </Link>
+                <p className="mt-2 text-xs text-muted-foreground">Practice only: this does not verify your identity or award a badge.</p>
+              </section>
               <ReviewRow label={t.name} value={draft.displayName} emptyLabel={t.notAdded} />
               <ReviewRow label="Height" value={draft.height ? `${draft.height} cm` : ""} emptyLabel="Required" />
               <ReviewRow label={t.location} value={[draft.region, draft.country].filter(Boolean).join(", ")} emptyLabel={t.notAdded} />
