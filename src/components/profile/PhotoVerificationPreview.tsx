@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { LocalFaceScan } from "@/components/profile/LocalFaceScan";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 type PhotoCheck = { width: number; height: number; notices: string[] };
@@ -33,14 +34,14 @@ async function checkImage(file: File): Promise<PhotoCheck> {
   }
 }
 
-export default function PhotoVerificationPreview({ enabled }: { enabled: boolean }) {
+export default function PhotoVerificationPreview() {
   const [preview, setPreview] = useState<string | null>(null);
   const [photoCheck, setPhotoCheck] = useState<PhotoCheck | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
-  const [consented, setConsented] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [scanError, setScanError] = useState<string | null>(null);
-  const [scanStatus, setScanStatus] = useState<string | null>(null);
+
+
+
+
   useEffect(() => {
     let active = true;
     void fetch("/api/photo-verification/status", { credentials: "same-origin", cache: "no-store" })
@@ -65,37 +66,13 @@ export default function PhotoVerificationPreview({ enabled }: { enabled: boolean
     }
   }
 
-  async function beginScan() {
-    if (!consented || loading) return;
-    setLoading(true);
-    setScanError(null);
-    try {
-      const response = await fetch("/api/photo-verification/session", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ consent: true }),
-      });
-      const result = await response.json() as { url?: string; error?: string };
-      if (!response.ok || !result.url) throw new Error(result.error || "Unable to open verification.");
-      const url = new URL(result.url);
-      if (url.protocol !== "https:" || !url.hostname.endsWith(".didit.me")) {
-        throw new Error("Untrusted verification destination.");
-      }
-      window.location.assign(url.toString());
-    } catch (error) {
-      setScanError(error instanceof Error ? error.message : "Unable to open verification.");
-      setLoading(false);
-    }
-  }
-
   return (
     <main className="mx-auto max-w-2xl space-y-7 px-4 py-8 text-foreground">
       <Link href="/dashboard" className="text-sm text-primary underline">← Back to dashboard</Link>
       <header className="space-y-3 text-center">
         <span aria-hidden="true" className="text-4xl">◉</span>
-        <h1 className="text-3xl font-bold">Verify your profile picture</h1>
-        <p className="text-muted-foreground">Help members trust that your profile photograph shows the person behind your account.</p>
+        <h1 className="text-3xl font-bold">Live profile photo scan</h1>
+        <p className="text-muted-foreground">Follow live, automatic face-alignment instructions directly on your phone. A verification badge requires additional security checks.</p>
       </header>
 
       <section className="space-y-4 rounded-2xl border border-primary/20 bg-background p-5">
@@ -118,41 +95,8 @@ export default function PhotoVerificationPreview({ enabled }: { enabled: boolean
         <p className="text-xs text-muted-foreground">To use a different main photo for verification, first save it on your CupidMatch profile. Selecting a file here does not upload it.</p>
       </section>
 
-      <section className="space-y-4 rounded-2xl border border-primary/20 bg-background p-5">
-        <h2 className="text-xl font-semibold">2. Live face scan</h2>
-        {scanStatus && scanStatus !== "not_started" && (
-          <p role="status" className="rounded-lg border p-3 text-sm">
-            Latest scan status: <strong>{scanStatus.replaceAll("_", " ")}</strong>.
-            {scanStatus === "passed_liveness" ? " Live-person check passed. Photo-to-face matching is still awaiting secure review." : ""}
-          </p>
-        )}
-        <div className="mx-auto flex h-52 w-52 items-center justify-center rounded-full border-[6px] border-dashed border-primary/40 bg-primary/5">
-          <div className="space-y-2 text-center">
-            <span className="block text-6xl text-primary" aria-hidden="true">◎</span>
-            <span className="block text-sm font-medium">Live selfie check</span>
-          </div>
-        </div>
-        <p className="text-sm text-muted-foreground">A specialised verification provider will guide you to centre your face and complete its automatic liveness challenge. It may use different movements from the examples shown.</p>
-        <ol className="list-decimal space-y-1 pl-6 text-sm">
-          <li>Open the secure live scan on your phone.</li>
-          <li>Allow camera access and position your face inside the frame.</li>
-          <li>Follow the provider's automatic prompts until the scan completes.</li>
-        </ol>
-        <p className="rounded-lg border p-3 text-xs text-muted-foreground">
-          <strong>Privacy:</strong> This uses biometric information processed by an external provider. Before enabling, CupidMatch must publish the provider's retention, deletion and contact details and a lawful basis/UK GDPR special-category condition. Declining does not prevent normal registration.
-        </p>
-        {!enabled && <p role="status" className="rounded-lg border border-amber-400/40 p-3 text-sm text-amber-700">Live face scanning is not enabled yet. The secure provider, privacy settings and database setup must be completed before you can start verification.</p>}
-        <label className="flex items-start gap-3 text-sm">
-          <input type="checkbox" className="mt-1" checked={consented} onChange={(e) => setConsented(e.target.checked)} />
-          <span>I explicitly agree to open the biometric liveness verification service for the purpose of checking my profile photograph. I understand it is optional and can contact support for an alternative review.</span>
-        </label>
-        <button onClick={() => void beginScan()} type="button" disabled={!enabled || !consented || loading}
-          className="w-full rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground disabled:opacity-50">
-          {!enabled ? "Live verification coming soon" : loading ? "Preparing secure scan…" : "Start live face verification"}
-        </button>
-        {scanError && <p role="alert" className="rounded-lg border border-destructive/40 p-3 text-sm text-destructive">{scanError}</p>}
-        <p className="text-center text-xs text-muted-foreground">A completed liveness scan alone does not issue a Photo Verified badge. Secure comparison with the saved profile photo and provider verdict integration are still required.</p>
-      </section>
+      <LocalFaceScan />
+
     </main>
   );
 }

@@ -11,6 +11,5 @@ export const metadata: Metadata = {
 export default async function PhotoVerificationPreviewPage() {
   const user = await getServerAuthUser();
   if (!user) redirect("/login");
-  const enabled = process.env.PHOTO_VERIFICATION_ENABLED === "true" && Boolean(process.env.DIDIT_API_KEY && process.env.DIDIT_WORKFLOW_ID);
-  return <PhotoVerificationPreview enabled={enabled} />;
+  return <PhotoVerificationPreview />;
 }
