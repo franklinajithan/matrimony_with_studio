@@ -40,6 +40,15 @@ export default function PhotoVerificationPreview({ enabled }: { enabled: boolean
   const [consented, setConsented] = useState(false);
   const [loading, setLoading] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
+  const [scanStatus, setScanStatus] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    void fetch("/api/photo-verification/status", { credentials: "same-origin", cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((result: { status?: string } | null) => { if (active && result?.status) setScanStatus(result.status); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
   async function handlePhoto(file?: File) {
@@ -111,6 +120,12 @@ export default function PhotoVerificationPreview({ enabled }: { enabled: boolean
 
       <section className="space-y-4 rounded-2xl border border-primary/20 bg-background p-5">
         <h2 className="text-xl font-semibold">2. Live face scan</h2>
+        {scanStatus && scanStatus !== "not_started" && (
+          <p role="status" className="rounded-lg border p-3 text-sm">
+            Latest scan status: <strong>{scanStatus.replaceAll("_", " ")}</strong>.
+            {scanStatus === "passed_liveness" ? " Live-person check passed. Photo-to-face matching is still awaiting secure review." : ""}
+          </p>
+        )}
         <div className="mx-auto flex h-52 w-52 items-center justify-center rounded-full border-[6px] border-dashed border-primary/40 bg-primary/5">
           <div className="space-y-2 text-center">
             <span className="block text-6xl text-primary" aria-hidden="true">◎</span>
