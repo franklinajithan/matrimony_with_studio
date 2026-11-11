@@ -17,12 +17,12 @@ create index if not exists photo_verification_sessions_user_created
   on public.photo_verification_sessions(user_id, created_at desc);
 alter table public.photo_verification_sessions enable row level security;
 revoke all on public.photo_verification_sessions from anon;
--- Members may see their own session status only; API inserts rows via the
--- authenticated client, with required server-only provider ID.
+-- Members may see their own status, but only trusted server code may create or update sessions.
 create policy "Members read own photo verification sessions"
   on public.photo_verification_sessions for select to authenticated
   using (auth.uid() = user_id);
-create policy "Members create own photo verification pending session"
-  on public.photo_verification_sessions for insert to authenticated
-  with check (auth.uid() = user_id and status = 'pending' and provider = 'didit');
 -- No user update/delete policy: provider verdicts and badges require privileged server logic.
+
+-- Prevent forged vendor session IDs and biometric states via direct browser writes.
+revoke insert, update, delete on public.photo_verification_sessions from authenticated;
+grant select on public.photo_verification_sessions to authenticated;
