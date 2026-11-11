@@ -26,6 +26,7 @@ export function LocalFaceScan() {
   const detectorRef = useRef<Detector | null>(null);
   const frameRef = useRef<number | null>(null);
   const runningRef = useRef(false);
+  const startAttemptRef = useRef(0);
   const stepRef = useRef<ScanStep>(0);
   const streakRef = useRef(0);
   const firstDirectionRef = useRef(0);
@@ -156,7 +157,7 @@ export function LocalFaceScan() {
       const media = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 720 } }, audio: false
       });
-      if (!mountedRef.current) { media.getTracks().forEach((track) => track.stop()); return; }
+      if (!mountedRef.current || startAttemptRef.current !== thisAttempt) { media.getTracks().forEach((track) => track.stop()); return; }
       mediaRef.current = media;
       setStatus("scanning");
       // Wait for video element to mount after state change.
@@ -166,7 +167,7 @@ export function LocalFaceScan() {
       await videoRef.current.play();
       // Dynamic, pinned ESM import: no API key or paid verification service required.
       // Module and model are downloaded from public model/CDN hosting.
-      const toolkit = await import(/* webpackIgnore: true */ MODULE_URL);
+      const toolkit = await import(/* webpackIgnore: true */ MODULE_URL);\n      if (startAttemptRef.current !== thisAttempt) return;
       const wasm = await toolkit.FilesetResolver.forVisionTasks(WASM_URL);
       const detector: Detector = await toolkit.FaceLandmarker.createFromOptions(wasm, {
         baseOptions: { modelAssetPath: MODEL_URL, delegate: "CPU" },
@@ -176,7 +177,7 @@ export function LocalFaceScan() {
         minFacePresenceConfidence: 0.55,
         minTrackingConfidence: 0.5,
       });
-      if (!mountedRef.current) { detector.close(); cleanup(); return; }
+      if (!mountedRef.current || startAttemptRef.current !== thisAttempt) { detector.close(); return; }
       detectorRef.current = detector;
       runningRef.current = true;
       setMessage(INSTRUCTIONS[0]);
