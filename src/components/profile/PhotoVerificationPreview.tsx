@@ -33,7 +33,7 @@ async function checkImage(file: File): Promise<PhotoCheck> {
   }
 }
 
-export default function PhotoVerificationPreview() {
+export default function PhotoVerificationPreview({ enabled }: { enabled: boolean }) {
   const [preview, setPreview] = useState<string | null>(null);
   const [photoCheck, setPhotoCheck] = useState<PhotoCheck | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
@@ -126,13 +126,14 @@ export default function PhotoVerificationPreview() {
         <p className="rounded-lg border p-3 text-xs text-muted-foreground">
           <strong>Privacy:</strong> This uses biometric information processed by an external provider. Before enabling, CupidMatch must publish the provider's retention, deletion and contact details and a lawful basis/UK GDPR special-category condition. Declining does not prevent normal registration.
         </p>
+        {!enabled && <p role="status" className="rounded-lg border border-amber-400/40 p-3 text-sm text-amber-700">Live face scanning is not enabled yet. The secure provider, privacy settings and database setup must be completed before you can start verification.</p>}
         <label className="flex items-start gap-3 text-sm">
           <input type="checkbox" className="mt-1" checked={consented} onChange={(e) => setConsented(e.target.checked)} />
           <span>I explicitly agree to open the biometric liveness verification service for the purpose of checking my profile photograph. I understand it is optional and can contact support for an alternative review.</span>
         </label>
-        <button onClick={() => void beginScan()} type="button" disabled={!consented || loading}
+        <button onClick={() => void beginScan()} type="button" disabled={!enabled || !consented || loading}
           className="w-full rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground disabled:opacity-50">
-          {loading ? "Preparing secure scan…" : "Start live face verification"}
+          {!enabled ? "Live verification coming soon" : loading ? "Preparing secure scan…" : "Start live face verification"}
         </button>
         {scanError && <p role="alert" className="rounded-lg border border-destructive/40 p-3 text-sm text-destructive">{scanError}</p>}
         <p className="text-center text-xs text-muted-foreground">A completed liveness scan alone does not issue a Photo Verified badge. Secure comparison with the saved profile photo and provider verdict integration are still required.</p>
