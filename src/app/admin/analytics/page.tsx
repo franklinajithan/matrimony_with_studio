@@ -2,6 +2,7 @@ import Link from "next/link";
 import { z } from "zod";
 import { requireAdminPage } from "../guard";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { TrafficOverview, type TrafficSummary } from "./traffic-summary";
 
 const dateTime = new Intl.DateTimeFormat("en-GB", {
   dateStyle: "medium", timeStyle: "medium", timeZone: "Europe/London",
@@ -13,7 +14,7 @@ function duration(seconds: number) {
 }
 
 export default async function AnalyticsPage({ searchParams }: {
-  searchParams: Promise<{ page?: string; visit?: string }>;
+  searchParams: Promise<{ page?: string; visit?: string; day?: string }>;
 }) {
   await requireAdminPage();
   const query = await searchParams;
@@ -21,17 +22,25 @@ export default async function AnalyticsPage({ searchParams }: {
   const page = Number.isSafeInteger(number) && number >= 0 && number < 10000 ? number : 0;
   const selected = z.string().uuid().safeParse(query.visit);
   const db = createSupabaseAdminClient();
-  const [visits, detail] = await Promise.all([
+  const day = z.string().date().safeParse(query.day);
+  const [visits, detail, traffic] = await Promise.all([
     db.rpc("visitor_visit_list", { p_offset: page * 30 }),
     selected.success ? db.from("visitor_activity").select("page_id, page, opened_at, active_seconds")
       .eq("visit_id", selected.data).gte("opened_at", new Date(Date.now() - 30 * 86400_000).toISOString())
       .order("opened_at").order("page_id") : null,
+    db.rpc("visitor_traffic_summary", day.success ? { p_day: day.data } : {}),
   ]);
+  const summary = traffic.data as TrafficSummary | null;
+  const dayParam = summary ? `&day=${summary.selected_day}` : "";
   return <div className="space-y-6">
     <header>
       <h1 className="font-headline text-3xl font-bold">Visitor analytics</h1>
-      <p className="mt-2 text-muted-foreground">Opted-in visits from the last 30 days. Times are shown in London time. Duration estimates time with the page visible.</p>
+      <p className="mt-2 text-muted-foreground">Traffic includes public and member pages when visitors opt in. Visit totals count sessions, and one person may start several sessions. Times are shown in London time.</p>
     </header>
+    {traffic.error ? <p role="alert">Traffic totals are temporarily unavailable.</p> :
+      summary && <TrafficOverview key={summary.selected_day} summary={summary} />}
+    <h2 className="text-xl font-semibold">Recent visits across all dates</h2>
+    <p className="text-sm text-muted-foreground">Select a visit to see its page journey. Active time estimates time with the page visible.</p>
     {visits.error ? <p role="alert">Visitor analytics is temporarily unavailable.</p> :
       <div className="overflow-x-auto rounded-xl border">
         <table className="w-full text-left text-sm">
@@ -43,7 +52,7 @@ export default async function AnalyticsPage({ searchParams }: {
               source: string; landing_page: string; page_views: number; active_seconds: number;
             }) => <tr key={visit.visit_id} className="border-t">
               <td className="whitespace-nowrap p-3"><Link className="font-semibold text-primary underline"
-                href={`/admin/analytics?page=${page}&visit=${visit.visit_id}#journey`}>{dateTime.format(new Date(visit.started_at))}</Link></td>
+                href={`/admin/analytics?page=${page}${dayParam}&visit=${visit.visit_id}#journey`}>{dateTime.format(new Date(visit.started_at))}</Link></td>
               <td className="p-3">{visit.country ? countries.of(visit.country) : "Unknown"}</td>
               <td className="p-3">{visit.browser}</td><td className="p-3">{visit.source}</td>
               <td className="p-3">{visit.landing_page}</td><td className="p-3">{visit.page_views}</td>
@@ -54,8 +63,8 @@ export default async function AnalyticsPage({ searchParams }: {
         </table>
       </div>}
     <nav aria-label="Visit pages" className="flex gap-4 text-primary">
-      {page > 0 && <Link href={`/admin/analytics?page=${page - 1}`}>Previous</Link>}
-      {(visits.data?.length ?? 0) > 30 && <Link href={`/admin/analytics?page=${page + 1}`}>Next</Link>}
+      {page > 0 && <Link href={`/admin/analytics?page=${page - 1}${dayParam}`}>Previous</Link>}
+      {(visits.data?.length ?? 0) > 30 && <Link href={`/admin/analytics?page=${page + 1}${dayParam}`}>Next</Link>}
     </nav>
     {selected.success && <section id="journey" className="space-y-3 rounded-xl border bg-card p-4">
       <h2 className="text-xl font-semibold">Page journey</h2>
