@@ -1,8 +1,13 @@
-import { type NextRequest } from "next/server";
+import { type NextFetchEvent, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-export async function middleware(request: NextRequest) {
-  return updateSession(request);
+import { publicNavigationCountry, recordCountryPageLoad } from "@/lib/analytics/country-traffic";
+
+export async function middleware(request: NextRequest, event: NextFetchEvent) {
+  const response = await updateSession(request);
+  const country = response.ok ? publicNavigationCountry(request) : null;
+  if (country) event.waitUntil(recordCountryPageLoad(country));
+  return response;
 }
 
 export const config = {
