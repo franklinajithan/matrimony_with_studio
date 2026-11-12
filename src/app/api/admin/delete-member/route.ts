@@ -6,6 +6,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
 
+function isMissingLegacyTable(error: { code: string; message: string }, table: string) {
+  return (error.code === "42P01" || error.code === "PGRST205") && error.message.includes(`public.${table}`);
+}
+
 // Collect before deleting, otherwise removing objects shifts subsequent pages.
 async function removeFolder(db: SupabaseClient, bucket: string, prefix: string) {
   const paths: string[] = [];
@@ -53,12 +57,14 @@ export async function POST(request: Request) {
     if (account.user.email.toLowerCase() !== email.trim().toLowerCase()) return json({ error: "Confirmation email does not match the account" }, 400);
 
     const [current, legacy] = await Promise.all([
-      db.from("member_subscriptions").select("stripe_subscription_id,status").eq("user_id", memberId),
       db.from("user_subscriptions").select("provider_subscription_id,status").eq("user_id", memberId),
+      db.from("member_subscriptions").select("stripe_subscription_id,status").eq("user_id", memberId),
     ]);
-    if (current.error || legacy.error) throw new Error("Billing check failed");
+    if (current.error || (legacy.error && !isMissingLegacyTable(legacy.error, "member_subscriptions"))) {
+      throw new Error(`Billing check failed (${current.error?.code ?? legacy.error?.code})`);
+    }
     const ended = new Set(["canceled", "cancelled", "expired", "refunded"]);
-    if (current.data?.some(s => s.stripe_subscription_id && !ended.has(s.status)) || legacy.data?.some(s => s.provider_subscription_id && !ended.has(s.status))) {
+    if (current.data?.some(s => s.provider_subscription_id && !ended.has(s.status)) || legacy.data?.some(s => s.stripe_subscription_id && !ended.has(s.status))) {
       return json({ error: "Cancel the paid subscription with the payment provider before deleting this member" }, 409);
     }
 
@@ -75,7 +81,7 @@ export async function POST(request: Request) {
     const { error: storiesError } = await db.from("success_stories").delete().eq("submitted_by_uid", memberId);
     if (storiesError) throw new Error("Unable to remove member stories");
     const { error: eventsError } = await db.from("subscription_events").delete().eq("user_id", memberId);
-    if (eventsError) throw new Error("Unable to remove billing events");
+    if (eventsError && !isMissingLegacyTable(eventsError, "subscription_events")) throw new Error("Unable to remove billing events");
     // Retain administrative action/timestamp, but erase profile changes and identifiers.
     const { error: auditError } = await db.from("admin_audit_log").update({ metadata: {}, target_id: null }).eq("target_id", memberId);
     if (auditError) throw new Error("Unable to erase audit details");
