@@ -2,24 +2,24 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { referringDomain, searchEngine } from "@/lib/analytics/referrers";
 import { activityPage } from "@/lib/analytics/pages";
 import { analyticsVisitKey as visitKey, hasAnalyticsConsent } from "@/lib/analytics/growth-events";
 import { Button } from "@/components/ui/button";
 
 const consentKey = "cm_analytics";
+let attributedDocument = false;
 
-function trafficSource() {
+function trafficSource(domain: string | undefined) {
   if (!document.referrer) return "Direct";
-  const host = new URL(document.referrer).hostname.toLowerCase();
-  if (host === location.hostname) return "Internal";
-  if (/^(www\.)?google\.[a-z.]+$/.test(host)) return "Google";
-  if (/^(www\.)?bing\.com$/.test(host)) return "Bing";
-  if (/(^|\.)(duckduckgo\.com|yahoo\.com|ecosia\.org)$/.test(host)) return "Other search";
-  if (/(^|\.)(facebook\.com|instagram\.com|tiktok\.com|linkedin\.com|reddit\.com|t\.co|x\.com)$/.test(host)) return "Social";
+  if (!domain) return "Internal";
+  const engine = searchEngine(domain);
+  if (engine) return engine === "Google" || engine === "Bing" ? engine : "Other search";
+  if (/(^|\.)(facebook\.com|instagram\.com|tiktok\.com|linkedin\.com|reddit\.com|t\.co|x\.com)$/.test(domain)) return "Social";
   return "Referral";
 }
 
-type Visit = { id: string; last: number; started: number; source: string; campaign?: { channel: string; name: string } };
+type Visit = { id: string; last: number; started: number; source: string; referrer?: string; referrerSaved?: boolean; campaign?: { channel: string; name: string } };
 
 function campaignTag() {
   const params = new URLSearchParams(location.search);
@@ -35,9 +35,16 @@ function currentVisit(): Visit {
   const stored = sessionStorage.getItem(visitKey);
   if (stored) {
     const visit: Visit = JSON.parse(stored);
-    if (Date.now() - visit.last < 30 * 60_000 && Date.now() - visit.started < 4 * 60 * 60_000) return visit;
+    if (Date.now() - visit.last < 30 * 60_000 && Date.now() - visit.started < 4 * 60 * 60_000) {
+      attributedDocument = true;
+      return visit;
+    }
   }
-  return { id: crypto.randomUUID(), last: Date.now(), started: Date.now(), source: trafficSource(), campaign: campaignTag() };
+  const referrer = attributedDocument ? undefined : referringDomain(document.referrer, location.hostname);
+  const source = attributedDocument ? "Direct" : trafficSource(referrer);
+  const campaign = attributedDocument ? undefined : campaignTag();
+  attributedDocument = true;
+  return { id: crypto.randomUUID(), last: Date.now(), started: Date.now(), source, referrer, campaign };
 }
 
 export function VisitorAnalytics() {
@@ -61,9 +68,16 @@ export function VisitorAnalytics() {
         visit.last = Date.now();
         try { sessionStorage.setItem(visitKey, JSON.stringify(visit)); } catch { return; }
       }
+      const sentVisit = visit;
+      const referrer = sentVisit.referrerSaved ? undefined : sentVisit.referrer;
       void fetch("/api/visitor-activity", {
         method: "POST", keepalive: true,
-        body: JSON.stringify({ visit: visit.id, view, page, source: visit.source, campaign: visit.campaign, seconds: Math.min(14400, Math.floor(seconds)) }),
+        body: JSON.stringify({ visit: visit.id, view, page, source: visit.source, referrer, campaign: visit.campaign, seconds: Math.min(14400, Math.floor(seconds)) }),
+      }).then(response => {
+        if (!response.ok || !referrer || !hasAnalyticsConsent()) return;
+        sentVisit.referrerSaved = true;
+        const stored = JSON.parse(sessionStorage.getItem(visitKey) ?? "null") as Visit | null;
+        if (stored?.id === sentVisit.id) sessionStorage.setItem(visitKey, JSON.stringify({ ...stored, referrerSaved: true }));
       }).catch(() => {});
     }
     function visibility() {
