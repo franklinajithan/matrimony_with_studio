@@ -16,7 +16,20 @@ function setup(options = {}) {
         update() { calls.push(`anonymize:${table}`); return q; },
         eq() { return q; },
         single: async () => ({ data: { id: memberId, is_admin: !!options.targetAdmin }, error: null }),
-        then(resolve) { return Promise.resolve(table.includes('subscriptions') && options.paid ? { data: [{ stripe_subscription_id: 'sub_1', status: 'active' }], error: null } : ok).then(resolve); },
+        then(resolve) {
+          let result = ok;
+          if (options.missingTables?.includes(table)) {
+            result = { data: null, error: { code: 'PGRST205', message: `Could not find the table 'public.${table}' in the schema cache` } };
+          }
+          if (options.billingErrorTable === table) {
+            result = { data: null, error: { code: '42501', message: 'Permission denied' } };
+          }
+          if (options.paidTable === table) {
+            const idColumn = table === 'user_subscriptions' ? 'provider_subscription_id' : 'stripe_subscription_id';
+            result = { data: [{ [idColumn]: 'sub_1', status: 'active' }], error: null };
+          }
+          return Promise.resolve(result).then(resolve);
+        },
       }; return q;
     },
     auth: { admin: {
@@ -56,8 +69,16 @@ for (const [name, options, status] of [
   ['rejects self deletion', { body: { memberId: adminId, email: 'x' } }, 403],
   ['protects administrator targets', { targetAdmin: true }, 403],
   ['checks Auth email', { body: { memberId, email: 'wrong@example.com' } }, 400],
-  ['blocks ongoing paid billing', { paid: true }, 409],
+  ['blocks ongoing paid billing with legacy tables absent', { paidTable: 'user_subscriptions', missingTables: ['member_subscriptions', 'subscription_events'] }, 409],
+  ['blocks ongoing paid billing on legacy installations', { paidTable: 'member_subscriptions' }, 409],
+  ['fails closed when the current subscription table is missing', { missingTables: ['user_subscriptions'] }, 503],
+  ['fails closed when the legacy billing check is denied', { billingErrorTable: 'member_subscriptions' }, 503],
 ]) test(name, async () => { const s = setup(options); assert.equal((await s.run()).status, status); assert.equal(s.calls.length, 0); });
+test('deletes a member on the current schema without legacy billing tables', async () => {
+  const s = setup({ missingTables: ['member_subscriptions', 'subscription_events'] });
+  assert.equal((await s.run()).status, 200);
+  assert.deepEqual(s.calls.at(-1), ['deleteAuth', memberId, false]);
+});
 test('hard deletes only after paginated nested storage and residual data cleanup', async () => {
   const s = setup(); assert.equal((await s.run()).status, 200);
   const removals = s.calls.filter(c => c[0] === 'remove');
