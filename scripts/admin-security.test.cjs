@@ -132,11 +132,12 @@ for (const file of adminPages) {
       const page = load(file, {
         '@/app/admin/guard': guard, './guard': guard, '../guard': guard,
         '@/lib/feedback/inbox': { countFeedbackNeedingReply: async () => 0, loadFeedback: async () => null },
-        "@/lib/supabase/admin": { createSupabaseAdminClient: () => { if (!authorized) throw new Error("Read before authorization"); return { rpc: async () => ({ data: [], error: null }) }; } },
+        "@/lib/supabase/admin": { createSupabaseAdminClient: () => { if (!authorized) throw new Error("Read before authorization"); return { rpc: async name => ({ data: name === "visitor_traffic_summary" ? null : [], error: null }) }; } },
         zod: require("zod"),
         '@/components/feedback/FeedbackInbox': { FeedbackInbox: 'FeedbackInbox', feedbackPageNumber: () => 0 },
         '@/lib/admin/dashboard': { getAdminDashboardMetrics: async () => ({ members: 14, activeUsers: 3, pendingVerification: 12, updatedAt: '2026-09-18T10:00:00Z' }) },
         '@/lib/supabase/server': { createSupabaseServerClient: async () => ({ from: table => { assert.equal(table, 'admin_audit_log'); return { select: () => ({ order: () => ({ limit: async () => ({ data: [], error: null }) }) }) }; } }) },
+        './traffic-summary': { TrafficOverview: 'TrafficOverview' },
         './controls': { default: 'HoroscopeControls' },
         './registration-controls': { default: 'RegistrationControls' },
         './page-client': { default: 'AdminPageClient' }, './audit-explorer': { default: 'AuditExplorer' },
