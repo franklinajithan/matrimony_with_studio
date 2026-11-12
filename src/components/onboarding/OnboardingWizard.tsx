@@ -1,5 +1,6 @@
 "use client";
 
+import { recordGrowthMilestone } from "@/lib/analytics/growth-events";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -358,6 +359,7 @@ export function OnboardingWizard() {
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || payload.ok !== true || payload.isPublished !== true) throw new Error(payload.error || "Could not confirm publication.");
+      if (!isPublished) recordGrowthMilestone("profile_published");
       setIsPublished(true);
       toast({ title: "Profile published", description: "Members can now find you in discovery." });
       router.push("/dashboard"); router.refresh();
