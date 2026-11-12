@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { growthMilestones } from "@/lib/analytics/growth-events";
+import { referrerDomainPattern, searchEngine } from "@/lib/analytics/referrers";
 import { activityPage } from "@/lib/analytics/pages";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
@@ -9,6 +10,7 @@ const event = z.object({
   view: z.string().uuid(),
   page: z.string().max(80),
   source: z.enum(["Google", "Bing", "Other search", "Social", "Referral", "Direct", "Internal"]),
+  referrer: z.string().regex(referrerDomainPattern).optional(),
   campaign: z.object({
     channel: z.enum(["google", "instagram", "facebook", "whatsapp", "bing", "tiktok", "linkedin", "newsletter", "other"]),
     name: z.string().regex(/^[a-z0-9][a-z0-9_-]{0,47}$/),
@@ -34,7 +36,7 @@ export async function POST(request: NextRequest) {
   }
   if (request.headers.get("sec-fetch-site") === "cross-site") return new Response(null, { status: 403 });
   const body = await request.text();
-  if (body.length > 512) return new Response(null, { status: 413 });
+  if (body.length > 768) return new Response(null, { status: 413 });
   let input: unknown;
   try { input = JSON.parse(body); } catch { return new Response(null, { status: 400 }); }
   const agent = request.headers.get("user-agent") ?? "";
@@ -60,6 +62,12 @@ export async function POST(request: NextRequest) {
     p_browser: browserFamily(agent), p_source: data.source, p_seconds: data.seconds,
   });
   if (error) return new Response(null, { status: 503 });
+  if (data.referrer && data.referrer.replace(/^www\./, "") !== request.nextUrl.hostname.replace(/^www\./, "")) {
+    const { error: referrerError } = await db.from("visitor_referrers").upsert({
+      visit_id: data.visit, domain: data.referrer, engine: searchEngine(data.referrer) ?? null,
+    }, { onConflict: "visit_id", ignoreDuplicates: true });
+    if (referrerError) return new Response(null, { status: 503 });
+  }
   if (data.campaign) {
     const { error: attributionError } = await db.from("visitor_campaigns").upsert({
       visit_id: data.visit, channel: data.campaign.channel, name: data.campaign.name,

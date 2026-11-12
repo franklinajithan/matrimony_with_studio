@@ -13,7 +13,7 @@
     "seed:demo": "tsx scripts/seed-demo-profiles.ts",
     "seed:demo:cleanup": "tsx scripts/seed-demo-profiles.ts --cleanup",
     "test:signup": "node --test scripts/family-signup-regression.test.mjs",
-    "test:admin": "node --test scripts/admin-security.test.cjs scripts/member-deletion.test.cjs scripts/admin-growth.test.mjs scripts/visitor-activity.test.mjs",
+    "test:admin": "node --test scripts/admin-security.test.cjs scripts/member-deletion.test.cjs scripts/admin-growth.test.mjs scripts/visitor-activity.test.mjs scripts/visitor-acquisition.test.mjs",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:horoscope": "node --test scripts/horoscope-security.test.mjs scripts/horoscope-api.test.cjs scripts/horoscope-qa-access.test.cjs && node --import tsx --test src/lib/horoscope/*.test.ts scripts/profile-gender.test.ts",
