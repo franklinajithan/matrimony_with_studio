@@ -10,7 +10,7 @@ export type AuthUser = {
 };
 
 export type User = AuthUser;
-export type OAuthProvider = "google" | "facebook";
+export type OAuthProvider = "google";
 
 let cachedUser: AuthUser | null = null;
 let authReady: Promise<void> | null = null;
@@ -139,7 +139,7 @@ export async function signInWithOAuth(provider: OAuthProvider, next = "/dashboar
     provider,
     options: {
       redirectTo: callbackUrl(next),
-      scopes: provider === "facebook" ? "email,public_profile" : "openid email profile",
+      scopes: "openid email profile",
     },
   });
   if (error) mapAuthError(error, `Could not continue with ${provider}`);
