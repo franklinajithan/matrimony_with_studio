@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { ReportProfile } from "@/components/safety/ReportProfile";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -736,6 +737,9 @@ export default function ProfilePage() {
               <Button variant="outline" asChild className="rounded-xl"><a href="#profile-details">Explore full profile</a></Button>
               <Button variant="outline" asChild className="rounded-xl"><a href={`/profile/${viewedUserId}/horoscope`}>View Horoscope</a></Button>
             </div>
+            {currentFirebaseUser && currentFirebaseUser.uid !== viewedUserProfile.userId && (
+              <ReportProfile key={viewedUserProfile.userId} reporterId={currentFirebaseUser.uid} reportedId={viewedUserProfile.userId} />
+            )}
           </div>
         </div>
       </section>
