@@ -36,7 +36,10 @@ export default async function AnalyticsPage({ searchParams }: {
     <header className="rounded-2xl border bg-gradient-to-br from-accent via-card to-card p-5 sm:p-7">
       <h1 className="font-headline text-3xl font-bold sm:text-4xl">Visitor analytics</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">Traffic covers opted-in visits to public and member pages. Visits count sessions. Reports use London time.</p>
-      <Link href="#recent-visits" className="mt-4 inline-flex text-sm font-semibold text-primary underline underline-offset-4">Jump to recent visits</Link>
+      <div className="mt-4 flex flex-wrap gap-4">
+        <Link href="/admin/analytics/growth" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Growth and operations</Link>
+        <Link href="#recent-visits" className="inline-flex items-center text-sm font-semibold text-primary underline underline-offset-4">Jump to recent visits</Link>
+      </div>
     </header>
     {traffic.error ? <p role="alert">Traffic totals are temporarily unavailable.</p> :
       summary && <TrafficOverview key={summary.selected_day} summary={summary} />}
