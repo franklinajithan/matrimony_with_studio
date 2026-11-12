@@ -41,6 +41,8 @@ export function LocalFaceScan() {
   const [consent, setConsent] = useState(false);
 
   function cleanup() {
+    // Invalidate any async camera/model start that has not finished yet.
+    startAttemptRef.current += 1;
     runningRef.current = false;
     if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
     frameRef.current = null;
@@ -144,6 +146,8 @@ export function LocalFaceScan() {
 
   async function start() {
     if (!consent || runningRef.current) return;
+    // Distinguish this camera request from an earlier cancelled attempt.
+    const thisAttempt = ++startAttemptRef.current;
     setStatus("loading");
     setError(null);
     setStep(0);
@@ -165,6 +169,8 @@ export function LocalFaceScan() {
       if (!videoRef.current) throw new Error("Camera preview cannot be displayed.");
       videoRef.current.srcObject = media;
       await videoRef.current.play();
+      if (startAttemptRef.current !== thisAttempt) return;
+      setMessage("Loading face model on your device…");
       // Dynamic, pinned ESM import: no API key or paid verification service required.
       // Module and model are downloaded from public model/CDN hosting.
       const toolkit = await import(/* webpackIgnore: true */ MODULE_URL);
@@ -184,6 +190,8 @@ export function LocalFaceScan() {
       setMessage(INSTRUCTIONS[0]);
       frameRef.current = requestAnimationFrame(tick);
     } catch (cause) {
+      // Do not resurrect an error after the user cancelled this request.
+      if (startAttemptRef.current !== thisAttempt) return;
       cleanup();
       setStatus("idle");
       const detail = cause instanceof Error ? cause.message : "Unable to initialise the camera.";
