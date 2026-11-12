@@ -33,13 +33,14 @@ export default async function AnalyticsPage({ searchParams }: {
   const summary = traffic.data as TrafficSummary | null;
   const dayParam = summary ? `&day=${summary.selected_day}` : "";
   return <div className="space-y-6">
-    <header>
-      <h1 className="font-headline text-3xl font-bold">Visitor analytics</h1>
-      <p className="mt-2 text-muted-foreground">Traffic includes public and member pages when visitors opt in. Visit totals count sessions, and one person may start several sessions. Times are shown in London time.</p>
+    <header className="rounded-2xl border bg-gradient-to-br from-accent via-card to-card p-5 sm:p-7">
+      <h1 className="font-headline text-3xl font-bold sm:text-4xl">Visitor analytics</h1>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">Traffic covers opted-in visits to public and member pages. Visits count sessions. Reports use London time.</p>
+      <Link href="#recent-visits" className="mt-4 inline-flex text-sm font-semibold text-primary underline underline-offset-4">Jump to recent visits</Link>
     </header>
     {traffic.error ? <p role="alert">Traffic totals are temporarily unavailable.</p> :
       summary && <TrafficOverview key={summary.selected_day} summary={summary} />}
-    <h2 className="text-xl font-semibold">Recent visits across all dates</h2>
+    <h2 id="recent-visits" className="scroll-mt-52 text-xl font-semibold">Recent visits across all dates</h2>
     <p className="text-sm text-muted-foreground">Select a visit to see its page journey. Active time estimates time with the page visible.</p>
     {visits.error ? <p role="alert">Visitor analytics is temporarily unavailable.</p> :
       <div className="overflow-x-auto rounded-xl border">
@@ -66,7 +67,7 @@ export default async function AnalyticsPage({ searchParams }: {
       {page > 0 && <Link href={`/admin/analytics?page=${page - 1}${dayParam}`}>Previous</Link>}
       {(visits.data?.length ?? 0) > 30 && <Link href={`/admin/analytics?page=${page + 1}${dayParam}`}>Next</Link>}
     </nav>
-    {selected.success && <section id="journey" className="space-y-3 rounded-xl border bg-card p-4">
+    {selected.success && <section id="journey" className="scroll-mt-52 space-y-3 rounded-xl border bg-card p-4">
       <h2 className="text-xl font-semibold">Page journey</h2>
       {detail?.error ? <p role="alert">This journey could not be loaded.</p> : detail?.data?.length ?
         <ol className="space-y-2">{detail.data.map(view => <li key={view.page_id} className="flex flex-wrap gap-x-4 rounded-lg bg-muted p-3">

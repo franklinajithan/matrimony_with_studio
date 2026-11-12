@@ -2,22 +2,24 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, ShieldCheck, CreditCard, Menu } from "lucide-react";
+import { LayoutDashboard, Users, ShieldCheck, BarChart3, Menu } from "lucide-react";
 import { useState } from "react";
 
 const primary = [
   { href: "/admin", label: "Home", icon: LayoutDashboard },
   { href: "/admin/users", label: "Members", icon: Users },
   { href: "/admin/verifications", label: "Reviews", icon: ShieldCheck },
-  { href: "/admin/subscriptions", label: "Billing", icon: CreditCard },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
 ];
 const extra = [
-  { href: "/admin/analytics", label: "Visitor analytics" },
+  { href: "/admin/subscriptions", label: "Subscriptions" },
   { href: "/admin/feedback", label: "Feedback inbox" },
   { href: "/admin/payments", label: "Payments & Tide readiness" },
   { href: "/admin/registration", label: "Registration controls" },
   { href: "/admin/plans", label: "Plans & pricing" },
   { href: "/admin/success-stories", label: "Success stories" },
+  { href: "/admin/promo-codes", label: "Promo codes" },
+  { href: "/admin/horoscope", label: "Horoscope" },
   { href: "/admin/security", label: "Security & audit" },
 ];
 
@@ -27,7 +29,7 @@ export function AdminMobileTabBar() {
   const moreActive = extra.some(item => pathname.startsWith(item.href));
   return <>
     {moreOpen && <div className="fixed inset-0 z-40 bg-primary-dark/30 backdrop-blur-[2px] md:hidden" onClick={() => setMoreOpen(false)}>
-      <div role="dialog" aria-label="More admin sections" className="absolute inset-x-3 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] rounded-3xl border border-border bg-card p-4 shadow-elevated" onClick={event => event.stopPropagation()}>
+      <div role="dialog" aria-label="More admin sections" className="absolute inset-x-3 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] max-h-[calc(100dvh-8rem)] overflow-y-auto rounded-3xl border border-border bg-card p-4 shadow-elevated" onClick={event => event.stopPropagation()}>
         <p className="mb-3 px-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">More tools</p>
         {extra.map(item => <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)} className="block rounded-xl px-3 py-3 text-sm font-semibold text-foreground hover:bg-accent">{item.label}</Link>)}
       </div>
