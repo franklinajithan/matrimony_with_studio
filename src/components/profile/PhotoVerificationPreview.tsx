@@ -42,14 +42,6 @@ export default function PhotoVerificationPreview() {
 
 
 
-  useEffect(() => {
-    let active = true;
-    void fetch("/api/photo-verification/status", { credentials: "same-origin", cache: "no-store" })
-      .then((response) => response.ok ? response.json() : null)
-      .then((result: { status?: string } | null) => { if (active && result?.status) setScanStatus(result.status); })
-      .catch(() => {});
-    return () => { active = false; };
-  }, []);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
   async function handlePhoto(file?: File) {
