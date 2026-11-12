@@ -7,7 +7,12 @@ import { TrafficOverview, type TrafficSummary } from "./traffic-summary";
 const dateTime = new Intl.DateTimeFormat("en-GB", {
   dateStyle: "medium", timeStyle: "medium", timeZone: "Europe/London",
 });
-const countries = new Intl.DisplayNames(["en-GB"], { type: "region" });
+const countries = new Intl.DisplayNames(["en-GB"], { type: "region", fallback: "none" });
+const counts = new Intl.NumberFormat("en-GB");
+
+function countryName(code: string | null) {
+  return code && code !== "ZZ" && code !== "XX" ? countries.of(code) ?? "Unknown" : "Unknown";
+}
 
 function duration(seconds: number) {
   return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
@@ -23,12 +28,13 @@ export default async function AnalyticsPage({ searchParams }: {
   const selected = z.string().uuid().safeParse(query.visit);
   const db = createSupabaseAdminClient();
   const day = z.string().date().safeParse(query.day);
-  const [visits, detail, traffic] = await Promise.all([
+  const [visits, detail, traffic, geography] = await Promise.all([
     db.rpc("visitor_visit_list", { p_offset: page * 30 }),
     selected.success ? db.from("visitor_activity").select("page_id, page, opened_at, active_seconds")
       .eq("visit_id", selected.data).gte("opened_at", new Date(Date.now() - 30 * 86400_000).toISOString())
       .order("opened_at").order("page_id") : null,
     db.rpc("visitor_traffic_summary", day.success ? { p_day: day.data } : {}),
+    db.rpc("country_page_load_report"),
   ]);
   const summary = traffic.data as TrafficSummary | null;
   const dayParam = summary ? `&day=${summary.selected_day}` : "";
@@ -41,6 +47,26 @@ export default async function AnalyticsPage({ searchParams }: {
         <Link href="#recent-visits" className="inline-flex items-center text-sm font-semibold text-primary underline underline-offset-4">Jump to recent visits</Link>
       </div>
     </header>
+    <section aria-labelledby="country-traffic" className="space-y-3 rounded-2xl border bg-card p-5 shadow-sm">
+      <div>
+        <h2 id="country-traffic" className="text-xl font-semibold">Public page loads by country</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Counts full public page loads by network country, including visitors who haven’t chosen analytics settings. London dates.</p>
+      </div>
+      {geography.error ? <p role="alert">Country totals are temporarily unavailable.</p> :
+        geography.data?.length ? <div className="overflow-x-auto rounded-lg border">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-muted"><tr>{["Country", "Today", "Last 7 days", "Last 28 days"].map(label =>
+              <th key={label} scope="col" className="whitespace-nowrap px-3 py-2">{label}</th>)}</tr></thead>
+            <tbody>{geography.data.map((row: { country: string; today: number; last_7_days: number; last_28_days: number }) =>
+              <tr key={row.country} className="border-t">
+                <th scope="row" className="px-3 py-2 font-medium">{countryName(row.country)}</th>
+                {[row.today, row.last_7_days, row.last_28_days].map((value, index) =>
+                  <td key={index} className="px-3 py-2 tabular-nums">{counts.format(value)}</td>)}
+              </tr>)}</tbody>
+          </table>
+        </div> : <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">No public page loads have been counted yet.</p>}
+      <p className="text-xs text-muted-foreground">Totals begin when this counter goes live. Returning visitors and reloads can count more than once.</p>
+    </section>
     {traffic.error ? <p role="alert">Traffic totals are temporarily unavailable.</p> :
       summary && <TrafficOverview key={summary.selected_day} summary={summary} />}
     <h2 id="recent-visits" className="scroll-mt-52 text-xl font-semibold">Recent visits across all dates</h2>
@@ -57,7 +83,7 @@ export default async function AnalyticsPage({ searchParams }: {
             }) => <tr key={visit.visit_id} className="border-t">
               <td className="whitespace-nowrap p-3"><Link className="font-semibold text-primary underline"
                 href={`/admin/analytics?page=${page}${dayParam}&visit=${visit.visit_id}#journey`}>{dateTime.format(new Date(visit.started_at))}</Link></td>
-              <td className="p-3">{visit.country ? countries.of(visit.country) : "Unknown"}</td>
+              <td className="p-3">{countryName(visit.country)}</td>
               <td className="p-3">{visit.browser}</td><td className="p-3">{visit.source}</td>
               <td className="p-3">{visit.landing_page}</td><td className="p-3">{visit.page_views}</td>
               <td className="whitespace-nowrap p-3">{duration(visit.active_seconds)}</td>
