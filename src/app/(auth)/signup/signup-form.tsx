@@ -1,5 +1,6 @@
 "use client";
 
+import { recordGrowthMilestone } from "@/lib/analytics/growth-events";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -63,12 +64,14 @@ export default function SignupPage() {
     setIsLoading(true);
     setFormError(null);
     try {
+      recordGrowthMilestone("signup_started");
       const result = await createUserWithEmailAndPassword(auth, values.email, values.password, {
         displayName: values.name,
         pendingPhone: values.phone,
         pendingPromoCode: values.promoCode?.trim().toUpperCase(),
       });
 
+      recordGrowthMilestone("account_created");
       if (result.needsEmailConfirmation) {
         toast({
           title: "Confirm your email",

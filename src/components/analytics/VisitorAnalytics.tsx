@@ -3,10 +3,10 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { activityPage } from "@/lib/analytics/pages";
+import { analyticsVisitKey as visitKey, hasAnalyticsConsent } from "@/lib/analytics/growth-events";
 import { Button } from "@/components/ui/button";
 
 const consentKey = "cm_analytics";
-const visitKey = "cm_analytics_visit";
 
 function trafficSource() {
   if (!document.referrer) return "Direct";
@@ -19,7 +19,17 @@ function trafficSource() {
   return "Referral";
 }
 
-type Visit = { id: string; last: number; started: number; source: string };
+type Visit = { id: string; last: number; started: number; source: string; campaign?: { channel: string; name: string } };
+
+function campaignTag() {
+  const params = new URLSearchParams(location.search);
+  const source = params.get("utm_source")?.toLowerCase();
+  const name = params.get("utm_campaign")?.toLowerCase();
+  if (!source || !name || !/^[a-z0-9][a-z0-9_-]{0,47}$/.test(name)) return undefined;
+  const channel = ["google", "instagram", "facebook", "whatsapp", "bing", "tiktok", "linkedin", "newsletter"]
+    .includes(source) ? source : "other";
+  return { channel, name };
+}
 
 function currentVisit(): Visit {
   const stored = sessionStorage.getItem(visitKey);
@@ -27,7 +37,7 @@ function currentVisit(): Visit {
     const visit: Visit = JSON.parse(stored);
     if (Date.now() - visit.last < 30 * 60_000 && Date.now() - visit.started < 4 * 60 * 60_000) return visit;
   }
-  return { id: crypto.randomUUID(), last: Date.now(), started: Date.now(), source: trafficSource() };
+  return { id: crypto.randomUUID(), last: Date.now(), started: Date.now(), source: trafficSource(), campaign: campaignTag() };
 }
 
 export function VisitorAnalytics() {
@@ -53,7 +63,7 @@ export function VisitorAnalytics() {
       }
       void fetch("/api/visitor-activity", {
         method: "POST", keepalive: true,
-        body: JSON.stringify({ visit: visit.id, view, page, source: visit.source, seconds: Math.min(14400, Math.floor(seconds)) }),
+        body: JSON.stringify({ visit: visit.id, view, page, source: visit.source, campaign: visit.campaign, seconds: Math.min(14400, Math.floor(seconds)) }),
       }).catch(() => {});
     }
     function visibility() {
@@ -82,10 +92,6 @@ export function VisitorAnalytics() {
     };
   }, [path]);
   return null;
-}
-
-function hasAnalyticsConsent() {
-  return document.cookie.split("; ").includes(consentKey + "=yes");
 }
 
 export function AnalyticsSettings() {

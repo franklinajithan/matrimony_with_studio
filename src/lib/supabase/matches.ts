@@ -1,3 +1,4 @@
+import { recordGrowthMilestone } from "@/lib/analytics/growth-events";
 import { supabase } from "./client";
 import { Timestamp } from "./timestamp";
 import type { MatchRequestRow } from "./types";
@@ -34,6 +35,7 @@ export async function createMatchRequest(params: {
     status: "pending",
   });
   if (error) throw error;
+  recordGrowthMilestone("request_sent");
 }
 
 export async function updateMatchRequestStatus(
@@ -97,6 +99,7 @@ export async function sendInterest(params: {
       })
       .eq("id", id);
     if (updateError) throw updateError;
+    recordGrowthMilestone("request_sent");
     return { id };
   }
 
@@ -108,6 +111,7 @@ export async function sendInterest(params: {
     message: params.message || null,
   });
   if (error) throw error;
+  recordGrowthMilestone("request_sent");
   return { id };
 }
 
