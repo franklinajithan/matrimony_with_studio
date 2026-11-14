@@ -62,7 +62,7 @@ import {
   type GalleryPhotoItem,
 } from "@/components/profile/PhotoGalleryEditor";
 import { readProfileGender, profileGenderPatch } from "@/lib/profile-gender";
-import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
+import { PageFrame } from "@/components/dashboard/PageHero";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -623,13 +623,10 @@ export default function EditProfilePage() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit, handleInvalidSubmit)}>
         <PageFrame>
-          <PageHero
-            eyebrow="Your profile"
-            title="Edit profile"
-            description="Update how you appear to members. Changes stay private until you save."
-            leading={
-              <div className="relative group shrink-0">
-                <Avatar className="h-20 w-20 border-4 border-white text-lg shadow-md sm:h-24 sm:w-24">
+          <section className="space-y-4 rounded-2xl border border-primary/15 bg-gradient-to-br from-accent via-background to-background p-4 shadow-sm sm:p-6">
+            <div className="flex items-start gap-3 sm:gap-5">
+              <div className="relative mt-1 shrink-0">
+                <Avatar className="h-16 w-16 border-2 border-white shadow-md sm:h-24 sm:w-24">
                   <AvatarImage src={profilePhotoPreview || currentProfilePhotoUrl || defaultFirestoreProfile.profilePhotoUrl} alt={form.getValues("fullName") || "User"} data-ai-hint={profilePhotoPreview ? "new upload preview" : currentDataAiHint} />
                   <AvatarFallback className="text-2xl text-gold-foreground">{form.getValues("fullName")?.substring(0, 2) || "U"}</AvatarFallback>
                 </Avatar>
@@ -647,83 +644,84 @@ export default function EditProfilePage() {
                   </Button>
                 )}
               </div>
-            }
-          >
-            <div className="mt-3 space-y-2">
-              <FormField
-                control={form.control}
-                name="fullName"
-                render={({ field }) => (
-                  <FormItem className="mb-0">
-                    <FormControl>
-                      <Input {...field} className="h-auto border-none bg-transparent p-0 text-xl font-semibold text-foreground focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-2xl" disabled={isSaving || anyEnhancementLoading} />
-                    </FormControl>
-                    <FormMessage className="text-xs text-red-500" />
-                  </FormItem>
-                )}
-              />
-              <div className="flex flex-col gap-1 text-sm text-muted-foreground sm:text-base">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 shrink-0" />
-                  <FormField
-                    control={form.control}
-                    name="location"
-                    render={({ field }) => (
-                      <FormItem className="mb-0 flex items-center">
-                        <FormControl>
-                          <Input {...field} className="h-auto w-auto border-none bg-transparent p-0 text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0" placeholder="Add location" disabled={isSaving || anyEnhancementLoading} />
-                        </FormControl>
-                        <FormMessage className="text-xs text-red-500" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 shrink-0" />
-                  <FormField
-                    control={form.control}
-                    name="profession"
-                    render={({ field }) => (
-                      <FormItem className="mb-0 flex items-center">
-                        <FormControl>
-                          <Input {...field} className="h-auto w-auto border-none bg-transparent p-0 text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0" placeholder="Add profession" disabled={isSaving || anyEnhancementLoading} />
-                        </FormControl>
-                        <FormMessage className="text-xs text-red-500" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-white/70 px-3 py-2.5">
-                <Checkbox
-                  id="profile-visible"
-                  checked={isProfileVisible}
-                  disabled={isSaving || visibilitySaving || anyEnhancementLoading}
-                  onCheckedChange={(value) => void handleVisibilityChange(value === true)}
-                />
-                <Label htmlFor="profile-visible" className="flex cursor-pointer items-center gap-2 text-sm font-medium text-foreground">
-                  {isProfileVisible ? (
-                    <Eye className="h-4 w-4 text-primary" aria-hidden />
-                  ) : (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden />
+              <div className="min-w-0 flex-1 space-y-1">
+                <h1 className="text-xs font-semibold uppercase tracking-widest text-primary">Edit profile</h1>
+                <FormField
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem className="mb-0">
+                      <FormControl>
+                        <Input {...field} aria-label="Full name" className="min-h-10 w-full rounded-lg border-transparent bg-transparent px-2 py-1 text-xl font-semibold focus-visible:ring-2 sm:text-2xl" disabled={isSaving || anyEnhancementLoading} />
+                      </FormControl>
+                      <FormMessage className="text-xs text-red-500" />
+                    </FormItem>
                   )}
-                  {isProfileVisible ? "Visible in Discover" : "Invisible — hidden from Discover"}
-                </Label>
-                {visibilitySaving ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
-                <Button asChild variant="outline" size="sm" className="ml-auto rounded-xl border-input">
-                  <Link href="/biodata">Biodata Studio</Link>
-                </Button>
-              </div>
+                />
+                <div className="flex flex-col gap-1 text-sm text-muted-foreground sm:text-base">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 shrink-0" />
+                    <FormField
+                      control={form.control}
+                      name="location"
+                      render={({ field }) => (
+                        <FormItem className="mb-0 min-w-0 flex-1">
+                          <FormControl>
+                            <Input {...field} className="min-h-9 w-full rounded-lg border-transparent bg-transparent px-2 py-1 text-sm focus-visible:ring-2" aria-label="Location" placeholder="Add location" disabled={isSaving || anyEnhancementLoading} />
+                          </FormControl>
+                          <FormMessage className="text-xs text-red-500" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="h-4 w-4 shrink-0" />
+                    <FormField
+                      control={form.control}
+                      name="profession"
+                      render={({ field }) => (
+                        <FormItem className="mb-0 min-w-0 flex-1">
+                          <FormControl>
+                            <Input {...field} className="min-h-9 w-full rounded-lg border-transparent bg-transparent px-2 py-1 text-sm focus-visible:ring-2" aria-label="Profession" placeholder="Add profession" disabled={isSaving || anyEnhancementLoading} />
+                          </FormControl>
+                          <FormMessage className="text-xs text-red-500" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                </div>
             </div>
-          </PageHero>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-primary/15 pt-3">
+              <Checkbox
+                id="profile-visible"
+                checked={isProfileVisible}
+                disabled={isSaving || visibilitySaving || anyEnhancementLoading}
+                onCheckedChange={(value) => void handleVisibilityChange(value === true)}
+              />
+              <Label htmlFor="profile-visible" className="flex cursor-pointer items-center gap-2 text-sm font-medium text-foreground">
+                {isProfileVisible ? (
+                  <Eye className="h-4 w-4 text-primary" aria-hidden />
+                ) : (
+                  <EyeOff className="h-4 w-4 text-muted-foreground" aria-hidden />
+                )}
+                {isProfileVisible ? "Visible in Discover" : "Invisible — hidden from Discover"}
+              </Label>
+              {visibilitySaving ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : null}
+              <Button asChild variant="outline" size="sm" className="min-h-9 rounded-lg border-input sm:ml-auto">
+                <Link href="/biodata">Biodata Studio</Link>
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">Save your details to update your profile.</p>
+          </section>
 
         {/* Main Content */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 rounded-xl">
-              <TabsTrigger value="about">About</TabsTrigger>
-              <TabsTrigger value="photos">Photos</TabsTrigger>
-              <TabsTrigger value="interests">Interests</TabsTrigger>
-              <TabsTrigger value="horoscope">Horoscope</TabsTrigger>
+            <TabsList className="grid h-auto min-h-11 w-full grid-cols-4 rounded-xl p-1">
+              <TabsTrigger value="about" className="min-h-10 px-1 text-xs sm:text-sm">About</TabsTrigger>
+              <TabsTrigger value="photos" className="min-h-10 px-1 text-xs sm:text-sm">Photos</TabsTrigger>
+              <TabsTrigger value="interests" className="min-h-10 px-1 text-xs sm:text-sm">Interests</TabsTrigger>
+              <TabsTrigger value="horoscope" className="min-h-10 px-1 text-xs sm:text-sm">Horoscope</TabsTrigger>
             </TabsList>
 
             <TabsContent value="about" className="space-y-6">
