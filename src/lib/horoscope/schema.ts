@@ -26,6 +26,13 @@ export const fieldKeys = fieldDefinitions.map((f) => f[0]) as [
   FieldKey,
   ...FieldKey[],
 ];
+export const shareableChartFields = [
+  "timeQuality", "rasi", "nakshatra", "pada", "lagna", "ayanamsa", "dosha", "dasha",
+] as const satisfies readonly FieldKey[];
+export function isShareableChartField(key: string) {
+  return shareableChartFields.some((field) => field === key);
+}
+
 const short = z.string().trim().max(200);
 export const fieldsSchema = z
   .object(
@@ -122,7 +129,7 @@ export const saveSchema = z
     tradition: z.enum(["tamil", "vedic", "western", "other"]),
     visibility: z.enum(["private", "connections", "members"]),
     fields: fieldsSchema,
-    shared_fields: z.array(z.enum(fieldKeys)).max(fieldKeys.length),
+    shared_fields: z.array(z.enum(shareableChartFields)).max(shareableChartFields.length),
     comparison_consent: z.boolean(),
     ai_consent: z.boolean(),
     planets: z.array(planetSchema).max(18).default([]),

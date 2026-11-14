@@ -65,6 +65,9 @@ await db.exec(migration);
 await db.exec(await readFile(new URL(
   "../supabase/migrations/20261023073857_horoscope_revision_conflict.sql", import.meta.url,
 ), "utf8"));
+await db.exec(await readFile(new URL(
+  "../supabase/migrations/20261114100000_horoscope_peer_privacy_and_report_retries.sql", import.meta.url,
+), "utf8"));
 await db.exec(
   "begin; update public.horoscope_settings set horoscope_enabled=true,horoscope_upload_enabled=true;",
 );
@@ -132,7 +135,9 @@ try {
       "shared DTO redacts exact DOB/location/provenance",
       async () => {
         await actor(a);
-        await save(payload(1, "members"));
+        const legacySelection = payload(1, "members");
+        legacySelection.shared_fields.push("dateOfBirth", "timeOfBirth", "birthCity", "birthCountry", "timezone");
+        await save(legacySelection);
         await actor(b);
         const h = await rpc("horoscope_view", ["$1::uuid"], [a]);
         assert.deepEqual(Object.keys(h.fields).sort(), [
@@ -193,7 +198,7 @@ try {
       "reports stored only with fresh revisions and current permission",
       async () => {
         await actor(b);
-        reportId = await rpc(
+        const storeReport = () => rpc(
           "horoscope_store_report",
           ["$1::uuid", "2", "3", "$2::jsonb"],
           [
@@ -204,6 +209,8 @@ try {
             }),
           ],
         );
+        reportId = await storeReport();
+        assert.equal(await storeReport(), reportId);
         assert.equal(
           (await db.query("select id from public.horoscope_match_reports")).rows
             .length,
