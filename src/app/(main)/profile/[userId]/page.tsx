@@ -735,7 +735,9 @@ export default function ProfilePage() {
             {viewedUserProfile.isVerified && <span className="inline-flex w-fit items-center gap-2 rounded-full bg-accent px-3 py-2 text-xs font-medium text-primary"><CheckCircle className="h-4 w-4" />Verified profile</span>}
             <div className="flex flex-wrap items-center gap-3">
               <Button variant="outline" asChild className="rounded-xl"><a href="#profile-details">Explore full profile</a></Button>
-              <Button variant="outline" asChild className="rounded-xl"><a href={`/profile/${viewedUserId}/horoscope`}>View Horoscope</a></Button>
+              {currentFirebaseUser && currentFirebaseUser.uid !== viewedUserProfile.userId && (
+                <Button variant="outline" asChild className="rounded-xl"><a href={`/profile/${viewedUserId}/horoscope`}>Horoscope compatibility</a></Button>
+              )}
             </div>
             {currentFirebaseUser && currentFirebaseUser.uid !== viewedUserProfile.userId && (
               <ReportProfile key={viewedUserProfile.userId} reporterId={currentFirebaseUser.uid} reportedId={viewedUserProfile.userId} />
