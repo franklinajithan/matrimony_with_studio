@@ -2,6 +2,8 @@
 
 ## Current release decision
 
+On 9 November 2026, all three production flags were confirmed off via a read-only check. The local horoscope suite passed 51 checks covering QA access, consent, private and blocked access, missing birth details, restricted users and report invalidation. QA enrolment and relationship/consent checks still apply. These checks do not establish plan-specific production entitlement behavior. No isolated Supabase branch was available for signed-in staging acceptance, so regular-member access remains gated.
+
 The initial migration failures were resolved on 19 October 2026: `horoscope_private_studio` applied successfully. Read-only live checks confirmed all eight horoscope tables have RLS, zero horoscope functions are executable by anonymous users, anonymous raw-profile SELECT and authenticated raw-profile UPDATE are denied, and `horoscope-private` is private. All three feature flags remain OFF.
 
 The application may be staged through the established PR → main → Vercel workflow with those flags OFF. This is not an enabled feature launch. The owner-authorized disposable Auth/JWT run on 23 October passed all twelve manual-entry/privacy checks. All disposable identities were removed, and registration and all horoscope flags were restored to OFF. Browser/device acceptance and the operational items below still gate activation. Earlier preview Google sign-in redirected to production, so that attempt did not verify the new screens.
