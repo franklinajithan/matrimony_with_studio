@@ -44,12 +44,13 @@ export default async function AnalyticsPage({ searchParams }: {
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">Traffic covers opted-in visits to public and member pages. Visits count sessions. Reports use London time.</p>
       <div className="mt-4 flex flex-wrap gap-4">
         <Link href="/admin/analytics/growth" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Growth and operations</Link>
-        <Link href="#recent-visits" className="inline-flex items-center text-sm font-semibold text-primary underline underline-offset-4">Jump to recent visits</Link>
+        <Link href="#recent-visits" className="inline-flex items-center text-sm font-semibold text-primary underline underline-offset-4">Jump to recorded visits</Link>
+        <Link href="#country-traffic" className="inline-flex items-center text-sm font-semibold text-primary underline underline-offset-4">Jump to country totals</Link>
       </div>
     </header>
     <section aria-labelledby="country-traffic" className="space-y-3 rounded-2xl border bg-card p-5 shadow-sm">
       <div>
-        <h2 id="country-traffic" className="text-xl font-semibold">Public page loads by country</h2>
+        <h2 id="country-traffic" className="scroll-mt-52 text-xl font-semibold">Public page loads by country</h2>
         <p className="mt-1 text-sm text-muted-foreground">Counts full public page loads by network country, including visitors who haven’t chosen analytics settings. London dates.</p>
       </div>
       {geography.error ? <p role="alert">Country totals are temporarily unavailable.</p> :
@@ -69,8 +70,8 @@ export default async function AnalyticsPage({ searchParams }: {
     </section>
     {traffic.error ? <p role="alert">Traffic totals are temporarily unavailable.</p> :
       summary && <TrafficOverview key={summary.selected_day} summary={summary} />}
-    <h2 id="recent-visits" className="scroll-mt-52 text-xl font-semibold">Recent visits across all dates</h2>
-    <p className="text-sm text-muted-foreground">Select a visit to see its page journey. Active time estimates time with the page visible.</p>
+    <h2 id="recent-visits" className="scroll-mt-52 text-xl font-semibold">Recorded visits (analytics opt-in)</h2>
+    <p className="text-sm text-muted-foreground">Only visitors who enable analytics appear here. For international traffic including visitors who haven’t chosen analytics settings, see <Link href="#country-traffic" className="font-semibold text-primary underline underline-offset-4">public page loads by country</Link>. Select a visit to see its page journey.</p>
     {visits.error ? <p role="alert">Visitor analytics is temporarily unavailable.</p> :
       <div className="overflow-x-auto rounded-xl border">
         <table className="w-full text-left text-sm">
