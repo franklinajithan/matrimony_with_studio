@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 const socials = [
-  { name: "Instagram", url: process.env.CUPIDMATCH_INSTAGRAM_URL, hosts: ["instagram.com", "www.instagram.com"] },
+  { name: "Instagram", url: "https://www.instagram.com/cupidmatch.co.uk/", hosts: ["instagram.com", "www.instagram.com"] },
   { name: "Facebook", url: process.env.CUPIDMATCH_FACEBOOK_URL, hosts: ["facebook.com", "www.facebook.com"] },
   { name: "LinkedIn", url: process.env.CUPIDMATCH_LINKEDIN_URL, hosts: ["linkedin.com", "www.linkedin.com"] },
   { name: "TikTok", url: process.env.CUPIDMATCH_TIKTOK_URL, hosts: ["tiktok.com", "www.tiktok.com"] },
