@@ -617,18 +617,19 @@ export default function EditProfilePage() {
     );
   }
 
+  const bioPreview = form.watch("bio")?.trim();
   const anyEnhancementLoading = isEnhancingBio || isEnhancingHobbies || isEnhancingMovies || isEnhancingMusic;
   
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit, handleInvalidSubmit)}>
         <PageFrame>
-          <section className="space-y-4 rounded-2xl border border-primary/15 bg-gradient-to-br from-accent via-background to-background p-4 shadow-sm sm:p-6">
-            <div className="flex items-start gap-3 sm:gap-5">
-              <div className="relative mt-1 shrink-0">
-                <Avatar className="h-16 w-16 border-2 border-white shadow-md sm:h-24 sm:w-24">
-                  <AvatarImage src={profilePhotoPreview || currentProfilePhotoUrl || defaultFirestoreProfile.profilePhotoUrl} alt={form.getValues("fullName") || "User"} data-ai-hint={profilePhotoPreview ? "new upload preview" : currentDataAiHint} />
-                  <AvatarFallback className="text-2xl text-gold-foreground">{form.getValues("fullName")?.substring(0, 2) || "U"}</AvatarFallback>
+          <section className="overflow-hidden rounded-3xl border border-primary/15 bg-card shadow-sm">
+            <div className="grid items-center gap-4 bg-gradient-to-br from-[#2D1538] to-[#482153] p-4 text-[#FFFCF7] sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-8 sm:p-8">
+              <div className="relative mx-auto w-full max-w-52 sm:max-w-none">
+                <Avatar className="aspect-[4/3] h-auto w-full rounded-2xl border border-[#C6A15B]/60 shadow-lg sm:aspect-[4/5]">
+                  <AvatarImage className="object-cover object-center" src={profilePhotoPreview || currentProfilePhotoUrl || defaultFirestoreProfile.profilePhotoUrl} alt={form.getValues("fullName") || "User"} data-ai-hint={profilePhotoPreview ? "new upload preview" : currentDataAiHint} />
+                  <AvatarFallback className="rounded-none bg-[#482153] font-serif text-4xl text-[#FFFCF7]">{form.getValues("fullName")?.substring(0, 2) || "U"}</AvatarFallback>
                 </Avatar>
                 {profilePhotoPreview && (
                   <Button
@@ -644,21 +645,21 @@ export default function EditProfilePage() {
                   </Button>
                 )}
               </div>
-              <div className="min-w-0 flex-1 space-y-1">
-                <h1 className="text-xs font-semibold uppercase tracking-widest text-primary">Edit profile</h1>
+              <div className="min-w-0 space-y-1">
+                <h1 className="px-2 text-xs font-semibold uppercase tracking-widest text-[#E5C482]">Your profile</h1>
                 <FormField
                   control={form.control}
                   name="fullName"
                   render={({ field }) => (
                     <FormItem className="mb-0">
                       <FormControl>
-                        <Input {...field} aria-label="Full name" className="min-h-10 w-full rounded-lg border-transparent bg-transparent px-2 py-1 text-xl font-semibold focus-visible:ring-2 sm:text-2xl" disabled={isSaving || anyEnhancementLoading} />
+                        <Input {...field} aria-label="Full name" className="min-h-10 w-full rounded-lg border-transparent bg-white/10 px-2 py-1 font-serif text-2xl font-semibold text-white focus-visible:ring-[#E5C482] sm:text-4xl" disabled={isSaving || anyEnhancementLoading} />
                       </FormControl>
                       <FormMessage className="text-xs text-red-500" />
                     </FormItem>
                   )}
                 />
-                <div className="flex flex-col gap-1 text-sm text-muted-foreground sm:text-base">
+                <div className="flex flex-col gap-1 text-sm text-[#F3EDF6] sm:text-base">
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 shrink-0" />
                     <FormField
@@ -667,7 +668,7 @@ export default function EditProfilePage() {
                       render={({ field }) => (
                         <FormItem className="mb-0 min-w-0 flex-1">
                           <FormControl>
-                            <Input {...field} className="min-h-9 w-full rounded-lg border-transparent bg-transparent px-2 py-1 text-sm focus-visible:ring-2" aria-label="Location" placeholder="Add location" disabled={isSaving || anyEnhancementLoading} />
+                            <Input {...field} className="min-h-9 w-full rounded-lg border-transparent bg-white/10 px-2 py-1 text-sm text-white placeholder:text-[#DDCFE4] focus-visible:ring-[#E5C482]" aria-label="Location" placeholder="Add location" disabled={isSaving || anyEnhancementLoading} />
                           </FormControl>
                           <FormMessage className="text-xs text-red-500" />
                         </FormItem>
@@ -682,7 +683,7 @@ export default function EditProfilePage() {
                       render={({ field }) => (
                         <FormItem className="mb-0 min-w-0 flex-1">
                           <FormControl>
-                            <Input {...field} className="min-h-9 w-full rounded-lg border-transparent bg-transparent px-2 py-1 text-sm focus-visible:ring-2" aria-label="Profession" placeholder="Add profession" disabled={isSaving || anyEnhancementLoading} />
+                            <Input {...field} className="min-h-9 w-full rounded-lg border-transparent bg-white/10 px-2 py-1 text-sm text-white placeholder:text-[#DDCFE4] focus-visible:ring-[#E5C482]" aria-label="Profession" placeholder="Add profession" disabled={isSaving || anyEnhancementLoading} />
                           </FormControl>
                           <FormMessage className="text-xs text-red-500" />
                         </FormItem>
@@ -690,9 +691,9 @@ export default function EditProfilePage() {
                     />
                   </div>
                 </div>
-                </div>
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-primary/15 pt-3">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-primary/15 px-4 py-3 sm:px-8">
               <Checkbox
                 id="profile-visible"
                 checked={isProfileVisible}
@@ -712,7 +713,7 @@ export default function EditProfilePage() {
                 <Link href="/biodata">Biodata Studio</Link>
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">Save your details to update your profile.</p>
+
           </section>
 
         {/* Main Content */}
@@ -725,6 +726,12 @@ export default function EditProfilePage() {
             </TabsList>
 
             <TabsContent value="about" className="space-y-6">
+              {bioPreview && (
+                <div className="rounded-2xl border-l-4 border-[#C6A15B] bg-accent px-5 py-4">
+                  <h2 className="font-serif text-xl text-foreground">A little about me</h2>
+                  <p className="mt-2 line-clamp-4 whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">{bioPreview}</p>
+                </div>
+              )}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Basic Information</CardTitle>
