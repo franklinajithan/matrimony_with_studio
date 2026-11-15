@@ -5,12 +5,16 @@ import { getSupabaseUrl } from "@/lib/supabase/env";
 const publicPages = new Set(searchPages);
 
 export function publicNavigationCountry(request: NextRequest): string | null {
-  if (request.method !== "GET" || request.headers.get("sec-fetch-mode") !== "navigate"
-    || request.headers.get("sec-fetch-dest") !== "document") return null;
+  if (request.method !== "GET") return null;
+  const mode = request.headers.get("sec-fetch-mode");
+  const destination = request.headers.get("sec-fetch-dest");
+  if ((mode && mode !== "navigate") || (destination && destination !== "document")) return null;
+  // Some browsers and in-app webviews omit Fetch Metadata on document requests.
+  if ((!mode || !destination) && !/\btext\/html\b/i.test(request.headers.get("accept") ?? "")) return null;
   if (!publicPages.has(request.nextUrl.pathname.replace(/\/$/, "") || "/")) return null;
   if (request.cookies.get("cm_analytics")?.value === "no") return null;
   if (request.headers.has("next-router-prefetch") || request.headers.has("rsc")
-    || /prefetch|prerender/i.test(request.headers.get("sec-purpose") ?? request.headers.get("purpose") ?? "")
+    || /prefetch|prerender/i.test([request.headers.get("sec-purpose"), request.headers.get("purpose")].join(" "))
     || /bot|crawler|spider|headless/i.test(request.headers.get("user-agent") ?? "")) return null;
 
   const country = request.headers.get("x-vercel-ip-country");

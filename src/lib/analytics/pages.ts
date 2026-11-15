@@ -12,7 +12,8 @@ export const searchPages = [
   "/sri-lankan-matrimony-germany", "/sri-lankan-matrimony-switzerland", "/success-stories",
 ];
 
-const sections = [
+export const memberActivityPages = [
+  "/dashboard/horoscope",
   "/discover", "/feedback", "/signup", "/login", "/dashboard", "/onboarding",
   "/profile", "/messages", "/connections", "/interests", "/search", "/suggestions",
   "/membership", "/checkout", "/settings", "/profile-setup", "/verification",
@@ -21,5 +22,5 @@ const sections = [
 export function activityPage(path: string) {
   const normalized = path.replace(/\/$/, "") || "/";
   if (searchPages.includes(normalized)) return normalized;
-  return sections.find(section => normalized === section || normalized.startsWith(section + "/"));
+  return memberActivityPages.find(section => normalized === section || normalized.startsWith(section + "/"));
 }
