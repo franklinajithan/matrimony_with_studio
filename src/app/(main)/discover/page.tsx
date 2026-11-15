@@ -1,11 +1,19 @@
-"use client";
-
+import { getServerAdminAccess } from "@/lib/auth/admin";
+import { AdminProfileDirectory } from "./admin-profile-directory";
 import { Suspense } from "react";
 import { PreferenceDiscovery } from "@/components/discovery/PreferenceDiscovery";
 import { PageFrame } from "@/components/dashboard/PageHero";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function DiscoverPage() {
+export default async function DiscoverPage({ searchParams }: {
+  searchParams: Promise<{ page?: string | string[] }>;
+}) {
+  const access = await getServerAdminAccess();
+  if (access.status === "authorized") {
+    const { page } = await searchParams;
+    return <AdminProfileDirectory page={page} />;
+  }
+
   return (
     <Suspense
       fallback={
