@@ -338,7 +338,7 @@ export function DashboardOverview() {
       <section aria-label="Your activity" className="grid grid-cols-3 gap-2 sm:gap-4">
         <Link href="/dashboard/interests" className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-border bg-card p-3 transition hover:bg-accent sm:flex-row sm:items-center sm:gap-3 sm:p-4">
           <span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-gold-foreground"><Heart className="h-4 w-4" /></span>
-          <span><strong className="block text-lg text-foreground">{countText(data.receivedInterests)}</strong><span className="text-xs text-muted-foreground">{t.received}</span></span>
+          <span><strong className="block text-lg text-foreground">{countText(data.pendingRequests)}</strong><span className="text-xs text-muted-foreground">{t.received}</span></span>
         </Link>
         <Link href="/connections" className="flex min-w-0 flex-col items-start gap-2 rounded-2xl border border-border bg-card p-3 transition hover:bg-accent sm:flex-row sm:items-center sm:gap-3 sm:p-4">
           <span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-gold-foreground"><Users className="h-4 w-4" /></span>
