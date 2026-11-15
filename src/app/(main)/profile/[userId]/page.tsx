@@ -30,8 +30,6 @@ import {
   UserCheck,
   UserX,
   XCircle,
-  ArrowLeftCircle,
-  ArrowRightCircle,
   Gamepad2,
 } from "lucide-react";
 import React, { useEffect, useState, useCallback, useMemo } from "react";
@@ -56,7 +54,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useDashboardChrome } from "@/components/dashboard/chrome-context";
 import { cn } from "@/lib/utils";
-import { Dialog, DialogContent, DialogTrigger, DialogClose, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
+import { PhotoPreview } from "@/components/profile/PhotoPreview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -76,6 +74,7 @@ interface ViewedUserProfileData extends AIPotentialMatchProfileSchema {
   name: string;
   bio?: string;
   photoURL?: string;
+  photoGrayscale?: boolean;
   additionalPhotoUrls?: StoredPhoto[];
   isVerified?: boolean;
   dataAiHint?: string;
@@ -127,8 +126,6 @@ export default function ProfilePage() {
   const [currentFirebaseUser, setCurrentFirebaseUser] = useState<FirebaseUser | null>(null);
 
   const [mainPageImage, setMainPageImage] = useState<StoredPhoto | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentModalImageIndex, setCurrentModalImageIndex] = useState(0);
 
   const [hasLiked, setHasLiked] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
@@ -269,18 +266,19 @@ export default function ProfilePage() {
             moonSign: data.moonSign || undefined,
             nakshatra: data.nakshatra || undefined,
             bio: data.bio || "No bio provided.",
-            photoURL: data.photoURL || `https://placehold.co/600x800.png?text=${data.displayName ? data.displayName.substring(0, 1) : "P"}`,
+            photoURL: data.photoURL,
+            photoGrayscale: data.profilePhotoGrayscale,
             dataAiHint: data.dataAiHint || (data.photoURL ? "person profile" : "placeholder person"),
             additionalPhotoUrls: data.additionalPhotoUrls || [],
             isVerified: data.isVerified || false,
           };
           setViewedUserProfile(profileData);
           if (profileData.photoURL) {
-            setMainPageImage({ id: "main", url: profileData.photoURL, hint: profileData.dataAiHint || "profile main" });
+            setMainPageImage({ id: "main", url: profileData.photoURL, hint: profileData.dataAiHint || "profile main", grayscale: data.profilePhotoGrayscale });
           } else if (profileData.additionalPhotoUrls && profileData.additionalPhotoUrls.length > 0) {
             setMainPageImage(profileData.additionalPhotoUrls[0]);
           } else {
-            setMainPageImage({ id: "placeholder", url: `https://placehold.co/600x800.png?text=${profileData.name ? profileData.name.substring(0, 1) : "P"}`, hint: "placeholder person" });
+            setMainPageImage(null);
           }
         } else {
           setError("Profile not found.");
@@ -394,15 +392,12 @@ export default function ProfilePage() {
   const allPhotos = useMemo(() => {
     const photos: StoredPhoto[] = [];
     if (viewedUserProfile?.photoURL) {
-      photos.push({ id: "main-profile", url: viewedUserProfile.photoURL, hint: viewedUserProfile.dataAiHint || "profile main" });
+      photos.push({ id: "main-profile", url: viewedUserProfile.photoURL, hint: viewedUserProfile.dataAiHint || "profile main", grayscale: viewedUserProfile.photoGrayscale });
     }
     if (viewedUserProfile?.additionalPhotoUrls) {
       photos.push(...viewedUserProfile.additionalPhotoUrls);
     }
-    if (photos.length === 0 && viewedUserProfile?.name) {
-      photos.push({ id: "placeholder-gallery", url: `https://placehold.co/300x400.png?text=${viewedUserProfile.name.substring(0, 1)}`, hint: "placeholder person" });
-    }
-    return photos;
+    return photos.filter(photo => photo.url);
   }, [viewedUserProfile]);
 
   useEffect(() => {
@@ -410,21 +405,6 @@ export default function ProfilePage() {
       setMainPageImage(allPhotos[0]);
     }
   }, [allPhotos, mainPageImage]);
-
-  const handleThumbnailClick = (photo: StoredPhoto, index: number) => {
-    setMainPageImage(photo);
-    setCurrentModalImageIndex(index); // Keep modal in sync if it's open
-  };
-
-  const openImageModal = (index: number) => {
-    setCurrentModalImageIndex(index);
-    setIsModalOpen(true);
-  };
-
-  const changeModalImage = (direction: "next" | "prev") => {
-    const newIndex = direction === "next" ? (currentModalImageIndex + 1) % allPhotos.length : (currentModalImageIndex - 1 + allPhotos.length) % allPhotos.length;
-    setCurrentModalImageIndex(newIndex);
-  };
 
   const handleLikeToggle = async () => {
     if (!currentFirebaseUser || !viewedUserId || isLiking || currentFirebaseUser.uid === viewedUserId) return;
@@ -674,7 +654,6 @@ export default function ProfilePage() {
     );
   }
 
-  const currentModalPhoto = allPhotos[currentModalImageIndex];
 
   return (
     <div className="min-h-screen bg-background">
@@ -711,10 +690,14 @@ export default function ProfilePage() {
         <div className="grid overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_16px_48px_hsl(var(--primary)/0.08)] md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
           <div className="relative min-h-[360px] overflow-hidden bg-accent sm:min-h-[480px]">
             {mainPageImage?.url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={mainPageImage.url} alt={viewedUserProfile.name} className="absolute inset-0 h-full w-full object-cover" />
+              <PhotoPreview photos={allPhotos} index={Math.max(0, allPhotos.findIndex(photo => photo.url === mainPageImage.url))} name={viewedUserProfile.name}>
+                <button type="button" aria-label="Enlarge profile photo" className="absolute inset-0 cursor-zoom-in">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={mainPageImage.url} alt={viewedUserProfile.name} className={`h-full w-full object-cover${mainPageImage.grayscale ? " grayscale" : ""}`} />
+                </button>
+              </PhotoPreview>
             ) : <div className="flex h-full min-h-[360px] items-center justify-center text-7xl font-semibold text-primary">{viewedUserProfile.name.slice(0,1)}</div>}
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent px-5 pb-6 pt-20 text-white">
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent px-5 pb-6 pt-20 text-white">
               <p className="text-2xl font-semibold tracking-tight sm:text-3xl">{viewedUserProfile.name}{viewedUserProfile.age ? `, ${viewedUserProfile.age}` : ""}</p>
               <p className="mt-1 text-sm text-white/90">{viewedUserProfile.location}</p>
               {publicMemberReference && <span className="mt-2 inline-block rounded-full border border-white/40 bg-black/25 px-3 py-1 text-xs font-semibold">{publicMemberReference}</span>}
@@ -833,53 +816,14 @@ export default function ProfilePage() {
               <TabsContent value="photos" className="space-y-4">
                 <Card>
                   <CardContent className="p-4">
+                    {allPhotos.length === 0 && <p className="text-sm text-muted-foreground">No photos available.</p>}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                       {allPhotos.map((photo, index) => (
-                        <Dialog key={photo.id}>
-                          <DialogTrigger asChild>
-                            <button className="relative aspect-square rounded-lg overflow-hidden group" onClick={() => handleThumbnailClick(photo, index)}>
-                              <Image
-                                src={photo.url}
-                                alt={photo.hint || "Gallery photo"}
-                                fill
-                                className={`object-cover transition-transform group-hover:scale-105${photo.grayscale ? " grayscale" : ""}`}
-                                data-ai-hint={photo.hint}
-                              />
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                            </button>
-                          </DialogTrigger>
-                          {currentModalPhoto && (
-                            <DialogPortal>
-                              <DialogOverlay className="bg-black/80 backdrop-blur-sm" />
-                              <DialogContent className="max-w-3xl w-auto p-2 bg-transparent border-none shadow-none !rounded-none sm:!rounded-none !gap-0">
-                                <div className="relative">
-                                  <Image
-                                    src={currentModalPhoto.url}
-                                    alt={currentModalPhoto.hint || `Photo of ${viewedUserProfile.name}`}
-                                    width={800}
-                                    height={1000}
-                                    className={`object-contain max-h-[85vh] w-auto rounded-md${currentModalPhoto.grayscale ? " grayscale" : ""}`}
-                                    data-ai-hint={currentModalPhoto.hint}
-                                  />
-                                  <DialogClose className="absolute -top-3 -right-3 sm:top-2 sm:right-2 bg-background/50 hover:bg-background/80 text-foreground rounded-full p-1.5 z-10">
-                                    <XCircle className="h-6 w-6" />
-                                    <span className="sr-only">Close</span>
-                                  </DialogClose>
-                                  {allPhotos.length > 1 && (
-                                    <>
-                                      <Button variant="ghost" size="icon" onClick={() => changeModalImage("prev")} className="absolute left-1 sm:left-3 top-1/2 -translate-y-1/2 rounded-full h-10 w-10 bg-black/30 hover:bg-black/50 text-white" aria-label="Previous image">
-                                        <ArrowLeftCircle className="h-6 w-6" />
-                                      </Button>
-                                      <Button variant="ghost" size="icon" onClick={() => changeModalImage("next")} className="absolute right-1 sm:right-3 top-1/2 -translate-y-1/2 rounded-full h-10 w-10 bg-black/30 hover:bg-black/50 text-white" aria-label="Next image">
-                                        <ArrowRightCircle className="h-6 w-6" />
-                                      </Button>
-                                    </>
-                                  )}
-                                </div>
-                              </DialogContent>
-                            </DialogPortal>
-                          )}
-                        </Dialog>
+                        <PhotoPreview key={photo.id} photos={allPhotos} index={index} name={viewedUserProfile.name}>
+                          <button type="button" aria-label={`Enlarge photo ${index + 1}`} className="relative aspect-square cursor-zoom-in overflow-hidden rounded-lg">
+                            <Image src={photo.url} alt={photo.hint || "Gallery photo"} fill className={`object-cover${photo.grayscale ? " grayscale" : ""}`} />
+                          </button>
+                        </PhotoPreview>
                       ))}
                     </div>
                   </CardContent>
