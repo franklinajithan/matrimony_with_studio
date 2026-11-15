@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { getAdminDashboardMetrics } from "@/lib/admin/dashboard";
+import { GrowthReportSections } from "./growth/report-sections";
 import { z } from "zod";
 import { requireAdminPage } from "../guard";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -19,7 +21,7 @@ function duration(seconds: number) {
 }
 
 export default async function AnalyticsPage({ searchParams }: {
-  searchParams: Promise<{ page?: string; visit?: string; day?: string }>;
+  searchParams: Promise<{ page?: string; visit?: string; day?: string; days?: string; review?: string }>;
 }) {
   await requireAdminPage();
   const query = await searchParams;
@@ -28,22 +30,23 @@ export default async function AnalyticsPage({ searchParams }: {
   const selected = z.string().uuid().safeParse(query.visit);
   const db = createSupabaseAdminClient();
   const day = z.string().date().safeParse(query.day);
-  const [visits, detail, traffic, geography] = await Promise.all([
+  const [visits, detail, traffic, geography, members] = await Promise.all([
     db.rpc("visitor_visit_list", { p_offset: page * 30 }),
     selected.success ? db.from("visitor_activity").select("page_id, page, opened_at, active_seconds")
       .eq("visit_id", selected.data).gte("opened_at", new Date(Date.now() - 30 * 86400_000).toISOString())
       .order("opened_at").order("page_id") : null,
     db.rpc("visitor_traffic_summary", day.success ? { p_day: day.data } : {}),
     db.rpc("country_page_load_report"),
+    getAdminDashboardMetrics().catch(() => null),
   ]);
   const summary = traffic.data as TrafficSummary | null;
-  const dayParam = summary ? `&day=${summary.selected_day}` : "";
+  const dayParam = (summary ? `&day=${summary.selected_day}` : "") + (query.days === "30" ? "&days=30" : "");
   return <div className="space-y-6">
     <header className="rounded-2xl border bg-gradient-to-br from-accent via-card to-card p-5 sm:p-7">
       <h1 className="font-headline text-3xl font-bold sm:text-4xl">Visitor analytics</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">Traffic covers opted-in visits to public and member pages. Visits count sessions. Reports use London time.</p>
       <div className="mt-4 flex flex-wrap gap-4">
-        <Link href="/admin/analytics/growth" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Growth and operations</Link>
+        <Link href="#growth-and-operations" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Growth and operations</Link>
         <Link href="#recent-visits" className="inline-flex items-center text-sm font-semibold text-primary underline underline-offset-4">Jump to recorded visits</Link>
         <Link href="#country-traffic" className="inline-flex items-center text-sm font-semibold text-primary underline underline-offset-4">Jump to country totals</Link>
       </div>
@@ -70,6 +73,20 @@ export default async function AnalyticsPage({ searchParams }: {
     </section>
     {traffic.error ? <p role="alert">Traffic totals are temporarily unavailable.</p> :
       summary && <TrafficOverview key={summary.selected_day} summary={summary} />}
+    <section aria-labelledby="member-overview" className="rounded-xl border bg-card p-5">
+      <h2 id="member-overview" className="text-xl font-semibold">Member overview</h2>
+      {members ? <dl className="mt-3 grid gap-4 sm:grid-cols-3">
+        {[
+          ["Registered members (excluding admins)", members.members],
+          ["Members signed in within 30 days", members.activeUsers],
+          ["Published profiles awaiting verification", members.pendingVerification],
+        ].map(([label, value]) => <div key={label}>
+          <dt className="text-sm text-muted-foreground">{label}</dt>
+          <dd className="text-2xl font-semibold tabular-nums">{counts.format(Number(value))}</dd>
+        </div>)}
+      </dl> : <p role="alert">Member statistics are temporarily unavailable.</p>}
+    </section>
+    <GrowthReportSections query={query} embedded />
     <h2 id="recent-visits" className="scroll-mt-52 text-xl font-semibold">Recorded visits (analytics opt-in)</h2>
     <p className="text-sm text-muted-foreground">Only visitors who enable analytics appear here. For international traffic including visitors who haven’t chosen analytics settings, see <Link href="#country-traffic" className="font-semibold text-primary underline underline-offset-4">public page loads by country</Link>. Select a visit to see its page journey.</p>
     {visits.error ? <p role="alert">Visitor analytics is temporarily unavailable.</p> :
