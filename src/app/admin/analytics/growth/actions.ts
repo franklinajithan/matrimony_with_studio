@@ -10,7 +10,9 @@ export async function reviewProfileReport(form: FormData) {
   const id = z.string().uuid().safeParse(form.get("id"));
   const decision = z.enum(["resolved", "dismissed"]).safeParse(form.get("decision"));
   const days = form.get("days") === "30" ? "30" : "7";
-  const destination = `/admin/analytics/growth?days=${days}`;
+  const destination = form.get("analytics") === "yes"
+    ? `/admin/analytics?days=${days}`
+    : `/admin/analytics/growth?days=${days}`;
   if (!id.success || !decision.success) redirect(`${destination}&review=error#action-queue`);
   const now = new Date().toISOString();
   const { data, error } = await createSupabaseAdminClient().from("reports")
