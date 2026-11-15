@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { PhotoPreview } from "@/components/profile/PhotoPreview";
 import { getProfile } from "@/lib/supabase/profiles";
 import type { Profile } from "@/lib/supabase/types";
 import { MemberOperations } from "./member-operations";
@@ -58,11 +59,35 @@ export default function AdminMemberDetailsPage() {
     } catch (error) { setEditError(error instanceof Error ? error.message : "Unable to save changes."); }
     finally { setSaving(false); }
   }
+  const photos = [
+    ...(user?.photoURL ? [{ url: user.photoURL, grayscale: user.profilePhotoGrayscale }] : []),
+    ...(user?.additionalPhotoUrls ?? []),
+  ].filter((photo, index, all) => photo.url && all.findIndex(item => item.url === photo.url) === index);
+
   return <div className="space-y-6">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h1 className="text-3xl font-bold">Member details</h1>
       <Link href="/admin/users" className="rounded-lg border px-4 py-2 text-sm">Back to members</Link>
     </div>
+    {user && (
+      <Card>
+        <CardHeader><CardTitle>Member photos</CardTitle></CardHeader>
+        <CardContent>
+          {photos.length === 0 ? <p className="text-sm text-muted-foreground">This member has no profile photos.</p> : (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {photos.map((photo, index) => (
+                <PhotoPreview key={photo.url} photos={photos} index={index} name={user.displayName || "member"}>
+                  <button type="button" aria-label={`Enlarge photo ${index + 1}`} className="aspect-square cursor-zoom-in overflow-hidden rounded-lg border bg-muted">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={photo.url} alt={`Member photo ${index + 1}`} loading="lazy" className={`h-full w-full object-cover${photo.grayscale ? " grayscale" : ""}`} />
+                  </button>
+                </PhotoPreview>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    )}
     <Card>
       <CardHeader><CardTitle>Profile review</CardTitle>
         <CardDescription>Edit basic member details when a member needs assistance. Changes are logged. Verification, roles and billing are managed separately.</CardDescription>
