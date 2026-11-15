@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { memberActivityPages, searchPages } from "@/lib/analytics/pages";
 import { Activity, ArrowDownRight, ChevronDown, Eye, House } from "lucide-react";
 
 type Counts = { visits: number; views: number; home_entries: number; home_views: number };
@@ -123,6 +124,18 @@ export function TrafficOverview({ summary }: { summary: TrafficSummary }) {
   const countCells = (counts: Counts) => metrics.map(([key]) => numbers.format(counts[key]));
 
   return <section aria-label="Traffic overview" className="space-y-6">
+    <Breakdown label="All tracked pages and member features">
+      <p className="mb-3 text-sm text-muted-foreground">
+        Page activity for {dayLabel} from opted-in sessions. Feature rows measure visits to their pages.
+      </p>
+      <DataTable label="Tracked page activity" columns={["Page", "Views", "Entries", "Active minutes"]}
+        rows={[...new Set([...searchPages, ...memberActivityPages, ...summary.pages.map(row => row.page)])]
+          .map(page => {
+            const activity = summary.pages.find(row => row.page === page);
+            return { key: page, cells: [page, numbers.format(activity?.views ?? 0),
+              numbers.format(activity?.entries ?? 0), numbers.format((activity?.active_seconds ?? 0) / 60)] };
+          })} />
+    </Breakdown>
     <div className="flex flex-wrap items-end justify-between gap-4 rounded-2xl border bg-card p-4 sm:p-5">
       <div>
         <h2 className="text-xl font-semibold">Traffic on {dayLabel}</h2>
