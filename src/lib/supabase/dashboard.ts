@@ -5,7 +5,6 @@ import {
   type ProfileReadiness,
 } from "@/lib/onboarding/readiness";
 import type { OnboardingDraft } from "@/lib/onboarding/schema";
-import { countReceivedLikes, listReceivedLikes } from "./likes";
 import { listPendingRequests, listSentInterestReceiverIds } from "./matches";
 import { listConnections } from "./connections";
 import { listChatsForUser, unreadMessageCount } from "./chats";
@@ -43,7 +42,6 @@ export type DashboardOverviewData = {
   profile: Profile;
   draft: OnboardingDraft;
   readiness: ProfileReadiness;
-  receivedInterests: CountResult;
   connections: CountResult;
   unreadMessages: CountResult;
   pendingRequests: CountResult;
@@ -84,7 +82,6 @@ export async function loadDashboardOverview(userId: string): Promise<DashboardOv
   const draft = draftFromProfile(profile);
   const readiness = computeProfileReadiness(draft, Boolean(profile.isPublished));
 
-  const likesTask = countReceivedLikes(userId);
   // Use the canonical connections table: accepted requests can remain after a connection is removed.
   const connectionsTask = listConnections(userId);
   const chatsTask = listChatsForUser(userId);
@@ -93,27 +90,21 @@ export async function loadDashboardOverview(userId: string): Promise<DashboardOv
   const discoveryTask = profile.isPublished
     ? listProfiles({ limit: 24, excludeId: userId })
     : Promise.resolve(null);
-  const recentLikesTask = listReceivedLikes(userId, 8);
 
   const [
-    likesResult,
     connectionsResult,
     chatsResult,
     pendingResult,
     sentInterestResult,
     discoveryResult,
-    recentLikesResult,
   ] = await Promise.allSettled([
-    likesTask,
     connectionsTask,
     chatsTask,
     pendingTask,
     sentInterestIdsTask,
     discoveryTask,
-    recentLikesTask,
   ]);
 
-  const receivedInterests = settledNumber(likesResult);
   const connections = settledNumber(connectionsResult.status === "fulfilled"
     ? { status: "fulfilled", value: connectionsResult.value.length }
     : connectionsResult);
@@ -184,33 +175,22 @@ export async function loadDashboardOverview(userId: string): Promise<DashboardOv
 
   let recent: DashboardOverviewData["recent"];
   try {
-    if ([recentLikesResult, connectionsResult, chatsResult, pendingResult].every(result => result.status === "rejected")) {
+    if ([connectionsResult, chatsResult, pendingResult].every(result => result.status === "rejected")) {
       throw new Error("Could not load recent activity.");
     }
 
     const items: ActivityItem[] = [];
-    const likes = recentLikesResult.status === "fulfilled" ? recentLikesResult.value : [];
     const recentConnections = connectionsResult.status === "fulfilled" ? connectionsResult.value.slice(0, 8) : [];
     const chats = chatsResult.status === "fulfilled" ? chatsResult.value : [];
     const pending = pendingResult.status === "fulfilled" ? pendingResult.value : [];
 
     const relatedIds = [
-      ...likes.map((like) => like.likerId),
       ...recentConnections.map((row) => (row.memberAId === userId ? row.memberBId : row.memberAId)),
       ...pending.map((row) => row.senderUid),
     ];
     const relatedProfiles = await listProfilesByIds(relatedIds);
     const names = new Map(relatedProfiles.map((row) => [row.id, row.displayName || "Member"]));
 
-    for (const like of likes) {
-      items.push({
-        id: `like-${like.likerId}`,
-        type: "interest",
-        title: `${names.get(like.likerId) || "A member"} expressed interest`,
-        href: "/interests",
-        at: like.createdAt ? Date.parse(like.createdAt) : 0,
-      });
-    }
     for (const row of recentConnections) {
       const otherId = row.memberAId === userId ? row.memberBId : row.memberAId;
       items.push({
@@ -224,7 +204,7 @@ export async function loadDashboardOverview(userId: string): Promise<DashboardOv
     for (const row of pending.slice(0, 5)) {
       items.push({
         id: `pending-${row.id}`,
-        type: "connection",
+        type: "interest",
         title: `${names.get(row.senderUid) || "A member"} sent an interest request`,
         href: "/interests",
         at: row.createdAt?.toMillis() || 0,
@@ -258,7 +238,6 @@ export async function loadDashboardOverview(userId: string): Promise<DashboardOv
     profile,
     draft,
     readiness,
-    receivedInterests,
     connections,
     unreadMessages,
     pendingRequests,
