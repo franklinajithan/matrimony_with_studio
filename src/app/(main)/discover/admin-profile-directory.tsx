@@ -40,16 +40,15 @@ export async function AdminProfileDirectory({ page }: { page?: string | string[]
                       <h2 className="break-words font-semibold">{profile.display_name?.trim() || "Unnamed profile"}{age ? `, ${age}` : ""}</h2>
                       {[profile.location, profile.profession].filter(Boolean).map((value, index) => (
                         <p key={index} className="break-words text-sm text-muted-foreground">{value}</p>
-                        );
-              })}
-                    <p className="text-sm text-muted-foreground">
-                      {profile.suspended_at ? "Suspended" : profile.is_published ? "Published" : "Unpublished"}
-                    </p>
-                    <Link className="inline-flex min-h-11 items-center font-medium text-primary underline underline-offset-4" href={`/admin/users/edit/${profile.id}`}>
-                      View member details
-                    </Link>
-                  </CardContent>
-                </Card>
+                      ))}
+                      <p className="text-sm text-muted-foreground">
+                        {profile.suspended_at ? "Suspended" : profile.is_published ? "Published" : "Unpublished"}
+                      </p>
+                      <Link className="inline-flex min-h-11 items-center font-medium text-primary underline underline-offset-4" href={`/admin/users/edit/${profile.id}`}>
+                        View member details
+                      </Link>
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>
