@@ -1048,6 +1048,18 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
                         .completeness
                     }
                   </p>
+                  {(() => {
+                    const { vedha } = comparison.comparison as {
+                      vedha?: { label: string; explanation: string } | null;
+                    };
+                    return vedha ? (
+                      <p className="text-sm">
+                        <strong>{vedha.label}</strong>
+                        <br />
+                        {vedha.explanation}
+                      </p>
+                    ) : null;
+                  })()}
                   {comparison.aiExplanation ? (
                     <>
                       <h3 className="font-semibold">
