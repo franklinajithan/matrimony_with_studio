@@ -315,7 +315,14 @@ export function DashboardOverview() {
   const relocation = formatRelocation(draft.relocationOpenness);
   const recentItems = data.recent.status === "ok" ? data.recent.items : [];
   const previousVisit = visit?.userId === userId ? visit.previous : null;
-  const nextAction = readiness.isPublished ? readiness.nextActions[0] : readiness.primaryAction;
+  const hasUnreadMessages = data.unreadMessages.status !== "error" && data.unreadMessages.value > 0;
+  const hasPendingRequests = data.pendingRequests.status !== "error" && data.pendingRequests.value > 0;
+  let nextAction: { href: string; label: string } | undefined = readiness.isPublished ? readiness.nextActions[0] : readiness.primaryAction;
+  if (hasUnreadMessages) {
+    nextAction = { href: "/messages", label: t.unread };
+  } else if (hasPendingRequests) {
+    nextAction = { href: "/dashboard/interests", label: t.received };
+  }
 
   return (
     <PageFrame>
