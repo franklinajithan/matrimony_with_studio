@@ -1071,6 +1071,22 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
                             .explanation
                         }
                       </p>
+                      {(() => {
+                        const { questions } = comparison.aiExplanation as {
+                          questions?: string[];
+                        };
+                        if (!questions?.length) return null;
+                        return (
+                          <>
+                            <h3 className="font-semibold">Questions to discuss together</h3>
+                            <ul className="list-disc space-y-2 pl-5 text-sm">
+                              {questions.map((question, index) => (
+                                <li key={index}>{question}</li>
+                              ))}
+                            </ul>
+                          </>
+                        );
+                      })()}
                     </>
                   ) : (
                     <p className="text-sm text-muted-foreground">
