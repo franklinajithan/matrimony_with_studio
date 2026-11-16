@@ -5,6 +5,7 @@ import { CompatibilityStory, StickyHowItWorks } from "@/components/landing/Premi
 import { GlobalCommunityStory, PremiumStories, PremiumFinalCta } from "@/components/landing/PremiumClosingSections";
 import { LandingFaq } from "@/components/landing/LandingFaq";
 import { ModernMatchFeatures } from "@/components/landing/ModernMatchFeatures";
+import { WeeklyConversation } from "@/components/landing/WeeklyConversation";
 import { Navbar } from "@/components/navigation/Navbar";
 import { Footer } from "@/components/navigation/Footer";
 import { getServerAuthUser } from "@/lib/supabase/server";
@@ -42,6 +43,7 @@ export default async function HomePage() {
       <Navbar />
       <main id="main-content" className="flex-grow homepage-card-flow">
         <PremiumOpeningStory />
+        <WeeklyConversation />
         <ModernMatchFeatures />
         <CompatibilityStory />
         <StickyHowItWorks />
