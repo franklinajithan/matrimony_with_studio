@@ -1048,6 +1048,18 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
                         .completeness
                     }
                   </p>
+                  {(() => {
+                    const { vedha } = comparison.comparison as {
+                      vedha?: { label: string; explanation: string } | null;
+                    };
+                    return vedha ? (
+                      <p className="text-sm">
+                        <strong>{vedha.label}</strong>
+                        <br />
+                        {vedha.explanation}
+                      </p>
+                    ) : null;
+                  })()}
                   {comparison.aiExplanation ? (
                     <>
                       <h3 className="font-semibold">
@@ -1059,6 +1071,22 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
                             .explanation
                         }
                       </p>
+                      {(() => {
+                        const { questions } = comparison.aiExplanation as {
+                          questions?: string[];
+                        };
+                        if (!questions?.length) return null;
+                        return (
+                          <>
+                            <h3 className="font-semibold">Questions to discuss together</h3>
+                            <ul className="list-disc space-y-2 pl-5 text-sm">
+                              {questions.map((question, index) => (
+                                <li key={index}>{question}</li>
+                              ))}
+                            </ul>
+                          </>
+                        );
+                      })()}
                     </>
                   ) : (
                     <p className="text-sm text-muted-foreground">

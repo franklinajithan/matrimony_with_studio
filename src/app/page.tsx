@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { PremiumOpeningStory } from "@/components/landing/PremiumOpeningStory";
@@ -44,6 +45,18 @@ export default async function HomePage() {
         <PremiumOpeningStory />
         <ModernMatchFeatures />
         <CompatibilityStory />
+        <section className="mx-auto max-w-5xl px-5 py-12 sm:py-16">
+          <div className="rounded-3xl border border-gold/25 bg-card p-7 sm:p-10">
+            <p className="text-sm font-semibold text-gold-foreground">Planned feature</p>
+            <h2 className="mt-2 font-serif text-3xl text-primary sm:text-4xl">AI-assisted horoscope matching</h2>
+            <p className="mt-4 max-w-2xl leading-7 text-muted-foreground">
+              Explore Tamil Vedha Porutham with a plain-language AI explanation and conversation starters. Both members choose whether to share their horoscope details.
+            </p>
+            <Link className="mt-5 inline-block font-semibold text-primary underline" href="/horoscope-matching">
+              Learn about horoscope matching
+            </Link>
+          </div>
+        </section>
         <StickyHowItWorks />
         <GlobalCommunityStory />
         <PremiumStories />
