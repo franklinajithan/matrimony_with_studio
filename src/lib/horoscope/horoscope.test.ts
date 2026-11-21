@@ -134,3 +134,25 @@ test("hidden/unknown time excludes lagna comparison", () => {
   assert.equal(r.criteria.find((x) => x.field === "lagna")?.status, "excluded");
   assert.equal(r.criteria.find((x) => x.field === "lagna")?.first, null);
 });
+
+test("exact birth facts cannot be selected for peer sharing", () => {
+  for (const key of ["dateOfBirth", "timeOfBirth", "birthCity", "birthCountry", "timezone"]) {
+    assert.equal(saveSchema.safeParse({ ...valid, shared_fields: [key] }).success, false);
+  }
+});
+
+test("a shared-fields comparison does not convert local dates or guess birth times", () => {
+  const first = { tradition: "tamil", fields: {
+    dateOfBirth: "1990-06-15", timeOfBirth: "00:05", timezone: "Asia/Colombo",
+    timeQuality: "exact", rasi: "Mesha", lagna: "Mesha",
+  } };
+  const second = { tradition: "tamil", fields: {
+    dateOfBirth: "1990-06-14", timezone: "Europe/London", timeQuality: "unknown",
+    rasi: "Mesha",
+  } };
+  const result = compareSharedFields(first, second);
+  assert.deepEqual(compareSharedFields(first, second), result);
+  assert.equal(result.traditionalResult.score, null);
+  assert.equal(result.criteria.find((item) => item.field === "lagna")?.status, "excluded");
+  assert.doesNotMatch(JSON.stringify(result), /1990|00:05|Colombo|London/);
+});

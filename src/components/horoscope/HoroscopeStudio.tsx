@@ -18,6 +18,7 @@ import {
   type HoroscopeRecord,
   type Candidate,
   type HoroscopeSave,
+  isShareableChartField,
 } from "@/lib/horoscope/schema";
 import HoroscopeChart from "./HoroscopeChart";
 const input =
@@ -90,7 +91,7 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
     setFields(p?.fields || defaults);
     setTradition((p?.tradition || "tamil") as HoroscopeSave["tradition"]);
     setVisibility((p?.visibility || "private") as HoroscopeSave["visibility"]);
-    setShared(p?.shared_fields || []);
+    setShared(p?.shared_fields?.filter(isShareableChartField) || []);
     setCompareConsent(p?.comparison_consent || false);
     setAiConsent(p?.ai_consent || false);
     setPlanets((p?.provenance?.planets as HoroscopeSave["planets"]) || []);
@@ -148,6 +149,12 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
     }
   }
   function change(key: FieldKey, value: string) {
+    if (key === "timeQuality" && value === "unknown") {
+      setPlanets((previous) => previous.map((planet) => ({
+        ...planet,
+        house: undefined,
+      })));
+    }
     setFields((prev) => ({
       ...prev,
       [key]: value,
@@ -314,6 +321,22 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
         <p>Unable to load the horoscope. Please sign in or retry.</p>
       ) : (
         <>
+          {!member && (
+            <div className={card}>
+              <h2 className="font-semibold">
+                {record ? "Birth details saved" : "No birth details saved"}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {!record
+                  ? "To save your details, enter your date, birthplace, timezone and birth time choice."
+                  : record.comparison_consent && record.visibility !== "private"
+                    ? "Comparison sharing is on for eligible members who also opt in."
+                    : record.comparison_consent
+                      ? "To enable comparisons, choose who can view your selected chart fields."
+                      : "Comparison sharing is off."}
+              </p>
+            </div>
+          )}
           <div className="flex flex-wrap gap-2">
             {!member && (
               <>
@@ -472,7 +495,7 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
                             value={fields.timeQuality || "unknown"}
                             onChange={(e) => change(key, e.target.value)}
                           >
-                            <option value="unknown">Unknown / தெரியாது</option>
+                            <option value="unknown">I don’t know my birth time / தெரியாது</option>
                             <option value="approximate">Approximate</option>
                             <option value="exact">Exact (as recorded)</option>
                           </select>
@@ -509,9 +532,10 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
                     ))}
                 </div>
                 <p className="mt-4 text-sm text-muted-foreground">
-                  Enter chart facts only where known. Unknown birth time
-                  excludes lagna and house comparisons. Nothing is calculated
-                  from birth facts by AI.
+                  Enter the local clock time and the timezone of your birthplace
+                  (for example, Asia/Colombo). If you don’t know the time,
+                  leave it blank. Birth details are saved for your own records.
+                  Chart values are copied from a chart you already have.
                 </p>
                 {advanced && (
                   <div className="mt-6 space-y-4">
@@ -690,12 +714,12 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
                   </select>
                 </label>
                 <p className="my-4 text-sm text-muted-foreground">
-                  Choose each field to share. Birth date, time, location and all
-                  other fields are hidden unless selected. Source documents and
-                  provenance are always private.
+                  Your exact birth date, clock time, birthplace and timezone
+                  stay private. Eligible members can view only the chart fields
+                  you select below. Source documents stay private.
                 </p>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {fieldDefinitions.map(([key, label]) => (
+                  {fieldDefinitions.filter(([key]) => isShareableChartField(key)).map(([key, label]) => (
                     <label key={key} className="flex items-start gap-3 text-sm">
                       <input
                         type="checkbox"
@@ -724,8 +748,9 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
                       setReviewed(false);
                     }}
                   />
-                  Allow comparisons using only my selected shared fields, when
-                  both members permit access.
+                  Allow compatibility comparisons when both members opt in
+                  and grant each other access. The report shows selected chart
+                  values side by side. Untick this and save to stop comparisons.
                 </label>
                 <label className="mt-4 flex items-start gap-3 text-sm">
                   <input
@@ -1004,10 +1029,11 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
               {comparison && (
                 <div className="mt-5 space-y-4">
                   <h3 className="font-semibold">
-                    Traditional rule result: unavailable
+                    Shared chart fields comparison
                   </h3>
                   <p className="text-sm">
-                    No compatibility score or prediction has been calculated.
+                    Traditional compatibility result unavailable. This method
+                    lists recorded chart values side by side.
                   </p>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
@@ -1031,10 +1057,10 @@ export default function HoroscopeStudio({ member }: { member?: string }) {
                         ).criteria.map((c) => (
                           <tr key={c.field} className="border-t">
                             <th className="p-2 font-normal">{c.label}</th>
-                            <td className="break-words p-2">
+                            <td className="break-all p-2">
                               {c.first || "Unknown / hidden"}
                             </td>
-                            <td className="break-words p-2">
+                            <td className="break-all p-2">
                               {c.second || "Unknown / hidden"}
                             </td>
                           </tr>

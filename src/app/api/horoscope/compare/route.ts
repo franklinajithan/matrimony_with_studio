@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       return json(
         {
           error:
-            "Both members must allow comparison and reciprocal horoscope access.",
+            "Comparison is unavailable. Both members need saved details, comparison consent and permission to view each other’s chart fields.",
         },
         403,
       );

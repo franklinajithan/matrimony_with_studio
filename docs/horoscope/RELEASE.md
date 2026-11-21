@@ -60,3 +60,28 @@ The owner-authorized live disposable run passed all twelve manual-entry/privacy 
 Registration and editing were restored to paused after QA. Upload/AI flags stayed off throughout. Actual browser/device checks and provider/scoring gates remain outstanding; backend success does not authorize a general launch.
 
 Run `node scripts/horoscope-browser.mjs` after `npx playwright install --with-deps chromium webkit` for the mocked component checks. Run it separately from builds/type generation; it creates a temporary route, starts a local dev server, then removes the route/build directory and restores tsconfig. No production flags, accounts or credentials are required. `.github/workflows/horoscope-ui.yml` runs this on relevant PR changes. Reports/screenshots are local ignored artifacts under `artifacts/horoscope-ui/`, or the CI artifact `horoscope-ui`. Physical Safari/Android/PWA acceptance remains separate.
+
+## Shared chart fields and the November rollout gate
+
+The only implemented comparison method is `shared-fields-v1`. It lists
+member-confirmed rasi, nakshatra, pada, lagna, ayanamsa, dosha and dasha
+side by side when both members grant reciprocal access and opt in. Lagna
+is omitted if either member's birth time quality is unknown or hidden.
+The comparison does not convert birth times or derive chart values. No
+Sri Lankan Tamil porutham or Sinhala scoring rules are implemented or
+validated. A selected chart tradition is a label for the recorded chart.
+No result feeds profile visibility, ranking or rejection.
+
+Apply `20261114100000_horoscope_peer_privacy_and_report_retries.sql` before
+deploying the corresponding UI. It retains owner records, removes cached
+reports, redacts legacy selections in the peer RPC and enforces one
+report per requester, peer and pair of revisions. Keep the SQL protections
+in place on rollback. Turn off the manual, upload and AI flags first, then
+revert the application if needed.
+
+On 14 November, a read-only check showed all three production flags
+false and an empty rule set. The connected Supabase project listed no
+preview branches. Set up an isolated application and database, apply the
+migrations, and run the authenticated acceptance runner plus browser
+checks there before any activation. Validate a documented traditional
+rule set against independent reference cases before offering a score.

@@ -12,10 +12,10 @@ export default function Page() {
       </p>
       <h2 className="text-xl font-semibold">Visibility</h2>
       <p>
-        New records are private. If you share a horoscope, select each field
-        permitted for eligible members or approved connections. Source files,
-        original values and extraction provenance are never shared with other
-        members. Blocking and account suspension override access.
+        New records are private. Exact birth details, source files and extraction
+        provenance stay private. You can select chart fields for eligible
+        members or approved connections. Both members must opt in to compare
+        those fields. Blocking and account suspension override access.
       </p>
       <h2 className="text-xl font-semibold">Optional AI processing</h2>
       <p>
