@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { verificationStatus } from '@/lib/auth/verification-status';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -7,11 +8,21 @@ export async function GET() {
   const supabase = await createSupabaseServerClient();
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError || !auth.user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-  const { data, error } = await supabase.from('verification_requests')
-    .select('id,status,member_note,created_at,reviewed_at')
-    .eq('member_id', auth.user.id).order('created_at', { ascending: false }).limit(20);
-  if (error) return NextResponse.json({ error: 'Unable to load requests' }, { status: 503 });
-  return NextResponse.json({ requests: data ?? [] }, { headers: { 'Cache-Control': 'no-store' } });
+  const [history, review] = await Promise.all([
+    supabase.from('verification_requests')
+      .select('id,status,member_note,created_at,reviewed_at')
+      .eq('member_id', auth.user.id).order('created_at', { ascending: false }).limit(20),
+    supabase.from('verification_requests')
+      .select('status,reviewed_at').eq('member_id', auth.user.id)
+      .not('reviewed_at', 'is', null).in('status', ['approved', 'rejected'])
+      .order('reviewed_at', { ascending: false }).order('id', { ascending: false }).limit(1).maybeSingle(),
+  ]);
+  const headers = { 'Cache-Control': 'private, no-store' };
+  if (history.error || review.error) return NextResponse.json({ error: 'Unable to load requests' }, { status: 503, headers });
+  return NextResponse.json({
+    requests: history.data ?? [],
+    verification: verificationStatus(auth.user, review.data),
+  }, { headers });
 }
 
 export async function POST(request: Request) {

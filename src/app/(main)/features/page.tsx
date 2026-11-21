@@ -22,7 +22,7 @@ const featuresData = [
     borderColor: "border-primary",
   },
   { icon: <MessageSquareText className="h-8 w-8" />, title: "Secure Real-time Chat", description: "Chat safely via our encrypted system with typing indicators and photo sharing.", borderColor: "border-orange-500" },
-  { icon: <UserCheckIcon className="h-8 w-8" />, title: "Verified Profiles", description: "Connect with genuine users through admin approval with ID proof for a verified badge.", borderColor: "border-cyan-500" },
+  { icon: <UserCheckIcon className="h-8 w-8" />, title: "Profile Review", description: "Members can request a profile review. Email and phone confirmations are tracked separately.", borderColor: "border-cyan-500" },
   { icon: <Palette className="h-8 w-8" />, title: "Easy Profile Setup", description: "Step-by-Step Profile Setup after sign-in with AI assistance for bio and interests.", borderColor: "border-lime-500" },
   { icon: <ListFilter className="h-8 w-8" />, title: "Custom Match Preferences", description: "Refine criteria to find your ideal match, e.g. only show verified / premium users.", borderColor: "border-primary" },
   { icon: <SmartphoneNfc className="h-8 w-8" />, title: "Subscription & Notifications", description: "Premium plans with Razorpay/Stripe, push notifications for matches, messages, and profile views.", borderColor: "border-rose-500" },

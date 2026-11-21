@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import type { VerificationStatus } from "@/lib/auth/verification-status";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 type VerificationRequest = { id: string; status: "pending" | "approved" | "rejected"; member_note: string; created_at: string; reviewed_at: string | null };
 
 export default function VerificationRequestClient() {
+  const [status, setStatus] = useState<VerificationStatus | null>(null);
   const [requests, setRequests] = useState<VerificationRequest[]>([]);
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(true);
@@ -25,7 +27,9 @@ export default function VerificationRequestClient() {
       const payload = await response.json();
       if (!Array.isArray(payload.requests)) throw new Error("Unexpected server response.");
       setRequests(payload.requests);
+      setStatus(payload.verification ?? null);
     } catch (err) {
+      setStatus(null);
       setError(err instanceof Error ? err.message : "Unable to load requests.");
     } finally {
       setLoading(false);
@@ -60,13 +64,26 @@ export default function VerificationRequestClient() {
   const pending = requests.some(request => request.status === "pending");
   return <div className="mx-auto max-w-3xl space-y-6">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <h1 className="text-3xl font-bold">Profile verification</h1>
+      <h1 className="text-3xl font-bold">Account verification</h1>
       <Button asChild variant="outline"><Link href="/settings">Back to settings</Link></Button>
     </div>
     <Card>
+      <CardHeader><CardTitle>Your verification status</CardTitle><CardDescription>Each check records a different kind of evidence.</CardDescription></CardHeader>
+      <CardContent>
+        {loading ? <p role="status">Loading verification status…</p> : status ? (
+          <dl className="grid gap-3 sm:grid-cols-2">
+            <div><dt className="font-medium">Email confirmed</dt><dd className="text-muted-foreground">{status.emailConfirmed ? "Confirmed" : "Awaiting confirmation"}</dd></div>
+            <div><dt className="font-medium">Phone confirmed</dt><dd className="text-muted-foreground">{status.phoneConfirmed ? "Confirmed" : <Link href="/verify-phone" className="underline">Confirm a phone number</Link>}</dd></div>
+            <div><dt className="font-medium">Profile reviewed</dt><dd className="text-muted-foreground">{status.profileReviewed ? "Approved by a profile reviewer" : "No current approved review"}</dd></div>
+            <div><dt className="font-medium">Identity checked</dt><dd className="text-muted-foreground">{status.identityChecked === null ? "Identity checks are unavailable" : "Checked"}</dd></div>
+          </dl>
+        ) : <p>Verification status is unavailable. Refresh status to try again.</p>}
+      </CardContent>
+    </Card>
+    <Card>
       <CardHeader>
         <CardTitle>Request profile verification</CardTitle>
-        <CardDescription>Submit a request for an administrator to review your profile. This does not submit identity documents or guarantee approval. Do not include identity-document numbers or sensitive documents in the note.</CardDescription>
+        <CardDescription>Ask an administrator to review your profile. Keep identity documents and document numbers out of your note.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={submit} className="space-y-3">
