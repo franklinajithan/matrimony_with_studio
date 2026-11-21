@@ -81,22 +81,18 @@ export async function createConnection(
 }
 
 export async function removeConnection(userA: string, userB: string): Promise<void> {
-  const [smaller, larger] = userA < userB ? [userA, userB] : [userB, userA];
+  // Server checks auth.uid() and that the caller belongs to the relationship.
+  // Removing a connection and retiring accepted interests must be atomic:
+  // client-side sequential deletes leave stale accepted requests on failure.
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError) throw authError;
+  if (!user || user.id !== userA) throw new Error("Authentication required.");
 
-  const { error } = await supabase
-    .from("connections")
-    .delete()
-    .eq("member_a_id", smaller)
-    .eq("member_b_id", larger);
-
-  if (error) {
-    if (isMissingTableError(error)) {
-      throw new Error(
-        "Connections table is not set up yet. Run supabase/fixups/create-connections.sql in the Supabase SQL Editor."
-      );
-    }
-    throw error;
-  }
+  const { data, error } = await supabase.rpc("remove_my_connection", {
+    p_other_member_id: userB,
+  });
+  if (error) throw error;
+  if (data !== true) throw new Error("Connection removal was not confirmed.");
 }
 
 async function listConnectionsFromAcceptedRequests(userId: string): Promise<Connection[]> {

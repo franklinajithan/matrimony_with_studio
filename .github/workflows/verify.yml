@@ -15,6 +15,7 @@ jobs:
       - run: npm ci
       - run: node --test scripts/whatsapp-share-preview.test.mjs
       - run: node --test scripts/auth-session.test.cjs
+      - run: node --test scripts/atomic-connection-removal.test.mjs
       - run: npm run test:marriage-onboarding
       - run: npm run test:premium-launch
       - run: npm run test:payments
