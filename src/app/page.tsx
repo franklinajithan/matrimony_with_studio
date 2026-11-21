@@ -10,12 +10,11 @@ import { Footer } from "@/components/navigation/Footer";
 import { getServerAuthUser } from "@/lib/supabase/server";
 
 const shareTitle = 'CupidMatch | Sri Lankan Matrimony Worldwide';
-const shareDescription = 'Find your perfect match with CupidMatch. Meaningful matrimonial connections for the Sri Lankan community worldwide.';
+const shareDescription = 'Discover meaningful marriage connections with Sri Lankan singles in the UK and worldwide. Create your profile and explore compatible matches on CupidMatch.';
 const shareImage = 'https://cupidmatch.co.uk/images/cupidmatch-og.jpg';
 
 export const metadata: Metadata = {
   // All homepage URLs are absolute; preserve the canonical root trailing slash.
-  metadataBase: null,
   title: { absolute: shareTitle },
   description: shareDescription,
   alternates: { canonical: 'https://cupidmatch.co.uk/' },
