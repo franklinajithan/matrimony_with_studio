@@ -8,7 +8,7 @@ import { getProfile, listProfiles } from "@/lib/supabase/profiles";
 import type { Profile } from "@/lib/supabase/types";
 import { getShortlistedIds, addToShortlist, removeFromShortlist } from "@/lib/supabase/shortlist";
 import { sendInterest, listSentInterestReceiverIds } from "@/lib/supabase/matches";
-import { filtersFromPreferences, partnerPreferencesFromProfile, preferenceScore, profileMatchesFilters, type DiscoveryFilters, type PartnerPreferences } from "@/lib/matching/preferences";
+import { filtersFromPreferences, partnerPreferencesFromProfile, preferenceScore, profileMatchesFilters, requiredDiscoveryGender, type DiscoveryFilters, type PartnerPreferences } from "@/lib/matching/preferences";
 import { PageFrame, PageHero } from "@/components/dashboard/PageHero";
 import { ShareProfileButton } from "@/components/discovery/ShareProfileButton";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -80,17 +80,7 @@ export function PreferenceDiscovery() {
       const self = await getProfile(user.id);
       if (!self) throw new Error("Complete your profile before finding matches.");
       const saved = partnerPreferencesFromProfile(self);
-      // Gender is a matching eligibility filter rather than just a score.
-      const extra = (self.extra || {}) as Record<string, any>;
-      const details = (extra.matchDetails || {}) as Record<string, any>;
-      const draft = (self.onboardingDraft || {}) as Record<string, any>;
-      const ownGender = String(details.gender || extra.gender || draft.gender || "").toLowerCase();
-      const chosen = String(saved.gender || "").trim();
-      const mandatoryGender = chosen && !["no preference", "any", "all"].includes(chosen.toLowerCase())
-        ? chosen
-        : ["man", "male"].includes(ownGender) ? "Woman"
-        : ["woman", "female"].includes(ownGender) ? "Man"
-        : undefined;
+      const mandatoryGender = requiredDiscoveryGender(self, saved);
       setRequiredGender(mandatoryGender);
       // Saved preferences rank candidates; they must not silently exclude every profile.
       const defaults = empty;

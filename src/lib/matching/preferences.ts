@@ -35,6 +35,33 @@ export function partnerPreferencesFromProfile(profile: Profile): PartnerPreferen
 }
 export function filtersFromPreferences(prefs: PartnerPreferences): DiscoveryFilters { return { ...prefs, query: "" }; }
 
+export function requiredDiscoveryGender(profile: Profile, saved: PartnerPreferences): string | undefined {
+  const extra = record(profile.extra);
+  const details = record(extra.matchDetails);
+  const draft = record(profile.onboardingDraft);
+  const ownGender = String(details.gender || extra.gender || draft.gender || "").toLowerCase();
+  const chosen = String(saved.gender || "").trim();
+  if (chosen && !["no preference", "any", "all"].includes(chosen.toLowerCase())) return chosen;
+  if (["man", "male"].includes(ownGender)) return "Woman";
+  if (["woman", "female"].includes(ownGender)) return "Man";
+}
+
+export function matchesNewProfile(candidate: Profile, member: Profile, preferences: PartnerPreferences): boolean {
+  const score = preferenceScore(candidate, preferences);
+  return (!(preferences.ageMin || preferences.ageMax) || Boolean(candidate.ageYears)) &&
+    score.failedMustHaves.length === 0 &&
+    profileMatchesFilters(candidate, { ...filtersFromPreferences(preferences), gender: requiredDiscoveryGender(member, preferences) });
+}
+
+export function hasPartnerPreferences(p: PartnerPreferences): boolean {
+  return Boolean(p.ageMin || p.ageMax || [
+    p.countries, p.languages, p.religions, p.professions, p.smoking, p.drinking,
+    p.education,
+  ].some((values) => values?.length) || p.maritalStatuses?.some((value) => !neutral(value)) ||
+    p.heightMin || p.heightMax ||
+    [p.gender, p.relocation, p.wantsChildren, p.familyInvolvement, p.marriageTimeline].some((value) => !neutral(value) && value?.toLowerCase() !== "all"));
+}
+
 function candidateDetails(profile: Profile) {
   const extra = record(profile.extra); const match = record(extra.matchDetails); const relationship = record(profile.relationshipIntentions); const lifestyle = record(profile.valuesLifestyle); const family = record(profile.culturalFamily); const settlement = record(profile.settlement); const draft = record(profile.onboardingDraft);
   return {
