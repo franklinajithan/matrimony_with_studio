@@ -14,7 +14,8 @@ function asRecord(value: unknown): Record<string, unknown> {
 }
 
 export function draftFromProfileRow(row: Record<string, unknown> | null): OnboardingDraft {
-  const stored = parseOnboardingDraft(row?.onboarding_draft || {});
+  const rawDraft = asRecord(row?.onboarding_draft);
+  const stored = parseOnboardingDraft(rawDraft);
   const intentions = asRecord(row?.relationship_intentions);
   const values = asRecord(row?.values_lifestyle);
   const cultural = asRecord(row?.cultural_family);
@@ -63,7 +64,9 @@ export function draftFromProfileRow(row: Record<string, unknown> | null): Onboar
     familyResponsibilities:
       stored.familyResponsibilities || String(settlement.familyResponsibilities || ""),
     photoURL: stored.photoURL || String(row?.photo_url || ""),
-    additionalPhotoUrls: stored.additionalPhotoUrls?.length
+    // An explicitly empty draft gallery means the member removed every photo.
+    // Fall back to legacy profile data only if this field was never saved.
+    additionalPhotoUrls: Array.isArray(rawDraft.additionalPhotoUrls)
       ? stored.additionalPhotoUrls
       : Array.isArray(row?.additional_photo_urls)
         ? (row?.additional_photo_urls as OnboardingDraft["additionalPhotoUrls"])
@@ -127,7 +130,7 @@ export function draftFromProfile(profile: {
 
 export function profilePatchFromDraft(draft: OnboardingDraft): Record<string, unknown> {
   const location = [draft.region, draft.country].filter(Boolean).join(", ");
-  return omitEmptyDefaults({
+  const patch = omitEmptyDefaults({
     display_name: draft.hideName && draft.aliasName ? draft.aliasName : draft.displayName,
     dob: draft.dob,
     profession: draft.profession,
@@ -143,7 +146,6 @@ export function profilePatchFromDraft(draft: OnboardingDraft): Record<string, un
     hobbies: draft.hobbies,
     religion: draft.religion,
     photo_url: draft.photoURL,
-    additional_photo_urls: draft.additionalPhotoUrls,
     photo_privacy: draft.photoPrivacy,
     language: draft.languages?.join(", "),
     relationship_intentions: omitEmptyDefaults({
@@ -176,6 +178,8 @@ export function profilePatchFromDraft(draft: OnboardingDraft): Record<string, un
       familyResponsibilities: draft.familyResponsibilities,
     }),
   });
+  // Unlike other blank defaults, [] is an intentional deletion, not a missing value.
+  return { ...patch, additional_photo_urls: draft.additionalPhotoUrls ?? [] };
 }
 
 export async function loadOnboardingState(client: SupabaseClient, userId: string) {
@@ -229,6 +233,11 @@ export function mergeOnboardingDrafts(
   (Object.keys(EMPTY_ONBOARDING_DRAFT) as Array<keyof OnboardingDraft>).forEach((key) => {
     const nextValue = incoming[key];
     if (nextValue === undefined) return;
+    if (key === "additionalPhotoUrls" && Array.isArray(nextValue)) {
+      // Preserve deliberate removal even when the last gallery item is deleted.
+      merged.additionalPhotoUrls = nextValue;
+      return;
+    }
     if (typeof nextValue === "boolean") {
       merged[key] = nextValue as never;
       return;
