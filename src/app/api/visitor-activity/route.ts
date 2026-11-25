@@ -27,12 +27,43 @@ function browserFamily(agent: string) {
   return /Safari\//i.test(agent) ? "Safari" : "Other";
 }
 
+// Best-effort per-instance throttling. Distributed enforcement belongs at the edge.
+const RATE_WINDOW_MS = 60_000;
+const RATE_LIMIT = 120;
+const MAX_BUCKETS = 10_000;
+const rateBuckets = new Map<string, { until: number; count: number }>();
+
+function overRateLimit(request: NextRequest): boolean {
+  // Vercel supplies this header; do not trust client-supplied generic forwarding headers.
+  const ip = request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim();
+  if (!ip || ip.length > 64) return false;
+  const now = Date.now();
+  const existing = rateBuckets.get(ip);
+  if (existing && existing.until > now) {
+    existing.count += 1;
+    return existing.count > RATE_LIMIT;
+  }
+  if (rateBuckets.size >= MAX_BUCKETS) {
+    for (const [key, bucket] of rateBuckets) {
+      if (bucket.until <= now) rateBuckets.delete(key);
+    }
+    if (rateBuckets.size >= MAX_BUCKETS && !rateBuckets.has(ip)) return false;
+  }
+  rateBuckets.set(ip, { until: now + RATE_WINDOW_MS, count: 1 });
+  return false;
+}
+
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
   if (origin !== request.nextUrl.origin || request.cookies.get("cm_analytics")?.value !== "yes") {
     return new Response(null, { status: 403 });
   }
   if (request.headers.get("sec-fetch-site") === "cross-site") return new Response(null, { status: 403 });
+  if (overRateLimit(request)) {
+    return new Response(null, { status: 429, headers: { "Retry-After": "60" } });
+  }
+  const length = Number(request.headers.get("content-length") ?? 0);
+  if (length > 512) return new Response(null, { status: 413 });
   const body = await request.text();
   if (body.length > 512) return new Response(null, { status: 413 });
   let input: unknown;
