@@ -7,6 +7,7 @@ import { analyticsVisitKey as visitKey, hasAnalyticsConsent } from "@/lib/analyt
 import { Button } from "@/components/ui/button";
 
 const consentKey = "cm_analytics";
+const HEARTBEAT_MS = 120_000;
 
 function trafficSource() {
   if (!document.referrer) return "Direct";
@@ -54,7 +55,7 @@ export function VisitorAnalytics() {
       if (!hasAnalyticsConsent()) return;
       const now = performance.now();
       if (visibleSince !== null) {
-        seconds += Math.min(now - visibleSince, 20_000) / 1000;
+        seconds += Math.min(now - visibleSince, HEARTBEAT_MS + 5_000) / 1000;
         visibleSince = now;
       }
       if (!document.hidden || seconds > 0) {
@@ -81,7 +82,7 @@ export function VisitorAnalytics() {
       }
     }
     if (!document.hidden) send();
-    const timer = window.setInterval(() => { if (visibleSince !== null) send(); }, 15_000);
+    const timer = window.setInterval(() => { if (visibleSince !== null) send(); }, HEARTBEAT_MS);
     document.addEventListener("visibilitychange", visibility);
     window.addEventListener("pagehide", send);
     return () => {

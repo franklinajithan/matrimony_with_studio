@@ -45,17 +45,18 @@ export function SearchAutocomplete({ className, onSearch, placeholder = "Search 
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    const query = searchQuery.trim();
+    setSuggestions([]);
+    setSelectedIndex(-1);
+    setIsLoading(false);
+    if (query.length < 3) return;
     const fetchSuggestions = async () => {
-      if (!searchQuery.trim()) {
-        setSuggestions([]);
-        return;
-      }
-
-      console.log("Search query received:", searchQuery);
+      if (cancelled) return;
 
       setIsLoading(true);
       try {
-        const matches = await searchProfiles(searchQuery, 10);
+        const matches = await searchProfiles(query, 10);
         const uniqueResults: SearchSuggestion[] = matches.map((data) => ({
           id: data.id,
           displayName: data.displayName || "User",
@@ -68,7 +69,7 @@ export function SearchAutocomplete({ className, onSearch, placeholder = "Search 
         uniqueResults.sort((a, b) => {
           const aName = a.displayName.toLowerCase();
           const bName = b.displayName.toLowerCase();
-          const searchTerm = searchQuery.toLowerCase();
+          const searchTerm = query.toLowerCase();
 
           const aStartsWith = aName.startsWith(searchTerm);
           const bStartsWith = bName.startsWith(searchTerm);
@@ -85,20 +86,19 @@ export function SearchAutocomplete({ className, onSearch, placeholder = "Search 
           return aName.localeCompare(bName);
         });
 
-        console.log("Final unique search results:", uniqueResults);
+        if (cancelled) return;
 
         setSuggestions(uniqueResults);
         setSelectedIndex(-1);
       } catch (error) {
-        console.error("Error fetching suggestions:", error);
+        if (!cancelled) console.error("Error fetching suggestions:", error);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
-    // Reduced debounce time for faster response
-    const debounceTimer = setTimeout(fetchSuggestions, 150);
-    return () => clearTimeout(debounceTimer);
+    const debounceTimer = setTimeout(fetchSuggestions, 500);
+    return () => { cancelled = true; clearTimeout(debounceTimer); };
   }, [searchQuery]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -160,7 +160,7 @@ export function SearchAutocomplete({ className, onSearch, placeholder = "Search 
         />
       </div>
 
-      {showSuggestions && (searchQuery.trim() || isLoading) && (
+      {showSuggestions && (searchQuery.trim().length >= 3 || isLoading) && (
         <div className="absolute z-50 w-full mt-1 bg-popover text-popover-foreground rounded-md border shadow-md max-h-[300px] overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center p-4">
