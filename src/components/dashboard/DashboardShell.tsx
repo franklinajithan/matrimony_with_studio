@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Bell,
   Globe,
@@ -103,6 +103,7 @@ function NavList({
           <li key={`${item.label}-${item.href}`}>
             <Link
               href={item.href}
+              prefetch={false}
               onClick={onNavigate}
               aria-current={active ? "page" : undefined}
               aria-label={count > 0 ? `${item.label}, ${count} new` : item.label}
@@ -186,6 +187,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [badges, setBadges] = useState<NavBadges>({ interests: 0, connections: 0, messages: 0 });
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  const badgeUserId = currentUser?.uid;
+  const badgeInFlight = useRef(new Map<string, Promise<void>>());
+  const activeBadgeUser = useRef<string | undefined>(undefined);
   const isMessagesRoute = pathname === "/messages" || pathname.startsWith("/messages/");
 
   useLoginWelcomeToast();
@@ -198,7 +202,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   );
 
   const refreshBadges = useCallback(
-    async (userId: string) => {
+    (userId: string) => {
+      const pending = badgeInFlight.current.get(userId);
+      if (pending) return pending;
+      const task = (async () => {
       try {
         const seenAt =
           typeof window !== "undefined"
@@ -209,10 +216,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           countRecentAcceptedConnections(userId, 14, seenAt),
           countUnreadMessages(userId),
         ]);
-        setBadges({ interests, connections, messages });
+        if (activeBadgeUser.current === userId) setBadges({ interests, connections, messages });
       } catch (error) {
         console.warn("Could not refresh notification badges:", error);
       }
+      })().finally(() => badgeInFlight.current.delete(userId));
+      badgeInFlight.current.set(userId, task);
+      return task;
     },
     [connectionsSeenKey]
   );
@@ -294,19 +304,26 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }, [clearConnectionsBadge, currentUser, pathname]);
 
   useEffect(() => {
-    if (!currentUser) return;
-    void refreshBadges(currentUser.uid);
-    const unsubscribe = subscribeToPendingRequests(currentUser.uid, (requests) => {
-      setBadges((prev) => ({ ...prev, interests: requests.length }));
+    activeBadgeUser.current = badgeUserId;
+    if (!badgeUserId) return;
+    let active = true;
+    const refreshVisible = () => {
+      if (active && !document.hidden) void refreshBadges(badgeUserId);
+    };
+    refreshVisible();
+    const unsubscribe = subscribeToPendingRequests(badgeUserId, (requests) => {
+      if (active) setBadges((prev) => ({ ...prev, interests: requests.length }));
     });
-    const interval = window.setInterval(() => {
-      void refreshBadges(currentUser.uid);
-    }, 30000);
+    const interval = window.setInterval(refreshVisible, 120_000);
+    document.addEventListener("visibilitychange", refreshVisible);
     return () => {
+      active = false;
+      activeBadgeUser.current = undefined;
       unsubscribe();
       window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshVisible);
     };
-  }, [currentUser, refreshBadges, pathname]);
+  }, [badgeUserId, refreshBadges]);
 
   const title = useMemo(() => navLabels[pathname] || (pathname === "/dashboard" ? dt.titleOverview : titleForDashboardPath(pathname)), [pathname, navLabels, dt.titleOverview]);
 
